@@ -1,0 +1,83 @@
+﻿<Window x:Class="InterfazClientes.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:InterfazClientes"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Background="#FF0A132D">
+        <DataGrid x:Name="DataGridInventario" Margin="359,178,10,47" >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Código" 
+                                    Binding="{Binding Codigo}" 
+                                    Width="*"/>
+                <DataGridTextColumn Header="Nombre"
+                                Binding="{Binding Nombre}"
+                                Width="*"/>
+
+                <DataGridTextColumn Header="Categoría"
+                                Binding="{Binding Categoria}"
+                                Width="*"/>
+
+                <DataGridTextColumn Header="Modelo"
+                                Binding="{Binding Modelo}"
+                                Width="*"/>
+
+                <DataGridTextColumn Header="Cantidad Actual"
+                                Binding="{Binding CantidadActual}"
+                                Width="*"/>
+
+                <DataGridTextColumn Header="Cantidad Mínima"
+                                Binding="{Binding CantidadMinima}"
+                                Width="*"/>
+
+                <DataGridTextColumn Header="Estado Actual"
+                                Binding="{Binding EstadoActual}"
+                                Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Rectangle HorizontalAlignment="Left" Height="434" Stroke="#FF12224B" VerticalAlignment="Center" Width="176" Fill="#FF12224B" RenderTransformOrigin="1.056,0.555"/>
+        <TextBlock HorizontalAlignment="Left" Margin="210,67,0,0" TextWrapping="Wrap" Text="Código:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <TextBox x:Name="txtCodigo" HorizontalAlignment="Left" Margin="210,88,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="210,117,0,0" TextWrapping="Wrap" Text="Nombre:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <TextBox x:Name="txtNombre" HorizontalAlignment="Left" Margin="210,138,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="210,171,0,0" TextWrapping="Wrap" Text="Categoría:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <TextBox x:Name="txtCategoria" HorizontalAlignment="Left" Margin="210,192,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="210,223,0,0" TextWrapping="Wrap" Text="Modelo:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <TextBox x:Name="txtModelo" HorizontalAlignment="Left" Margin="210,244,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="210,275,0,0" TextWrapping="Wrap" Text="Cantidad Actual:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <TextBox x:Name="txtCantidadActual" HorizontalAlignment="Left" Margin="210,296,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="210,327,0,0" TextWrapping="Wrap" Text="Cantidad Mínima:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <TextBox x:Name="txtCantidadMinima" HorizontalAlignment="Left" Margin="210,348,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="txtBuscar" HorizontalAlignment="Left" Margin="418,80,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="280" Height="19"/>
+        <TextBlock HorizontalAlignment="Left" Margin="375,82,0,0" TextWrapping="Wrap" Text="Buscar:" VerticalAlignment="Top" Foreground="#FFFDFCFC"/>
+        <Button x:Name="btnAgregar" Content="Agregar" HorizontalAlignment="Left" Margin="382,137,0,0" VerticalAlignment="Top" Width="365"/>
+        <Button x:Name="btnBuscar" Content="Buscar" HorizontalAlignment="Left" Margin="703,80,0,0" VerticalAlignment="Top" Width="55"/>
+        <Button x:Name="btnMenu" Content="Menú Principal" HorizontalAlignment="Left" Margin="50,99,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnCerrarSesion" Content="Cerrar Sesión" HorizontalAlignment="Left" Margin="51,383,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnConfiguracion" Content="Configuración" HorizontalAlignment="Left" Margin="50,358,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnProveedores" Content="Proveedores" HorizontalAlignment="Left" Margin="50,309,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnContabilidad" Content="Contabilidad" HorizontalAlignment="Left" Margin="50,277,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnOrdenes" Content="Órdenes" HorizontalAlignment="Left" Margin="50,240,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnClientes" Content="Clientes" HorizontalAlignment="Left" Margin="51,205,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnVehiculo" Content="Vehículo" HorizontalAlignment="Left" Margin="51,171,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Button x:Name="btnInventario" Content="Inventario" HorizontalAlignment="Left" Margin="51,133,0,0" VerticalAlignment="Top" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White"/>
+        <Rectangle HorizontalAlignment="Left" Height="50" Margin="171,0,0,0" Stroke="#FF12224B" VerticalAlignment="Top" Width="629" Fill="#FF12224B"/>
+        <TextBlock HorizontalAlignment="Left" Margin="181,17,0,0" TextWrapping="Wrap" Text="¡Hola, Oscar Sosa!" VerticalAlignment="Top" Foreground="White" FontSize="15" FontWeight="Bold"/>
+        <TextBlock HorizontalAlignment="Left" Margin="721,30,0,0" TextWrapping="Wrap" Text="Inventario" VerticalAlignment="Top" Foreground="White" FontSize="10" FontWeight="Bold"/>
+        <Image Margin="17,-12,647,315" Source="/OSM_LOGO.png" Stretch="Fill"/>
+        <Image Margin="29,103,755,315" Source="/ICONO DE MENU.png" Stretch="Fill"/>
+        <Image Margin="27,135,755,281" Source="/ICONO DE INVENTARIO.png" Stretch="Fill"/>
+        <Image Margin="25,171,755,243" Source="/ICONO DE VEHÍCULOS.png" Stretch="Fill"/>
+        <Image Margin="24,208,755,209" Source="/ICONO DE CLIENTES.png" Stretch="Fill"/>
+        <Image Margin="25,241,757,174" Source="/ICONO DE ÓRDENES.png" Stretch="Fill"/>
+        <Image Margin="25,277,757,138" Source="/ICONO DE CONTABILIDAD.png" Stretch="Fill"/>
+        <Image Margin="25,310,755,106" Source="/ICONO DE PROVEEDORES.png" Stretch="Fill"/>
+        <Image Margin="27,360,755,56" Source="/ICONO DE CONFIGURACIÓN.png" Stretch="Fill"/>
+        <Image Margin="33,386,757,31" Source="/PARTE 1 DE ICONO DE CERRAR SESIÓN.png" Stretch="Fill"/>
+        <Image Margin="26,391,762,35" Source="/PARTE 2 DE ICONO DE CERRAR SESIÓN.png" Stretch="Fill"/>
+
+    </Grid>
+</Window>
