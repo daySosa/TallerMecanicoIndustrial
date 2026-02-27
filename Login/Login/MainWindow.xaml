@@ -1,0 +1,39 @@
+﻿<Window x:Class="Login.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Login"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Image Height="875" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5" Source="/e92893811988a28b7a094edbd2b22379cc0adbed.jpg" Cursor="AppStarting" Stretch="Fill" Margin="-43,0,-213,0"/>
+        <Rectangle x:Name="Rectángulo" HorizontalAlignment="Center" Height="311" VerticalAlignment="Center" Width="250" Fill="#FF8897AD" RenderTransformOrigin="0.5,0.5" StrokeDashOffset="11" RadiusX="20" RadiusY="20">
+            <Rectangle.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform X="0"/>
+                </TransformGroup>
+            </Rectangle.RenderTransform>
+            <Rectangle.OpacityMask>
+                <SolidColorBrush Color="#FF8897AD" Opacity="0.66"/>
+            </Rectangle.OpacityMask>
+        </Rectangle>
+        <Image x:Name="image" HorizontalAlignment="Left" Height="60" Margin="368,78,0,0" VerticalAlignment="Top" Width="60">
+            <Image.OpacityMask>
+                <ImageBrush/>
+            </Image.OpacityMask>
+        </Image>
+        <Image Margin="348,62,348,268" Source="/95fbfdd390b9f4a4baf6b0f3e0fc052da1c24aec.png" Stretch="Fill" Cursor=""/>
+        <Label Content="¡Bienvenido!" HorizontalAlignment="Left" Height="26" Margin="299,152,0,0" VerticalAlignment="Top" Width="117" FontWeight="Bold" FontFamily="MS Reference Sans Serif"/>
+        <Button x:Name="btnIniciarSesion" Content="Iniciar sesión" HorizontalAlignment="Center" Height="20" Margin="0,307,0,0" VerticalAlignment="Top" Width="136" Background="#FF003C93" AutomationProperties.Name="btnIniciarSesion" BorderThickness="0,1,1,1" Click="Button_Click" FontFamily="MS Reference Sans Serif" FontSize="10" ScrollViewer.VerticalScrollBarVisibility="Disabled" UseLayoutRounding="False"/>
+        <TextBox x:Name="txtUsuario" HorizontalAlignment="Center" Height="20" TextWrapping="Wrap" VerticalAlignment="Top" Width="188" TextChanged="txtUsuario_TextChanged" RenderTransformOrigin="0.503,0.553" Margin="0,211,0,0"/>
+        <TextBox x:Name="txtContra" HorizontalAlignment="Center" Height="20" TextWrapping="Wrap" VerticalAlignment="Top" Width="188" Margin="0,257,0,0"/>
+        <Label Content="Contraseña" HorizontalAlignment="Left" Height="29" Margin="296,241,0,0" VerticalAlignment="Top" Width="98" FontSize="7" FontWeight="Medium"/>
+        <Label Content="Correo electrónico" HorizontalAlignment="Left" Height="29" Margin="295,194,0,0" VerticalAlignment="Top" Width="98" FontSize="7" FontWeight="Medium"/>
+        <Label Content="Ingrese sus Credenciales para acceder a su cuenta" HorizontalAlignment="Center" Height="23" Margin="0,166,0,0" VerticalAlignment="Top" Width="198" FontSize="8" FontWeight="Medium"/>
+
+    </Grid>
+</Window>
