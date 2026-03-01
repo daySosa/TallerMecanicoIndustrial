@@ -23,6 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HandyControl" Version="3.5.1" />
+    <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
+    <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="ICONO DE CLIENTES.png" />
     <Resource Include="ICONO DE CONFIGURACIÓN.png" />
     <Resource Include="ICONO DE CONTABILIDAD.png" />
@@ -34,6 +41,12 @@
     <Resource Include="OSM_LOGO.png" />
     <Resource Include="PARTE 1 DE ICONO DE CERRAR SESIÓN.png" />
     <Resource Include="PARTE 2 DE ICONO DE CERRAR SESIÓN.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="MainWindow.xaml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Page>
   </ItemGroup>
 
 </Project>
