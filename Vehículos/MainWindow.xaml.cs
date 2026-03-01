@@ -21,29 +21,36 @@ namespace Vehículos
             InitializeComponent();
         }
 
-        private void TextBox_TextChanged()
+        private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
-
+            if (txtEstadoLabel == null) return;
+            txtEstadoLabel.Text = "El vehículo está activo";
+            txtEstadoLabel.Foreground = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#4CAF50"));
         }
 
-        private void TextBox_TextChanged_1(object sender, TextChangedEventArgs e)
+        private void ToggleActivo_Unchecked(object sender, RoutedEventArgs e)
         {
-
+            if (txtEstadoLabel == null) return;
+            txtEstadoLabel.Text = "El vehículo está inactivo";
+            txtEstadoLabel.Foreground = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
-        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
-
+           // this.DialogResult = true;
+            //this.Close();
         }
 
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
-
+            // Tu lógica para actualizar
         }
 
-        private void TextBox_TextChanged_2(object sender, TextChangedEventArgs e)
+        private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
-
+            this.Close();
         }
     }
 }

@@ -3,70 +3,464 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Vehículos"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="1200" Background="#292E3D">
-    <Grid RenderTransformOrigin="0.5,0.517" Margin="1,0,-1,-1">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="264*"/>
-            <RowDefinition Height="421*"/>
-        </Grid.RowDefinitions>
+        Title ="MenúPrincipalVehículos" Height="850" Width="1200" 
+        TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"  Background="#1F2128"  WindowStartupLocation="CenterScreen" BorderBrush="#242731" >
 
-        <Image HorizontalAlignment="Left" Height="144" Margin="10,8,0,0" VerticalAlignment="Top" Width="151" Source="/OSM_LOGO.png"/>
-        <Image HorizontalAlignment="Left" Height="17" Margin="34,152,0,0" VerticalAlignment="Top" Width="12" Source="/ICONO DE MENU.png" RenderTransformOrigin="0.3,-0.137"/>
-        <Label Content="Menú Principal" HorizontalAlignment="Left" Margin="51,145,0,0" VerticalAlignment="Top" Foreground="White"/>
-        <Image HorizontalAlignment="Left" Height="12" Margin="35,199,0,0" VerticalAlignment="Top" Width="14" Source="/ICONO DE INVENTARIO.png" RenderTransformOrigin="-0.157,-0.413"/>
-        <Label Content="Inventario" HorizontalAlignment="Left" Margin="51,193,0,0" VerticalAlignment="Top" Foreground="White"/>
-        <Image HorizontalAlignment="Left" Height="19" Margin="32,242,0,0" VerticalAlignment="Top" Width="17" Source="/ICONO DE VEHÍCULOS.png"/>
-        <Label Content="Vehículos" HorizontalAlignment="Left" Margin="54,236,0,0" VerticalAlignment="Top" Foreground="White"/>
-        <Image HorizontalAlignment="Left" Height="12" Margin="34,32,0,0" VerticalAlignment="Top" Width="16" Source="/ICONO DE CLIENTES.png" RenderTransformOrigin="0.367,0.909" Grid.Row="1"/>
-        <Label Content="Clientes" HorizontalAlignment="Left" Margin="51,26,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Image HorizontalAlignment="Left" Height="15" Margin="36,81,0,0" VerticalAlignment="Top" Width="14" Source="/ICONO DE ÓRDENES.png" RenderTransformOrigin="-0.024,0.749" Grid.Row="1"/>
-        <Image HorizontalAlignment="Left" Height="13" Margin="37,132,0,0" VerticalAlignment="Top" Width="13" Source="/ICONO DE CONTABILIDAD.png" RenderTransformOrigin="0.431,0.157" Grid.Row="1"/>
-        <Label Content="Órdenes" HorizontalAlignment="Left" Margin="53,77,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Label Content="Contabilidad" HorizontalAlignment="Left" Margin="51,127,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Image HorizontalAlignment="Left" Height="5" Margin="128,138,0,0" VerticalAlignment="Top" Width="4" Source="/FECHA DE ICONO DE CONTA.png" RenderTransformOrigin="0.55,0.595" Grid.Row="1">
-            <Image.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform/>
-                    <SkewTransform/>
-                    <RotateTransform Angle="-4.666"/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </Image.RenderTransform>
-        </Image>
-        <Image HorizontalAlignment="Left" Height="13" Margin="35,181,0,0" VerticalAlignment="Top" Width="14" RenderTransformOrigin="0.5,0.49" Source="/ICONO DE PROVEEDORES.png" Grid.Row="1"/>
-        <Label Content="Proveedores" HorizontalAlignment="Left" Margin="57,173,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Image HorizontalAlignment="Left" Height="16" Margin="34,276,0,0" VerticalAlignment="Top" Width="21" Source="/ICONO DE CONFIGURACIÓN.png" RenderTransformOrigin="-0.065,0.488" Grid.Row="1"/>
-        <Image HorizontalAlignment="Left" Height="15" Margin="40,336,0,0" VerticalAlignment="Top" Width="10" Source="/PARTE 1 DE ICONO DE CERRAR SESIÓN.png" Grid.Row="1"/>
-        <Image HorizontalAlignment="Left" Height="11" Margin="31,339,0,0" VerticalAlignment="Top" Width="13" Source="/PARTE 2 DE ICONO DE CERRAR SESIÓN.png" Grid.Row="1"/>
-        <Label Content="Configuración" HorizontalAlignment="Left" Margin="51,270,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Label Content="Cerrar Sesión" HorizontalAlignment="Left" Margin="50,331,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Rectangle HorizontalAlignment="Left" Height="565" Margin="174,101,0,0" Stroke="#111827" VerticalAlignment="Top" Width="1010" Fill="#111827" Grid.RowSpan="2"/>
-        <Image HorizontalAlignment="Left" Height="37" Margin="407,50,0,0" VerticalAlignment="Top" Width="339" Source="/BARRA DE BUSQUEDA.png"/>
-        <Label Content="DNI" HorizontalAlignment="Left" Margin="198,162,0,0" VerticalAlignment="Top" Foreground="White"/>
-        <Label Content="Marca" HorizontalAlignment="Left" Margin="198,220,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.427,-0.037" Foreground="White"/>
-        <Label Content="Modelo" HorizontalAlignment="Left" Margin="193,77,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Label Content="Año" HorizontalAlignment="Left" Margin="200,18,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
-        <Label Content="Observaciones" HorizontalAlignment="Left" Margin="200,0,0,0" VerticalAlignment="Center" RenderTransformOrigin="0.362,-0.106" Foreground="White" Grid.Row="1"/>
-        <Label Content="Tipo" HorizontalAlignment="Left" Margin="201,139,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.328,0.456" Foreground="White" Grid.Row="1"/>
-        <TextBox HorizontalAlignment="Left" Margin="245,224,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="122" RenderTransformOrigin="0.246,-0.644" Height="18"/>
-        <TextBox HorizontalAlignment="Left" Margin="247,80,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="TextBox_TextChanged_1" Grid.Row="1"/>
-        <TextBox HorizontalAlignment="Left" Margin="201,223,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="954" Height="154" Grid.Row="1"/>
-        <TextBox HorizontalAlignment="Left" Margin="241,21,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.492,0.526" Grid.Row="1"/>
-        <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="550,140,45,257" SelectionChanged="DataGrid_SelectionChanged" Grid.RowSpan="2"/>
-        <Button Content="Agregar" HorizontalAlignment="Left" Margin="559,178,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
-        <Button Content="Activo" HorizontalAlignment="Left" Margin="937,181,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
-        <Button Content="Inactivo" HorizontalAlignment="Left" Margin="1038,180,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
-        <Button Content="Editar" HorizontalAlignment="Left" Margin="659,180,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
-        <Button Content="Actualizar" Margin="750,180,383,0" VerticalAlignment="Top" Background="#253B7A" Foreground="White" Grid.Row="1"/>
-        <Label Content="Vehículos" HorizontalAlignment="Left" Margin="207,38,0,0" VerticalAlignment="Top" Foreground="White" Height="48" Width="141" FontSize="30"/>
-        <Image HorizontalAlignment="Left" Height="27" Margin="997,50,0,0" VerticalAlignment="Top" Width="26" Source="/ICONO DE CAMPANA.png" RenderTransformOrigin="0.462,0.298"/>
-        <Image HorizontalAlignment="Left" Height="33" Margin="1041,47,0,0" VerticalAlignment="Top" Width="30" Source="/DIVISOR.png"/>
-        <Image HorizontalAlignment="Left" Height="36" Margin="1060,46,0,0" VerticalAlignment="Top" Width="35" Source="/FOTO DE PERFIL.png"/>
-        <Image HorizontalAlignment="Left" Height="37" Margin="1102,45,0,0" VerticalAlignment="Top" Width="100" Source="/TEXTO.png"/>
-        <TextBox HorizontalAlignment="Left" Margin="249,143,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="TextBox_TextChanged_1" Grid.Row="1"/>
-        <TextBox HorizontalAlignment="Left" Margin="242,167,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="132" TextChanged="TextBox_TextChanged_2"/>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="20*"/>
+        </Grid.ColumnDefinitions>
 
+        <!-- ═══════════════════════════════════════ -->
+        <!--              SIDEBAR                    -->
+        <!-- ═══════════════════════════════════════ -->
+        <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
+                                  Background="#242731" VerticalAlignment="Stretch">
+            <StackPanel Margin="15,0,15,0">
+
+                <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
+                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="199" Width="200"/>
+                </WrapPanel>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
+                        <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
+                        <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
+                          BorderThickness="0" Margin="0,0,0,15">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Width="250">
+                            <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
+                                                     Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
+                            <TextBlock Foreground="White" FontSize="15">Contabilidad</TextBlock>
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Background="#242731">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Width="250">
+                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
+                                <TextBlock Text="Egresos" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Width="250">
+                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
+                                <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Expander>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
+                        <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,200,0,15">
+                    <WrapPanel Width="175">
+                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
+                        <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+            </StackPanel>
+        </materialDesign:ColorZone>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--          CONTENIDO PRINCIPAL            -->
+        <!-- ═══════════════════════════════════════ -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="80"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- TOP BAR -->
+            <Border Grid.Row="0" Background="#1A1D2E">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
+                        <TextBlock Text="Nuevo Vehículo" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Completa los datos del vehículo" Foreground="#6B7280" FontSize="12"/>
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Background="#252836" CornerRadius="5"
+                            VerticalAlignment="Center" Height="40" MaxWidth="400"
+                            HorizontalAlignment="Left" Margin="20,0,0,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
+                            <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Background="Transparent" Foreground="#6B7280"
+                                     BorderThickness="0" VerticalAlignment="Center"
+                                     FontSize="13" Width="200" CaretBrush="White">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
+                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
+                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
+                            <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
+                        </Button>
+                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
+                                               HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
+
+                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="16,0,20,0">
+                        <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
+                                Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
+                            <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- FORMULARIO -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" >
+                <Grid Margin="30,24,30,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="24"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- COLUMNA IZQUIERDA -->
+                    <StackPanel Grid.Column="0" Grid.RowSpan="2">
+
+                        <!-- Card datos principales -->
+                        <materialDesign:Card Background="#252836"
+                                             UniformCornerRadius="12"
+                                             Padding="22"
+                                             Margin="0,0,0,16"
+                                             materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <Border Background="#2e3250" CornerRadius="8"
+                                            Width="36" Height="36" Margin="0,0,12,0">
+                                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle"
+                                                                 Foreground="#4f6ef7"
+                                                                 Width="20" Height="20"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Datos del Vehículo"
+                                                   Foreground="White" FontSize="14" FontWeight="Medium"/>
+                                        <TextBlock Text="Información de identificación"
+                                                   Foreground="#6c7293" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Placa -->
+                                <TextBlock Text="Placa" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtPlaca"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White"
+                                         BorderBrush="#3a3f5c" CaretBrush="White"
+                                         Height="40" VerticalContentAlignment="Center"
+                                         Margin="0,0,0,14"/>
+
+                                <!-- Marca -->
+                                <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtMarca"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White"
+                                         BorderBrush="#3a3f5c" CaretBrush="White"
+                                         Height="40" VerticalContentAlignment="Center"
+                                         Margin="0,0,0,14"/>
+
+                                <!-- Modelo + Año en la misma fila -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="110"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Modelo" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="txtModelo"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White"
+                                                 BorderBrush="#3a3f5c" CaretBrush="White"
+                                                 Height="40" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Año" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="txtAnio"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White"
+                                                 BorderBrush="#3a3f5c" CaretBrush="White"
+                                                 Height="40" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Tipo -->
+                                <TextBlock Text="Tipo de Vehículo" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="cmbTipo"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                          Background="#1e2130" Foreground="White"
+                                          BorderBrush="#3a3f5c" Height="40">
+                                    <ComboBox.Resources>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Background" Value="#252836"/>
+                                        </Style>
+                                    </ComboBox.Resources>
+                                    <ComboBoxItem Content="Sedán"/>
+                                    <ComboBoxItem Content="SUV"/>
+                                    <ComboBoxItem Content="Pickup"/>
+                                    <ComboBoxItem Content="Van"/>
+                                    <ComboBoxItem Content="Moto"/>
+                                    <ComboBoxItem Content="Camión"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </materialDesign:Card>
+
+                    </StackPanel>
+
+                    <!-- COLUMNA DERECHA -->
+                    <StackPanel Grid.Column="2" Grid.RowSpan="2">
+
+                        <!-- Card observaciones y estado -->
+                        <materialDesign:Card Background="#252836"
+                                             UniformCornerRadius="12"
+                                             Padding="22"
+                                             Margin="0,0,0,16"
+                                             materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <Border Background="#2e3250" CornerRadius="8"
+                                            Width="36" Height="36" Margin="0,0,12,0">
+                                        <materialDesign:PackIcon Kind="NoteTextOutline"
+                                                                 Foreground="#4f6ef7"
+                                                                 Width="20" Height="20"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Detalles Adicionales"
+                                                   Foreground="White" FontSize="14" FontWeight="Medium"/>
+                                        <TextBlock Text="Observaciones y estado"
+                                                   Foreground="#6c7293" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Observaciones -->
+                                <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtObservaciones"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White"
+                                         BorderBrush="#3a3f5c" CaretBrush="White"
+                                         Height="130" TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         VerticalContentAlignment="Top"
+                                         Padding="10"
+                                         Margin="0,0,0,20"/>
+
+                                <!-- Toggle Estado -->
+                                <Border Background="#1e2130" CornerRadius="10" Padding="16,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                <materialDesign:PackIcon Kind="CheckCircleOutline"
+                                                                         x:Name="iconEstado"
+                                                                         Foreground="#4CAF50"
+                                                                         Width="16" Height="16"
+                                                                         VerticalAlignment="Center"
+                                                                         Margin="0,0,6,0"/>
+                                                <TextBlock Text="Estado del Vehículo"
+                                                           Foreground="White" FontSize="13" FontWeight="Medium"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="txtEstadoLabel"
+                                                       Text="El vehículo está activo"
+                                                       Foreground="#4CAF50"
+                                                       FontSize="11"/>
+                                        </StackPanel>
+
+                                        <ToggleButton x:Name="toggleActivo"
+                                                      Grid.Column="1"
+                                                      IsChecked="True"
+                                                      Checked="ToggleActivo_Checked"
+                                                      Unchecked="ToggleActivo_Unchecked"
+                                                      VerticalAlignment="Center">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Width" Value="54"/>
+                                                    <Setter Property="Height" Value="30"/>
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Grid>
+                                                                    <Border x:Name="switchBg"
+                                                                            Background="#4CAF50"
+                                                                            CornerRadius="15"
+                                                                            Width="54" Height="30"/>
+                                                                    <Border x:Name="switchThumb"
+                                                                            Background="White"
+                                                                            CornerRadius="12"
+                                                                            Width="24" Height="24"
+                                                                            HorizontalAlignment="Right"
+                                                                            Margin="0,0,3,0">
+                                                                        <Border.Effect>
+                                                                            <DropShadowEffect Color="Black" Opacity="0.2"
+                                                                                              BlurRadius="4" ShadowDepth="1"/>
+                                                                        </Border.Effect>
+                                                                    </Border>
+                                                                </Grid>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsChecked" Value="False">
+                                                                        <Setter TargetName="switchBg" Property="Background" Value="#3a3f5c"/>
+                                                                        <Setter TargetName="switchThumb" Property="HorizontalAlignment" Value="Left"/>
+                                                                        <Setter TargetName="switchThumb" Property="Margin" Value="3,0,0,0"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </Grid>
+                                </Border>
+
+                            </StackPanel>
+                        </materialDesign:Card>
+
+                    </StackPanel>
+
+                    <!-- BOTONES — fila 1, ocupa ambas columnas -->
+                    <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                         Background="#252836"
+                                         UniformCornerRadius="12"
+                                         Padding="20,16"
+                                         materialDesign:ElevationAssist.Elevation="Dp3" Margin="5,243,-5,-242">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                       Foreground="#6c7293" FontSize="12">
+                                <Run Text="⚠ "/>
+                                <Run Text="Recuerda verificar los datos antes de guardar"/>
+                            </TextBlock>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Cancelar"
+                                        Height="38" Padding="24,0"
+                                        Margin="0,0,10,0"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#6c7293" Foreground="#6c7293"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Click="BtnCancelar_Click"/>
+
+                                <Button Content="Actualizar"
+                                        Height="38" Padding="24,0"
+                                        Margin="0,0,10,0"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#4f6ef7" Foreground="#4f6ef7"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Click="BtnActualizar_Click"/>
+                                <Button Height="38" Padding="24,0"
+        materialDesign:ButtonAssist.CornerRadius="8"
+        materialDesign:ElevationAssist.Elevation="Dp0"
+        Click="BtnGuardar_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Background" Value="#4f6ef7"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderBrush" Value="#4f6ef7"/>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16"
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Guardar Vehículo" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </materialDesign:Card>
+
+                </Grid>
+            </ScrollViewer>
+
+        </Grid>
     </Grid>
 </Window>
