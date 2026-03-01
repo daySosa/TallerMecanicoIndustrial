@@ -1,0 +1,72 @@
+﻿<Window x:Class="Vehículos.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Vehículos"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="700" Width="1200" Background="#292E3D">
+    <Grid RenderTransformOrigin="0.5,0.517" Margin="1,0,-1,-1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="264*"/>
+            <RowDefinition Height="421*"/>
+        </Grid.RowDefinitions>
+
+        <Image HorizontalAlignment="Left" Height="144" Margin="10,8,0,0" VerticalAlignment="Top" Width="151" Source="/OSM_LOGO.png"/>
+        <Image HorizontalAlignment="Left" Height="17" Margin="34,152,0,0" VerticalAlignment="Top" Width="12" Source="/ICONO DE MENU.png" RenderTransformOrigin="0.3,-0.137"/>
+        <Label Content="Menú Principal" HorizontalAlignment="Left" Margin="51,145,0,0" VerticalAlignment="Top" Foreground="White"/>
+        <Image HorizontalAlignment="Left" Height="12" Margin="35,199,0,0" VerticalAlignment="Top" Width="14" Source="/ICONO DE INVENTARIO.png" RenderTransformOrigin="-0.157,-0.413"/>
+        <Label Content="Inventario" HorizontalAlignment="Left" Margin="51,193,0,0" VerticalAlignment="Top" Foreground="White"/>
+        <Image HorizontalAlignment="Left" Height="19" Margin="32,242,0,0" VerticalAlignment="Top" Width="17" Source="/ICONO DE VEHÍCULOS.png"/>
+        <Label Content="Vehículos" HorizontalAlignment="Left" Margin="54,236,0,0" VerticalAlignment="Top" Foreground="White"/>
+        <Image HorizontalAlignment="Left" Height="12" Margin="34,32,0,0" VerticalAlignment="Top" Width="16" Source="/ICONO DE CLIENTES.png" RenderTransformOrigin="0.367,0.909" Grid.Row="1"/>
+        <Label Content="Clientes" HorizontalAlignment="Left" Margin="51,26,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="15" Margin="36,81,0,0" VerticalAlignment="Top" Width="14" Source="/ICONO DE ÓRDENES.png" RenderTransformOrigin="-0.024,0.749" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="13" Margin="37,132,0,0" VerticalAlignment="Top" Width="13" Source="/ICONO DE CONTABILIDAD.png" RenderTransformOrigin="0.431,0.157" Grid.Row="1"/>
+        <Label Content="Órdenes" HorizontalAlignment="Left" Margin="53,77,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Label Content="Contabilidad" HorizontalAlignment="Left" Margin="51,127,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="5" Margin="128,138,0,0" VerticalAlignment="Top" Width="4" Source="/FECHA DE ICONO DE CONTA.png" RenderTransformOrigin="0.55,0.595" Grid.Row="1">
+            <Image.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-4.666"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Image.RenderTransform>
+        </Image>
+        <Image HorizontalAlignment="Left" Height="13" Margin="35,181,0,0" VerticalAlignment="Top" Width="14" RenderTransformOrigin="0.5,0.49" Source="/ICONO DE PROVEEDORES.png" Grid.Row="1"/>
+        <Label Content="Proveedores" HorizontalAlignment="Left" Margin="57,173,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="16" Margin="34,276,0,0" VerticalAlignment="Top" Width="21" Source="/ICONO DE CONFIGURACIÓN.png" RenderTransformOrigin="-0.065,0.488" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="15" Margin="40,336,0,0" VerticalAlignment="Top" Width="10" Source="/PARTE 1 DE ICONO DE CERRAR SESIÓN.png" Grid.Row="1"/>
+        <Image HorizontalAlignment="Left" Height="11" Margin="31,339,0,0" VerticalAlignment="Top" Width="13" Source="/PARTE 2 DE ICONO DE CERRAR SESIÓN.png" Grid.Row="1"/>
+        <Label Content="Configuración" HorizontalAlignment="Left" Margin="51,270,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Label Content="Cerrar Sesión" HorizontalAlignment="Left" Margin="50,331,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Rectangle HorizontalAlignment="Left" Height="565" Margin="174,101,0,0" Stroke="#111827" VerticalAlignment="Top" Width="1010" Fill="#111827" Grid.RowSpan="2"/>
+        <Image HorizontalAlignment="Left" Height="37" Margin="407,50,0,0" VerticalAlignment="Top" Width="339" Source="/BARRA DE BUSQUEDA.png"/>
+        <Label Content="DNI" HorizontalAlignment="Left" Margin="198,162,0,0" VerticalAlignment="Top" Foreground="White"/>
+        <Label Content="Marca" HorizontalAlignment="Left" Margin="198,220,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.427,-0.037" Foreground="White"/>
+        <Label Content="Modelo" HorizontalAlignment="Left" Margin="193,77,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Label Content="Año" HorizontalAlignment="Left" Margin="200,18,0,0" VerticalAlignment="Top" Foreground="White" Grid.Row="1"/>
+        <Label Content="Observaciones" HorizontalAlignment="Left" Margin="200,0,0,0" VerticalAlignment="Center" RenderTransformOrigin="0.362,-0.106" Foreground="White" Grid.Row="1"/>
+        <Label Content="Tipo" HorizontalAlignment="Left" Margin="201,139,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.328,0.456" Foreground="White" Grid.Row="1"/>
+        <TextBox HorizontalAlignment="Left" Margin="245,224,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="122" RenderTransformOrigin="0.246,-0.644" Height="18"/>
+        <TextBox HorizontalAlignment="Left" Margin="247,80,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="TextBox_TextChanged_1" Grid.Row="1"/>
+        <TextBox HorizontalAlignment="Left" Margin="201,223,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="954" Height="154" Grid.Row="1"/>
+        <TextBox HorizontalAlignment="Left" Margin="241,21,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.492,0.526" Grid.Row="1"/>
+        <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="550,140,45,257" SelectionChanged="DataGrid_SelectionChanged" Grid.RowSpan="2"/>
+        <Button Content="Agregar" HorizontalAlignment="Left" Margin="559,178,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
+        <Button Content="Activo" HorizontalAlignment="Left" Margin="937,181,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
+        <Button Content="Inactivo" HorizontalAlignment="Left" Margin="1038,180,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
+        <Button Content="Editar" HorizontalAlignment="Left" Margin="659,180,0,0" VerticalAlignment="Top" Width="59" Background="#253B7A" Foreground="White" Grid.Row="1"/>
+        <Button Content="Actualizar" Margin="750,180,383,0" VerticalAlignment="Top" Background="#253B7A" Foreground="White" Grid.Row="1"/>
+        <Label Content="Vehículos" HorizontalAlignment="Left" Margin="207,38,0,0" VerticalAlignment="Top" Foreground="White" Height="48" Width="141" FontSize="30"/>
+        <Image HorizontalAlignment="Left" Height="27" Margin="997,50,0,0" VerticalAlignment="Top" Width="26" Source="/ICONO DE CAMPANA.png" RenderTransformOrigin="0.462,0.298"/>
+        <Image HorizontalAlignment="Left" Height="33" Margin="1041,47,0,0" VerticalAlignment="Top" Width="30" Source="/DIVISOR.png"/>
+        <Image HorizontalAlignment="Left" Height="36" Margin="1060,46,0,0" VerticalAlignment="Top" Width="35" Source="/FOTO DE PERFIL.png"/>
+        <Image HorizontalAlignment="Left" Height="37" Margin="1102,45,0,0" VerticalAlignment="Top" Width="100" Source="/TEXTO.png"/>
+        <TextBox HorizontalAlignment="Left" Margin="249,143,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="TextBox_TextChanged_1" Grid.Row="1"/>
+        <TextBox HorizontalAlignment="Left" Margin="242,167,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="132" TextChanged="TextBox_TextChanged_2"/>
+
+    </Grid>
+</Window>
