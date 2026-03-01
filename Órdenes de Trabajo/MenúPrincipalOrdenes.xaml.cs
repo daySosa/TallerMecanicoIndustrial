@@ -24,8 +24,10 @@ namespace Órdenes_de_Trabajo
 
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí abres tu ventana de nueva orden cuando la tengas
-            MainFrame.Navigate(new MainWindow());
+
+            MainWindow ventana = new MainWindow();
+            ventana.Show();
+            this.Close();
         }
     }
 }

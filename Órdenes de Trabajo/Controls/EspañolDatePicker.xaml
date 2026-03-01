@@ -1,0 +1,140 @@
+﻿<UserControl x:Class="Órdenes_de_Trabajo.Controls.EspañolDatePicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+             
+     <Grid>
+    <Grid>
+        <TextBox x:Name="txtFecha" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Background="#1e2130"
+                     Foreground="White"
+                     BorderBrush="#3a3f5c"
+                     CaretBrush="White"
+                     Height="38"
+                     VerticalContentAlignment="Center"
+                     IsReadOnly="True"
+                     MouseLeftButtonUp="TxtFecha_Click" Margin="0,0,8,0"/>
+        <materialDesign:PackIcon Kind="Calendar"
+                                     Width="18" Height="18"
+                                     Foreground="#6c7293"
+                                     HorizontalAlignment="Right"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,15,0"
+                                     Cursor="Hand"
+                                     MouseLeftButtonUp="TxtFecha_Click"/>
+    </Grid>
+
+    <Popup x:Name="popupCalendario"
+               PlacementTarget="{Binding ElementName=txtFecha}"
+               Placement="Bottom"
+               StaysOpen="False"
+               AllowsTransparency="True">
+        <Border Background="#252836"
+                    BorderBrush="#3a3f5c"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="0,0,0,10"
+                    Width="280">
+            <StackPanel>
+
+                <Border Background="#4f6ef7" CornerRadius="10,10,0,0" Padding="10,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="36"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0"
+                                    Content="&#8249;"
+                                    FontSize="22"
+                                    Foreground="White"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Click="BtnAnterior_Click"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Padding="0" Height="30"/>
+                        <TextBlock x:Name="txtMesAnio"
+                                       Grid.Column="1"
+                                       Foreground="White"
+                                       FontSize="15"
+                                       FontWeight="Medium"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        <Button Grid.Column="2"
+                                    Content="&#8250;"
+                                    FontSize="22"
+                                    Foreground="White"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Click="BtnSiguiente_Click"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Padding="0" Height="30"/>
+                    </Grid>
+                </Border>
+
+                <Grid Margin="10,10,10,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Lu" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="Ma" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="Mi" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="Ju" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="4" Text="Vi" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="Sá" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="6" Text="Do" Foreground="#6c7293" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                </Grid>
+
+                    <ItemsControl x:Name="icDias" Margin="10,0,10,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="7"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Dia}"
+                    Height="34"
+                    Margin="1"
+                    FontSize="12"
+                    Cursor="Hand"
+                    Click="DiaClic"
+                    Tag="{Binding Fecha}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="17"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding EsOtroMes}" Value="True">
+                                                    <Setter Property="Foreground" Value="#3a3f5c"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding EsHoy}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#4f6ef7"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding EsSeleccionado}" Value="True">
+                                                    <Setter Property="Background" Value="#4f6ef7"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+        </Border>
+    </Popup>
+    </Grid>
+</UserControl>
