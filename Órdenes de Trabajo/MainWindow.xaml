@@ -440,7 +440,6 @@
                                FontWeight="Medium"
                                Margin="0,0,0,14"/>
 
-
                             <Button Content="+ Agregar Repuestos"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             BorderBrush="#4f6ef7"
