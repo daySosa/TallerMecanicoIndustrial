@@ -4,272 +4,177 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:hc="https://handyorg.github.io/handycontrol"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        xmlns:local="clr-namespace:Login"
-        Title="Inventario" Height="850" Width="1200"
-        TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
-        Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
+        Title="Login" Height="680" Width="950" WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True" Background="Transparent">
 
     <Border CornerRadius="16" ClipToBounds="True">
         <Grid>
 
-            <!-- ══════════════════════════ -->
-            <!--     FONDO — IMAGEN CARRO   -->
-            <!-- ══════════════════════════ -->
-            <Image Source="/img/Captura de pantalla 2026-03-01 183240.png"
+            <!-- FONDO IMAGEN -->
+            <Image Source="/fondo_login.png"
                    Stretch="UniformToFill"
                    RenderOptions.BitmapScalingMode="HighQuality"/>
 
-
-
-            <!-- Círculos decorativos de fondo -->
-            <Canvas>
-                <Ellipse Canvas.Left="-80" Canvas.Top="-80"
-                         Width="350" Height="350"
-                         Opacity="0.06">
-                    <Ellipse.Fill>
-                        <RadialGradientBrush>
-                            <GradientStop Color="#4f6ef7" Offset="0"/>
-                            <GradientStop Color="Transparent" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Ellipse.Fill>
-                </Ellipse>
-                <Ellipse Canvas.Right="-100" Canvas.Bottom="-100"
-                         Width="400" Height="400"
-                         Opacity="0.07">
-                    <Ellipse.Fill>
-                        <RadialGradientBrush>
-                            <GradientStop Color="#4f6ef7" Offset="0"/>
-                            <GradientStop Color="Transparent" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Ellipse.Fill>
-                </Ellipse>
-            </Canvas>
-
-            <!-- Botón cerrar -->
-            <Button HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Margin="0,14,14,0" Width="34" Height="34"
-                    Style="{StaticResource MaterialDesignIconButton}"
-                    Foreground="White" Cursor="Hand"
-                    Click="BtnCerrar_Click">
-                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
-            </Button>
-
-            <!-- Barra arrastrar -->
-            <Border Height="50" VerticalAlignment="Top"
-                    Background="Transparent"
-                    MouseLeftButtonDown="Window_Drag"/>
-
-            <!-- ══════════════════════════ -->
-            <!--     TARJETA CENTRAL        -->
-            <!-- ══════════════════════════ -->
-            <Border Width="400"
+            <!-- TARJETA CENTRAL -->
+            <Border Width="360"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    CornerRadius="20"
-                    Padding="38,34">
+                    CornerRadius="18"
+                    Padding="36,30">
                 <Border.Background>
-                    <SolidColorBrush Color="#8897AD" Opacity="0.66"/>
+                    <SolidColorBrush Color="#7A8BA0" Opacity="0.55"/>
                 </Border.Background>
                 <Border.Effect>
-                    <DropShadowEffect Color="#000000" Opacity="0.55"
+                    <DropShadowEffect Color="#000000" Opacity="0.5"
                                       BlurRadius="40" ShadowDepth="0"/>
                 </Border.Effect>
                 <Border.BorderBrush>
-                    <SolidColorBrush Color="#3a3f5c" Opacity="0.6"/>
+                    <SolidColorBrush Color="#ffffff" Opacity="0.15"/>
                 </Border.BorderBrush>
                 <Border.BorderThickness>1</Border.BorderThickness>
 
                 <StackPanel>
 
-                    <!-- Logo + OSM -->
-                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
+                    <!-- Logo -->
+                    <Image Source="/OSM_Logo_AR.png"
+                           Height="90" Width="90"
+                           HorizontalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           Margin="0,0,0,2"/>
 
-                        <Image Source="/img/OSM_Logo_A-removebg-preview.png" Height="109" Width="123"
-                                   HorizontalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    
+                    <!-- Bienvenido -->
+                    <TextBlock Text="Bienvenido!"
+                               Foreground="White" FontSize="22" FontWeight="Bold"
+                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                    <TextBlock Text="Ingrese sus Credenciales para acceder a su cuenta"
+                               Foreground="#dce3f0" FontSize="11"
+                               TextWrapping="Wrap" TextAlignment="Center"
+                               HorizontalAlignment="Center" Margin="0,0,0,22"/>
 
-                        <TextBlock Text="Bienvenido!" Foreground="Black"
-                                   FontSize="22" FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="Ingresa tus credenciales para acceder"
-                                   Foreground="Black" FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,4,0,0"/>
-                    </StackPanel>
-
-                    <!-- ─── Campo Email ─── -->
-                    <TextBlock Text="Correo Electrónico" Foreground="Black"
-                               FontSize="11" FontWeight="SemiBold"
-                               Margin="0,0,0,6"/>
-                    <Border x:Name="borderEmail"
-                            Background="#252836" CornerRadius="10"
-                            BorderBrush="#3a3f5c" BorderThickness="1"
-                            Height="46" Margin="0,0,0,4">
+                    <!-- Correo -->
+                    <TextBlock Text="Correo Electrónico" Foreground="White"
+                               FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <Border x:Name="borderCorreo"
+                            Background="White" CornerRadius="8"
+                            BorderBrush="Transparent" BorderThickness="1.5"
+                            Height="42" Margin="0,0,0,4">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="42"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <materialDesign:PackIcon Grid.Column="0"
                                                      Kind="EmailOutline"
-                                                     Foreground="#4f6ef7"
-                                                     Width="18" Height="18"
+                                                     Foreground="#5D5FEF"
+                                                     Width="17" Height="17"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
-                            <TextBox x:Name="txtEmail"
+                            <TextBox x:Name="txtCorreo"
                                      Grid.Column="1"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Foreground="White"
+                                     Foreground="#333"
                                      FontSize="13"
                                      VerticalContentAlignment="Center"
-                                     Padding="0,0,12,0"
-                                     CaretBrush="White"
-                                     GotFocus="TxtEmail_GotFocus"
-                                     LostFocus="TxtEmail_LostFocus">
+                                     Padding="0,0,10,0"
+                                     CaretBrush="#333"
+                                     GotFocus="TxtCorreo_GotFocus"
+                                     LostFocus="TxtCorreo_LostFocus">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="ejemplo@email.com"/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#4a4f6a"/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Example@email.com"/>
+                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#aaa"/>
                                     </Style>
                                 </TextBox.Style>
                             </TextBox>
                         </Grid>
                     </Border>
-                    <TextBlock x:Name="txtErrorEmail" Text=""
+                    <TextBlock x:Name="txtErrorCorreo" Text=""
                                Foreground="#f44336" FontSize="11"
-                               Margin="4,0,0,10" Visibility="Collapsed"/>
+                               Margin="4,0,0,8" Visibility="Collapsed"/>
 
-                    <!-- ─── Campo Contraseña ─── -->
-                    <TextBlock Text="Contraseña" Foreground="Black"
-                               FontSize="11" FontWeight="SemiBold"
-                               Margin="0,6,0,6"/>
-                    <Border x:Name="borderPassword"
-                            Background="#252836" CornerRadius="10"
-                            BorderBrush="#3a3f5c" BorderThickness="1"
-                            Height="46" Margin="0,0,0,4">
+                    <!-- Contraseña -->
+                    <TextBlock Text="Contraseña" Foreground="White"
+                               FontSize="11" FontWeight="SemiBold" Margin="0,4,0,5"/>
+                    <Border x:Name="borderContrasena"
+                            Background="White" CornerRadius="8"
+                            BorderBrush="Transparent" BorderThickness="1.5"
+                            Height="42" Margin="0,0,0,4">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="42"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="44"/>
+                                <ColumnDefinition Width="42"/>
                             </Grid.ColumnDefinitions>
                             <materialDesign:PackIcon Grid.Column="0"
                                                      Kind="LockOutline"
-                                                     Foreground="#4f6ef7"
-                                                     Width="18" Height="18"
+                                                     Foreground="#5D5FEF"
+                                                     Width="17" Height="17"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
-                            <PasswordBox x:Name="txtPassword"
+                            <PasswordBox x:Name="txtContrasena"
                                          Grid.Column="1"
                                          Background="Transparent"
                                          BorderThickness="0"
-                                         Foreground="White"
+                                         Foreground="#333"
                                          FontSize="13"
-                                         Padding="0,0,0,0"
+                                         Padding="0"
                                          VerticalContentAlignment="Center"
-                                         GotFocus="TxtPassword_GotFocus"
-                                         LostFocus="TxtPassword_LostFocus"/>
+                                         GotFocus="TxtContrasena_GotFocus"
+                                         LostFocus="TxtContrasena_LostFocus"/>
                             <Button Grid.Column="2"
-                                    x:Name="btnVerPassword"
+                                    x:Name="btnVerContrasena"
                                     Style="{StaticResource MaterialDesignIconButton}"
                                     Background="Transparent"
                                     BorderThickness="0"
-                                    Cursor="Hand"
-                                    Width="38" Height="38"
-                                    Click="BtnVerPassword_Click">
+                                    Cursor="Hand" Width="38" Height="38"
+                                    Click="BtnVerContrasena_Click">
                                 <materialDesign:PackIcon x:Name="iconOjo"
                                                          Kind="EyeOutline"
-                                                         Foreground="#6c7293"
+                                                         Foreground="#888"
                                                          Width="17" Height="17"/>
                             </Button>
                         </Grid>
                     </Border>
-                    <TextBlock x:Name="txtErrorPassword" Text=""
+                    <TextBlock x:Name="txtErrorContrasena" Text=""
                                Foreground="#f44336" FontSize="11"
                                Margin="4,0,0,0" Visibility="Collapsed"/>
 
-                    <!-- ─── Recordar + Olvidé ─── -->
-                    <Grid Margin="0,14,0,22">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="chkRecordar"
-                                  Content="Recordarme"
-                                  Foreground="#a0a8c8" FontSize="12">
-                            <CheckBox.Style>
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}">
-                                    <Setter Property="materialDesign:CheckBoxAssist.CheckBoxSize" Value="16"/>
-                                </Style>
-                            </CheckBox.Style>
-                        </CheckBox>
-                        <TextBlock Grid.Column="1"
-                                   Text="¿Olvidaste tu contraseña?"
-                                   Foreground="#4f6ef7" FontSize="12"
-                                   Cursor="Hand" VerticalAlignment="Center"
-                                   MouseLeftButtonDown="TxtOlvide_Click"/>
-                    </Grid>
+                    <!-- Recordar -->
+                    <CheckBox x:Name="chkRecordar"
+                              Content="Recordar"
+                              Foreground="White" FontSize="11"
+                              Margin="0,10,0,18">
+                        <CheckBox.Style>
+                            <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}">
+                                <Setter Property="materialDesign:CheckBoxAssist.CheckBoxSize" Value="15"/>
+                            </Style>
+                        </CheckBox.Style>
+                    </CheckBox>
 
-                    <!-- ─── Botón Iniciar Sesión ─── -->
-                    <Button Height="46"
+                    <!-- Botón Iniciar Sesión -->
+                    <Button Height="44"
                             FontSize="14" FontWeight="SemiBold"
                             Cursor="Hand"
                             Click="BtnLogin_Click"
-                            materialDesign:ButtonAssist.CornerRadius="10"
+                            materialDesign:ButtonAssist.CornerRadius="8"
                             materialDesign:ElevationAssist.Elevation="Dp0"
-                            Margin="0,0,0,18">
+                            Margin="0,0,0,16">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                <Setter Property="Background" Value="#4f6ef7"/>
+                                <Setter Property="Background" Value="#2563EB"/>
                                 <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="BorderBrush" Value="#4f6ef7"/>
+                                <Setter Property="BorderBrush" Value="#2563EB"/>
                             </Style>
                         </Button.Style>
-                        <Button.Effect>
-                            <DropShadowEffect Color="#4f6ef7" Opacity="0.4"
-                                              BlurRadius="14" ShadowDepth="0"/>
-                        </Button.Effect>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Login"
-                                                     Width="18" Height="18"
-                                                     VerticalAlignment="Center"
-                                                     Margin="0,0,8,0"/>
-                            <TextBlock Text="Iniciar Sesión" VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <TextBlock Text="Iniciar Sesión" FontSize="14" FontWeight="SemiBold"/>
                     </Button>
 
-                    <!-- ─── Separador ─── -->
-                    <Grid Margin="0,0,0,18">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        <Separator Grid.Column="0" Background="#2e3250" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="o continúa con"
-                                   Foreground="#4a4f6a" FontSize="11" Margin="12,0"/>
-                        <Separator Grid.Column="2" Background="#2e3250" VerticalAlignment="Center"/>
-                    </Grid>
-
-                    <!-- ─── Registrarse ─── -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="¿No tienes cuenta? "
-                                   Foreground="#6c7293" FontSize="12"/>
-                        <TextBlock Text="Regístrate aquí"
-                                   Foreground="#4f6ef7" FontSize="12"
-                                   FontWeight="SemiBold" Cursor="Hand"
-                                   MouseLeftButtonDown="TxtRegistrarse_Click"/>
-                    </StackPanel>
+                   
 
                 </StackPanel>
             </Border>
-
-            <!-- Footer -->
-            <TextBlock Text="© 2026 OSM Taller · Todos los derechos reservados"
-                       Foreground="#2e3250" FontSize="10"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Bottom"
-                       Margin="0,0,0,12"/>
 
         </Grid>
     </Border>
