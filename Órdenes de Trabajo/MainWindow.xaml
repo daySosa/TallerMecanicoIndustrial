@@ -426,70 +426,168 @@
                             </Grid>
                         </StackPanel>
                     </materialDesign:Card>
+					
+					<!-- CARD DETALLE DEL TRABAJO -->
+					<materialDesign:Card Background="#252836"
+								 UniformCornerRadius="12"
+								 Padding="18"
+								 Margin="0,0,0,14"
+								 MinHeight="350"
+								 materialDesign:ElevationAssist.Elevation="Dp3">
+						<StackPanel>
+							<TextBlock Text="Detalle del Trabajo"
+							   Foreground="White"
+							   FontSize="14"
+							   FontWeight="Medium"
+							   Margin="0,0,0,14"/>
+							
+							<Button Content="+ Agregar Repuestos"
+							Style="{StaticResource MaterialDesignOutlinedButton}"
+							BorderBrush="#4f6ef7"
+							Foreground="#4f6ef7"
+							Height="36"
+							HorizontalAlignment="Left"
+							Padding="16,0"
+							Margin="0,0,0,12"
+									
+							materialDesign:ButtonAssist.CornerRadius="6"/>
 
-                    <!-- CARD DETALLE DEL TRABAJO -->
-                    <materialDesign:Card Background="#252836"
-                                 UniformCornerRadius="12"
-                                 Padding="18"
-                                 Margin="0,0,0,14"
-                                 materialDesign:ElevationAssist.Elevation="Dp3">
-                        <StackPanel>
-                            <TextBlock Text="Detalle del Trabajo"
-                               Foreground="White"
-                               FontSize="14"
-                               FontWeight="Medium"
-                               Margin="0,0,0,14"/>
+							<DataGrid x:Name="dgRepuestos"
+							  AutoGenerateColumns="False"
+							  Background="#1e2130"
+							  Foreground="White"
+							  BorderBrush="#3a3f5c"
+							  BorderThickness="1"
+							  RowBackground="#252836"
+							  AlternatingRowBackground="#1e2130"
+							  GridLinesVisibility="Horizontal"
+							  HorizontalGridLinesBrush="#2e3250"
+							  HeadersVisibility="Column"
+							  CanUserAddRows="False"
+							  MaxHeight="180"
+							  materialDesign:DataGridAssist.CellPadding="10 6 10 6"
+							  materialDesign:DataGridAssist.ColumnHeaderPadding="10 8 10 8">
+								<DataGrid.ColumnHeaderStyle>
+									<Style TargetType="DataGridColumnHeader"
+								   BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+										<Setter Property="Background" Value="#2e3250"/>
+										<Setter Property="Foreground" Value="#a0a8c8"/>
+										<Setter Property="FontSize" Value="12"/>
+										<Setter Property="FontWeight" Value="Medium"/>
+									</Style>
+								</DataGrid.ColumnHeaderStyle>
+								<DataGrid.Columns>
+									<DataGridTextColumn Header="#"        Binding="{Binding Numero}"   Width="40"/>
+									<DataGridTextColumn Header="Repuesto" Binding="{Binding Nombre}"   Width="*"/>
+									<DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="80"/>
+									<DataGridTextColumn Header="Precio"   Binding="{Binding Precio, StringFormat=C}" Width="90"/>
+									<DataGridCheckBoxColumn Header="Incl." Binding="{Binding Incluido}" Width="60"/>
+								</DataGrid.Columns>
+							</DataGrid>
 
-                            <Button Content="+ Agregar Repuestos"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            BorderBrush="#4f6ef7"
-                            Foreground="#4f6ef7"
-                            Height="36"
-                            HorizontalAlignment="Left"
-                            Padding="16,0"
-                            Margin="0,0,0,12"
-                            materialDesign:ButtonAssist.CornerRadius="6"/>
+							<!-- SEPARADOR -->
+							<Separator Background="#3a3f5c" Margin="0,14,0,14"/>
 
-                            <DataGrid x:Name="dgRepuestos"
-                              AutoGenerateColumns="False"
-                              Background="#1e2130"
-                              Foreground="White"
-                              BorderBrush="#3a3f5c"
-                              BorderThickness="1"
-                              RowBackground="#252836"
-                              AlternatingRowBackground="#1e2130"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#2e3250"
-                              HeadersVisibility="Column"
-                              CanUserAddRows="False"
-                              MaxHeight="180"
-                              materialDesign:DataGridAssist.CellPadding="10 6 10 6"
-                              materialDesign:DataGridAssist.ColumnHeaderPadding="10 8 10 8">
-                                <DataGrid.ColumnHeaderStyle>
-                                    <Style TargetType="DataGridColumnHeader"
-                                   BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                        <Setter Property="Background" Value="#2e3250"/>
-                                        <Setter Property="Foreground" Value="#a0a8c8"/>
-                                        <Setter Property="FontSize" Value="12"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </Style>
-                                </DataGrid.ColumnHeaderStyle>
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#"        Binding="{Binding Numero}"   Width="40"/>
-                                    <DataGridTextColumn Header="Repuesto" Binding="{Binding Nombre}"   Width="*"/>
-                                    <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="80"/>
-                                    <DataGridTextColumn Header="Precio"   Binding="{Binding Precio, StringFormat=C}" Width="90"/>
-                                    <DataGridCheckBoxColumn Header="Incl." Binding="{Binding Incluido}" Width="60"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </StackPanel>
-                    </materialDesign:Card>
+							<!-- SECCIÓN DE PRECIOS -->
+							<Grid Margin="0,0,0,8">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="160"/>
+								</Grid.ColumnDefinitions>
+
+								<!-- Precio del Repuesto -->
+								<TextBlock Grid.Column="0"
+										   Text="PRECIO DEL REPUESTO"
+										   Foreground="#a0a8c8"
+										   FontSize="11"
+										   FontWeight="Medium"
+										   VerticalAlignment="Center"/>
+								<Border Grid.Column="1"
+										Background="#1e2130"
+										BorderBrush="#3a3f5c"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10,6">
+									<TextBox x:Name="txtPrecioRepuesto"
+											 Foreground="White"
+											 Background="Transparent"
+											 BorderThickness="0"
+											 IsReadOnly="True"
+											 Text="S/ 0.00"
+											 HorizontalAlignment="Right"/>
+								</Border>
+							</Grid>
+
+							<Grid Margin="0,0,0,8">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="160"/>
+								</Grid.ColumnDefinitions>
+
+								<!-- Precio del Servicio -->
+								<TextBlock Grid.Column="0"
+										   Text="PRECIO DEL SERVICIO"
+										   Foreground="#a0a8c8"
+										   FontSize="11"
+										   FontWeight="Medium"
+										   VerticalAlignment="Center"/>
+								<Border Grid.Column="1"
+										Background="#1e2130"
+										BorderBrush="#3a3f5c"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10,6">
+									<TextBox x:Name="txtPrecioServicio"
+											 Foreground="White"
+											 Background="Transparent"
+											 BorderThickness="0"
+											 Text="S/ 0.00"
+											 HorizontalAlignment="Right"/>
+								</Border>
+							</Grid>
+
+							<!-- SEPARADOR ANTES DEL TOTAL -->
+							<Separator Background="#3a3f5c" Margin="0,6,0,8"/>
+
+							<Grid Margin="0,0,0,14">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="160"/>
+								</Grid.ColumnDefinitions>
+
+								<!-- Costo Total -->
+								<TextBlock Grid.Column="0"
+										   Text="COSTO TOTAL"
+										   Foreground="White"
+										   FontSize="13"
+										   FontWeight="Bold"
+										   VerticalAlignment="Center"/>
+								<Border Grid.Column="1"
+										Background="#2e3250"
+										BorderBrush="#4f6ef7"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10,6">
+									<TextBox x:Name="txtCostoTotal"
+											 Foreground="#4f6ef7"
+											 Background="Transparent"
+											 BorderThickness="0"
+											 IsReadOnly="True"
+											 FontWeight="Bold"
+											 Text="S/ 0.00"
+											 HorizontalAlignment="Right"/>
+								</Border>
+							</Grid>
+
+						</StackPanel>
+					</materialDesign:Card>
 
                     <!-- BARRA DE ACCIONES -->
                     <Border Background="#252836"
                     CornerRadius="12"
                     Padding="18,12">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+			        
+						<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
                             <Button Content="Cancelar"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -500,6 +598,16 @@
                             Margin="0,0,10,0"
                             materialDesign:ButtonAssist.CornerRadius="6"/>
 
+							<Button Content="Calcular Total"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            BorderBrush="#4f6ef7"
+                            Foreground="#4f6ef7"
+                            Height="36"
+                            Padding="20,0"
+                            Margin="0,0,10,0"
+                            Click="btnCalcular_Click"
+                            materialDesign:ButtonAssist.CornerRadius="6"/>
+							
                             <Button Content="Actualizar"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             BorderBrush="#4f6ef7"
