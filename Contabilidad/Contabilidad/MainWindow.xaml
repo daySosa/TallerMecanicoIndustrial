@@ -24,7 +24,9 @@
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
 
-                <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185"/>
+                <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185">
+                    <Image Source="/Imagenes/OSM_LOGO.png" Height="204" Width="195"/>
+                </WrapPanel>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -33,6 +35,7 @@
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="38" HorizontalAlignment="Center"/>
                         <TextBlock Foreground="White" FontSize="15" Height="16">Pantalla Principal</TextBlock>
+                        
                     </WrapPanel>
                 </Button>
 
