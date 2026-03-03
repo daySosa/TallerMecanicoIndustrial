@@ -121,8 +121,7 @@
                     HorizontalAlignment="Right"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="#6c7293" Foreground="#6c7293"
-                    materialDesign:ButtonAssist.CornerRadius="8"
-                    Click="btnCerrar_Click"/>
+                    materialDesign:ButtonAssist.CornerRadius="8"/>
 
         </Grid>
     </Border>

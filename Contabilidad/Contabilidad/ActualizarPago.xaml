@@ -1,0 +1,208 @@
+﻿<Window x:Class="Contabilidad.ActualizarPago"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:local="clr-namespace:Contabilidad"
+        mc:Ignorable="d"
+        Title="ActualizarPago" Height="520" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#1e2130"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Border Padding="24" Background="#1e2130">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- TÍTULO -->
+            <TextBlock Grid.Row="0"
+                       Text="Actualizar Pago"
+                       Foreground="White"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Margin="0,0,0,16"/>
+
+            <!-- TABS -->
+            <TabControl Grid.Row="1"
+                        Background="#1e2130"
+                        BorderThickness="0"
+                        Margin="0,0,0,20">
+
+                <TabControl.Template>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid Background="#1e2130">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    BorderThickness="0,0,0,1"
+                                    BorderBrush="#3a3f5c"
+                                    Background="#1e2130">
+                                <TabPanel IsItemsHost="True" Background="#1e2130"/>
+                            </Border>
+                            <Border Grid.Row="1" Background="#1e2130" Padding="0,16,0,0">
+                                <ContentPresenter ContentSource="SelectedContent"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </TabControl.Template>
+
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="#6B7280"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabItem">
+                                    <Border x:Name="border"
+                                            BorderThickness="0,0,0,2"
+                                            BorderBrush="Transparent"
+                                            Padding="16,8"
+                                            Background="Transparent">
+                                        <ContentPresenter ContentSource="Header"
+                                                          TextBlock.Foreground="{TemplateBinding Foreground}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="border" Property="BorderBrush" Value="#3D7EFF"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="#a0a8c8"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.Resources>
+
+                <!-- ===== TAB 1: DETALLES ===== -->
+                <TabItem Header="Detalles del Pago">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- DNI del Cliente -->
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,14">
+                            <TextBlock Text="DNI DEL CLIENTE"
+                                       Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtDNI"
+                                     Height="47" Foreground="White" CaretBrush="White"
+                                     Background="#252836" BorderBrush="#3a3f5c"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="Ej: 12345678"/>
+                        </StackPanel>
+
+                        <!-- Nombre (se llena solo) -->
+                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,14">
+                            <TextBlock Text="NOMBRE DEL CLIENTE"
+                                       Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtNombreCliente"
+                                     Height="47" Foreground="#6B7280" CaretBrush="White"
+                                     Background="#1a1d2e" BorderBrush="#3a3f5c"
+                                     IsReadOnly="True"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="Se llena automáticamente..."/>
+                        </StackPanel>
+
+                        <!-- Orden ID -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
+                            <TextBlock Text="ID DE LA ORDEN"
+                                       Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtOrdenID"
+                                     Height="47" Foreground="White" CaretBrush="White"
+                                     Background="#252836" BorderBrush="#3a3f5c"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="Ej: 1"/>
+                        </StackPanel>
+
+                        <!-- Precio -->
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,14">
+                            <TextBlock Text="MONTO DEL PAGO"
+                                       Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtPrecio"
+                                     Height="47" Foreground="White" CaretBrush="White"
+                                     Background="#252836" BorderBrush="#3a3f5c"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="0.00"/>
+                        </StackPanel>
+
+                        <!-- Fecha solo lectura -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,14">
+                            <TextBlock Text="FECHA DE REGISTRO"
+                                       Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
+                            <TextBox x:Name="txtFecha"
+                                     Height="47" Foreground="#6B7280"
+                                     Background="#1a1d2e" BorderBrush="#3a3f5c"
+                                     IsReadOnly="True"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </StackPanel>
+
+                        <!-- Mensaje de validación DNI -->
+                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,14"
+                                    VerticalAlignment="Center">
+                            <TextBlock x:Name="txtMensajeDNI"
+                                       Foreground="#FF6B6B"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Visibility="Collapsed"/>
+                        </StackPanel>
+
+                    </Grid>
+                </TabItem>
+
+            </TabControl>
+
+            <!-- BOTONES -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="Cancelar"
+                        Height="40"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        BorderBrush="#6c7293"
+                        Foreground="#6c7293"
+                        materialDesign:ButtonAssist.CornerRadius="8"/>
+
+                <Button Grid.Column="2"
+                        Content="Guardar Cambios"
+                        Height="40"
+                        materialDesign:ButtonAssist.CornerRadius="8">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                            <Setter Property="Background" Value="#3D7EFF"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="BorderBrush" Value="#3D7EFF"/>
+                            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp0"/>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
