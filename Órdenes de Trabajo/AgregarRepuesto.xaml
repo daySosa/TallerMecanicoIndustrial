@@ -18,29 +18,13 @@
         <StackPanel>
 
             <!-- TÍTULO -->
-            <TextBlock Text="Agregar Repuesto"
-                       Foreground="White"
-                       FontSize="16"
-                       FontWeight="Bold"
-                       Margin="0,0,0,20"/>
+            <TextBlock Text="Agregar Repuesto" Foreground="White" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
 
             <!-- COMBOBOX DE PRODUCTOS -->
-            <TextBlock Text="PRODUCTO"
-                       Foreground="#a0a8c8"
-                       FontSize="11"
-                       FontWeight="Medium"
-                       Margin="0,0,0,6"/>
-            <ComboBox x:Name="cmbProducto"
-                      Background="#252836"
-                      Foreground="White"
-                      BorderBrush="#3a3f5c"
-                      BorderThickness="1"
-                      Height="40"
-                      Margin="0,0,0,14"
-                      DisplayMemberPath="Producto_Nombre"
-                      SelectionChanged="cmbProducto_SelectionChanged"
-                      materialDesign:HintAssist.Hint="Selecciona un producto"
-                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+            <TextBlock Text="PRODUCTO" Foreground="#a0a8c8" FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+            <ComboBox x:Name="cmbProducto"  Background="#252836" Foreground="White" BorderBrush="#3a3f5c"
+                      BorderThickness="1" Height="40" Margin="0,0,0,14" DisplayMemberPath="Producto_Nombre" SelectionChanged="cmbProducto_SelectionChanged"
+                      materialDesign:HintAssist.Hint="Selecciona un producto" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
             <!-- FILA: CATEGORÍA, PRECIO, STOCK -->
             <Grid Margin="0,0,0,14">
@@ -54,16 +38,8 @@
 
                 <!-- Categoría -->
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="CATEGORÍA"
-                               Foreground="#a0a8c8"
-                               FontSize="11"
-                               FontWeight="Medium"
-                               Margin="0,0,0,6"/>
-                    <Border Background="#1a1d2e"
-                            BorderBrush="#3a3f5c"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10,8">
+                    <TextBlock Text="CATEGORÍA" Foreground="#a0a8c8" FontSize="11" FontWeight="Medium"  Margin="0,0,0,6"/>
+                    <Border Background="#1a1d2e" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="6" Padding="10,8">
                         <TextBox x:Name="txtCategoria"
                                  Foreground="#6c7293"
                                  Background="Transparent"
