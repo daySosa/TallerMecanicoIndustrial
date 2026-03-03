@@ -53,6 +53,8 @@ namespace InterfazInventario
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
+            MenúPrincipalInventario ventana = new MenúPrincipalInventario();
+            ventana.Show();
             this.Close();
         }
     }
