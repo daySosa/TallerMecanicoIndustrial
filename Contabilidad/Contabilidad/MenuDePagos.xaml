@@ -200,7 +200,7 @@
                         Background="#3D7EFF" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         materialDesign:ElevationAssist.Elevation="Dp0"
-                        Height="38" Padding="16,0" Margin="0,0,10,0">
+                        Height="38" Padding="16,0" Margin="0,0,10,0" VerticalAlignment="Top" Click="Button_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -212,7 +212,7 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Margin="0,0,10,0">
+                        Height="38" Padding="16,0" Margin="0,0,10,0" Click="Button_Click_1">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -224,7 +224,7 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0">
+                        Height="38" Padding="16,0" Click="Button_Click_2">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>

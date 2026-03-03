@@ -20,6 +20,32 @@ namespace Contabilidad
         public MenuDePagos()
         {
             InitializeComponent();
+            CargarPago();
+        }
+
+        public void CargarPago()
+        {
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new AgregarPago();
+            ventana.ShowDialog();
+            CargarPago();
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ActualizarPago();
+            ventana.ShowDialog();
+            CargarPago();
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ComprobanteDePago();
+            ventana.ShowDialog();
+            CargarPago();
         }
     }
 }

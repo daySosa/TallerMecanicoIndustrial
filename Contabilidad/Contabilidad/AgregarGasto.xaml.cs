@@ -21,5 +21,22 @@ namespace Contabilidad
         {
             InitializeComponent();
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void btnGuardar_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtNombreGasto.Text) ||
+                string.IsNullOrWhiteSpace(txtObservaciones.Text) ||
+                !double.TryParse(txtPrecio.Text, out double precio) ||
+                cmbTipoGasto.SelectedItem == null)
+            {
+                MessageBox.Show("Complete todos los campos Obligatorios", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+        }
     }
 }

@@ -243,7 +243,7 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         BorderBrush="#6c7293"
                         Foreground="#6c7293"
-                        materialDesign:ButtonAssist.CornerRadius="8"/>
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="Button_Click"/>
             </Grid>
 
         </Grid>

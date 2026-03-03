@@ -106,13 +106,13 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         BorderBrush="#6c7293"
                         Foreground="#6c7293"
-                        materialDesign:ButtonAssist.CornerRadius="8"/>
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="Button_Click"/>
 
                 <Button Grid.Column="2"
                         x:Name="btnGuardar"
                         Content="Guardar Gasto"
                         Height="40"
-                        materialDesign:ButtonAssist.CornerRadius="8">
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnGuardar_Click">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                             <Setter Property="Background" Value="#3D7EFF"/>
