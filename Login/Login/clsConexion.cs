@@ -14,7 +14,7 @@ namespace Login
 {
     internal class clsConexion
     {
-        string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=os9416331;Password=osm2000;";
+        string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         public SqlConnection SqlC = new SqlConnection();
 
