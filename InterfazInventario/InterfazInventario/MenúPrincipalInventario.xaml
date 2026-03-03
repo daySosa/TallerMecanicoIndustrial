@@ -190,6 +190,7 @@
                         <TextBlock Text="Agregar Repuesto" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
+                
                 <Button Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"

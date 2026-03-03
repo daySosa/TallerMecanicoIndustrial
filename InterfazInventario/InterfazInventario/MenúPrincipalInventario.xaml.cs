@@ -52,5 +52,9 @@ namespace InterfazInventario
         private void dgInventario_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
         }
+
+
+
+
     }
 }
