@@ -39,17 +39,36 @@ namespace Vehículos
 
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
-           // this.DialogResult = true;
-            //this.Close();
+            if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
+            string.IsNullOrWhiteSpace(txtMarca.Text) ||
+            string.IsNullOrWhiteSpace(txtModelo.Text) ||
+            !int.TryParse(txtAnio.Text, out int año) ||
+             cmbTipo.SelectedItem == null)
+            {
+                MessageBox.Show("Complete todos los campos Obligatorios", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
         }
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            // Tu lógica para actualizar
+            if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
+            string.IsNullOrWhiteSpace(txtMarca.Text) ||
+            string.IsNullOrWhiteSpace(txtModelo.Text) ||
+            !int.TryParse(txtAnio.Text, out int anio) ||
+            cmbTipo.SelectedItem == null)
+            {
+                MessageBox.Show("Complete to dos los campos obligatorios", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
         }
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
+            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            ventana.Show();
             this.Close();
         }
     }
