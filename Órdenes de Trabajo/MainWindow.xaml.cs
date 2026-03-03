@@ -21,9 +21,9 @@ namespace Órdenes_de_Trabajo
             InitializeComponent();
         }
 
-        private void TextBox_TextChanged()
+        private void btnCalcular_Click(object sender, RoutedEventArgs e)
         {
-
+            // Tu lógica para calcular total
         }
     }
 }

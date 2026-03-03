@@ -21,5 +21,25 @@ namespace Órdenes_de_Trabajo
         {
             InitializeComponent();
         }
+
+        private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Tu lógica aquí
+        }
+
+        private void txtCantidad_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Tu lógica aquí
+        }
+
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close(); // o this.DialogResult = false;
+        }
+
+        private void btnAgregar_Click(object sender, RoutedEventArgs e)
+        {
+            // Tu lógica para agregar repuesto
+        }
     }
 }
