@@ -149,9 +149,9 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
                                                      Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Background="Transparent" Foreground="#6B7280"
+                            <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="#6B7280"
                                      BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White">
+                                     FontSize="13" Width="200" CaretBrush="White" TextChanged="TextBox_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                         <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
