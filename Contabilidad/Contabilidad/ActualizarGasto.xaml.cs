@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,6 +19,9 @@ namespace Contabilidad
     /// </summary>
     public partial class ActualizarGasto : Window
     {
+
+        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
+
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
@@ -29,7 +34,7 @@ namespace Contabilidad
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            //Tu lógica aqui
+
         }
     }
 }
