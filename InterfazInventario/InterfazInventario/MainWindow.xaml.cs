@@ -1,26 +1,15 @@
 ﻿using Microsoft.Data.SqlClient;
-using System.Text;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace InterfazInventario
 {
-   
     public partial class MainWindow : Window
     {
         private clsConexion _conexion = new clsConexion();
-        
-        // Guarda el ID del producto seleccionado para Actualizar
         private int _productoIdSeleccionado = -1;
-
-        
 
         public MainWindow()
         {
@@ -28,11 +17,31 @@ namespace InterfazInventario
         }
 
         // ═══════════════════════════════════════════
+        // BOTONES + Y - DE CANTIDAD
+        // ═══════════════════════════════════════════
+        private void BtnSumar_Click(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(txtCantidad.Text, out int val))
+                txtCantidad.Text = (val + 1).ToString();
+            else
+                txtCantidad.Text = "1";
+        }
+
+        private void BtnRestar_Click(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(txtCantidad.Text, out int val) && val > 0)
+                txtCantidad.Text = (val - 1).ToString();
+            else
+                txtCantidad.Text = "0";
+        }
+
+        // ═══════════════════════════════════════════
         // 1. AGREGAR → INSERT
+        //    Guarda el producto con la cantidad inicial
         // ═══════════════════════════════════════════
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
-            if (!ValidarCampos(out decimal precio)) return;
+            if (!ValidarCampos(out decimal precio, out int cantidad)) return;
 
             try
             {
@@ -44,7 +53,8 @@ namespace InterfazInventario
                          Producto_Modelo, Producto_Precio,
                          Producto_Cantidad_Actual, Producto_Stock_Minimo)
                     VALUES
-                        (@Nombre, @Categoria, @Marca, @Modelo, @Precio, 0, 10)";
+                        (@Nombre, @Categoria, @Marca, @Modelo, @Precio,
+                         @Cantidad, 10)";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
                 {
@@ -59,6 +69,7 @@ namespace InterfazInventario
                             ? (object)DBNull.Value
                             : txtModelo.Text.Trim());
                     cmd.Parameters.AddWithValue("@Precio", precio);
+                    cmd.Parameters.AddWithValue("@Cantidad", cantidad);
 
                     cmd.ExecuteNonQuery();
                 }
@@ -79,6 +90,8 @@ namespace InterfazInventario
 
         // ═══════════════════════════════════════════
         // 2. ACTUALIZAR → UPDATE
+        //    Stock nuevo = stock actual + cantidad ingresada
+        //    Si cantidad = 0, el stock no cambia
         // ═══════════════════════════════════════════
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
@@ -89,7 +102,7 @@ namespace InterfazInventario
                 return;
             }
 
-            if (!ValidarCampos(out decimal precio)) return;
+            if (!ValidarCampos(out decimal precio, out int cantidad)) return;
 
             try
             {
@@ -97,11 +110,12 @@ namespace InterfazInventario
 
                 string query = @"
                     UPDATE Producto SET
-                        Producto_Nombre    = @Nombre,
-                        Producto_Categoria = @Categoria,
-                        Producto_Marca     = @Marca,
-                        Producto_Modelo    = @Modelo,
-                        Producto_Precio    = @Precio
+                        Producto_Nombre          = @Nombre,
+                        Producto_Categoria       = @Categoria,
+                        Producto_Marca           = @Marca,
+                        Producto_Modelo          = @Modelo,
+                        Producto_Precio          = @Precio,
+                        Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
                     WHERE Producto_ID = @ID";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
@@ -117,13 +131,18 @@ namespace InterfazInventario
                             ? (object)DBNull.Value
                             : txtModelo.Text.Trim());
                     cmd.Parameters.AddWithValue("@Precio", precio);
+                    cmd.Parameters.AddWithValue("@Cantidad", cantidad);
                     cmd.Parameters.AddWithValue("@ID", _productoIdSeleccionado);
 
                     cmd.ExecuteNonQuery();
                 }
 
-                MessageBox.Show("✅ Producto actualizado correctamente.",
-                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Mensaje personalizado según si repuso stock o no
+                string msg = cantidad > 0
+                    ? $"✅ Producto actualizado.\n+{cantidad} unidades sumadas al stock."
+                    : "✅ Producto actualizado sin cambios en el stock.";
+
+                MessageBox.Show(msg, "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 LimpiarFormulario();
                 this.Close();
@@ -145,42 +164,21 @@ namespace InterfazInventario
             this.Close();
         }
 
-        // ═══════════════════════════════════════════
-        // 4. TOGGLE ESTADO
-        // ═══════════════════════════════════════════
-        private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
-        {
-            if (txtEstadoLabel == null) return;
-            txtEstadoLabel.Text = "El producto está activo";
-            txtEstadoLabel.Foreground =
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
-            iconEstado.Foreground =
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
-            iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
-        }
-
-        private void ToggleActivo_Unchecked(object sender, RoutedEventArgs e)
-        {
-            if (txtEstadoLabel == null) return;
-            txtEstadoLabel.Text = "El producto está inactivo";
-            txtEstadoLabel.Foreground =
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E74C3C"));
-            iconEstado.Foreground =
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E74C3C"));
-            iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CloseCircleOutline;
-        }
 
         // ═══════════════════════════════════════════
-        // 5. CARGAR DATOS PARA EDITAR (llamado desde el menú)
+        // 5. CARGAR DATOS PARA EDITAR
+        //    txtCantidad siempre arranca en 0
+        //    El usuario escribe cuánto quiere SUMAR hoy
         // ═══════════════════════════════════════════
         public void CargarProductoParaEditar(Repuesto producto)
         {
             _productoIdSeleccionado = producto.Producto_ID;
 
             txtNombre.Text = producto.Producto_Nombre;
-            txtMarca.Text = producto.Producto_Marca;      // ← Marca incluida
+            txtMarca.Text = producto.Producto_Marca;
             txtModelo.Text = producto.Producto_Modelo == "—" ? "" : producto.Producto_Modelo;
             txtPrecio.Text = producto.Producto_Precio.ToString("N2");
+            txtCantidad.Text = "0";  // siempre 0: solo se suma lo que entre ahora
 
             foreach (ComboBoxItem item in cmbCategoria.Items)
             {
@@ -195,9 +193,10 @@ namespace InterfazInventario
         // ═══════════════════════════════════════════
         // 6. VALIDACIÓN CENTRALIZADA
         // ═══════════════════════════════════════════
-        private bool ValidarCampos(out decimal precio)
+        private bool ValidarCampos(out decimal precio, out int cantidad)
         {
             precio = 0;
+            cantidad = 0;
 
             if (string.IsNullOrWhiteSpace(txtNombre.Text) ||
                 cmbCategoria.SelectedItem == null ||
@@ -216,6 +215,13 @@ namespace InterfazInventario
                 return false;
             }
 
+            if (!int.TryParse(txtCantidad.Text, out cantidad) || cantidad < 0)
+            {
+                MessageBox.Show("La cantidad debe ser un número entero mayor o igual a 0.",
+                    "Cantidad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
             return true;
         }
 
@@ -228,8 +234,8 @@ namespace InterfazInventario
             txtMarca.Clear();
             txtModelo.Clear();
             txtPrecio.Clear();
+            txtCantidad.Text = "0";
             cmbCategoria.SelectedIndex = -1;
-            toggleActivo.IsChecked = true;
             _productoIdSeleccionado = -1;
         }
     }
