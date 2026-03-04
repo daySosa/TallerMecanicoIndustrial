@@ -4,8 +4,8 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:hc="https://handyorg.github.io/handycontrol"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Login.MainWindow"
-        Title="Login" Height="680" Width="950" WindowStartupLocation="CenterScreen"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Login.Verificacion2FA"
+        Title="Verificacion2FA" Height="680" Width="950" WindowStartupLocation="CenterScreen"
          Background="Transparent">
 
     <Border CornerRadius="16" ClipToBounds="True">
@@ -44,7 +44,7 @@
                            Margin="0,0,0,2"/>
 
 
-                    <!-- Bienvenido -->
+                    <!-- Verificación -->
                     <TextBlock Text="Verificación"
                                Foreground="White" FontSize="22" FontWeight="Bold"
                                HorizontalAlignment="Center" Margin="0,0,0,4"/>
@@ -53,8 +53,8 @@
                                TextWrapping="Wrap" TextAlignment="Center"
                                HorizontalAlignment="Center" Margin="0,0,0,22" Text="Ingresa el código que enviamos a tu correo"/>
 
-                    <!-- Correo -->
-                    <Border x:Name="borderCorreo"
+                    <!-- Código de 6 Digitos -->
+                    <Border x:Name="borderCodigo"
                             Background="White" CornerRadius="8"
                             BorderBrush="Transparent" BorderThickness="1.5"
                             Height="42" Margin="0,0,0,4">
@@ -67,15 +67,16 @@
                                 <ColumnDefinition Width="42"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="txtCorreo"
+                            <TextBox x:Name="txtCodigo"
                                      BorderThickness="0"
                                      Foreground="#333"
                                      FontSize="13"
                                      VerticalContentAlignment="Center"
                                      Padding="0,0,10,0"
                                      CaretBrush="#333"
-                                     GotFocus="TxtCorreo_GotFocus"
-                                     LostFocus="TxtCorreo_LostFocus" Text="Código de 6 dígitos" HorizontalAlignment="Left" Grid.Column="1" Margin="41,0,0,0" Grid.RowSpan="2" Width="149" Background="#00000000">
+                                     GotFocus="TxtCodigo_GotFocus"
+                                     LostFocus="TxtCodigo_LostFocus" Text="Código de 6 dígitos" HorizontalAlignment="Left" Grid.Column="1" 
+                                     Margin="41,0,0,0" Grid.RowSpan="2" Width="149" Background="#00000000">
                                 <TextBox.Style>
                                     <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource MaterialDesignTextBox}">
                                         <Setter Property="materialDesign:HintAssist.Hint" Value="Example@email.com"/>
@@ -89,14 +90,9 @@
                                Foreground="#f44336" FontSize="11"
                                Margin="4,0,0,8" Visibility="Collapsed"/>
 
-                    <!-- Contraseña -->
+                    <!-- Tiempo -->
                     <TextBlock Text="El código expira en 5 min." Foreground="White"
                                FontSize="10" FontWeight="SemiBold" Margin="0,4,0,5" Width="117" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="txtErrorContrasena" Text=""
-                               Foreground="#f44336" FontSize="11"
-                               Margin="4,0,0,0" Visibility="Collapsed"/>
-
-                    <!-- Recordar -->
 
                     <!-- Botón Iniciar Sesión -->
                     <Button
@@ -104,7 +100,8 @@
 
 
                 Height="42"
-                            Margin="0,0,0,16" FontSize="14" FontWeight="SemiBold" materialDesign:ElevationAssist.Elevation="Dp0" Click="BtnLogin_Click" Cursor="Hand" materialDesign:ButtonAssist.CornerRadius="8" BorderBrush="#FF2563EB" Background="#FF2563EB" Foreground="#FF2563FF">
+                            Margin="0,0,0,16" FontSize="14" FontWeight="SemiBold" materialDesign:ElevationAssist.Elevation="Dp0" Click="BtnVerificar_Click" Cursor="Hand" 
+                        materialDesign:ButtonAssist.CornerRadius="8" BorderBrush="#FF2563EB" Background="#FF2563EB" Foreground="#FF2563FF">
 
 
 
@@ -171,7 +168,8 @@
 
 
                     <Button Height="24"
-                        FontSize="10" FontWeight="SemiBold" materialDesign:ElevationAssist.Elevation="Dp0" Click="BtnLogin_Click" Cursor="Hand" materialDesign:ButtonAssist.CornerRadius="8" BorderBrush="{x:Null}" Background="{x:Null}">
+                        FontSize="10" FontWeight="SemiBold" materialDesign:ElevationAssist.Elevation="Dp0" Click="BtnReenviar_Click" 
+                            Cursor="Hand" materialDesign:ButtonAssist.CornerRadius="8" BorderBrush="{x:Null}" Background="{x:Null}">
 
 
 
@@ -227,7 +225,7 @@
 
 
 
-                            Text="Reenviar código" FontSize="10" FontWeight="SemiBold"/>
+                            Text="Reenviar código" FontSize="10" FontWeight="SemiBold" Foreground="#FF5D5FEF"/>
 
 
 

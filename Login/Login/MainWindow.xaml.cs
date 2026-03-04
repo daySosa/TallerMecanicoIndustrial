@@ -123,13 +123,11 @@ namespace Login
                     lector.Close();
                     conexion.Cerrar();
 
-                    // Abrir ventana principal
-                    // MenuPrincipal ventanaPrincipal = new MenuPrincipal();
-                    // ventanaPrincipal.Show();
-                    // this.Close();
-
                     /*MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
                         MessageBoxButton.OK, MessageBoxImage.Information);*/
+                    clsAutenticacion autenticacion = new clsAutenticacion();
+                    string codigo2FA = autenticacion.GenerarCodigo(correo);
+                    bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
 
                     if (enviado)
                     {
@@ -168,8 +166,5 @@ namespace Login
         {
             this.Close();
         }
-
-
-
     }
 }
