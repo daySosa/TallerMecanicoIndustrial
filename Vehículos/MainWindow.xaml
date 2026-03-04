@@ -283,31 +283,6 @@
                                 <!-- Separador -->
                                 <Separator Background="#3a3f5c" Margin="0,0,0,16"/>
 
-
-
-
-
-
-                                <!-- Panel resultado verificación -->
-                                <Border x:Name="borderClienteInfo"
-                                        Background="#1e2130" CornerRadius="8" Padding="12,10"
-                                        Visibility="Collapsed">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon x:Name="iconClienteEstado"
-                                                                 Kind="AccountCheck"
-                                                                 Foreground="#4CAF50"
-                                                                 Width="18" Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Margin="0,0,8,0"/>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock x:Name="txtClienteNombre"
-                                                       Foreground="White" FontSize="13" FontWeight="Medium"/>
-                                            <TextBlock x:Name="txtClienteEstado"
-                                                       Foreground="#4CAF50" FontSize="11"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-
                             </StackPanel>
                         </materialDesign:Card>
                     </StackPanel>
@@ -345,20 +320,20 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="txtClienteDNI"
-             Grid.Column="0"
-             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-             Background="#1e2130" Foreground="White"
-             BorderBrush="#3a3f5c" CaretBrush="White"
-             Height="40" VerticalContentAlignment="Center"
-             Padding="10,0"
-             TextChanged="txtClienteDNI_TextChanged"/>
+                                             Grid.Column="0"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Background="#1e2130" Foreground="White"
+                                             BorderBrush="#3a3f5c" CaretBrush="White"
+                                             Height="40" VerticalContentAlignment="Center"
+                                             Padding="10,0"
+                                             TextChanged="txtClienteDNI_TextChanged"/>
                                     <Button Grid.Column="2"
-            x:Name="btnVerificarCliente"
-            Content="Verificar"
-            Height="40" Padding="14,0"
-            materialDesign:ButtonAssist.CornerRadius="8"
-            materialDesign:ElevationAssist.Elevation="Dp0"
-            Click="BtnVerificarCliente_Click">
+                                            x:Name="btnVerificarCliente"
+                                            Content="Verificar"
+                                            Height="40" Padding="14,0"
+                                            materialDesign:ButtonAssist.CornerRadius="8"
+                                            materialDesign:ElevationAssist.Elevation="Dp0"
+                                            Click="BtnVerificarCliente_Click">  
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                                 <Setter Property="Background" Value="#4f6ef7"/>
@@ -369,6 +344,24 @@
                                         </Button.Style>
                                     </Button>
                                 </Grid>
+
+                                <!-- Panel resultado verificación -->
+                                <Border x:Name="borderClienteInfo"
+                                        Background="#1e2130" CornerRadius="8" Padding="12,10"
+                                        Visibility="Collapsed"> 
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon x:Name="iconClienteEstado"
+                                         Kind="AccountCheck"
+                                         Foreground="#4CAF50"
+                                         Width="18" Height="18"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,8,0"/>     
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock x:Name="txtClienteNombre" Foreground="White" FontSize="13" FontWeight="Medium"/>
+                                            <TextBlock x:Name="txtClienteEstado" Foreground="#4CAF50" FontSize="11"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
 
                                 <!-- Observaciones -->
                                 <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>

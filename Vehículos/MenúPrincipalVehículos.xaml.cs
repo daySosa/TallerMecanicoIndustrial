@@ -20,9 +20,6 @@ namespace Vehículos
             CargarDatosDesdeDB();
         }
 
-        // ═══════════════════════════════════════════
-        // 1. CARGAR DATOS
-        // ═══════════════════════════════════════════
         private void CargarDatosDesdeDB()
         {
             _listaVehiculos.Clear();
@@ -76,9 +73,6 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 2. FILTRO BUSCADOR
-        // ═══════════════════════════════════════════
         private bool AplicarFiltros(object item)
         {
             if (item is not Vehiculo v) return false;
@@ -93,17 +87,11 @@ namespace Vehículos
                    (v.Cliente_NombreCompleto ?? "").ToLower().Contains(texto);
         }
 
-        // ═══════════════════════════════════════════
-        // 3. BUSCADOR EN TIEMPO REAL
-        // ═══════════════════════════════════════════
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaVehiculos?.Refresh();
         }
 
-        // ═══════════════════════════════════════════
-        // 4. SELECCIÓN EN DATAGRID → abrir edición
-        // ═══════════════════════════════════════════
         private void dgVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgVehiculos.SelectedItem is Vehiculo seleccionado)
@@ -117,9 +105,6 @@ namespace Vehículos
             }
         }
 
-        // ═══════════════════════════════════════════
-        // 5. BOTÓN NUEVO VEHÍCULO
-        // ═══════════════════════════════════════════
         private void BtnNuevoVehiculo_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MainWindow();

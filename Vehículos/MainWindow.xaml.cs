@@ -1,9 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Vehículos;
 
 namespace Vehículos
 {
@@ -35,6 +35,9 @@ namespace Vehículos
             InitializeComponent();
         }
 
+        // ═══════════════════════════════════════════
+        // MODO NUEVO: inyectar cliente desde el menú
+        // ═══════════════════════════════════════════
         public void EstablecerCliente(int clienteDNI)
         {
             _clienteDNI = clienteDNI;
@@ -42,6 +45,9 @@ namespace Vehículos
             VerificarClienteEnBD(clienteDNI);
         }
 
+        // ═══════════════════════════════════════════
+        // BOTÓN VERIFICAR CLIENTE
+        // ═══════════════════════════════════════════
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
             if (!int.TryParse(txtClienteDNI.Text.Trim(), out int dni) || dni <= 0)
@@ -121,6 +127,9 @@ namespace Vehículos
             _clienteDNI = -1;
         }
 
+        // ═══════════════════════════════════════════
+        // 1. GUARDAR
+        // ═══════════════════════════════════════════
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
@@ -185,6 +194,9 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
+        // ═══════════════════════════════════════════
+        // 2. ACTUALIZAR
+        // ═══════════════════════════════════════════
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
@@ -251,12 +263,17 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-
+        // ═══════════════════════════════════════════
+        // 3. CANCELAR
+        // ═══════════════════════════════════════════
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
+        // ═══════════════════════════════════════════
+        // 4. TOGGLE ESTADO
+        // ═══════════════════════════════════════════
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -273,6 +290,9 @@ namespace Vehículos
                 (Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
+        // ═══════════════════════════════════════════
+        // 5. CARGAR PARA EDITAR
+        // ═══════════════════════════════════════════
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
@@ -301,6 +321,9 @@ namespace Vehículos
             toggleActivo.IsChecked = vehiculo.EstaActivo;
         }
 
+        // ═══════════════════════════════════════════
+        // 6. PLACA → MAYÚSCULAS
+        // ═══════════════════════════════════════════
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtPlaca.IsReadOnly) return;
@@ -309,6 +332,9 @@ namespace Vehículos
             txtPlaca.CaretIndex = caret;
         }
 
+        // ═══════════════════════════════════════════
+        // 7. LIMPIAR FORMULARIO
+        // ═══════════════════════════════════════════
         private void LimpiarFormulario()
         {
             txtPlaca.Clear();
