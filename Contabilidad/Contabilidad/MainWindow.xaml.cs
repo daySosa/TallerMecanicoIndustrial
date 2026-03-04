@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
+using System.ComponentModel;
 using System.Data;
 using System.Text;
 using System.Windows;
@@ -13,6 +15,8 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
+
+
     public partial class MainWindow : Window
     {
 
@@ -24,6 +28,9 @@ namespace Contabilidad
             CargarEgreso();
             CargarNotificaciones();
         }
+
+
+
 
         public void CargarEgreso(string busqueda = null)
         {
