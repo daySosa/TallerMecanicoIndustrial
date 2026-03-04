@@ -32,12 +32,6 @@ namespace Contabilidad
 
         public void CargarEgreso(string busqueda = null)
         {
-<<<<<<< HEAD
-            // Conecta con tu base de datos
-        }
-
-        private void btnAgregar_Click(object sender, RoutedEventArgs e)
-=======
             try
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
@@ -69,7 +63,6 @@ namespace Contabilidad
         }
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
->>>>>>> 5e2a40853f49d27fb246db1dd6fa28521f5ebcdf
         {
             string texto = txtBuscar.Text.Trim();
             CargarEgreso(string.IsNullOrEmpty(texto) ? null : texto);
@@ -77,9 +70,9 @@ namespace Contabilidad
 
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
-
             var ventana = new AgregarGasto();
-            ventana.ShowDialog();
+            ventana.Owner = this;
+            if (ventana.ShowDialog() == true)
             CargarEgreso();
         }
 
@@ -110,11 +103,7 @@ namespace Contabilidad
             CargarEgreso();
         }
 
-<<<<<<< HEAD
-        private void btnMostrarComprobantes_Click(object sender, RoutedEventArgs e)
-=======
         private void btnMostrarComprobante_Click(object sender, RoutedEventArgs e)
->>>>>>> 5e2a40853f49d27fb246db1dd6fa28521f5ebcdf
         {
             if (dgGastos.SelectedItem == null)
             {
@@ -139,7 +128,6 @@ namespace Contabilidad
             ventana.Owner = this;
             ventana.ShowDialog();
         }
-
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
             CargarEgreso();
