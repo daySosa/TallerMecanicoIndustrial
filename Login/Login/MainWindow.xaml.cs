@@ -1,82 +1,156 @@
-﻿using System.Collections;
-using System.Data.SqlClient;
-using System.Text;
+﻿using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Dasboard_Prueba;
-
-
-
+using System.IO;
+using System.Text.Json;
 
 namespace Login
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        private bool _contrasenaVisible = false;
+
+        // Ruta donde se guardan las credenciales recordadas
+        private readonly string _archivoRecordar =
+            Path.Combine(Environment.GetFolderPath(
+                Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
+
         public MainWindow()
         {
             InitializeComponent();
+            CargarCredencialesRecordadas();
         }
 
-        private bool _contrasenaVisible = false;
-
+        // ═══════════════════════════════════════════
+        // DRAG — mover ventana
+        // ═══════════════════════════════════════════
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 this.DragMove();
         }
 
+        // ═══════════════════════════════════════════
+        // FOCO — correo
+        // ═══════════════════════════════════════════
         private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
         {
-            borderCorreo.BorderBrush = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#2563EB"));
+            borderCorreo.BorderBrush =
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2563EB"));
             borderCorreo.BorderThickness = new Thickness(2);
         }
+
         private void TxtCorreo_LostFocus(object sender, RoutedEventArgs e)
         {
             borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             borderCorreo.BorderThickness = new Thickness(1.5);
         }
 
+        // ═══════════════════════════════════════════
+        // FOCO — contraseña
+        // ═══════════════════════════════════════════
         private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e)
         {
-            borderContrasena.BorderBrush = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#2563EB"));
+            borderContrasena.BorderBrush =
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2563EB"));
             borderContrasena.BorderThickness = new Thickness(2);
         }
+
         private void TxtContrasena_LostFocus(object sender, RoutedEventArgs e)
         {
             borderContrasena.BorderBrush = new SolidColorBrush(Colors.Transparent);
             borderContrasena.BorderThickness = new Thickness(1.5);
         }
 
+        // ═══════════════════════════════════════════
+        // OJITO — mostrar / ocultar contraseña
+        // ═══════════════════════════════════════════
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
             _contrasenaVisible = !_contrasenaVisible;
-            iconOjo.Kind = _contrasenaVisible
-                ? MaterialDesignThemes.Wpf.PackIconKind.EyeOffOutline
-                : MaterialDesignThemes.Wpf.PackIconKind.EyeOutline;
+
+            if (_contrasenaVisible)
+            {
+                // Copiar texto del PasswordBox al TextBox y mostrar TextBox
+                txtContrasenaVisible.Text = txtContrasena.Password;
+                txtContrasena.Visibility = Visibility.Collapsed;
+                txtContrasenaVisible.Visibility = Visibility.Visible;
+                txtContrasenaVisible.Focus();
+                txtContrasenaVisible.CaretIndex = txtContrasenaVisible.Text.Length;
+                iconOjo.Kind = MaterialDesignThemes.Wpf.PackIconKind.EyeOffOutline;
+            }
+            else
+            {
+                // Copiar texto del TextBox al PasswordBox y mostrar PasswordBox
+                txtContrasena.Password = txtContrasenaVisible.Text;
+                txtContrasenaVisible.Visibility = Visibility.Collapsed;
+                txtContrasena.Visibility = Visibility.Visible;
+                txtContrasena.Focus();
+                iconOjo.Kind = MaterialDesignThemes.Wpf.PackIconKind.EyeOutline;
+            }
         }
 
+        // ═══════════════════════════════════════════
+        // OBTENER CONTRASEÑA — sea cual sea el control activo
+        // ═══════════════════════════════════════════
+        private string ObtenerContrasena()
+        {
+            return _contrasenaVisible
+                ? txtContrasenaVisible.Text
+                : txtContrasena.Password;
+        }
+
+        // ═══════════════════════════════════════════
+        // RECORDAR — guardar credenciales en archivo local
+        // ═══════════════════════════════════════════
+        private void GuardarCredenciales(string correo, string contrasena)
+        {
+            var datos = new { Correo = correo, Contrasena = contrasena };
+            string json = JsonSerializer.Serialize(datos);
+            File.WriteAllText(_archivoRecordar, json);
+        }
+
+        private void EliminarCredenciales()
+        {
+            if (File.Exists(_archivoRecordar))
+                File.Delete(_archivoRecordar);
+        }
+
+        private void CargarCredencialesRecordadas()
+        {
+            try
+            {
+                if (!File.Exists(_archivoRecordar)) return;
+
+                string json = File.ReadAllText(_archivoRecordar);
+                var datos = JsonSerializer.Deserialize<JsonElement>(json);
+
+                txtCorreo.Text = datos.GetProperty("Correo").GetString() ?? "";
+                txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
+                chkRecordar.IsChecked = true;
+            }
+            catch
+            {
+                // Si el archivo está corrupto simplemente no carga nada
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // BOTÓN INICIAR SESIÓN
+        // ═══════════════════════════════════════════
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             bool hayError = false;
 
+            // Validar correo
             if (string.IsNullOrWhiteSpace(txtCorreo.Text))
             {
                 txtErrorCorreo.Text = "⚠ El correo es obligatorio.";
                 txtErrorCorreo.Visibility = Visibility.Visible;
-                borderCorreo.BorderBrush = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#f44336"));
+                borderCorreo.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
                 hayError = true;
             }
             else
@@ -85,12 +159,14 @@ namespace Login
                 borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             }
 
-            if (string.IsNullOrWhiteSpace(txtContrasena.Password))
+            // Validar contraseña
+            string contrasena = ObtenerContrasena();
+            if (string.IsNullOrWhiteSpace(contrasena))
             {
                 txtErrorContrasena.Text = "⚠ La contraseña es obligatoria.";
                 txtErrorContrasena.Visibility = Visibility.Visible;
-                borderContrasena.BorderBrush = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#f44336"));
+                borderContrasena.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
                 hayError = true;
             }
             else
@@ -101,9 +177,18 @@ namespace Login
 
             if (hayError) return;
 
-            IniciarSesion(txtCorreo.Text.Trim(), txtContrasena.Password.Trim());
+            // Guardar o eliminar credenciales según el checkbox
+            if (chkRecordar.IsChecked == true)
+                GuardarCredenciales(txtCorreo.Text.Trim(), contrasena);
+            else
+                EliminarCredenciales();
+
+            IniciarSesion(txtCorreo.Text.Trim(), contrasena);
         }
 
+        // ═══════════════════════════════════════════
+        // INICIAR SESIÓN — consulta BD
+        // ═══════════════════════════════════════════
         private void IniciarSesion(string correo, string contrasena)
         {
             try
@@ -111,9 +196,9 @@ namespace Login
                 clsConexion conexion = new clsConexion();
                 conexion.Abrir();
 
-                string consulta = @"SELECT * FROM LOGIN 
-                                    WHERE Usuario_Email = @correo 
-                                    AND Usuario_Contraseña = @contrasena";
+                string consulta = @"SELECT * FROM LOGIN
+                                    WHERE Usuario_Email     = @correo
+                                    AND   Usuario_Contraseña = @contrasena";
 
                 SqlCommand comando = new SqlCommand(consulta, conexion.SqlC);
                 comando.Parameters.AddWithValue("@correo", correo);
@@ -125,8 +210,9 @@ namespace Login
                 {
                     lector.Close();
                     conexion.Cerrar();
-                    
-                   Dasboard_Prueba.MenuPrincipal ventanaPrincipal = new Dasboard_Prueba.MenuPrincipal();
+
+                    Dasboard_Prueba.MenuPrincipal ventanaPrincipal =
+                        new Dasboard_Prueba.MenuPrincipal();
                     ventanaPrincipal.Show();
                     this.Hide();
                 }
@@ -137,10 +223,10 @@ namespace Login
 
                     txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
                     txtErrorCorreo.Visibility = Visibility.Visible;
-                    borderCorreo.BorderBrush = new SolidColorBrush(
-                        (Color)ColorConverter.ConvertFromString("#f44336"));
-                    borderContrasena.BorderBrush = new SolidColorBrush(
-                        (Color)ColorConverter.ConvertFromString("#f44336"));
+                    borderCorreo.BorderBrush =
+                        new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                    borderContrasena.BorderBrush =
+                        new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
                 }
             }
             catch (Exception ex)
@@ -149,11 +235,5 @@ namespace Login
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        private void BtnCerrar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
     }
 }

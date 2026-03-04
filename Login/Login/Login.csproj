@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Remove="fondo_login.png" />
+    <None Remove="OSM_LOGO.png" />
     <None Remove="OSM_Logo_AR.png" />
   </ItemGroup>
 
@@ -24,6 +25,9 @@
 
   <ItemGroup>
     <Resource Include="fondo_login.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="OSM_LOGO.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="OSM_Logo_AR.png">

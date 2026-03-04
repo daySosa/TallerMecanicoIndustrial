@@ -20,9 +20,9 @@
 
         <!-- SIDEBAR -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15" Background="#242731" VerticalAlignment="Stretch">
-            <StackPanel Margin="15,49,15,60">
+            <StackPanel Margin="15,4,15,0">
                 <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="c:\users\dsosa\source\repos\annygiron\taller_mecanico\taller_mecanico\vehículos\osm_logo.png"/>
+                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png"/>
                 </WrapPanel>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731" materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -120,8 +120,7 @@
                         </StackPanel>
 
                         <Border Background="#252836" CornerRadius="5" VerticalAlignment="Center"
-                            Height="40" MaxWidth="700" HorizontalAlignment="Left"
-                            Grid.ColumnSpan="2" Margin="243,0,0,0" Width="532">
+                            Height="40" MaxWidth="700" HorizontalAlignment="Center" Width="495" Grid.Column="1">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                                 <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBox Background="Transparent" Foreground="#6B7280" BorderThickness="0"
