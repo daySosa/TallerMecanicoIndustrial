@@ -195,12 +195,12 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0"
+                <Button x:Name="btnAgregar" Grid.Column="0"
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#3D7EFF" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         materialDesign:ElevationAssist.Elevation="Dp0"
-                        Height="38" Padding="16,0" Margin="0,0,10,0" Click="Button_Click">
+                        Height="38" Padding="16,0" Margin="0,0,10,0" Click="btnAgregar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -208,11 +208,11 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="1"
+                <Button x:Name="btnActualizar" Grid.Column="1"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Margin="0,0,10,0" Click="Button_Click_1">
+                        Height="38" Padding="16,0" Margin="0,0,10,0" Click="btnActualizar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -220,11 +220,11 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="2"
+                <Button x:Name="btnMostrarComprobantes" Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Click="Button_Click_2">
+                        Height="38" Padding="16,0" Click="btnMostrarComprobantes_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>

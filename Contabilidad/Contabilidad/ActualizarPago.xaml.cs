@@ -22,22 +22,14 @@ namespace Contabilidad
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtNombreCliente.Text) ||
-                string.IsNullOrWhiteSpace(txtFecha.Text) ||
-                !int.TryParse(txtDNI.Text, out int dni) ||
-                !int.TryParse(txtOrdenID.Text, out int ordenID) ||
-                !double.TryParse(txtPrecio.Text, out double precio) )
-            {
-                MessageBox.Show("Complete todos los campos Obligatorios", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            //Tu lógica aquí
         }
     }
 }
