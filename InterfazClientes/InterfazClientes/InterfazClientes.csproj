@@ -9,21 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ICONO DE CLIENTES.png" />
-    <None Remove="ICONO DE CONFIGURACIÓN.png" />
-    <None Remove="ICONO DE CONTABILIDAD.png" />
-    <None Remove="ICONO DE INVENTARIO.png" />
-    <None Remove="ICONO DE MENU.png" />
-    <None Remove="ICONO DE PROVEEDORES.png" />
-    <None Remove="ICONO DE VEHÍCULOS.png" />
-    <None Remove="ICONO DE ÓRDENES.png" />
     <None Remove="OSM_LOGO.png" />
-    <None Remove="PARTE 1 DE ICONO DE CERRAR SESIÓN.png" />
-    <None Remove="PARTE 2 DE ICONO DE CERRAR SESIÓN.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <DesignDataWithDesignTimeCreatableTypes Include="OSM_LOGO.png" />
+    <Resource Include="OSM_LOGO.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
@@ -31,19 +23,6 @@
     <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
     <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="ICONO DE CLIENTES.png" />
-    <Resource Include="ICONO DE CONFIGURACIÓN.png" />
-    <Resource Include="ICONO DE CONTABILIDAD.png" />
-    <Resource Include="ICONO DE INVENTARIO.png" />
-    <Resource Include="ICONO DE MENU.png" />
-    <Resource Include="ICONO DE PROVEEDORES.png" />
-    <Resource Include="ICONO DE VEHÍCULOS.png" />
-    <Resource Include="ICONO DE ÓRDENES.png" />
-    <Resource Include="PARTE 1 DE ICONO DE CERRAR SESIÓN.png" />
-    <Resource Include="PARTE 2 DE ICONO DE CERRAR SESIÓN.png" />
   </ItemGroup>
 
 </Project>
