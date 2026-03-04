@@ -8,21 +8,28 @@
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- MENÚ LATERAL -->
+        <!-- ═══════════════════════════════════════════════════
+             MENÚ LATERAL
+             ═══════════════════════════════════════════════════ -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
+
+                <!-- Logo -->
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
                     <Image RenderOptions.BitmapScalingMode="HighQuality"
                            Source="c:\users\dsosa\source\repos\annygiron\taller_mecanico\taller_mecanico\vehículos\osm_logo.png"
                            Height="184"/>
                 </WrapPanel>
+
+                <!-- Pantalla Principal -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
@@ -32,6 +39,8 @@
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
+
+                <!-- Inventario -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -41,6 +50,8 @@
                         <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
+
+                <!-- Vehículos -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -50,6 +61,8 @@
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
+
+                <!-- Clientes -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -59,6 +72,8 @@
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
+
+                <!-- Contabilidad -->
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
@@ -87,6 +102,8 @@
                         </Button>
                     </StackPanel>
                 </Expander>
+
+                <!-- Órdenes -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -96,6 +113,8 @@
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
+
+                <!-- Cerrar Sesión -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White"
@@ -106,10 +125,13 @@
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
+
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- CONTENIDO PRINCIPAL -->
+        <!-- ═══════════════════════════════════════════════════
+             CONTENIDO PRINCIPAL
+             ═══════════════════════════════════════════════════ -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -127,17 +149,20 @@
                         <ColumnDefinition Width="1"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
                         <TextBlock Text="Hola, Oscar Sosa" Foreground="White" FontSize="18" FontWeight="Bold"/>
                         <TextBlock Text="Revisemos tu taller hoy" Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
+
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
                             VerticalAlignment="Center" Height="40" MaxWidth="400"
                             HorizontalAlignment="Left" Margin="20,0,0,0" Width="400">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
                                                      Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="#6B7280"
+                            <TextBox x:Name="txtBuscar"
+                                     Background="Transparent" Foreground="#6B7280"
                                      BorderThickness="0" VerticalAlignment="Center"
                                      FontSize="13" Width="200" CaretBrush="White"
                                      TextChanged="txtBuscar_TextChanged">
@@ -150,6 +175,7 @@
                             </TextBox>
                         </StackPanel>
                     </Border>
+
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                 Foreground="#6B7280" Width="38" Height="38">
@@ -158,7 +184,9 @@
                         <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
                                                HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     </Grid>
+
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
+
                     <StackPanel Grid.Column="4" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="16,0,20,0">
                         <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
@@ -178,7 +206,9 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0"
+
+                <Button x:Name="btnAgregarRepuesto"
+                        Grid.Column="0"
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#3D7EFF" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
@@ -190,12 +220,14 @@
                         <TextBlock Text="Agregar Repuesto" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-                
-                <Button Grid.Column="2"
+
+                <Button x:Name="btnFiltrar"
+                        Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="14,0">
+                        Height="38" Padding="14,0"
+                        Click="btnFiltrar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -218,14 +250,18 @@
 
                     <Border Grid.Row="0" Padding="20,16" BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Repuestos en Inventario" Foreground="White" FontSize="15" FontWeight="Medium"/>
-                            <Border Background="#1A3050" CornerRadius="4" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
-                                <TextBlock x:Name="tbTotalItems" Text="0 items" Foreground="#4A9EFF" FontSize="11"/>
+                            <TextBlock Text="Repuestos en Inventario" Foreground="White"
+                                       FontSize="15" FontWeight="Medium"/>
+                            <Border Background="#1A3050" CornerRadius="4" Padding="8,3"
+                                    Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="tbTotalItems" Text="0 items"
+                                           Foreground="#4A9EFF" FontSize="11"/>
                             </Border>
                         </StackPanel>
                     </Border>
 
-                    <DataGrid Grid.Row="1" x:Name="dgInventario"
+                    <DataGrid Grid.Row="1"
+                              x:Name="dgInventario"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False"
                               CanUserResizeRows="False" IsReadOnly="True"
@@ -282,6 +318,7 @@
 
                         <DataGrid.Columns>
 
+                            <!-- ID -->
                             <DataGridTextColumn Header="ID" Binding="{Binding Producto_ID}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -293,17 +330,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Código" Binding="{Binding Producto_Codigo}" Width="90">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#8B9BB4"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
-                                        <Setter Property="FontSize" Value="12"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
+                            <!-- Nombre -->
                             <DataGridTemplateColumn Header="Nombre" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -323,6 +350,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
+                            <!-- Categoría -->
                             <DataGridTemplateColumn Header="Categoría" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -336,17 +364,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Marca" Binding="{Binding Producto_Marca}" Width="120">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#C0CCDA"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
-                                        <Setter Property="FontSize" Value="12"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
+                            <!-- Modelo -->
                             <DataGridTextColumn Header="Modelo" Binding="{Binding Producto_Modelo}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -358,7 +376,10 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Precio" Binding="{Binding Producto_Precio, StringFormat='Q {0:N2}'}" Width="100">
+                            <!-- Precio -->
+                            <DataGridTextColumn Header="Precio"
+                                                Binding="{Binding Producto_Precio, StringFormat='Q {0:N2}'}"
+                                                Width="100">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#4CAF50"/>
@@ -370,6 +391,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
+                            <!-- Stock -->
                             <DataGridTemplateColumn Header="Stock" Width="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -399,6 +421,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
+                            <!-- Estado -->
                             <DataGridTemplateColumn Header="Estado" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -437,6 +460,84 @@
                     </DataGrid>
                 </Grid>
             </materialDesign:Card>
+
         </Grid>
+
+        <!-- ═══════════════════════════════════════════════════
+             POPUP FILTROS
+             ═══════════════════════════════════════════════════ -->
+        <Popup x:Name="popupFiltros"
+               Grid.Column="1"
+               PlacementTarget="{Binding ElementName=btnFiltrar}"
+               Placement="Bottom"
+               StaysOpen="False"
+               AllowsTransparency="True">
+            <Border Background="#252836" CornerRadius="10"
+                    Padding="20" MinWidth="280"
+                    Effect="{DynamicResource MaterialDesignShadowDepth3}">
+                <StackPanel>
+
+                    <!-- Título -->
+                    <TextBlock Text="Filtrar Inventario" Foreground="White"
+                               FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                    <!-- Categoría -->
+                    <TextBlock Text="Categoría" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="cmbCategoria"
+                              Background="#1A1D2E" Foreground="White"
+                              BorderBrush="#3D4458" Height="36"
+                              Style="{StaticResource MaterialDesignComboBox}"
+                              Margin="0,0,0,14"/>
+
+                    <!-- Precio mínimo -->
+                    <TextBlock Text="Precio mínimo (Q)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtPrecioMin"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Ej: 0"
+                             Foreground="White" BorderBrush="#3D4458"
+                             Height="36" Margin="0,0,0,10"/>
+
+                    <!-- Precio máximo -->
+                    <TextBlock Text="Precio máximo (Q)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtPrecioMax"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Ej: 9999"
+                             Foreground="White" BorderBrush="#3D4458"
+                             Height="36" Margin="0,0,0,14"/>
+
+                    <!-- Solo Stock Bajo -->
+                    <CheckBox x:Name="chkStockBajo"
+                              Content="Solo productos con Stock Bajo"
+                              Foreground="White" FontSize="13"
+                              Margin="0,0,0,20"/>
+
+                    <!-- Botones Limpiar / Aplicar -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="Limpiar"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="#6B7280" BorderBrush="#3D4458"
+                                Height="36"
+                                Click="btnLimpiarFiltros_Click"/>
+
+                        <Button Grid.Column="2"
+                                Content="Aplicar"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#3D7EFF" Foreground="White"
+                                materialDesign:ButtonAssist.CornerRadius="6"
+                                Height="36"
+                                Click="btnAplicarFiltros_Click"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+        </Popup>
+
     </Grid>
 </Window>
