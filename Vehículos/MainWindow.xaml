@@ -438,9 +438,9 @@
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         Click="BtnActualizar_Click"/>
                                 <Button Height="38" Padding="24,0"
-        materialDesign:ButtonAssist.CornerRadius="8"
-        materialDesign:ElevationAssist.Elevation="Dp0"
-        Click="BtnGuardar_Click">
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        materialDesign:ElevationAssist.Elevation="Dp0"
+                                        Click="BtnGuardar_Click">   
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                             <Setter Property="Background" Value="#4f6ef7"/>
