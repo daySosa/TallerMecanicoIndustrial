@@ -28,20 +28,19 @@
                     <Image Source="/Imagenes/OSM_LOGO.png" Height="204" Width="195"/>
                 </WrapPanel>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- PANTALLA PRINCIPAL -->
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15"
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="38" HorizontalAlignment="Center"/>
                         <TextBlock Foreground="White" FontSize="15" Height="16">Pantalla Principal</TextBlock>
-                        
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- INVENTARIO -->
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
                                                  Foreground="White" Height="26" Width="38" HorizontalAlignment="Center"/>
@@ -49,9 +48,9 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- VEHÍCULOS -->
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
                                                  Foreground="White" Width="39" HorizontalAlignment="Center" Height="25"/>

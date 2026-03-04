@@ -42,9 +42,8 @@ namespace Contabilidad
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            var ventana = new MostrarComprobante();
+                MessageBox.Show("Selecciona un gasto para ver el comprobante.", "Aviso",
             ventana.ShowDialog();
-            CargarEgreso();
         }
     }
 }
