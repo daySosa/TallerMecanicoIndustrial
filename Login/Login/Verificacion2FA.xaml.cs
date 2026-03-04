@@ -52,6 +52,17 @@ namespace Login
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private void TxtCodigo_GotFocus(object sender, RoutedEventArgs e)
+        {
+            borderCodigo.BorderBrush = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#2563EB"));
+            borderCodigo.BorderThickness = new Thickness(2);
+        }
 
+        private void TxtCodigo_LostFocus(object sender, RoutedEventArgs e)
+        {
+            borderCodigo.BorderBrush = new SolidColorBrush(Colors.Transparent);
+            borderCodigo.BorderThickness = new Thickness(1.5);
+        }
     }
 }
