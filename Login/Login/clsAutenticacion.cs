@@ -116,7 +116,7 @@ namespace Login
             try
             {
                 var mensaje = new MimeMessage();
-                mensaje.From.Add(new MailboxAddress("Taller Mecánico", "tallerind@outlook.com"));
+                mensaje.From.Add(new MailboxAddress("Taller Mecánico", "tallermecanicoind26@gmail.com"));
                 mensaje.To.Add(new MailboxAddress("", correoDestino));
                 mensaje.Subject = "Código de verificación - Taller Mecánico";
 
@@ -135,8 +135,8 @@ namespace Login
                 };
 
                 using var smtp = new SmtpClient();
-                smtp.Connect("smtp.office365.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                smtp.Authenticate("tallerind@outlook.com", "TallerMecanico#2026");
+                smtp.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                smtp.Authenticate("tallermecanicoind26@gmail.com", "igzy ooxe fmjr ippx");
                 smtp.Send(mensaje);
                 smtp.Disconnect(true);
 
