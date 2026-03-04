@@ -450,7 +450,7 @@
 							Padding="16,0"
 							Margin="0,0,0,12"
 									
-							materialDesign:ButtonAssist.CornerRadius="6"/>
+							materialDesign:ButtonAssist.CornerRadius="6" Click="Button_Click"/>
 
 							<DataGrid x:Name="dgRepuestos"
 							  AutoGenerateColumns="False"
@@ -596,7 +596,7 @@
                             Height="36"
                             Padding="20,0"
                             Margin="0,0,10,0"
-                            materialDesign:ButtonAssist.CornerRadius="6"/>
+                            materialDesign:ButtonAssist.CornerRadius="6" Click="Button_Click_1"/>
 
 							<Button Content="Calcular Total"
                             Style="{StaticResource MaterialDesignOutlinedButton}"

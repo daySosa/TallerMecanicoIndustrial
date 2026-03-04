@@ -25,5 +25,19 @@ namespace Órdenes_de_Trabajo
         {
             // Tu lógica para calcular total
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            AgregarRepuesto ventana = new AgregarRepuesto();
+            ventana.Show();
+            this.Close();
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalOrdenes ventana = new MenúPrincipalOrdenes();
+            ventana.Show();
+            this.Close();
+        }
     }
 }

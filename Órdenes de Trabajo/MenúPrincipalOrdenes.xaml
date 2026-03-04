@@ -23,7 +23,7 @@
             <StackPanel Margin="15,0,15 0">
 
                 <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <!--<Image RenderOptions.BitmapScalingMode="HighQuality" Source="" Height="184"/>--> 
+                    <!--<Image RenderOptions.BitmapScalingMode="HighQuality" Source="" Height="184"/>-->
                 </WrapPanel>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
@@ -121,6 +121,10 @@
 
         <!-- ===== CONTENIDO PRINCIPAL ===== -->
         <Grid Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="539*"/>
+                <ColumnDefinition Width="421*"/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -128,7 +132,7 @@
             </Grid.RowDefinitions>
 
             <!-- ===== TOP BAR ===== -->
-            <Border Grid.Row="0" Background="#1A1D2E" Height="80">
+            <Border Grid.Row="0" Background="#1A1D2E" Height="80" Grid.ColumnSpan="2">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -186,7 +190,7 @@
             </Border>
 
             <!-- ===== TOOLBAR: Nueva Orden + Filtrar ===== -->
-            <Grid Grid.Row="1" Margin="20,15,20,10">
+            <Grid Grid.Row="1" Margin="20,15,20,10" Grid.ColumnSpan="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -224,8 +228,7 @@
                                  Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
                                  UniformCornerRadius="10"
-                                 Margin="20,0,20,20"
-                                 VerticalAlignment="Stretch">
+                                 Margin="20,0,20,20" Grid.ColumnSpan="2">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

@@ -34,7 +34,9 @@ namespace Órdenes_de_Trabajo
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
-            this.Close(); // o this.DialogResult = false;
+            MainWindow ventana = new MainWindow();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
