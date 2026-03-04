@@ -14,55 +14,57 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ═══════════════════════════════════════ -->
-        <!--              SIDEBAR                    -->
-        <!-- ═══════════════════════════════════════ -->
+        <!-- SIDEBAR -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
-
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="199" Width="200"/>
+                    <Image RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="/OSM_LOGO.png" Height="199" Width="200"/>
                 </WrapPanel>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
+                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
+                                                 Foreground="White" Height="25" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
+                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
+                                                 Foreground="White" Height="26" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
+                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
+                                                 Foreground="White" Width="39" Height="25"/>
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
+                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center"
+                                                 Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
-                          BorderThickness="0" Margin="0,0,0,15">
+                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI"
+                          FontSize="13" BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
                             <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
@@ -71,45 +73,48 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center"
+                                                         Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center"
+                                                         Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </Expander>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
+                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center"
+                                                 Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,200,0,15">
                     <WrapPanel Width="175">
-                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
+                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center"
+                                                 Foreground="White" Width="39" Height="21"/>
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
-
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- ═══════════════════════════════════════ -->
-        <!--          CONTENIDO PRINCIPAL            -->
-        <!-- ═══════════════════════════════════════ -->
+        <!-- CONTENIDO PRINCIPAL -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="80"/>
@@ -128,8 +133,10 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
-                        <TextBlock Text="Inventario" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Gestión de productos y repuestos" Foreground="#6B7280" FontSize="12"/>
+                        <TextBlock Text="Inventario" Foreground="White"
+                                   FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Gestión de productos y repuestos"
+                                   Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
 
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
@@ -137,26 +144,22 @@
                             HorizontalAlignment="Left" Margin="20,0,0,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
-                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                     Width="18" Height="18" VerticalAlignment="Center"
+                                                     Margin="0,0,8,0"/>
                             <TextBox Background="Transparent" Foreground="#6B7280"
                                      BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White">
-                                <TextBox.Style>
-                                    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
-                                    </Style>
-                                </TextBox.Style>
-                            </TextBox>
+                                     FontSize="13" Width="200" CaretBrush="White"
+                                     materialDesign:HintAssist.Hint="Buscar..."
+                                     materialDesign:HintAssist.Foreground="#6B7280"
+                                     Style="{StaticResource MaterialDesignTextBox}"/>
                         </StackPanel>
                     </Border>
 
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                Foreground="#6B7280" Width="38" Height="38">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
-                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
-                                               HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     </Grid>
 
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
@@ -166,7 +169,8 @@
                         <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
                                 Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
+                            <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF"
+                                       FontSize="13" FontWeight="SemiBold"/>
                             <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
                         </StackPanel>
                     </StackPanel>
@@ -174,10 +178,8 @@
             </Border>
 
             <!-- FORMULARIO -->
-            <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          Background="#1a1d2e">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Background="#1a1d2e">
                 <Grid Margin="30,24,30,24">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -189,56 +191,59 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- COLUMNA IZQUIERDA -->
+                    <!-- ══════════════════════════════
+                         COLUMNA IZQUIERDA — Datos del Producto
+                         ══════════════════════════════ -->
                     <StackPanel Grid.Column="0" Grid.RowSpan="2">
-
-                        <materialDesign:Card Background="#252836"
-                                             UniformCornerRadius="12"
-                                             Padding="22"
-                                             Margin="0,0,0,16"
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12"
+                                             Padding="22" Margin="0,0,0,16"
                                              materialDesign:ElevationAssist.Elevation="Dp3">
                             <StackPanel>
 
-                                <!-- Header card -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <Border Background="#2e3250" CornerRadius="8"
                                             Width="36" Height="36" Margin="0,0,12,0">
-                                        <materialDesign:PackIcon Kind="PackageVariant"
-                                                                 Foreground="#4f6ef7"
+                                        <materialDesign:PackIcon Kind="PackageVariant" Foreground="#4f6ef7"
                                                                  Width="20" Height="20"
                                                                  HorizontalAlignment="Center"
                                                                  VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Datos del Producto"
-                                                   Foreground="White" FontSize="14" FontWeight="Medium"/>
+                                        <TextBlock Text="Datos del Producto" Foreground="White"
+                                                   FontSize="14" FontWeight="Medium"/>
                                         <TextBlock Text="Información de identificación"
                                                    Foreground="#6c7293" FontSize="11"/>
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Código -->
-                                <TextBlock Text="Código" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
-                                <TextBox x:Name="txtCodigo"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Background="#1e2130" Foreground="White"
-                                         BorderBrush="#3a3f5c" CaretBrush="White"
-                                         Height="40" VerticalContentAlignment="Center"
-                                         Margin="0,0,0,14"/>
-
                                 <!-- Nombre -->
-                                <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBlock Text="Nombre *" Foreground="#6c7293"
+                                           FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtNombre"
+                                         materialDesign:HintAssist.Hint=""
+                                         materialDesign:HintAssist.Foreground="#6c7293"
+                                         materialDesign:TextFieldAssist.UnderlineBrush="#4f6ef7"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Background="#1e2130" Foreground="White"
-                                         BorderBrush="#3a3f5c" CaretBrush="White"
-                                         Height="40" VerticalContentAlignment="Center"
-                                         Margin="0,0,0,14"/>
+                                         Foreground="White"
+                                         BorderBrush="#3a3f5c"
+                                         CaretBrush="White"
+                                         Height="44"
+                                         VerticalContentAlignment="Center"
+                                         Margin="0,0,0,14"
+                                         IsEnabled="True"
+                                         IsReadOnly="False"/>
 
                                 <!-- Categoría -->
-                                <TextBlock Text="Categoría" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="cmbCategoria" Style="{StaticResource MaterialDesignOutlinedComboBox}" Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="40"
-                                            Margin="0,0,0,14">
+                                <TextBlock Text="Categoría *" Foreground="#6c7293"
+                                           FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="cmbCategoria"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                          Foreground="White"
+                                          BorderBrush="#3a3f5c"
+                                          Height="44"
+                                          Margin="0,0,0,14"
+                                          materialDesign:HintAssist.Hint="Selecciona una categoría"
+                                          materialDesign:HintAssist.Foreground="#6c7293">
                                     <ComboBox.Resources>
                                         <Style TargetType="ComboBoxItem">
                                             <Setter Property="Foreground" Value="White"/>
@@ -257,58 +262,71 @@
                                 </ComboBox>
 
                                 <!-- Marca -->
-                                <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBlock Text="Marca *" Foreground="#6c7293"
+                                           FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtMarca"
+                                         materialDesign:HintAssist.Hint=""
+                                         materialDesign:HintAssist.Foreground="#6c7293"
+                                         materialDesign:TextFieldAssist.UnderlineBrush="#4f6ef7"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Background="#1e2130" Foreground="White"
-                                         BorderBrush="#3a3f5c" CaretBrush="White"
-                                         Height="40" VerticalContentAlignment="Center"
-                                         Margin="0,0,0,14"/>
+                                         Foreground="White"
+                                         BorderBrush="#3a3f5c"
+                                         CaretBrush="White"
+                                         Height="44"
+                                         VerticalContentAlignment="Center"
+                                         Margin="0,0,0,14"
+                                         IsEnabled="True"
+                                         IsReadOnly="False"/>
+
+                                <!-- Modelo -->
+                                <TextBlock Text="Modelo" Foreground="#6c7293"
+                                           FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtModelo"
+                                         materialDesign:HintAssist.Hint=""
+                                         materialDesign:HintAssist.Foreground="#6c7293"
+                                         materialDesign:TextFieldAssist.UnderlineBrush="#4f6ef7"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Foreground="White"
+                                         BorderBrush="#3a3f5c"
+                                         CaretBrush="White"
+                                         Height="44"
+                                         VerticalContentAlignment="Center"
+                                         Margin="0,0,0,0"
+                                         IsEnabled="True"
+                                         IsReadOnly="False"/>
 
                             </StackPanel>
                         </materialDesign:Card>
-
                     </StackPanel>
 
-                    <!-- COLUMNA DERECHA -->
+                    <!-- ══════════════════════════════
+                         COLUMNA DERECHA — Detalles y Precio
+                         ══════════════════════════════ -->
                     <StackPanel Grid.Column="2" Grid.RowSpan="2">
-
-                        <materialDesign:Card Background="#252836"
-                                             UniformCornerRadius="12"
-                                             Padding="22"
-                                             Margin="0,0,0,16"
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12"
+                                             Padding="22" Margin="0,0,0,16"
                                              materialDesign:ElevationAssist.Elevation="Dp3">
                             <StackPanel>
 
-                                <!-- Header card -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <Border Background="#2e3250" CornerRadius="8"
                                             Width="36" Height="36" Margin="0,0,12,0">
-                                        <materialDesign:PackIcon Kind="TagOutline"
-                                                                 Foreground="#4f6ef7"
+                                        <materialDesign:PackIcon Kind="TagOutline" Foreground="#4f6ef7"
                                                                  Width="20" Height="20"
                                                                  HorizontalAlignment="Center"
                                                                  VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Detalles y Precio"
-                                                   Foreground="White" FontSize="14" FontWeight="Medium"/>
-                                        <TextBlock Text="Modelo, precio y estado del producto"
+                                        <TextBlock Text="Detalles y Precio" Foreground="White"
+                                                   FontSize="14" FontWeight="Medium"/>
+                                        <TextBlock Text="Precio y estado del producto"
                                                    Foreground="#6c7293" FontSize="11"/>
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Modelo -->
-                                <TextBlock Text="Modelo" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
-                                <TextBox x:Name="txtModelo"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Background="#1e2130" Foreground="White"
-                                         BorderBrush="#3a3f5c" CaretBrush="White"
-                                         Height="40" VerticalContentAlignment="Center"
-                                         Margin="0,0,0,14"/>
-
                                 <!-- Precio -->
-                                <TextBlock Text="Precio" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBlock Text="Precio *" Foreground="#6c7293"
+                                           FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -316,19 +334,45 @@
                                     </Grid.ColumnDefinitions>
                                     <Border Grid.Column="0" Background="#2e3250"
                                             BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
-                                            CornerRadius="4,0,0,4" Padding="10,0" Height="40">
-                                        <TextBlock Text="$" Foreground="#4f6ef7" FontSize="16"
+                                            CornerRadius="4,0,0,4" Padding="10,0" Height="44">
+                                        <TextBlock Text="Q" Foreground="#4f6ef7" FontSize="16"
                                                    FontWeight="Bold" VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBox x:Name="txtPrecio"
                                              Grid.Column="1"
+                                             materialDesign:HintAssist.Hint="0.00"
+                                             materialDesign:HintAssist.Foreground="#6c7293"
+                                             materialDesign:TextFieldAssist.UnderlineBrush="#4f6ef7"
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White"
-                                             BorderBrush="#3a3f5c" CaretBrush="White"
-                                             Height="40" VerticalContentAlignment="Center"/>
+                                             Foreground="White"
+                                             BorderBrush="#3a3f5c"
+                                             CaretBrush="White"
+                                             Height="44"
+                                             VerticalContentAlignment="Center"
+                                             IsEnabled="True"
+                                             IsReadOnly="False"/>
                                 </Grid>
 
-                                <!-- Separador -->
+                                <!-- Info stock -->
+                                <Border Background="#1e2130" CornerRadius="8" Padding="14,12" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <materialDesign:PackIcon Kind="InformationOutline"
+                                                                     Foreground="#4f6ef7" Width="16" Height="16"
+                                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Stock inicial" Foreground="#6c7293" FontSize="12"/>
+                                        </StackPanel>
+                                        <TextBlock Foreground="White" FontSize="12">
+                                            <Run Text="Cantidad: "/>
+                                            <Run Text="0 (se actualiza con las órdenes)" Foreground="#4f6ef7"/>
+                                        </TextBlock>
+                                        <TextBlock Foreground="White" FontSize="12" Margin="0,4,0,0">
+                                            <Run Text="Stock mínimo: "/>
+                                            <Run Text="10 (valor por defecto)" Foreground="#4f6ef7"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+
                                 <Separator Background="#2e3250" Margin="0,6,0,18"/>
 
                                 <!-- Toggle Estado -->
@@ -338,7 +382,6 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                                 <materialDesign:PackIcon Kind="CheckCircleOutline"
@@ -348,14 +391,15 @@
                                                                          VerticalAlignment="Center"
                                                                          Margin="0,0,6,0"/>
                                                 <TextBlock Text="Estado del Producto"
-                                                           Foreground="White" FontSize="13" FontWeight="Medium"/>
+                                                           Foreground="White" FontSize="13"
+                                                           FontWeight="Medium"/>
                                             </StackPanel>
-                                            <TextBlock x:Name="txtEstadoLabel" Text="El producto está activo" Foreground="#4CAF50" FontSize="11"/>
+                                            <TextBlock x:Name="txtEstadoLabel"
+                                                       Text="El producto está activo"
+                                                       Foreground="#4CAF50" FontSize="11"/>
                                         </StackPanel>
-
                                         <ToggleButton x:Name="toggleActivo"
-                                                      Grid.Column="1"
-                                                      IsChecked="True"
+                                                      Grid.Column="1" IsChecked="True"
                                                       Checked="ToggleActivo_Checked"
                                                       Unchecked="ToggleActivo_Unchecked"
                                                       VerticalAlignment="Center">
@@ -368,16 +412,11 @@
                                                         <Setter.Value>
                                                             <ControlTemplate TargetType="ToggleButton">
                                                                 <Grid>
-                                                                    <Border x:Name="switchBg"
-                                                                            Background="#4CAF50"
-                                                                            CornerRadius="15"
-                                                                            Width="54" Height="30"/>
-                                                                    <Border x:Name="switchThumb"
-                                                                            Background="White"
-                                                                            CornerRadius="12"
-                                                                            Width="24" Height="24"
-                                                                            HorizontalAlignment="Right"
-                                                                            Margin="0,0,3,0">
+                                                                    <Border x:Name="switchBg" Background="#4CAF50"
+                                                                            CornerRadius="15" Width="54" Height="30"/>
+                                                                    <Border x:Name="switchThumb" Background="White"
+                                                                            CornerRadius="12" Width="24" Height="24"
+                                                                            HorizontalAlignment="Right" Margin="0,0,3,0">
                                                                         <Border.Effect>
                                                                             <DropShadowEffect Color="Black" Opacity="0.2"
                                                                                               BlurRadius="4" ShadowDepth="1"/>
@@ -402,51 +441,44 @@
 
                             </StackPanel>
                         </materialDesign:Card>
-
                     </StackPanel>
 
-                    <!-- BOTONES — fila 1, ocupa ambas columnas -->
+                    <!-- BOTONES -->
                     <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                         Background="#252836"
-                                         UniformCornerRadius="12"
-                                         Padding="20,16"
-                                         materialDesign:ElevationAssist.Elevation="Dp3" Margin="-5,247,5,-246">
+                                         Background="#252836" UniformCornerRadius="12"
+                                         Padding="20,16" Margin="0,258,0,-241"
+                                         materialDesign:ElevationAssist.Elevation="Dp3">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-
                             <TextBlock Grid.Column="0" VerticalAlignment="Center"
                                        Foreground="#6c7293" FontSize="12">
                                 <Run Text="⚠ "/>
                                 <Run Text="Verifica los datos antes de guardar"/>
                             </TextBlock>
-
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-
-                                <Button Content="Cancelar"
-                                        Height="38" Padding="24,0"
-                                        Margin="0,0,10,0"
+                                <Button x:Name="btnCancelar" Content="Cancelar"
+                                        Height="38" Padding="24,0" Margin="0,0,10,0"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#6c7293" Foreground="#6c7293"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         Click="BtnCancelar_Click"/>
-
-                                <Button Content="Actualizar"
-                                        Height="38" Padding="24,0"
-                                        Margin="0,0,10,0"
+                                <Button x:Name="btnActualizar" Content="Actualizar"
+                                        Height="38" Padding="24,0" Margin="0,0,10,0"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         Click="BtnActualizar_Click"/>
-
-                                <Button Height="38" Padding="24,0"
+                                <Button x:Name="btnAgregar"
+                                        Height="38" Padding="24,0"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         materialDesign:ElevationAssist.Elevation="Dp0"
                                         Click="BtnAgregar_Click">
                                     <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                        <Style TargetType="Button"
+                                               BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                             <Setter Property="Background" Value="#4f6ef7"/>
                                             <Setter Property="Foreground" Value="White"/>
                                             <Setter Property="BorderBrush" Value="#4f6ef7"/>
@@ -458,14 +490,12 @@
                                         <TextBlock Text="Agregar Producto" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-
                             </StackPanel>
                         </Grid>
                     </materialDesign:Card>
 
                 </Grid>
             </ScrollViewer>
-
         </Grid>
     </Grid>
 </Window>
