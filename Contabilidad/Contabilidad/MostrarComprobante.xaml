@@ -236,14 +236,14 @@
 
             <!-- BOTÓN CERRAR -->
             <Grid Grid.Row="2">
-                <Button HorizontalAlignment="Right"
+                <Button x:Name="btnCerrar" HorizontalAlignment="Right"
                         Content="Cerrar"
                         Height="40"
                         Width="140"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         BorderBrush="#6c7293"
                         Foreground="#6c7293"
-                        materialDesign:ButtonAssist.CornerRadius="8" Click="Button_Click"/>
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnCerrar_Click"/>
             </Grid>
 
         </Grid>

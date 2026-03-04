@@ -100,13 +100,13 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0"
+                <Button x:Name="btnCancelar" Grid.Column="0"
                         Content="Cancelar"
                         Height="40"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         BorderBrush="#6c7293"
                         Foreground="#6c7293"
-                        materialDesign:ButtonAssist.CornerRadius="8" Click="Button_Click"/>
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnCancelar_Click"/>
 
                 <Button Grid.Column="2"
                         x:Name="btnGuardar"

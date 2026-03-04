@@ -25,23 +25,24 @@ namespace Contabilidad
 
         public void CargarPago()
         {
+            // Conecta con tu base de datos
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarPago();
             ventana.ShowDialog();
             CargarPago();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ActualizarPago();
             ventana.ShowDialog();
             CargarPago();
         }
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
+        private void btnMostrarComprobantes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ComprobanteDePago();
             ventana.ShowDialog();
