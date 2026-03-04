@@ -21,7 +21,7 @@ namespace Contabilidad
     public partial class MainWindow : Window
     {
 
-        private string connectionString = "Server=Madrid73\\LOCALDB#D4CC4D4F;Database=Taller_Mecanico_Sistema;Integrated Security=True;";
+        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
 
         public MainWindow()
         {
