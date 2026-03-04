@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Login;
 
 namespace Dasboard_Prueba
 {
@@ -20,12 +21,12 @@ namespace Dasboard_Prueba
     /// 
     
 
-    public partial class MainWindow : Window
+    public partial class MenuPrincipal : Window
     {
         private DateTime _mesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         public ChartValues<double> IngresosSemanalValues { get; set; }
         public string[] IngresosSemanalLabels { get; set; }
-        public MainWindow()
+        public MenuPrincipal()
         {
             IngresosSemanalValues = new ChartValues<double> { 45, 60, 35, 50, 40, 55 };
             IngresosSemanalLabels = new[] { "24 Jan", "25 Jan", "26 Jan", "27 Jan", "28 Jan", "29 Jan" };

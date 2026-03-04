@@ -10,6 +10,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Dasboard_Prueba;
+
+
 
 
 namespace Login
@@ -122,14 +125,10 @@ namespace Login
                 {
                     lector.Close();
                     conexion.Cerrar();
-
-                    // Abrir ventana principal
-                    // MenuPrincipal ventanaPrincipal = new MenuPrincipal();
-                    // ventanaPrincipal.Show();
-                    // this.Close();
-
-                    MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    
+                   Dasboard_Prueba.MenuPrincipal ventanaPrincipal = new Dasboard_Prueba.MenuPrincipal();
+                    ventanaPrincipal.Show();
+                    this.Hide();
                 }
                 else
                 {
