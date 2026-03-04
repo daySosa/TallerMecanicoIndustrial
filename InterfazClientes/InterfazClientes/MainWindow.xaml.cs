@@ -11,11 +11,10 @@ using System.Windows.Shapes;
 
 namespace InterfazClientes
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        public Cliente ClienteResultado { get; private set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -58,24 +57,18 @@ namespace InterfazClientes
                     "Campos requeridos", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-        }
 
-            // Guardar en base de datos:
-            // using (var db = new TuContextoDB())
-            // {
-            //     var cliente = new Cliente
-            //     {
-            //         Cliente_Nombre   = txtNombre.Text,
-            //         Cliente_Apellido = txtApellido.Text,
-            //         Cliente_DPI      = txtDPI.Text,
-            //         Cliente_Telefono = txtTelefono.Text,
-            //         Cliente_Correo   = txtCorreo.Text,
-            //         Cliente_Direccion = txtDireccion.Text,
-            //         Cliente_Activo   = toggleActivo.IsChecked == true
-            //     };
-            //     db.Clientes.Add(cliente);
-            //     db.SaveChanges();
-            // }
+            ClienteResultado = new Cliente
+            {
+                Cliente_DPI = txtDPI.Text.Trim(),
+                Cliente_Nombre = txtNombre.Text.Trim(),
+                Cliente_Apellido = txtApellido.Text.Trim(),
+                Cliente_Telefono = txtTelefono.Text.Trim(),
+                Cliente_Correo = txtCorreo.Text.Trim(),
+                Cliente_Direccion = txtDireccion.Text.Trim(),
+                Cliente_Activo = toggleActivo.IsChecked == true
+            };
+        }
 
             private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
@@ -89,23 +82,6 @@ namespace InterfazClientes
                 return;
             }
 
-            // Actualizar en base de datos:
-            // using (var db = new TuContextoDB())
-            // {
-            //     var cliente = db.Clientes.Find(_clienteId);
-            //     cliente.Cliente_Nombre    = txtNombre.Text;
-            //     cliente.Cliente_Apellido  = txtApellido.Text;
-            //     cliente.Cliente_DPI       = txtDPI.Text;
-            //     cliente.Cliente_Telefono  = txtTelefono.Text;
-            //     cliente.Cliente_Correo    = txtCorreo.Text;
-            //     cliente.Cliente_Direccion = txtDireccion.Text;
-            //     cliente.Cliente_Activo    = toggleActivo.IsChecked == true;
-            //     db.SaveChanges();
-            // }
-
-            MessageBox.Show("Cliente actualizado correctamente.", "Éxito",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            this.Close();
         }
     }
 }
