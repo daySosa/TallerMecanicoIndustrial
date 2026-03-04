@@ -64,5 +64,10 @@ namespace Login
             borderCodigo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             borderCodigo.BorderThickness = new Thickness(1.5);
         }
+
+        private void txtCodigo_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }

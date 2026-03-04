@@ -166,5 +166,10 @@ namespace Login
         {
             this.Close();
         }
+
+        private void txtCorreo_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }

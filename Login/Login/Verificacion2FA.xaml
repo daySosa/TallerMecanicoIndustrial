@@ -75,11 +75,10 @@
                                      Padding="0,0,10,0"
                                      CaretBrush="#333"
                                      GotFocus="TxtCodigo_GotFocus"
-                                     LostFocus="TxtCodigo_LostFocus" Text="Código de 6 dígitos" HorizontalAlignment="Left" Grid.Column="1" 
-                                     Margin="41,0,0,0" Grid.RowSpan="2" Width="149" Background="#00000000">
+                                     LostFocus="TxtCodigo_LostFocus" Grid.Column="1" Grid.RowSpan="2" Background="#00000000" Height="37" TextChanged="txtCodigo_TextChanged" HorizontalAlignment="Left" RenderTransformOrigin="0.316,0.59" Margin="43,0,0,2">
                                 <TextBox.Style>
                                     <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Example@email.com"/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Código de 6 dígitos"/>
                                         <Setter Property="materialDesign:HintAssist.Foreground" Value="#aaa"/>
                                     </Style>
                                 </TextBox.Style>
