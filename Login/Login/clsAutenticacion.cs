@@ -99,7 +99,6 @@ namespace Login
             catch (Exception ex)
             {
                 MessageBox.Show("⚠ Error al validar el código: " + ex.Message);
-                return false;
             }
             finally
             {
