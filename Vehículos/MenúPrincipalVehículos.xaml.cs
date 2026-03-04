@@ -1,29 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Vehículos
 {
-    /// <summary>
-    /// Lógica de interacción para MenúPrincipalVehículos.xaml
-    /// </summary>
     public partial class MenúPrincipalVehículos : Window
     {
         private clsConexion _conexion = new clsConexion();
-
-        // Colección observable que alimenta el DataGrid
         private ObservableCollection<Vehiculo> _listaVehiculos = new ObservableCollection<Vehiculo>();
         private ICollectionView _vistaVehiculos;
 
@@ -34,9 +21,7 @@ namespace Vehículos
         }
 
         // ═══════════════════════════════════════════
-        // 1. CARGAR DATOS DESDE AZURE
-        //    Usa Vista_Vehiculo_Con_Cliente para traer
-        //    vehículo + cliente en un solo query.
+        // 1. CARGAR DATOS
         // ═══════════════════════════════════════════
         private void CargarDatosDesdeDB()
         {
@@ -79,7 +64,6 @@ namespace Vehículos
                     }
                 }
 
-                // Vincula la colección al DataGrid con soporte de filtros
                 _vistaVehiculos = CollectionViewSource.GetDefaultView(_listaVehiculos);
                 _vistaVehiculos.Filter = AplicarFiltros;
                 dgVehiculos.ItemsSource = _vistaVehiculos;
@@ -89,16 +73,11 @@ namespace Vehículos
                 MessageBox.Show("Error al cargar vehículos:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally
-            {
-                _conexion.Cerrar();
-            }
+            finally { _conexion.Cerrar(); }
         }
 
         // ═══════════════════════════════════════════
-        // 2. FILTRO POR BUSCADOR
-        //    Busca en tiempo real por placa, marca,
-        //    modelo, tipo y nombre del cliente.
+        // 2. FILTRO BUSCADOR
         // ═══════════════════════════════════════════
         private bool AplicarFiltros(object item)
         {
@@ -116,7 +95,6 @@ namespace Vehículos
 
         // ═══════════════════════════════════════════
         // 3. BUSCADOR EN TIEMPO REAL
-        //    Evento TextChanged del txtBuscar en el XAML
         // ═══════════════════════════════════════════
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -125,8 +103,6 @@ namespace Vehículos
 
         // ═══════════════════════════════════════════
         // 4. SELECCIÓN EN DATAGRID → abrir edición
-        //    Al hacer clic en una fila se carga el
-        //    vehículo en el formulario MainWindow.
         // ═══════════════════════════════════════════
         private void dgVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -136,20 +112,19 @@ namespace Vehículos
                 ventana.CargarVehiculoParaEditar(seleccionado);
                 ventana.ShowDialog();
 
-                dgVehiculos.SelectedItem = null;  // limpia la selección al volver
-                CargarDatosDesdeDB();              // refresca el grid con los cambios
+                dgVehiculos.SelectedItem = null;
+                CargarDatosDesdeDB();
             }
         }
 
         // ═══════════════════════════════════════════
         // 5. BOTÓN NUEVO VEHÍCULO
-        //    Abre el formulario MainWindow vacío.
         // ═══════════════════════════════════════════
-        private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
+        private void BtnNuevoVehiculo_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow ventana = new MainWindow();
-            ventana.Show();
-            this.Close();
+            var ventana = new MainWindow();
+            ventana.ShowDialog();
+            CargarDatosDesdeDB();
         }
     }
 }

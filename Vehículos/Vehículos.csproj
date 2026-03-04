@@ -9,8 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="BARRA DE BUSQUEDA.png" />
-    <None Remove="Captura de pantalla 2026-02-21 200418.png" />
     <None Remove="OSM_LOGO.png" />
   </ItemGroup>
 
@@ -23,8 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="BARRA DE BUSQUEDA.png" />
-    <Resource Include="Captura de pantalla 2026-02-21 200418.png" />
     <Resource Include="OSM_LOGO.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
