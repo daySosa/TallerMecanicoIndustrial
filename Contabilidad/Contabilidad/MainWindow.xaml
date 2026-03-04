@@ -28,20 +28,25 @@
                     <Image Source="/Imagenes/OSM_LOGO.png" Height="204" Width="195"/>
                 </WrapPanel>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- PANTALLA PRINCIPAL -->
+                <Button x:Name="btnPantallaPrincipal"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15"
+                        Click="btnPantallaPrincipal_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="38" HorizontalAlignment="Center"/>
                         <TextBlock Foreground="White" FontSize="15" Height="16">Pantalla Principal</TextBlock>
-                        
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- INVENTARIO -->
+                <Button x:Name="btnInventario"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnInventario_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
                                                  Foreground="White" Height="26" Width="38" HorizontalAlignment="Center"/>
@@ -49,9 +54,12 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- VEHÍCULOS -->
+                <Button x:Name="btnVehiculos"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnVehiculos_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
                                                  Foreground="White" Width="39" HorizontalAlignment="Center" Height="25"/>
@@ -59,9 +67,12 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- CLIENTES -->
+                <Button x:Name="btnClientes"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnClientes_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="People" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
@@ -69,6 +80,7 @@
                     </WrapPanel>
                 </Button>
 
+                <!-- CONTABILIDAD EXPANDER -->
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Width="Auto" Height="Auto" Margin="0,0,0,15">
                     <Expander.Header>
@@ -79,29 +91,40 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+
+                        <!-- EGRESOS -->
+                        <Button x:Name="btnEgresos"
+                                Background="#242731" BorderThickness="0" Foreground="White"
                                 FontSize="15" HorizontalContentAlignment="Left"
->
+                                Click="btnEgresos_Click">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center"
                                                          Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Background="#242731" BorderThickness="0" Foreground="White"
-                                FontSize="15" HorizontalContentAlignment="Left">
+
+                        <!-- INGRESOS -->
+                        <Button x:Name="btnIngresos"
+                                Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left"
+                                Click="btnIngresos_Click">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center"
                                                          Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
+
                     </StackPanel>
                 </Expander>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- ÓRDENES -->
+                <Button x:Name="btnOrdenes"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnOrdenes_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
@@ -109,9 +132,12 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <!-- CERRAR SESIÓN -->
+                <Button x:Name="btnCerrarSesion"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="210"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,70,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,70,0,15"
+                        Click="btnCerrarSesion_Click">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center"
                                                  Foreground="White" Width="39" HorizontalAlignment="Center" Height="21"/>
@@ -142,8 +168,10 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
-                        <TextBlock Text="Egresos" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Gestiona los egresos del taller" Foreground="#6B7280" FontSize="12"/>
+                        <TextBlock Text="Contabilidad — Egresos"
+                                   Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Gestiona los egresos del taller"
+                                   Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
 
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
@@ -152,12 +180,14 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
                                                      Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Background="Transparent" Foreground="#6B7280"
+                            <TextBox x:Name="txtBuscar"
+                                     Background="Transparent" Foreground="#6B7280"
                                      BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White">
+                                     FontSize="13" Width="200" CaretBrush="White"
+                                     TextChanged="txtBuscar_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar gasto..."/>
                                         <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
                                     </Style>
                                 </TextBox.Style>
@@ -165,11 +195,27 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- ===== CAMPANA CON BADGE ===== -->
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                Foreground="#6B7280" Width="38" Height="38">
+                        <Button x:Name="btnNotificaciones"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Foreground="#6B7280" Width="38" Height="38"
+                                Click="btnNotificaciones_Click">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
+
+                        <!-- BADGE ROJO CON NÚMERO -->
+                        <Border x:Name="badgeNotificaciones"
+                                Background="#FF4444"
+                                CornerRadius="8" Width="16" Height="16"
+                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Visibility="Collapsed">
+                            <TextBlock x:Name="txtContadorNotificaciones"
+                                       Text="0" Foreground="White"
+                                       FontSize="9" FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
                     </Grid>
 
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
@@ -195,12 +241,23 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+<<<<<<< HEAD
                 <Button x:Name="btnAgregar" Grid.Column="0"
+=======
+                <!-- AGREGAR -->
+                <Button x:Name="btnAgregar"
+                        Grid.Column="0"
+>>>>>>> 5e2a40853f49d27fb246db1dd6fa28521f5ebcdf
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#3D7EFF" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         materialDesign:ElevationAssist.Elevation="Dp0"
+<<<<<<< HEAD
                         Height="38" Padding="16,0" Margin="0,0,10,0" Click="btnAgregar_Click">
+=======
+                        Height="38" Padding="16,0" Margin="0,0,10,0"
+                        Click="btnAgregar_Click">
+>>>>>>> 5e2a40853f49d27fb246db1dd6fa28521f5ebcdf
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -208,11 +265,22 @@
                     </StackPanel>
                 </Button>
 
+<<<<<<< HEAD
                 <Button x:Name="btnActualizar" Grid.Column="1"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Height="38" Padding="16,0" Margin="0,0,10,0" Click="btnActualizar_Click">
+=======
+                <!-- ACTUALIZAR -->
+                <Button x:Name="btnActualizar"
+                        Grid.Column="1"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="#3D7EFF" BorderBrush="#3D7EFF"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Height="38" Padding="16,0" Margin="0,0,10,0"
+                        Click="btnActualizar_Click">
+>>>>>>> 5e2a40853f49d27fb246db1dd6fa28521f5ebcdf
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -220,11 +288,22 @@
                     </StackPanel>
                 </Button>
 
+<<<<<<< HEAD
                 <Button x:Name="btnMostrarComprobantes" Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Height="38" Padding="16,0" Click="btnMostrarComprobantes_Click">
+=======
+                <!-- MOSTRAR COMPROBANTE -->
+                <Button x:Name="btnMostrarComprobante"
+                        Grid.Column="2"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="#6B7280" BorderBrush="#3D4458"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Height="38" Padding="16,0"
+                        Click="btnMostrarComprobante_Click">
+>>>>>>> 5e2a40853f49d27fb246db1dd6fa28521f5ebcdf
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
