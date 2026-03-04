@@ -17,7 +17,7 @@ namespace Contabilidad
     /// </summary>
     public partial class MostrarComprobante : Window
     {
-        public MostrarComprobante()
+        public MostrarComprobante(int id, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
         }

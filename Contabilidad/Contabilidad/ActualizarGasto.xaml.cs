@@ -17,7 +17,7 @@ namespace Contabilidad
     /// </summary>
     public partial class ActualizarGasto : Window
     {
-        public ActualizarGasto()
+        public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
         }
