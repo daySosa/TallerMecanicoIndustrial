@@ -11,22 +11,7 @@
   <ItemGroup>
     <None Remove="BARRA DE BUSQUEDA.png" />
     <None Remove="Captura de pantalla 2026-02-21 200418.png" />
-    <None Remove="DIVISOR.png" />
-    <None Remove="FECHA DE ICONO DE CONTA.png" />
-    <None Remove="FOTO DE PERFIL.png" />
-    <None Remove="ICONO DE CAMPANA.png" />
-    <None Remove="ICONO DE CLIENTES.png" />
-    <None Remove="ICONO DE CONFIGURACIÓN.png" />
-    <None Remove="ICONO DE CONTABILIDAD.png" />
-    <None Remove="ICONO DE INVENTARIO.png" />
-    <None Remove="ICONO DE MENU.png" />
-    <None Remove="ICONO DE PROVEEDORES.png" />
-    <None Remove="ICONO DE VEHÍCULOS.png" />
-    <None Remove="ICONO DE ÓRDENES.png" />
     <None Remove="OSM_LOGO.png" />
-    <None Remove="PARTE 1 DE ICONO DE CERRAR SESIÓN.png" />
-    <None Remove="PARTE 2 DE ICONO DE CERRAR SESIÓN.png" />
-    <None Remove="TEXTO.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,22 +25,9 @@
   <ItemGroup>
     <Resource Include="BARRA DE BUSQUEDA.png" />
     <Resource Include="Captura de pantalla 2026-02-21 200418.png" />
-    <Resource Include="DIVISOR.png" />
-    <Resource Include="FECHA DE ICONO DE CONTA.png" />
-    <Resource Include="FOTO DE PERFIL.png" />
-    <Resource Include="ICONO DE CAMPANA.png" />
-    <Resource Include="ICONO DE CLIENTES.png" />
-    <Resource Include="ICONO DE CONFIGURACIÓN.png" />
-    <Resource Include="ICONO DE CONTABILIDAD.png" />
-    <Resource Include="ICONO DE INVENTARIO.png" />
-    <Resource Include="ICONO DE MENU.png" />
-    <Resource Include="ICONO DE PROVEEDORES.png" />
-    <Resource Include="ICONO DE VEHÍCULOS.png" />
-    <Resource Include="ICONO DE ÓRDENES.png" />
-    <Resource Include="OSM_LOGO.png" />
-    <Resource Include="PARTE 1 DE ICONO DE CERRAR SESIÓN.png" />
-    <Resource Include="PARTE 2 DE ICONO DE CERRAR SESIÓN.png" />
-    <Resource Include="TEXTO.png" />
+    <Resource Include="OSM_LOGO.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>
