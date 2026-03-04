@@ -49,6 +49,7 @@ namespace Vehículos
                 return;
             }
 
+
         }
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
@@ -70,6 +71,11 @@ namespace Vehículos
             MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
             ventana.Show();
             this.Close();
+        }
+
+        private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
         }
     }
 }
