@@ -73,7 +73,7 @@ namespace Contabilidad
             var ventana = new AgregarGasto();
             ventana.Owner = this;
             if (ventana.ShowDialog() == true)
-            CargarEgreso();
+                CargarEgreso();
         }
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
@@ -100,7 +100,7 @@ namespace Contabilidad
 
             ventana.Owner = this;
             if (ventana.ShowDialog() == true)
-            CargarEgreso();
+                CargarEgreso();
         }
 
         private void btnMostrarComprobante_Click(object sender, RoutedEventArgs e)
