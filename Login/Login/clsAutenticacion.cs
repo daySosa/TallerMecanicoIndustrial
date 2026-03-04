@@ -135,7 +135,7 @@ namespace Login
                 };
 
                 using var smtp = new SmtpClient();
-                smtp.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                smtp.Connect("smtp.office365.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
                 smtp.Authenticate("tallerind@outlook.com", "TallerMecanico#2026");
                 smtp.Send(mensaje);
                 smtp.Disconnect(true);

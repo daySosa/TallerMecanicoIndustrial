@@ -128,8 +128,21 @@ namespace Login
                     // ventanaPrincipal.Show();
                     // this.Close();
 
-                    MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    /*MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
+                        MessageBoxButton.OK, MessageBoxImage.Information);*/
+
+                    if (enviado)
+                    {
+                        //Abrir ventana de verificación
+                        Verificacion2FA ventanaVerificacion = new Verificacion2FA(correo);
+                        ventanaVerificacion.Show();
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
+                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
                 else
                 {
