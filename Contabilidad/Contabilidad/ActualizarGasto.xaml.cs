@@ -22,18 +22,98 @@ namespace Contabilidad
 
         private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
 
+        private int _gastoId;
+
+
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
+            _gastoId = gastoId;
+            CargarDatos(tipo, nombre, precio, fecha, observaciones);
         }
+
+        private void CargarDatos(string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
+        {
+            // Seleccionar el tipo en el ComboBox
+            foreach (ComboBoxItem item in cmbTipoGasto.Items)
+            {
+                if (item.Content.ToString() == tipo)
+                {
+                    cmbTipoGasto.SelectedItem = item;
+                    break;
+                }
+            }
+
+            txtNombre.Text = nombre;
+            txtPrecio.Text = precio.ToString("F2");
+            txtFecha.Text = fecha.ToString("dd/MM/yyyy HH:mm");
+            txtObservaciones.Text = observaciones;
+        }
+
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
+            this.DialogResult = false;
             this.Close();
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
+            if (cmbTipoGasto.SelectedItem == null)
+            {
+                MessageBox.Show("Selecciona un tipo de gasto.", "Aviso",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("Escribe el nombre del gasto.", "Aviso",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio <= 0)
+            {
+                MessageBox.Show("Ingresa un precio válido.", "Aviso",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string query = @"
+                        UPDATE Contabilidad_Gastos SET
+                            Tipo_Gasto          = @TipoGasto,
+                            Nombre_Gasto        = @NombreGasto,
+                            Observaciones_Gasto = @Observaciones,
+                            Precio_Gasto        = @Precio
+                        WHERE Gasto_ID = @GastoID";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@TipoGasto", ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString());
+                    cmd.Parameters.AddWithValue("@NombreGasto", txtNombre.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Precio", precio);
+                    cmd.Parameters.AddWithValue("@GastoID", _gastoId);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+
+                MessageBox.Show("Gasto actualizado correctamente.", "Éxito",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                this.DialogResult = true;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al actualizar el gasto: " + ex.Message, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
 
         }
     }
