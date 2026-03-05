@@ -12,12 +12,9 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Lógica de interacción para ActualizarPago.xaml
-    /// </summary>
     public partial class ActualizarPago : Window
     {
-        public ActualizarPago()
+
         {
             InitializeComponent();
         }
@@ -27,9 +24,9 @@ namespace Contabilidad
             this.Close();
         }
 
-        private void btnGuardar_Click(object sender, RoutedEventArgs e)
+        private void MostrarMensaje(string msg)
         {
-            //Tu lógica aquí
+            txtMensajeDNI.Visibility = Visibility.Collapsed;
         }
     }
 }

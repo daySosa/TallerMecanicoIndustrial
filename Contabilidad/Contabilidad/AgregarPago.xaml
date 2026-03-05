@@ -88,33 +88,27 @@
             </Grid>
 
             <!-- BOTONES -->
-            <Grid Margin="0,8,0,0">
+        <Grid Grid.Row="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button x:Name="btnCancelar" Grid.Column="0" Content="Cancelar"
-                        Height="40"
+            <Button Grid.Column="0" x:Name="btnCancelar"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                        BorderBrush="#6c7293" Foreground="#6c7293"
-                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnCancelar_Click"/>
+                    Foreground="#6B7280" BorderBrush="#3D4458"
+                    materialDesign:ButtonAssist.CornerRadius="8"
 
-                <Button x:Name="btnGuardar" Grid.Column="2" Content="Guardar Pago"
-                        Height="40"
-                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnGuardar_Click">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                            <Setter Property="Background" Value="#3D7EFF"/>
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="BorderBrush" Value="#3D7EFF"/>
-                            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp0"/>
-                        </Style>
-                    </Button.Style>
+            <Button Grid.Column="2" x:Name="btnGuardar"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="#3D7EFF" Foreground="White"
+                    materialDesign:ButtonAssist.CornerRadius="8"
+                    materialDesign:ElevationAssist.Elevation="Dp0"
+                    Height="44" FontSize="14" FontWeight="SemiBold"
+                    Click="btnGuardar_Click">
+                Guardar Pago
                 </Button>
 
             </Grid>
-        </StackPanel>
-    </Border>
 </Window>

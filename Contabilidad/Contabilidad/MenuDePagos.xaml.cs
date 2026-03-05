@@ -23,30 +23,27 @@ namespace Contabilidad
             CargarPago();
         }
 
-        public void CargarPago()
+        public void CargarPago(string busqueda = null)
         {
-            // Conecta con tu base de datos
+            string texto = txtBuscar.Text.Trim();
         }
 
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new AgregarPago();
+            AgregarPago ventana = new AgregarPago(this);
             ventana.ShowDialog();
-            CargarPago();
         }
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new ActualizarPago();
+            if (dgPagos.SelectedItem == null)
             ventana.ShowDialog();
-            CargarPago();
         }
 
         private void btnMostrarComprobantes_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new ComprobanteDePago();
+            if (dgPagos.SelectedItem == null)
             ventana.ShowDialog();
-            CargarPago();
         }
     }
 }
