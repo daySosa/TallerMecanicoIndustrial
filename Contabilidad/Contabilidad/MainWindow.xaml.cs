@@ -137,7 +137,9 @@ namespace Contabilidad
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí abres la ventana de ingresos cuando la tengas
+            MenuDePagos ventana = new MenuDePagos();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)

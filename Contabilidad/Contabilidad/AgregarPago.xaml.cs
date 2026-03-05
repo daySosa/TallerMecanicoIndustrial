@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,14 +14,181 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Lógica de interacción para AgregarPago.xaml
-    /// </summary>
+
     public partial class AgregarPago : Window
     {
-        public AgregarPago()
+
+        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
+
+
+        private MenuDePagos _menuRef;
+
+        private bool _esEdicion = false;
+        private int _pagoId = 0;
+
+        public AgregarPago(MenuDePagos menuRef)
         {
             InitializeComponent();
+            _menuRef = menuRef;
+        }
+
+        public AgregarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto)
+        {
+            InitializeComponent();
+            _menuRef = menuRef;
+            _esEdicion = true;
+            _pagoId = pagoId;
+
+            Title = "Actualizar Pago";
+            txtDNI.Text = dni;
+            txtOrdenID.Text = ordenId.ToString();
+            txtMonto.Text = monto.ToString("N2");
+
+            BuscarCliente(dni);
+        }
+
+        private void btnBuscar_Click(object sender, RoutedEventArgs e)
+        {
+            BuscarCliente(txtDNI.Text.Trim());
+        }
+
+        private void BuscarCliente(string dni)
+        {
+            OcultarMensaje();
+            if (string.IsNullOrEmpty(dni))
+            {
+                MostrarMensaje("Ingresa un DNI primero.");
+                return;
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@DNI", dni);
+                    conn.Open();
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        txtNombre.Text = reader["Cliente_Nombres"].ToString() + " " + reader["Cliente_Apellidos"].ToString();
+                        txtNombre.Foreground = System.Windows.Media.Brushes.White;
+                    }
+                    else
+                    {
+                        txtNombre.Text = "";
+                        MostrarMensaje("No se encontró ningún cliente con ese DNI.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje("Error al buscar cliente: " + ex.Message);
+            }
+        }
+
+        private void txtOrdenID_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            OcultarMensaje();
+            if (!int.TryParse(txtOrdenID.Text.Trim(), out int ordenId))
+            {
+                txtMonto.Text = "0.00";
+                return;
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    txtMonto.Text = (result != null && result != DBNull.Value)
+                        ? Convert.ToDecimal(result).ToString("N2")
+                        : "0.00";
+                }
+            }
+            catch
+            {
+                txtMonto.Text = "0.00";
+            }
+        }
+
+        private void btnGuardar_Click(object sender, RoutedEventArgs e)
+        {
+            OcultarMensaje();
+
+            string dni = txtDNI.Text.Trim();
+            string ordenStr = txtOrdenID.Text.Trim();
+            string montoStr = txtMonto.Text.Trim();
+
+            if (string.IsNullOrEmpty(dni) || string.IsNullOrEmpty(txtNombre.Text))
+            {
+                MostrarMensaje("Busca un cliente válido antes de guardar.");
+                return;
+            }
+            if (!int.TryParse(ordenStr, out int ordenId))
+            {
+                MostrarMensaje("El ID de la orden debe ser un número.");
+                return;
+            }
+            if (!decimal.TryParse(montoStr, out decimal monto) || monto <= 0)
+            {
+                MostrarMensaje("El monto calculado no es válido. Verifica la orden.");
+                return;
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    if (!_esEdicion)
+                    {
+                        SqlCommand cmd = new SqlCommand("sp_RegistrarPago", conn);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@ClienteDNI", Convert.ToInt32(dni));
+                        cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                        cmd.Parameters.AddWithValue("@Monto", monto);
+                        cmd.ExecuteNonQuery();
+                        MessageBox.Show("¡Pago registrado correctamente!", "Éxito",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        string updateQuery = @"
+                            UPDATE Contabilidad_Pago
+                            SET Cliente_DNI = @DNI,
+                                Orden_ID    = @OrdenID,
+                                Precio_Pago = @Monto
+                            WHERE Pago_ID = @PagoID";
+
+                        SqlCommand cmd = new SqlCommand(updateQuery, conn);
+                        cmd.Parameters.AddWithValue("@DNI", Convert.ToInt32(dni));
+                        cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                        cmd.Parameters.AddWithValue("@Monto", monto);
+                        cmd.Parameters.AddWithValue("@PagoID", _pagoId);
+                        cmd.ExecuteNonQuery();
+                        MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+
+                _menuRef.CargarPago();
+                this.Close();
+            }
+            catch (SqlException sqlEx)
+            {
+                MostrarMensaje(sqlEx.Message);
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje("Error inesperado: " + ex.Message);
+            }
         }
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
@@ -27,9 +196,15 @@ namespace Contabilidad
             this.Close();
         }
 
-        private void btnGuardar_Click(object sender, RoutedEventArgs e)
+        private void MostrarMensaje(string msg)
         {
-            //Tu lógica aquí
+            txtMensaje.Text = msg;
+            txtMensaje.Visibility = Visibility.Visible;
+        }
+
+        private void OcultarMensaje()
+        {
+            txtMensaje.Visibility = Visibility.Collapsed;
         }
     }
 }

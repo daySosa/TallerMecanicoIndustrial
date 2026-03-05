@@ -12,7 +12,6 @@
         Background="#1F2128"
         WindowStartupLocation="CenterScreen">
 
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
@@ -31,8 +30,8 @@
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
-                                                 Foreground="White" Height="25" Width="38" HorizontalAlignment="Center"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="16">Pantalla Principal</TextBlock>
+                                                 Foreground="White" Height="25" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -41,8 +40,8 @@
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
-                                                 Foreground="White" Height="26" Width="38" HorizontalAlignment="Center"/>
-                        <TextBlock Foreground="White" FontSize="15" Width="142" Height="20">Inventario</TextBlock>
+                                                 Foreground="White" Height="26" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -51,8 +50,8 @@
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
-                                                 Foreground="White" Width="39" HorizontalAlignment="Center" Height="25"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="19">Vehículos</TextBlock>
+                                                 Foreground="White" Width="39" Height="25"/>
+                        <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -62,12 +61,12 @@
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="People" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
-                        <TextBlock Foreground="White" FontSize="15" Width="77" Height="18">Clientes</TextBlock>
+                        <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
 
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
-                          BorderThickness="0" Width="Auto" Height="Auto" Margin="0,0,0,15">
+                          BorderThickness="0" Width="Auto" Margin="0,0,0,15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
                             <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
@@ -84,7 +83,7 @@
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                        <Button Background="#3D7EFF" BorderThickness="0" Foreground="White"
                                 FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center"
@@ -101,7 +100,7 @@
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="18">Órdenes</TextBlock>
+                        <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -111,8 +110,8 @@
                         VerticalAlignment="Bottom" Margin="0,70,0,15">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center"
-                                                 Foreground="White" Width="39" HorizontalAlignment="Center" Height="21"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="21">Cerrar Sesión</TextBlock>
+                                                 Foreground="White" Width="39" Height="21"/>
+                        <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -139,10 +138,8 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
-                        <TextBlock Text="Ingresos"
-                                   Foreground="White" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Gestiona los pagos recibidos"
-                                   Foreground="#6B7280" FontSize="12"/>
+                        <TextBlock Text="Ingresos" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Gestiona los pagos recibidos" Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
 
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
@@ -154,7 +151,8 @@
                             <TextBox x:Name="txtBuscar"
                                      Background="Transparent" Foreground="#6B7280"
                                      BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White">
+                                     FontSize="13" Width="200" CaretBrush="White"
+                                     TextChanged="txtBuscar_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                         <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar pago..."/>
@@ -200,7 +198,8 @@
                         Background="#3D7EFF" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         materialDesign:ElevationAssist.Elevation="Dp0"
-                        Height="38" Padding="16,0" Margin="0,0,10,0" VerticalAlignment="Top" Click="btnAgregar_Click">
+                        Height="38" Padding="16,0" Margin="0,0,10,0"
+                        Click="btnAgregar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -212,7 +211,8 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Margin="0,0,10,0" Click="btnActualizar_Click">
+                        Height="38" Padding="16,0" Margin="0,0,10,0"
+                        Click="btnActualizar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -224,14 +224,14 @@
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Click="btnMostrarComprobantes_Click">
+                        Height="38" Padding="16,0"
+                        Click="btnMostrarComprobantes_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Mostrar Comprobante" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-
             </Grid>
 
             <!-- ===== CARD CON DATAGRID ===== -->
@@ -239,8 +239,7 @@
                                  Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
                                  UniformCornerRadius="10"
-                                 Margin="20,0,20,20"
-                                 VerticalAlignment="Stretch">
+                                 Margin="20,0,20,20">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
