@@ -12,9 +12,6 @@ using System.Windows.Shapes;
 
 namespace Login
 {
-    /// <summary>
-    /// Lógica de interacción para OpcionSesion.xaml
-    /// </summary>
     public partial class OpcionSesion : Window
     {
         private string correoUsuario;
@@ -27,9 +24,9 @@ namespace Login
 
         private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
         {
-            InterfazIngresarCodigoV ventana = new InterfazIngresarCodigoV();
-            ventana.Show();
-            this.Close();
+            // Verificacion2FA ventana = new Verificacion2FA(correoUsuario);
+            //ventana.Show();
+           // this.Close();
         }
 
         private void BtnReconocimientoFacial_Click(object sender, RoutedEventArgs e)
