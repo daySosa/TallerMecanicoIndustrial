@@ -30,16 +30,18 @@ namespace Vehículos
 
                 string query = @"
                     SELECT
-                        Vehiculo_Placa,
-                        Vehiculo_Marca,
-                        Vehiculo_Modelo,
-                        Vehiculo_Año,
-                        Vehiculo_Tipo,
-                        ISNULL(Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
-                        Cliente_DNI,
-                        Cliente_Nombres + ' ' + Cliente_Apellidos AS Cliente_NombreCompleto
-                    FROM Vista_Vehiculo_Con_Cliente
-                    ORDER BY Vehiculo_Placa";
+                        v.Vehiculo_Placa,
+                        v.Vehiculo_Marca,
+                        v.Vehiculo_Modelo,
+                        v.Vehiculo_Año,
+                        v.Vehiculo_Tipo,
+                        ISNULL(v.Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
+                        v.Vehiculo_Activo,
+                        c.Cliente_DNI,
+                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto
+                    FROM Vehiculo v
+                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
+                    ORDER BY v.Vehiculo_Placa";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -56,7 +58,9 @@ namespace Vehículos
                             Vehiculo_Observaciones = reader["Vehiculo_Observaciones"].ToString(),
                             Cliente_DNI = reader.GetInt32(reader.GetOrdinal("Cliente_DNI")),
                             Cliente_NombreCompleto = reader["Cliente_NombreCompleto"].ToString(),
-                            EstaActivo = true
+
+                            EstaActivo = reader["Vehiculo_Activo"] != DBNull.Value
+                                         && (bool)reader["Vehiculo_Activo"]
                         });
                     }
                 }

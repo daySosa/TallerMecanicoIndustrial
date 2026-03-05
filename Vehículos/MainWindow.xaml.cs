@@ -9,17 +9,17 @@ namespace Vehículos
 {
     public class Vehiculo : INotifyPropertyChanged
     {
-        public string Vehiculo_Placa { get; set; }
-        public string Vehiculo_Marca { get; set; }
-        public string Vehiculo_Modelo { get; set; }
+        public string? Vehiculo_Placa { get; set; }
+        public string? Vehiculo_Marca { get; set; }
+        public string? Vehiculo_Modelo { get; set; }
         public int Vehiculo_Año { get; set; }
-        public string Vehiculo_Tipo { get; set; }
-        public string Vehiculo_Observaciones { get; set; }
+        public string? Vehiculo_Tipo { get; set; }
+        public string? Vehiculo_Observaciones { get; set; }
         public int Cliente_DNI { get; set; }
-        public string Cliente_NombreCompleto { get; set; }
+        public string? Cliente_NombreCompleto { get; set; }
         public bool EstaActivo { get; set; } = true;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
@@ -29,15 +29,13 @@ namespace Vehículos
         private clsConexion _conexion = new clsConexion();
         private string _placaSeleccionada = string.Empty;
         private int _clienteDNI = -1;
+        private ICollectionView? _vistaVehiculos;
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        // ═══════════════════════════════════════════
-        // MODO NUEVO: inyectar cliente desde el menú
-        // ═══════════════════════════════════════════
         public void EstablecerCliente(int clienteDNI)
         {
             _clienteDNI = clienteDNI;
@@ -45,9 +43,6 @@ namespace Vehículos
             VerificarClienteEnBD(clienteDNI);
         }
 
-        // ═══════════════════════════════════════════
-        // BOTÓN VERIFICAR CLIENTE
-        // ═══════════════════════════════════════════
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
             if (!int.TryParse(txtClienteDNI.Text.Trim(), out int dni) || dni <= 0)
@@ -63,7 +58,6 @@ namespace Vehículos
             try
             {
                 _conexion.Abrir();
-
                 string query = @"
                     SELECT Cliente_DNI,
                            Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto
@@ -100,24 +94,20 @@ namespace Vehículos
         {
             borderClienteInfo.Visibility = Visibility.Visible;
             iconClienteEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountCheck;
-            iconClienteEstado.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#4CAF50"));
+            iconClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
             txtClienteNombre.Text = nombreCompleto;
             txtClienteEstado.Text = "✔ Cliente verificado correctamente";
-            txtClienteEstado.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#4CAF50"));
+            txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
         }
 
         private void MostrarClienteError(string mensaje)
         {
             borderClienteInfo.Visibility = Visibility.Visible;
             iconClienteEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountAlert;
-            iconClienteEstado.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#f44336"));
+            iconClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
             txtClienteNombre.Text = mensaje;
             txtClienteEstado.Text = "✘ Cliente no encontrado";
-            txtClienteEstado.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#f44336"));
+            txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
         private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
@@ -127,9 +117,6 @@ namespace Vehículos
             _clienteDNI = -1;
         }
 
-        // ═══════════════════════════════════════════
-        // 1. GUARDAR
-        // ═══════════════════════════════════════════
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
@@ -152,7 +139,7 @@ namespace Vehículos
 
             if (_clienteDNI == -1)
             {
-                MessageBox.Show("Debes ingresar y verificar el DNI del cliente antes de guardar.",
+                MessageBox.Show("Debes verificar el DNI del cliente antes de guardar.",
                     "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -172,7 +159,6 @@ namespace Vehículos
                     cmd.Parameters.AddWithValue("@Tipo", (cmbTipo.SelectedItem as ComboBoxItem)?.Content.ToString());
                     cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
                         ? (object)DBNull.Value : txtObservaciones.Text.Trim());
-
                     cmd.ExecuteNonQuery();
                 }
 
@@ -194,9 +180,6 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 2. ACTUALIZAR
-        // ═══════════════════════════════════════════
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
@@ -234,7 +217,8 @@ namespace Vehículos
                         Vehiculo_Modelo        = @Modelo,
                         Vehiculo_Año           = @Año,
                         Vehiculo_Tipo          = @Tipo,
-                        Vehiculo_Observaciones = @Observaciones
+                        Vehiculo_Observaciones = @Observaciones,
+                        Vehiculo_Activo        = @Activo
                     WHERE Vehiculo_Placa = @Placa";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
@@ -245,6 +229,7 @@ namespace Vehículos
                     cmd.Parameters.AddWithValue("@Tipo", (cmbTipo.SelectedItem as ComboBoxItem)?.Content.ToString());
                     cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
                         ? (object)DBNull.Value : txtObservaciones.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
                     cmd.Parameters.AddWithValue("@Placa", _placaSeleccionada);
 
                     cmd.ExecuteNonQuery();
@@ -263,36 +248,29 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 3. CANCELAR
-        // ═══════════════════════════════════════════
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
-        // ═══════════════════════════════════════════
-        // 4. TOGGLE ESTADO
-        // ═══════════════════════════════════════════
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
             txtEstadoLabel.Text = "El vehículo está activo";
-            txtEstadoLabel.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#4CAF50"));
+            txtEstadoLabel.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
+            if (iconEstado != null)
+                iconEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
         }
 
         private void ToggleActivo_Unchecked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
             txtEstadoLabel.Text = "El vehículo está inactivo";
-            txtEstadoLabel.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#f44336"));
+            txtEstadoLabel.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+            if (iconEstado != null)
+                iconEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
-        // ═══════════════════════════════════════════
-        // 5. CARGAR PARA EDITAR
-        // ═══════════════════════════════════════════
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
@@ -320,10 +298,6 @@ namespace Vehículos
 
             toggleActivo.IsChecked = vehiculo.EstaActivo;
         }
-
-        // ═══════════════════════════════════════════
-        // 6. PLACA → MAYÚSCULAS
-        // ═══════════════════════════════════════════
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtPlaca.IsReadOnly) return;
@@ -331,10 +305,6 @@ namespace Vehículos
             txtPlaca.Text = txtPlaca.Text.ToUpper();
             txtPlaca.CaretIndex = caret;
         }
-
-        // ═══════════════════════════════════════════
-        // 7. LIMPIAR FORMULARIO
-        // ═══════════════════════════════════════════
         private void LimpiarFormulario()
         {
             txtPlaca.Clear();
