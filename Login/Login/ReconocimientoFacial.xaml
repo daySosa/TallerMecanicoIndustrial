@@ -1,0 +1,61 @@
+﻿<Window x:Class="Login.ReconocimientoFacial"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Reconocimiento Facial"
+        Height="546" Width="700"
+        Background="#1E1E2E"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+
+            <!-- Título -->
+            <TextBlock Text="Reconocimiento Facial"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="White" Margin="0,0,0,20"
+                       HorizontalAlignment="Center"/>
+
+            <!-- Área cámara -->
+            <Border Background="#2A2A3E"
+                    BorderBrush="#6C63FF" BorderThickness="2"
+                    CornerRadius="10" Padding="5">
+                <Grid Width="500" Height="320">
+                    <Image x:Name="imgCamara" Stretch="Uniform"/>
+                    <TextBlock x:Name="txtSinCamara"
+                               Text="Camara no iniciada"
+                               FontSize="16" Foreground="#888"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Estado -->
+            <TextBlock x:Name="txtEstado"
+                       Text="Estado: En espera..."
+                       Foreground="#AAA" FontSize="13"
+                       HorizontalAlignment="Center"
+                       Margin="0,10,0,10"/>
+
+            <!-- Botones -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="btnIniciarCamara"
+                        Content="Iniciar Camara"
+                        Width="150" Height="40" Margin="8"
+                        Background="#6C63FF" Foreground="White"
+                        FontSize="13" FontWeight="Bold"
+                        BorderThickness="0" Cursor="Hand"
+                        Click="btnIniciarCamara_Click"/>
+
+                <Button x:Name="btnDetenerCamara"
+                        Content="Detener"
+                        Width="120" Height="40" Margin="8"
+                        Background="#E74C3C" Foreground="White"
+                        FontSize="13" FontWeight="Bold"
+                        BorderThickness="0" Cursor="Hand"
+                        IsEnabled="False"
+                        Click="btnDetenerCamara_Click"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Grid>
+</Window>
