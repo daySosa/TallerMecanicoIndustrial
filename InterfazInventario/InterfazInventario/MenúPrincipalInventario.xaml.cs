@@ -16,7 +16,7 @@ namespace InterfazInventario
    
     public class Repuesto : INotifyPropertyChanged
     {
-        public int? Producto_ID { get; set; }
+        public int Producto_ID { get; set; }
         public string? Producto_Nombre { get; set; }
         public string? Producto_Categoria { get; set; }
         public string? Producto_Marca { get; set; }   
