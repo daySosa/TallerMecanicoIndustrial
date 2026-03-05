@@ -37,6 +37,7 @@ namespace Login
             ReconocimientoFacial ventana = new ReconocimientoFacial();
             ventana.Show();
             this.Close();
+<<<<<<< Updated upstream
         }
 
         private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
@@ -51,6 +52,8 @@ namespace Login
             ReconocimientoFacial ventana = new ReconocimientoFacial();
             ventana.Show();
             this.Close();
+=======
+>>>>>>> Stashed changes
         }
     }
 }
