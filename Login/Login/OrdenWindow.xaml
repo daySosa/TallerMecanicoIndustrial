@@ -194,7 +194,7 @@
                                     <Border x:Name="tabDNI" Grid.Column="0"
                                             Background="#4f6ef7" CornerRadius="6,0,0,6"
                                             Padding="0,8" Cursor="Hand"
-                                            MouseLeftButtonDown="TabDNI_Click">
+                                            MouseLeftButtonDown="TabDNI_Click" HorizontalAlignment="Left" Width="127">
                                         <TextBlock Text="Por DNI" Foreground="White"
                                                    FontSize="12" FontWeight="Medium"
                                                    HorizontalAlignment="Center"/>
@@ -365,7 +365,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="Estado" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                        <ComboBox Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                        <ComboBox x:Name="cmbEstado" Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                                   Background="#2e3250" Foreground="White"
                                                   BorderBrush="#4f6ef7" Height="38">
                                             <ComboBoxItem Content="En Espera" IsSelected="True"/>
@@ -409,7 +409,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                        <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                        <TextBox x:Name="txtObservaciones" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                                  Background="#1e2130" Foreground="White"
                                                  BorderBrush="#3a3f5c" CaretBrush="White"
                                                  Height="75" TextWrapping="Wrap" AcceptsReturn="True"
@@ -427,12 +427,12 @@
                             <StackPanel>
                                 <TextBlock Text="Detalle del Trabajo" Foreground="White"
                                            FontSize="14" FontWeight="Medium" Margin="0,0,0,14"/>
-                                <Button Content="+ Agregar Repuestos"
+                                <Button x:Name="btnAgregarRepuesto" Content="+ Agregar Repuestos"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                         Height="36" HorizontalAlignment="Left"
                                         Padding="16,0" Margin="0,0,0,12"
-                                        materialDesign:ButtonAssist.CornerRadius="6"/>
+                                        materialDesign:ButtonAssist.CornerRadius="6" Click="Button_Click_1"/>
                                 <DataGrid x:Name="dgRepuestos" AutoGenerateColumns="False"
                                           Background="#1e2130" Foreground="White"
                                           BorderBrush="#3a3f5c" BorderThickness="1"
@@ -516,23 +516,23 @@
                         <!-- BARRA ACCIONES -->
                         <Border Background="#252836" CornerRadius="12" Padding="18,12">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="Cancelar"
+                                <Button x:Name="btnCancelar" Content="Cancelar"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#6c7293" Foreground="#6c7293"
                                         Height="36" Padding="20,0" Margin="0,0,10,0"
-                                        materialDesign:ButtonAssist.CornerRadius="6"/>
-                                <Button Content="Calcular Total"
+                                        materialDesign:ButtonAssist.CornerRadius="6" Click="btnCancelar_Click"/>
+                                <Button x:Name="btnCalcularTotal" Content="Calcular Total"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                         Height="36" Padding="20,0" Margin="0,0,10,0"
                                         Click="btnCalcular_Click"
                                         materialDesign:ButtonAssist.CornerRadius="6"/>
-                                <Button Content="Actualizar"
+                                <Button x:Name="btnActualizar" Content="Actualizar"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                         Height="36" Padding="20,0" Margin="0,0,10,0"
-                                        materialDesign:ButtonAssist.CornerRadius="6"/>
-                                <Button Content="Añadir" Height="36" Padding="20,0"
+                                        materialDesign:ButtonAssist.CornerRadius="6" Click="Button_Click_1"/>
+                                <Button x:Name="btnActualizar1" Content="Añadir" Height="36" Padding="20,0"
                                         materialDesign:ButtonAssist.CornerRadius="6"
                                         materialDesign:ElevationAssist.Elevation="Dp0">
                                     <Button.Style>
