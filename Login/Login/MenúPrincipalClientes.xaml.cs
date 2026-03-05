@@ -67,7 +67,7 @@ namespace InterfazClientes
 
         private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
         {
-            var formulario = new MainWindow();
+            var formulario = new ClientesWindow();
 
 
             bool? resultado = formulario.ShowDialog();
@@ -123,7 +123,7 @@ namespace InterfazClientes
         {
             if (dgClientes.SelectedItem is Cliente seleccionado)
             {
-                var formulario = new MainWindow();
+                var formulario = new ClientesWindow();
                 formulario.CargarClienteParaEditar(seleccionado);
                 formulario.ShowDialog();
 

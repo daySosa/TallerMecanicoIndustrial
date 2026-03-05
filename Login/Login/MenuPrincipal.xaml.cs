@@ -15,6 +15,7 @@ using Login;
 using Órdenes_de_Trabajo;
 using Vehículos;
 using InterfazInventario;
+using InterfazClientes;
 
 namespace Dasboard_Prueba
 {
@@ -149,6 +150,13 @@ namespace Dasboard_Prueba
         {
             MenúPrincipalInventario invent = new MenúPrincipalInventario();
             invent.Show();
+            this.Close();
+        }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalClientes cli = new MenúPrincipalClientes();
+            cli.Show();
             this.Close();
         }
     }

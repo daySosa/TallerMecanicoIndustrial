@@ -17,12 +17,12 @@ namespace InterfazClientes
         public bool Cliente_Activo { get; set; } = true;
     }
 
-    public partial class MainWindow : Window
+    public partial class ClientesWindow : Window
     {
         private string _dniEditando = string.Empty;
         public Cliente ClienteResultado { get; private set; }
 
-        public MainWindow()
+        public ClientesWindow()
         {
             InitializeComponent();
         }
