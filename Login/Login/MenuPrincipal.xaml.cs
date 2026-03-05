@@ -32,37 +32,8 @@ namespace Dasboard_Prueba
 
             InitializeComponent();
             GenerarCalendario();
-            CargarOrdenes();
         }
 
-        // Clase modelo
-        public class OrdenReciente
-        {
-            public string NumeroOrden { get; set; }
-            public string NombreCliente { get; set; }
-            public string CodigoOrden { get; set; }
-            public DateTime FechaOrden { get; set; }
-            public string HoraOrden { get; set; }
-            public string Estado { get; set; }
-            public decimal Precio { get; set; }
-        }
-
-        // Cargar datos
-        private void CargarOrdenes()
-        {
-            dgOrdenes.ItemsSource = new List<OrdenReciente>
-        {
-            new OrdenReciente { NumeroOrden="01", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="En Espera", Precio=1300 },
-            new OrdenReciente { NumeroOrden="02", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="Reparando", Precio=1300 },
-            new OrdenReciente { NumeroOrden="03", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="Finalizado", Precio=1300 },
-            new OrdenReciente { NumeroOrden="02", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="Reparando", Precio=1300 },
-            new OrdenReciente { NumeroOrden="03", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="Finalizado", Precio=1300 },
-            new OrdenReciente { NumeroOrden="02", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="Reparando", Precio=1300 },
-            new OrdenReciente { NumeroOrden="03", NombreCliente="Shirt Creme", CodigoOrden="#A4064B", FechaOrden=DateTime.Now, HoraOrden="09:20 AM", Estado="Finalizado", Precio=1300 },
-        };
-        }
-
-        // Calendario
         private void btnAnterior_Click(object sender, RoutedEventArgs e)
         {
             _mesActual = _mesActual.AddMonths(-1);
