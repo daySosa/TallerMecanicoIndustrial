@@ -1,15 +1,13 @@
-﻿using System;
-using System.Windows;
-using System.Data;
-using System.Data.SqlClient;
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
 using MimeKit;
+using System.Data.SqlClient;
+using System.Windows;
 
 namespace Login.Clases
 {
     internal class clsAutenticacion
     {
-        private clsConexion conexion_2FA = new clsConexion(); //Instancia con la clase conexión
+        private clsConexion conexion_2FA = new clsConexion();
 
         public string GenerarCodigo(string correo)
         {
@@ -20,7 +18,6 @@ namespace Login.Clases
             {
                 conexion_2FA.Abrir();
 
-                // Invalidar códigos anteriores del mismo correo
                 string invalidar = @"UPDATE CodigosOTP 
                                      SET Usado = 1 
                                      WHERE Correo = @Correo AND Usado = 0";
@@ -28,7 +25,6 @@ namespace Login.Clases
                 cmdInvalidar.Parameters.AddWithValue("@Correo", correo);
                 cmdInvalidar.ExecuteNonQuery();
 
-                // Insertar el nuevo código
                 string query = @"INSERT INTO CodigosOTP 
                                  (Correo, Codigo, FechaExpiracion, Usado, Intentos)
                                  VALUES (@Correo, @Codigo, @Expiracion, 0, 0)";
@@ -41,7 +37,6 @@ namespace Login.Clases
             catch (Exception ex)
             {
                 MessageBox.Show("⚠ Error al generar el código: " + ex.Message);
-
             }
             finally
             {
@@ -50,7 +45,7 @@ namespace Login.Clases
             return codigo;
         }
 
-        public void ValidarCodigo(string correo, string codigoIngresado)
+        public bool ValidarCodigo(string correo, string codigoIngresado)
         {
             try
             {
@@ -74,21 +69,17 @@ namespace Login.Clases
                     int id = reader.GetInt32(0);
                     reader.Close();
 
-                    // Marcar código como usado
                     string update = "UPDATE CodigosOTP SET Usado = 1 WHERE Id = @Id";
                     SqlCommand cmdUpdate = new SqlCommand(update, conexion_2FA.SqlC);
                     cmdUpdate.Parameters.AddWithValue("@Id", id);
                     cmdUpdate.ExecuteNonQuery();
 
-                    MessageBox.Show("¡Código correcto! Acceso concedido.", "Autenticación exitosa",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-
+                    return true;
                 }
                 else
                 {
                     reader.Close();
 
-                    // Sumar intento fallido
                     string updateIntentos = @"UPDATE CodigosOTP 
                                              SET Intentos = Intentos + 1 
                                              WHERE Correo = @Correo 
@@ -97,13 +88,13 @@ namespace Login.Clases
                     cmdIntentos.Parameters.AddWithValue("@Correo", correo);
                     cmdIntentos.ExecuteNonQuery();
 
-                    MessageBox.Show("⚠ Código incorrecto o expirado. Intenta nuevamente.", "Error de autenticación",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("⚠ Error al validar el código: " + ex.Message);
+                return false;
             }
             finally
             {

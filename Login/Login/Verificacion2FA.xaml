@@ -2,9 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
         x:Class="Login.Verificacion2FA"
         Title="Verificacion2FA" Height="680" Width="950"
         WindowStartupLocation="CenterScreen"
@@ -13,7 +10,7 @@
     <Border CornerRadius="16" ClipToBounds="True">
         <Grid>
 
-            <Image Source="/fondo_login.png"
+            <Image Source="/Imagenes/fondo_login.png"
                    Stretch="UniformToFill"
                    RenderOptions.BitmapScalingMode="HighQuality"/>
 
@@ -36,7 +33,7 @@
 
                 <StackPanel>
 
-                    <Image Source="/OSM_Logo_AR.png"
+                    <Image Source="/Imagenes/OSM_Logo_AR.png"
                            Height="90" Width="90"
                            HorizontalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"
@@ -127,7 +124,7 @@
                         <TextBlock Text="Reenviar código" FontSize="10" FontWeight="SemiBold" Foreground="#5D5FEF"/>
                     </Button>
 
-                    <!-- Botón Regresar -->
+
                     <Button Height="36"
                             FontSize="12" FontWeight="SemiBold"
                             Cursor="Hand"

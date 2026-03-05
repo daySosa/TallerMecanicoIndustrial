@@ -5,6 +5,8 @@
         Height="725" Width="700"
         Background="#1E1E2E"
         WindowStartupLocation="CenterScreen">
+
+
     <Grid Margin="0,0,0,3">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
 
@@ -26,7 +28,7 @@
                 </Grid>
             </Border>
 
-            <!-- Estado -->
+
             <Border Background="#2A2A3E" CornerRadius="8"
                     Margin="0,10,0,0" Padding="10" Width="500">
                 <TextBlock x:Name="txtEstado"
@@ -35,7 +37,7 @@
                            HorizontalAlignment="Center"/>
             </Border>
 
-            <!-- Nombre reconocido -->
+
             <TextBlock x:Name="txtNombreReconocido"
                        Text=""
                        Foreground="#27AE60" FontSize="18" FontWeight="Bold"
@@ -70,7 +72,7 @@
                         Click="btnRegresar_Click"/>
             </StackPanel>
 
-            <!-- Sección registrar -->
+
             <Border Background="#2A2A3E" CornerRadius="8"
                     Margin="0,15,0,0" Padding="15" Width="500">
                 <StackPanel>

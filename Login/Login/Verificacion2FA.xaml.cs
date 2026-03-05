@@ -1,35 +1,21 @@
 ﻿using Login.Clases;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Login
 {
-    /// <summary>
-    /// Lógica de interacción para Verificacion2FA.xaml
-    /// </summary>
     public partial class Verificacion2FA : Window
     {
-        private string userEmail; // Variable para almacenar el correo del usuario
-        private clsAutenticacion autenticacion = new clsAutenticacion(); // Instancia de la clase de autenticación
+        private string userEmail;
+        private clsAutenticacion autenticacion = new clsAutenticacion();
 
-        //Constructor para recibir el correo del usuario:
         public Verificacion2FA(string correo)
         {
             InitializeComponent();
             userEmail = correo;
         }
 
-        //Botón para verificar el código ingresado por el usuario:
         private void BtnVerificar_Click(object sender, RoutedEventArgs e)
         {
             string codigoIngresado = txtCodigo.Text.Trim();
@@ -41,22 +27,46 @@ namespace Login
                 return;
             }
 
-            autenticacion.ValidarCodigo(userEmail, codigoIngresado);
+            bool codigoValido = autenticacion.ValidarCodigo(userEmail, codigoIngresado);
+
+            if (codigoValido)
+            {
+                Dasboard_Prueba.MenuPrincipal menu = new Dasboard_Prueba.MenuPrincipal();
+                menu.Show();
+                this.Close();
+            }
+            else
+            {
+                txtErrorCorreo.Text = "⚠ Código incorrecto o expirado. Intenta nuevamente.";
+                txtErrorCorreo.Visibility = Visibility.Visible;
+
+                borderCodigo.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                borderCodigo.BorderThickness = new Thickness(2);
+            }
         }
 
-        //Botón para reenviar el código al correo del usuario:
         private void BtnReenviar_Click(object sender, RoutedEventArgs e)
         {
             string codigo = autenticacion.GenerarCodigo(userEmail);
-            autenticacion.EnviarCorreo(userEmail, codigo);
-            MessageBox.Show("✅ Código reenviado a tu correo.", "Código enviado",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            bool enviado = autenticacion.EnviarCorreo(userEmail, codigo);
+
+            if (enviado)
+            {
+                MessageBox.Show("✅ Código reenviado a tu correo.", "Código enviado",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("⚠ No se pudo reenviar el código. Intenta nuevamente.",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void TxtCodigo_GotFocus(object sender, RoutedEventArgs e)
         {
-            borderCodigo.BorderBrush = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#2563EB"));
+            borderCodigo.BorderBrush =
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2563EB"));
             borderCodigo.BorderThickness = new Thickness(2);
         }
 
@@ -69,6 +79,12 @@ namespace Login
         private void txtCodigo_TextChanged(object sender, TextChangedEventArgs e)
         {
 
+            if (txtErrorCorreo.Visibility == Visibility.Visible)
+            {
+                txtErrorCorreo.Visibility = Visibility.Collapsed;
+                borderCodigo.BorderBrush = new SolidColorBrush(Colors.Transparent);
+                borderCodigo.BorderThickness = new Thickness(1.5);
+            }
         }
 
         private void BtnRegresar_Click(object sender, RoutedEventArgs e)
