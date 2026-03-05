@@ -14,9 +14,9 @@ namespace Órdenes_de_Trabajo
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class OrdenWindow : Window
     {
-        public MainWindow()
+        public OrdenWindow()
         {
             InitializeComponent();
         }

@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Login;
+using Órdenes_de_Trabajo;
 
 namespace Dasboard_Prueba
 {
@@ -159,6 +160,13 @@ namespace Dasboard_Prueba
                 celda.Child = txt;
                 gridDias.Children.Add(celda);
             }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalOrdenes Ordenes = new MenúPrincipalOrdenes();
+            Ordenes.Show();
+            this.Close();
         }
     }
 }
