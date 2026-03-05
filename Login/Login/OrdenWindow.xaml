@@ -333,7 +333,7 @@
                                         <materialDesign:PackIcon Kind="CameraPlus" Width="26" Height="26"
                                                                  Foreground="#6c7293" HorizontalAlignment="Center"/>
                                         <TextBlock Text="+ Adjuntar Foto" Foreground="#6c7293"
-                                                   FontSize="12" Margin="0,5,0,0" HorizontalAlignment="Center"/>
+                                                   FontSize="12"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
