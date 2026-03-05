@@ -17,9 +17,26 @@ namespace Login
     /// </summary>
     public partial class OpcionSesion : Window
     {
-        public OpcionSesion()
+        private string correoUsuario;
+
+        public OpcionSesion(string correo)
         {
             InitializeComponent();
+            correoUsuario = correo;
+        }
+
+        private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
+        {
+            InterfazIngresarCodigoV ventana = new InterfazIngresarCodigoV();
+            ventana.Show();
+            this.Close();
+        }
+
+        private void BtnReconocimientoFacial_Click(object sender, RoutedEventArgs e)
+        {
+            ReconocimientoFacial ventana = new ReconocimientoFacial();
+            ventana.Show();
+            this.Close();
         }
 
         private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)

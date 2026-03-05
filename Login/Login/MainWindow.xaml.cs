@@ -190,10 +190,31 @@ namespace Login
                     lector.Close();
                     conexion.Cerrar();
 
+<<<<<<< Updated upstream
                     Dasboard_Prueba.MenuPrincipal ventanaPrincipal =
                         new Dasboard_Prueba.MenuPrincipal();
                     ventanaPrincipal.Show();
                     this.Hide();
+=======
+                    /*MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
+                        MessageBoxButton.OK, MessageBoxImage.Information);*/
+                    clsAutenticacion autenticacion = new clsAutenticacion();
+                    string codigo2FA = autenticacion.GenerarCodigo(correo);
+                    bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
+
+                    if (enviado)
+                    {
+                        //Abrir ventana de verificación
+                        OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
+                        ventanaVerificacion.Show();
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
+                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+>>>>>>> Stashed changes
                 }
                 else
                 {
