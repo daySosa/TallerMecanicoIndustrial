@@ -205,8 +205,13 @@ namespace Login
                     if (enviado)
                     {
                         //Abrir ventana de verificación
+<<<<<<< Updated upstream
                         OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
                         ventanaVerificacion.Show();
+=======
+                        Verificacion2FA ventanaOpcion = new OpcionSesion(correo);
+                        ventanaOpcion.Show();
+>>>>>>> Stashed changes
                         this.Close();
                     }
                     else
