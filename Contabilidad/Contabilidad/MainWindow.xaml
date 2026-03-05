@@ -25,7 +25,6 @@
                     <Image Source="/Imagenes/OSM_LOGO.png" Height="204" Width="195"/>
                 </WrapPanel>
 
-                <!-- PANTALLA PRINCIPAL -->
                 <Button x:Name="btnPantallaPrincipal"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -38,7 +37,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- INVENTARIO -->
                 <Button x:Name="btnInventario"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -51,7 +49,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- VEHÍCULOS -->
                 <Button x:Name="btnVehiculos"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -64,7 +61,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- CLIENTES -->
                 <Button x:Name="btnClientes"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -77,7 +73,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- CONTABILIDAD EXPANDER -->
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Width="Auto" Height="Auto" Margin="0,0,0,15">
                     <Expander.Header>
@@ -88,10 +83,8 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-
-                        <!-- EGRESOS -->
                         <Button x:Name="btnEgresos"
-                                Background="#242731" BorderThickness="0" Foreground="White"
+                                Background="#3D7EFF" BorderThickness="0" Foreground="White"
                                 FontSize="15" HorizontalContentAlignment="Left"
                                 Click="btnEgresos_Click">
                             <StackPanel Orientation="Horizontal" Width="250">
@@ -100,8 +93,6 @@
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-
-                        <!-- INGRESOS -->
                         <Button x:Name="btnIngresos"
                                 Background="#242731" BorderThickness="0" Foreground="White"
                                 FontSize="15" HorizontalContentAlignment="Left"
@@ -112,11 +103,9 @@
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-
                     </StackPanel>
                 </Expander>
 
-                <!-- ÓRDENES -->
                 <Button x:Name="btnOrdenes"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
@@ -129,7 +118,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- CERRAR SESIÓN -->
                 <Button x:Name="btnCerrarSesion"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="210"
@@ -192,8 +180,9 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ===== CAMPANA CON BADGE ===== -->
+                    <!-- ===== CAMPANA CON BADGE Y POPUP ===== -->
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
+
                         <Button x:Name="btnNotificaciones"
                                 Style="{StaticResource MaterialDesignIconButton}"
                                 Foreground="#6B7280" Width="38" Height="38"
@@ -201,18 +190,87 @@
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
 
-                        <!-- BADGE ROJO CON NÚMERO -->
                         <Border x:Name="badgeNotificaciones"
-                                Background="#FF4444"
-                                CornerRadius="8" Width="16" Height="16"
+                                Background="#FF4444" CornerRadius="8"
+                                Width="16" Height="16"
                                 HorizontalAlignment="Right" VerticalAlignment="Top"
                                 Visibility="Collapsed">
                             <TextBlock x:Name="txtContadorNotificaciones"
                                        Text="0" Foreground="White"
                                        FontSize="9" FontWeight="Bold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+
+                        <Popup x:Name="popupNotificaciones"
+                               PlacementTarget="{Binding ElementName=btnNotificaciones}"
+                               Placement="Bottom"
+                               StaysOpen="False"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade">
+
+                            <Border Background="#252836" CornerRadius="10"
+                                    BorderBrush="#2A3A4D" BorderThickness="1"
+                                    Width="360" MaxHeight="480"
+                                    Effect="{DynamicResource MaterialDesignShadowDepth3}">
+                                <Grid Margin="16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="10"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="10"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="10"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="BellOutline" Foreground="White"
+                                                                     Width="18" Height="18"
+                                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Notificaciones" Foreground="White"
+                                                       FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" x:Name="badgeContadorPopup"
+                                                Background="#FF4444" CornerRadius="10"
+                                                Padding="8,2" VerticalAlignment="Center"
+                                                Visibility="Collapsed">
+                                            <TextBlock x:Name="txtContadorPopup"
+                                                       Text="0" Foreground="White"
+                                                       FontSize="11" FontWeight="Bold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <Rectangle Grid.Row="2" Height="1" Fill="#2A3A4D"/>
+
+                                    <ScrollViewer Grid.Row="4"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  MaxHeight="320">
+                                        <StackPanel x:Name="panelNotificaciones"/>
+                                    </ScrollViewer>
+
+                                    <Button Grid.Row="6" x:Name="btnMarcarTodas"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Foreground="#3D7EFF" BorderBrush="#3D7EFF"
+                                            materialDesign:ButtonAssist.CornerRadius="8"
+                                            Height="36" FontSize="12"
+                                            Visibility="Collapsed"
+                                            Click="btnMarcarTodas_Click">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CheckAll" Width="16" Height="16"
+                                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Marcar todas como leídas" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                </Grid>
+                            </Border>
+                        </Popup>
+
                     </Grid>
 
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
@@ -229,7 +287,7 @@
                 </Grid>
             </Border>
 
-            <!-- ===== TOOLBAR: BOTONES ===== -->
+            <!-- ===== TOOLBAR ===== -->
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -238,9 +296,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- AGREGAR -->
-                <Button x:Name="btnAgregar"
-                        Grid.Column="0"
+                <Button x:Name="btnAgregar" Grid.Column="0"
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#3D7EFF" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
@@ -254,9 +310,7 @@
                     </StackPanel>
                 </Button>
 
-                <!-- ACTUALIZAR -->
-                <Button x:Name="btnActualizar"
-                        Grid.Column="1"
+                <Button x:Name="btnActualizar" Grid.Column="1"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                         materialDesign:ButtonAssist.CornerRadius="8"
@@ -269,9 +323,7 @@
                     </StackPanel>
                 </Button>
 
-                <!-- MOSTRAR COMPROBANTE -->
-                <Button x:Name="btnMostrarComprobante"
-                        Grid.Column="2"
+                <Button x:Name="btnMostrarComprobante" Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
@@ -283,7 +335,6 @@
                         <TextBlock Text="Mostrar Comprobante" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-
             </Grid>
 
             <!-- ===== CARD CON DATAGRID ===== -->
@@ -363,7 +414,6 @@
                         </DataGrid.CellStyle>
 
                         <DataGrid.Columns>
-
                             <DataGridTextColumn Header="ID" Binding="{Binding Gasto_ID}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="{x:Type TextBlock}">
@@ -455,7 +505,6 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
