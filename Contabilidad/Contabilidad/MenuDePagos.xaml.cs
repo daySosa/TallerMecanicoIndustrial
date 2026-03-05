@@ -24,6 +24,7 @@ namespace Contabilidad
         {
             InitializeComponent();
             CargarPago();
+            CargarNotificaciones();
         }
 
         public void CargarPago(string busqueda = null)
@@ -116,6 +117,37 @@ namespace Contabilidad
             ComprobanteDePago ventana = new ComprobanteDePago(pagoId);
             ventana.Owner = this;
             ventana.ShowDialog();
+        }
+
+        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
+        {
+            PanelNotificaciones ventana = new PanelNotificaciones(onCerrar: () => CargarNotificaciones());
+            ventana.Owner = this;
+            ventana.ShowDialog();
+        }
+
+        private void CargarNotificaciones()
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    conn.Open();
+                    int cantidad = (int)cmd.ExecuteScalar();
+
+                    badgeNotificaciones.Visibility = cantidad > 0
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+
+                    txtContadorNotificaciones.Text = cantidad.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
+            }
         }
     }
 }

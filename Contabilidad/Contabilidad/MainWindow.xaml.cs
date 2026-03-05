@@ -178,6 +178,13 @@ namespace Contabilidad
             }
         }
 
+        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
+        {
+            PanelNotificaciones ventana = new PanelNotificaciones(onCerrar: () => CargarNotificaciones());
+            ventana.Owner = this;
+            ventana.ShowDialog();
+        }
+
         private void CargarNotificaciones()
         {
             try
@@ -204,13 +211,6 @@ namespace Contabilidad
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-        }
-
-        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
-        {
-            // TODO: Crear VentanaNotificaciones
-            MessageBox.Show("Próximamente.", "Info",
-                MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
