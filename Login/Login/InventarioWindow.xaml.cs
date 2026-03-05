@@ -1,22 +1,20 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using Login;
+using Login.Clases;
 
 namespace InterfazInventario
 {
     public partial class InventarioWindow : Window
     {
-        private clsConexionInvent _conexion = new clsConexionInvent();
+        private clsConexion _conexion = new clsConexion();
         private int _productoIdSeleccionado = -1;
 
         public InventarioWindow()
         {
             InitializeComponent();
         }
-
 
         private void BtnSumar_Click(object sender, RoutedEventArgs e)
         {
@@ -33,7 +31,6 @@ namespace InterfazInventario
             else
                 txtCantidad.Text = "0";
         }
-
 
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
@@ -54,25 +51,20 @@ namespace InterfazInventario
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
                 {
-                    cmd.Parameters.AddWithValue("@Nombre",
-                        txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Categoria",
-                        (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
-                    cmd.Parameters.AddWithValue("@Marca",
-                        txtMarca.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Nombre", txtNombre.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Categoria", (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
+                    cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
                     cmd.Parameters.AddWithValue("@Modelo",
                         string.IsNullOrWhiteSpace(txtModelo.Text)
                             ? (object)DBNull.Value
                             : txtModelo.Text.Trim());
                     cmd.Parameters.AddWithValue("@Precio", precio);
                     cmd.Parameters.AddWithValue("@Cantidad", cantidad);
-
                     cmd.ExecuteNonQuery();
                 }
 
                 MessageBox.Show("✅ Producto agregado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-
                 LimpiarFormulario();
                 this.Close();
             }
@@ -83,7 +75,6 @@ namespace InterfazInventario
             }
             finally { _conexion.Cerrar(); }
         }
-
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
@@ -112,12 +103,9 @@ namespace InterfazInventario
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
                 {
-                    cmd.Parameters.AddWithValue("@Nombre",
-                        txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Categoria",
-                        (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
-                    cmd.Parameters.AddWithValue("@Marca",
-                        txtMarca.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Nombre", txtNombre.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Categoria", (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
+                    cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
                     cmd.Parameters.AddWithValue("@Modelo",
                         string.IsNullOrWhiteSpace(txtModelo.Text)
                             ? (object)DBNull.Value
@@ -125,17 +113,14 @@ namespace InterfazInventario
                     cmd.Parameters.AddWithValue("@Precio", precio);
                     cmd.Parameters.AddWithValue("@Cantidad", cantidad);
                     cmd.Parameters.AddWithValue("@ID", _productoIdSeleccionado);
-
                     cmd.ExecuteNonQuery();
                 }
-
 
                 string msg = cantidad > 0
                     ? $"✅ Producto actualizado.\n+{cantidad} unidades sumadas al stock."
                     : "✅ Producto actualizado sin cambios en el stock.";
 
                 MessageBox.Show(msg, "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-
                 LimpiarFormulario();
                 this.Close();
             }
@@ -153,16 +138,14 @@ namespace InterfazInventario
             this.Close();
         }
 
-
         public void CargarProductoParaEditar(Repuesto producto)
         {
             _productoIdSeleccionado = producto.Producto_ID;
-
             txtNombre.Text = producto.Producto_Nombre;
             txtMarca.Text = producto.Producto_Marca;
             txtModelo.Text = producto.Producto_Modelo == "—" ? "" : producto.Producto_Modelo;
             txtPrecio.Text = producto.Producto_Precio.ToString("N2");
-            txtCantidad.Text = "0";  // siempre 0: solo se suma lo que entre ahora
+            txtCantidad.Text = "0";
 
             foreach (ComboBoxItem item in cmbCategoria.Items)
             {
@@ -173,7 +156,6 @@ namespace InterfazInventario
                 }
             }
         }
-
 
         private bool ValidarCampos(out decimal precio, out int cantidad)
         {
@@ -206,7 +188,6 @@ namespace InterfazInventario
 
             return true;
         }
-
 
         private void LimpiarFormulario()
         {

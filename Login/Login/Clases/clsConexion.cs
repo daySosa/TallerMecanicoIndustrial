@@ -11,7 +11,7 @@ using System.Data.SqlClient;
 
 
 
-namespace Login
+namespace Login.Clases
 {
     internal class clsConexion
     {

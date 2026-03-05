@@ -12,9 +12,7 @@ using System.Windows.Shapes;
 
 namespace Órdenes_de_Trabajo
 {
-    /// <summary>
-    /// Lógica de interacción para MenúPrincipalOrdenes.xaml
-    /// </summary>
+
     public partial class MenúPrincipalOrdenes : Window
     {
         public MenúPrincipalOrdenes()

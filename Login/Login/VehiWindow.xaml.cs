@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Login;
+using Login.Clases;
 
 namespace Vehículos
 {

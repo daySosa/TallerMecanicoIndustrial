@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace InterfazClientes
@@ -30,25 +28,18 @@ namespace InterfazClientes
         public void CargarClienteParaEditar(Cliente c)
         {
             _dniEditando = c.Cliente_DPI;
-
             txtDPI.Text = c.Cliente_DPI;
             txtDPI.IsReadOnly = false;
-
             txtNombre.Text = c.Cliente_Nombre;
             txtNombre.IsReadOnly = false;
-
             txtApellido.Text = c.Cliente_Apellido;
             txtApellido.IsReadOnly = false;
-
             txtTelefono.Text = c.Cliente_Telefono;
             txtTelefono.IsReadOnly = false;
-
             txtCorreo.Text = c.Cliente_Correo;
             txtCorreo.IsReadOnly = false;
-
             txtDireccion.Text = c.Cliente_Direccion;
             txtDireccion.IsReadOnly = false;
-
             toggleActivo.IsChecked = c.Cliente_Activo;
         }
 
@@ -74,7 +65,6 @@ namespace InterfazClientes
         {
             this.Close();
         }
-
 
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
@@ -108,7 +98,7 @@ namespace InterfazClientes
 
             try
             {
-                var db = new clsConexión();
+                var db = new clsConexion();
                 db.Abrir();
 
                 string sql = @"
@@ -146,6 +136,8 @@ namespace InterfazClientes
             }
         }
 
+        // Método agregado para satisfacer referencia en MainWindow.xaml
+        private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) { }
 
         private bool ValidarCampos()
         {

@@ -5,7 +5,7 @@ using System.Data.SqlClient;
 using MailKit.Net.Smtp;
 using MimeKit;
 
-namespace Login
+namespace Login.Clases
 {
     internal class clsAutenticacion
     {

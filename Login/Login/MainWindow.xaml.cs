@@ -1,10 +1,10 @@
-﻿using System.Data.SqlClient;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
+﻿using Login.Clases;
+using System.Data.SqlClient;
 using System.IO;
 using System.Text.Json;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Login
 {
@@ -62,7 +62,6 @@ namespace Login
 
             if (_contrasenaVisible)
             {
-                
                 txtContrasenaVisible.Text = txtContrasena.Password;
                 txtContrasena.Visibility = Visibility.Collapsed;
                 txtContrasenaVisible.Visibility = Visibility.Visible;
@@ -72,7 +71,6 @@ namespace Login
             }
             else
             {
-               
                 txtContrasena.Password = txtContrasenaVisible.Text;
                 txtContrasenaVisible.Visibility = Visibility.Collapsed;
                 txtContrasena.Visibility = Visibility.Visible;
@@ -118,14 +116,12 @@ namespace Login
             }
             catch
             {
-                
             }
         }
 
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             bool hayError = false;
-
 
             if (string.IsNullOrWhiteSpace(txtCorreo.Text))
             {
@@ -140,7 +136,6 @@ namespace Login
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
                 borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             }
-
 
             string contrasena = ObtenerContrasena();
             if (string.IsNullOrWhiteSpace(contrasena))
@@ -159,7 +154,6 @@ namespace Login
 
             if (hayError) return;
 
-
             if (chkRecordar.IsChecked == true)
                 GuardarCredenciales(txtCorreo.Text.Trim(), contrasena);
             else
@@ -176,7 +170,7 @@ namespace Login
                 conexion.Abrir();
 
                 string consulta = @"SELECT * FROM LOGIN
-                                    WHERE Usuario_Email     = @correo
+                                    WHERE Usuario_Email      = @correo
                                     AND   Usuario_Contraseña = @contrasena";
 
                 SqlCommand comando = new SqlCommand(consulta, conexion.SqlC);
@@ -190,36 +184,14 @@ namespace Login
                     lector.Close();
                     conexion.Cerrar();
 
-<<<<<<< Updated upstream
-                    Dasboard_Prueba.MenuPrincipal ventanaPrincipal =
-                        new Dasboard_Prueba.MenuPrincipal();
-                    ventanaPrincipal.Show();
-                    this.Hide();
-=======
-                    /*MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
-                        MessageBoxButton.OK, MessageBoxImage.Information);*/
                     clsAutenticacion autenticacion = new clsAutenticacion();
                     string codigo2FA = autenticacion.GenerarCodigo(correo);
                     bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
 
                     if (enviado)
                     {
-                        //Abrir ventana de verificación
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
                         OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
                         ventanaVerificacion.Show();
-=======
-                        Verificacion2FA ventanaOpcion = new OpcionSesion(correo);
-                        ventanaOpcion.Show();
->>>>>>> Stashed changes
-=======
-                        Verificacion2FA ventanaOpcion = new OpcionSesion(correo);
-                        ventanaOpcion.Show();
->>>>>>> Stashed changes
                         this.Close();
                     }
                     else
@@ -227,7 +199,6 @@ namespace Login
                         MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
                             "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
->>>>>>> Stashed changes
                 }
                 else
                 {

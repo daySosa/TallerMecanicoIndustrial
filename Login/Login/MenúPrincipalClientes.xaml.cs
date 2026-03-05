@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Login.Clases;
 using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
+#pragma warning disable CS0618
 
 namespace InterfazClientes
 {
     public partial class MenúPrincipalClientes : Window
     {
         private List<Cliente> _listaClientes = new List<Cliente>();
-        private clsConexiónClie _db = new clsConexiónClie();
+        private clsConexion _db = new clsConexion();
 
         public MenúPrincipalClientes()
         {
             InitializeComponent();
             CargarClientes();
         }
-
 
         public void CargarClientes()
         {
@@ -64,22 +62,18 @@ namespace InterfazClientes
             RefrescarDataGrid();
         }
 
-
         private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
         {
             var formulario = new ClientesWindow();
-
-
             bool? resultado = formulario.ShowDialog();
 
             if (resultado == true && formulario.ClienteResultado != null)
             {
                 var c = formulario.ClienteResultado;
                 GuardarEnDB(c);
-                CargarClientes(); 
+                CargarClientes();
             }
         }
-
 
         private void GuardarEnDB(Cliente c)
         {
@@ -88,17 +82,17 @@ namespace InterfazClientes
                 _db.Abrir();
 
                 string sql = @"
-            INSERT INTO Cliente
-                (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                 Cliente_TelefonoPrincipal, Cliente_Email,
-                 Cliente_Direccion, Cliente_Activo)
-            VALUES
-                (@DNI, @Nombres, @Apellidos,
-                 @Telefono, @Email,
-                 @Direccion, @Activo)";
+                    INSERT INTO Cliente
+                        (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                         Cliente_TelefonoPrincipal, Cliente_Email,
+                         Cliente_Direccion, Cliente_Activo)
+                    VALUES
+                        (@DNI, @Nombres, @Apellidos,
+                         @Telefono, @Email,
+                         @Direccion, @Activo)";
 
                 SqlCommand cmd = new SqlCommand(sql, _db.SqlC);
-                cmd.Parameters.AddWithValue("@DNI", c.Cliente_DPI);  // ✔ string directo
+                cmd.Parameters.AddWithValue("@DNI", c.Cliente_DPI);
                 cmd.Parameters.AddWithValue("@Nombres", c.Cliente_Nombre);
                 cmd.Parameters.AddWithValue("@Apellidos", c.Cliente_Apellido);
                 cmd.Parameters.AddWithValue("@Telefono", c.Cliente_Telefono);
@@ -118,7 +112,6 @@ namespace InterfazClientes
             finally { _db.Cerrar(); }
         }
 
-
         private void dgClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgClientes.SelectedItem is Cliente seleccionado)
@@ -131,7 +124,6 @@ namespace InterfazClientes
                 CargarClientes();
             }
         }
-
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -146,7 +138,6 @@ namespace InterfazClientes
             dgClientes.ItemsSource = null;
             dgClientes.ItemsSource = filtrados;
         }
-
 
         private void RefrescarDataGrid()
         {

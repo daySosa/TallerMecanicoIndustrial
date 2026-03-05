@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -6,20 +6,16 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-
-// ✅ Cuando esté unido en main, agrega el using del namespace del Login
-// donde está la clsConexion real del equipo
-//using Vehículos; // ← cambia esto por el namespace real del proyecto Login
+using Login.Clases;
 
 namespace InterfazInventario
 {
-   
     public class Repuesto : INotifyPropertyChanged
     {
         public int Producto_ID { get; set; }
         public string? Producto_Nombre { get; set; }
         public string? Producto_Categoria { get; set; }
-        public string? Producto_Marca { get; set; }   
+        public string? Producto_Marca { get; set; }
         public string? Producto_Modelo { get; set; }
         public int Producto_Cantidad_Actual { get; set; }
         public int Producto_Cantidad_Minima { get; set; }
@@ -32,10 +28,9 @@ namespace InterfazInventario
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-
     public partial class MenúPrincipalInventario : Window
     {
-        private clsConexionInvent _conexion = new clsConexionInvent();
+        private clsConexion _conexion = new clsConexion();
 
         private ObservableCollection<Repuesto> _listaRepuestos = new ObservableCollection<Repuesto>();
         private ICollectionView _vistaRepuestos;
@@ -50,7 +45,6 @@ namespace InterfazInventario
             InitializeComponent();
             CargarDatosDesdeDB();
         }
-
 
         private void CargarDatosDesdeDB()
         {
@@ -83,7 +77,7 @@ namespace InterfazInventario
                             Producto_ID = reader.GetInt32(reader.GetOrdinal("Producto_ID")),
                             Producto_Nombre = reader["Producto_Nombre"].ToString(),
                             Producto_Categoria = reader["Producto_Categoria"].ToString(),
-                            Producto_Marca = reader["Producto_Marca"].ToString(),  
+                            Producto_Marca = reader["Producto_Marca"].ToString(),
                             Producto_Modelo = reader["Producto_Modelo"].ToString(),
                             Producto_Cantidad_Actual = reader.GetInt32(reader.GetOrdinal("Producto_Cantidad_Actual")),
                             Producto_Cantidad_Minima = reader.GetInt32(reader.GetOrdinal("Producto_Stock_Minimo")),
@@ -91,7 +85,6 @@ namespace InterfazInventario
                         });
                     }
                 }
-
 
                 var categorias = _listaRepuestos
                     .Select(r => r.Producto_Categoria)
@@ -103,7 +96,6 @@ namespace InterfazInventario
                 cmbCategoria.ItemsSource = categorias;
                 cmbCategoria.SelectedIndex = 0;
 
-
                 _vistaRepuestos = CollectionViewSource.GetDefaultView(_listaRepuestos);
                 _vistaRepuestos.Filter = AplicarFiltros;
                 dgInventario.ItemsSource = _vistaRepuestos;
@@ -113,7 +105,7 @@ namespace InterfazInventario
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar inventario:\n" + ex.Message,
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -121,11 +113,9 @@ namespace InterfazInventario
             }
         }
 
-
         private bool AplicarFiltros(object item)
         {
             if (item is not Repuesto r) return false;
-
 
             string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
             if (!string.IsNullOrEmpty(texto))
@@ -133,26 +123,22 @@ namespace InterfazInventario
                 bool coincide =
                     (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
                     (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||  
+                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||
                     (r.Producto_Modelo ?? "").ToLower().Contains(texto);
 
                 if (!coincide) return false;
             }
 
-
             if (_filtroCategoria != null && _filtroCategoria != "Todas")
                 if (r.Producto_Categoria != _filtroCategoria) return false;
 
-
             if (r.Producto_Precio < _filtroPrecioMin) return false;
             if (r.Producto_Precio > _filtroPrecioMax) return false;
-
 
             if (_filtroStockBajo && !r.StockBajo) return false;
 
             return true;
         }
-
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -160,12 +146,10 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
         {
             popupFiltros.IsOpen = !popupFiltros.IsOpen;
         }
-
 
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
@@ -178,7 +162,6 @@ namespace InterfazInventario
             _vistaRepuestos?.Refresh();
             ActualizarContador();
         }
-
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
@@ -197,7 +180,6 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-
         private void dgInventario_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgInventario.SelectedItem is Repuesto seleccionado)
@@ -206,17 +188,16 @@ namespace InterfazInventario
                 ventana.CargarProductoParaEditar(seleccionado);
                 ventana.ShowDialog();
 
-                dgInventario.SelectedItem = null;  
-                CargarDatosDesdeDB();               
+                dgInventario.SelectedItem = null;
+                CargarDatosDesdeDB();
             }
         }
-
 
         private void btnAgregarRepuesto_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InventarioWindow();
             ventana.ShowDialog();
-            CargarDatosDesdeDB();  
+            CargarDatosDesdeDB();
         }
 
         private void ActualizarContador()
