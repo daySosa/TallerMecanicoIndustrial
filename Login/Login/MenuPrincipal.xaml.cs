@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Login;
 using Órdenes_de_Trabajo;
+using Vehículos;
 
 namespace Dasboard_Prueba
 {
@@ -133,6 +134,13 @@ namespace Dasboard_Prueba
         {
             MenúPrincipalOrdenes Ordenes = new MenúPrincipalOrdenes();
             Ordenes.Show();
+            this.Close();
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalVehículos vehi = new MenúPrincipalVehículos();
+            vehi.Show();
             this.Close();
         }
     }

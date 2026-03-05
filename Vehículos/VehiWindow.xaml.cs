@@ -24,14 +24,14 @@ namespace Vehículos
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    public partial class MainWindow : Window
+    public partial class VehiWindow : Window
     {
         private clsConexion _conexion = new clsConexion();
         private string _placaSeleccionada = string.Empty;
         private int _clienteDNI = -1;
         private ICollectionView? _vistaVehiculos;
 
-        public MainWindow()
+        public VehiWindow()
         {
             InitializeComponent();
         }

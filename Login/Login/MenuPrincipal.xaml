@@ -40,7 +40,7 @@
                 </Button>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731" materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                    Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
+                    Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15" Click="Button_Click_1">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" HorizontalAlignment="Center" Height="25"/>
                         <TextBlock Foreground="White" FontSize="15" Height="19"><Run Text="Vehículos"/></TextBlock>
