@@ -39,7 +39,7 @@ namespace Login
 
         private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
         {
-            InterfazIngresarCodigoV ventana = new InterfazIngresarCodigoV();
+            Verificacion2FA ventana = new Verificacion2FA("correo@ejemplo.com");
             ventana.Show();
             this.Close();
         }
