@@ -18,10 +18,7 @@ namespace InterfazClientes
             CargarClientes();
         }
 
-        // ═══════════════════════════════════════════
-        // 1. CARGAR CLIENTES DESDE BD
-        //    Tabla correcta: Cliente (sin 's')
-        // ═══════════════════════════════════════════
+
         public void CargarClientes()
         {
             _listaClientes.Clear();
@@ -30,7 +27,6 @@ namespace InterfazClientes
             {
                 _db.Abrir();
 
-                // ✔ Nombre correcto de la tabla y sus columnas según tu BD
                 string sql = @"
                     SELECT Cliente_DNI,
                            Cliente_Nombres,
@@ -68,30 +64,23 @@ namespace InterfazClientes
             RefrescarDataGrid();
         }
 
-        // ═══════════════════════════════════════════
-        // 2. BOTÓN AGREGAR CLIENTE
-        //    ✔ Una sola llamada a ShowDialog()
-        //    ✔ Guarda en BD si el usuario confirmó
-        // ═══════════════════════════════════════════
+
         private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
         {
             var formulario = new MainWindow();
 
-            // Una sola llamada — bloquea hasta que el formulario cierre
+
             bool? resultado = formulario.ShowDialog();
 
             if (resultado == true && formulario.ClienteResultado != null)
             {
                 var c = formulario.ClienteResultado;
                 GuardarEnDB(c);
-                CargarClientes(); // recarga desde BD para reflejar el nuevo registro
+                CargarClientes(); 
             }
         }
 
-        // ═══════════════════════════════════════════
-        // 3. GUARDAR EN BD
-        //    Columnas correctas según tu esquema
-        // ═══════════════════════════════════════════
+
         private void GuardarEnDB(Cliente c)
         {
             try
@@ -99,22 +88,27 @@ namespace InterfazClientes
                 _db.Abrir();
 
                 string sql = @"
-                    INSERT INTO Cliente
-                        (Cliente_Nombres, Cliente_Apellidos,
-                         Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Direccion)
-                    VALUES
-                        (@Nombres, @Apellidos, @Telefono, @Email, @Direccion)";
+            INSERT INTO Cliente
+                (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                 Cliente_TelefonoPrincipal, Cliente_Email,
+                 Cliente_Direccion, Cliente_Activo)
+            VALUES
+                (@DNI, @Nombres, @Apellidos,
+                 @Telefono, @Email,
+                 @Direccion, @Activo)";
 
                 SqlCommand cmd = new SqlCommand(sql, _db.SqlC);
+                cmd.Parameters.AddWithValue("@DNI", c.Cliente_DPI);  // ✔ string directo
                 cmd.Parameters.AddWithValue("@Nombres", c.Cliente_Nombre);
                 cmd.Parameters.AddWithValue("@Apellidos", c.Cliente_Apellido);
                 cmd.Parameters.AddWithValue("@Telefono", c.Cliente_Telefono);
                 cmd.Parameters.AddWithValue("@Email", c.Cliente_Correo);
                 cmd.Parameters.AddWithValue("@Direccion", c.Cliente_Direccion);
+                cmd.Parameters.AddWithValue("@Activo", c.Cliente_Activo ? 1 : 0);
 
                 cmd.ExecuteNonQuery();
 
-                MessageBox.Show($"✅ Cliente {c.Cliente_Nombre} {c.Cliente_Apellido} guardado correctamente.",
+                MessageBox.Show($"✅ Cliente {c.Cliente_Nombre} {c.Cliente_Apellido} guardado.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -124,9 +118,7 @@ namespace InterfazClientes
             finally { _db.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 4. SELECCIÓN EN DATAGRID → editar cliente
-        // ═══════════════════════════════════════════
+
         private void dgClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgClientes.SelectedItem is Cliente seleccionado)
@@ -140,9 +132,7 @@ namespace InterfazClientes
             }
         }
 
-        // ═══════════════════════════════════════════
-        // 5. BUSCADOR EN TIEMPO REAL
-        // ═══════════════════════════════════════════
+
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             string filtro = txtBuscar.Text.Trim().ToLower();
@@ -157,9 +147,7 @@ namespace InterfazClientes
             dgClientes.ItemsSource = filtrados;
         }
 
-        // ═══════════════════════════════════════════
-        // 6. REFRESCAR DATAGRID
-        // ═══════════════════════════════════════════
+
         private void RefrescarDataGrid()
         {
             dgClientes.ItemsSource = null;

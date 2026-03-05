@@ -19,9 +19,7 @@ namespace InterfazClientes
 
     public partial class MainWindow : Window
     {
-        // DNI del cliente cargado para editar. -1 = modo nuevo.
-        private int _dniEditando = -1;
-
+        private string _dniEditando = string.Empty;
         public Cliente ClienteResultado { get; private set; }
 
         public MainWindow()
@@ -29,25 +27,31 @@ namespace InterfazClientes
             InitializeComponent();
         }
 
-        // ═══════════════════════════════════════════
-        // CARGAR DATOS PARA EDITAR
-        // ═══════════════════════════════════════════
         public void CargarClienteParaEditar(Cliente c)
         {
-            _dniEditando = int.TryParse(c.Cliente_DPI, out int dni) ? dni : -1;
+            _dniEditando = c.Cliente_DPI;
+
             txtDPI.Text = c.Cliente_DPI;
-            txtDPI.IsReadOnly = true;   // El DNI es PK, no se edita
+            txtDPI.IsReadOnly = false;
+
             txtNombre.Text = c.Cliente_Nombre;
+            txtNombre.IsReadOnly = false;
+
             txtApellido.Text = c.Cliente_Apellido;
+            txtApellido.IsReadOnly = false;
+
             txtTelefono.Text = c.Cliente_Telefono;
+            txtTelefono.IsReadOnly = false;
+
             txtCorreo.Text = c.Cliente_Correo;
+            txtCorreo.IsReadOnly = false;
+
             txtDireccion.Text = c.Cliente_Direccion;
+            txtDireccion.IsReadOnly = false;
+
             toggleActivo.IsChecked = c.Cliente_Activo;
         }
 
-        // ═══════════════════════════════════════════
-        // TOGGLE ESTADO
-        // ═══════════════════════════════════════════
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -66,17 +70,12 @@ namespace InterfazClientes
             iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CloseCircleOutline;
         }
 
-        // ═══════════════════════════════════════════
-        // CANCELAR — solo cierra
-        // ═══════════════════════════════════════════
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
-        // ═══════════════════════════════════════════
-        // AGREGAR — guarda y cierra con DialogResult=true
-        // ═══════════════════════════════════════════
+
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos()) return;
@@ -92,19 +91,15 @@ namespace InterfazClientes
                 Cliente_Activo = toggleActivo.IsChecked == true
             };
 
-            // DialogResult = true hace que ShowDialog() devuelva true
             this.DialogResult = true;
             this.Close();
         }
 
-        // ═══════════════════════════════════════════
-        // ACTUALIZAR — UPDATE en BD
-        // ═══════════════════════════════════════════
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos()) return;
 
-            if (_dniEditando == -1)
+            if (string.IsNullOrEmpty(_dniEditando))
             {
                 MessageBox.Show("No hay ningún cliente cargado para actualizar.",
                     "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -118,11 +113,12 @@ namespace InterfazClientes
 
                 string sql = @"
                     UPDATE Cliente SET
-                        Cliente_Nombres          = @Nombres,
-                        Cliente_Apellidos        = @Apellidos,
-                        Cliente_TelefonoPrincipal= @Telefono,
-                        Cliente_Email            = @Email,
-                        Cliente_Direccion        = @Direccion
+                        Cliente_Nombres           = @Nombres,
+                        Cliente_Apellidos         = @Apellidos,
+                        Cliente_TelefonoPrincipal = @Telefono,
+                        Cliente_Email             = @Email,
+                        Cliente_Direccion         = @Direccion,
+                        Cliente_Activo            = @Activo
                     WHERE Cliente_DNI = @DNI";
 
                 SqlCommand cmd = new SqlCommand(sql, db.SqlC);
@@ -131,6 +127,7 @@ namespace InterfazClientes
                 cmd.Parameters.AddWithValue("@Telefono", txtTelefono.Text.Trim());
                 cmd.Parameters.AddWithValue("@Email", txtCorreo.Text.Trim());
                 cmd.Parameters.AddWithValue("@Direccion", txtDireccion.Text.Trim());
+                cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
                 cmd.Parameters.AddWithValue("@DNI", _dniEditando);
 
                 cmd.ExecuteNonQuery();
@@ -149,11 +146,16 @@ namespace InterfazClientes
             }
         }
 
-        // ═══════════════════════════════════════════
-        // VALIDAR CAMPOS
-        // ═══════════════════════════════════════════
+
         private bool ValidarCampos()
         {
+            if (string.IsNullOrWhiteSpace(txtDPI.Text))
+            {
+                MessageBox.Show("El DNI es obligatorio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(txtNombre.Text) ||
                 string.IsNullOrWhiteSpace(txtApellido.Text) ||
                 string.IsNullOrWhiteSpace(txtTelefono.Text))

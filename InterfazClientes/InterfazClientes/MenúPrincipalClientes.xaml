@@ -15,7 +15,6 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- MENÚ LATERAL -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
@@ -110,7 +109,7 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- CONTENIDO PRINCIPAL -->
+
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -118,7 +117,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP BAR -->
+
             <Border Grid.Row="0" Background="#1A1D2E" Height="80">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -172,7 +171,7 @@
                 </Grid>
             </Border>
 
-            <!-- TOOLBAR -->
+
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -204,7 +203,6 @@
                 </Button>
             </Grid>
 
-            <!-- DATAGRID -->
             <materialDesign:Card Grid.Row="2"
                                  Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
@@ -282,7 +280,7 @@
 
                         <DataGrid.Columns>
 
-                            <!-- NOMBRE -->
+
                             <DataGridTemplateColumn Header="Nombre" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -302,7 +300,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- APELLIDO -->
+
                             <DataGridTextColumn Header="Apellido" Binding="{Binding Cliente_Apellido}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -314,7 +312,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- DPI -->
+
                             <DataGridTextColumn Header="DPI / Identificación" Binding="{Binding Cliente_DPI}" Width="150">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -326,7 +324,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- TELÉFONO -->
+
                             <DataGridTemplateColumn Header="Teléfono" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -342,7 +340,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- CORREO -->
                             <DataGridTemplateColumn Header="Correo" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -358,7 +355,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- DIRECCIÓN -->
+
                             <DataGridTemplateColumn Header="Dirección" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

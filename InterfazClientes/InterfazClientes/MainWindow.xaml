@@ -16,7 +16,7 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SIDEBAR -->
+
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
@@ -105,14 +105,13 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- CONTENIDO PRINCIPAL -->
+
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="80"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP BAR -->
             <Border Grid.Row="0" Background="#1A1D2E">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -170,7 +169,7 @@
                 </Grid>
             </Border>
 
-            <!-- FORMULARIO -->
+
             <ScrollViewer Grid.Row="1"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
@@ -186,7 +185,6 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- COLUMNA IZQUIERDA -->
                     <StackPanel Grid.Column="0" Grid.RowSpan="2">
                         <materialDesign:Card Background="#252836"
                                              UniformCornerRadius="12"
@@ -208,17 +206,16 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                
+
                                 <TextBlock Text="DNI / Identificación" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtDPI"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Background="#1e2130" Foreground="White"
-                                         BorderBrush="#3a3f5c" CaretBrush="White"
-                                         Height="40" VerticalContentAlignment="Center"
-                                         Padding="10,0"
-                                         Margin="0,0,0,16"/>
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Background="#1e2130" Foreground="White"
+                                     BorderBrush="#3a3f5c" CaretBrush="White"
+                                     Height="40" VerticalContentAlignment="Center"
+                                     Padding="10,0"
+                                     Margin="0,0,0,16"/>    
 
-                            
                                 <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtNombre"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -264,7 +261,7 @@
                         </materialDesign:Card>
                     </StackPanel>
 
-                    <!-- COLUMNA DERECHA -->
+
                     <StackPanel Grid.Column="2" Grid.RowSpan="2">
                         <materialDesign:Card Background="#252836"
                                              UniformCornerRadius="12"
@@ -286,7 +283,7 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Correo -->
+
                                 <TextBlock Text="Correo Electrónico" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
@@ -308,7 +305,7 @@
                                              Padding="10,0"/>
                                 </Grid>
 
-                                <!-- Dirección -->
+
                                 <TextBlock Text="Dirección" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
@@ -332,7 +329,7 @@
 
                                 <Separator Background="#2e3250" Margin="0,6,0,18"/>
 
-                                <!-- Toggle Estado -->
+
                                 <Border Background="#1e2130" CornerRadius="10" Padding="16,14">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -398,7 +395,6 @@
                         </materialDesign:Card>
                     </StackPanel>
 
-                    <!-- BOTONES -->
                     <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                          Background="#252836" UniformCornerRadius="12"
                                          Padding="20,16" Margin="0,259,0,-250"
