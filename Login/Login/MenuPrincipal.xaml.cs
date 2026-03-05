@@ -16,11 +16,7 @@ using Órdenes_de_Trabajo;
 
 namespace Dasboard_Prueba
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    /// 
-    
+
 
     public partial class MenuPrincipal : Window
     {

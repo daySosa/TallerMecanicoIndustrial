@@ -12,7 +12,6 @@ namespace Login
     {
         private bool _contrasenaVisible = false;
 
-        // Ruta donde se guardan las credenciales recordadas
         private readonly string _archivoRecordar =
             Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
@@ -23,18 +22,14 @@ namespace Login
             CargarCredencialesRecordadas();
         }
 
-        // ═══════════════════════════════════════════
-        // DRAG — mover ventana
-        // ═══════════════════════════════════════════
+
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 this.DragMove();
         }
 
-        // ═══════════════════════════════════════════
-        // FOCO — correo
-        // ═══════════════════════════════════════════
+
         private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
         {
             borderCorreo.BorderBrush =
@@ -48,9 +43,6 @@ namespace Login
             borderCorreo.BorderThickness = new Thickness(1.5);
         }
 
-        // ═══════════════════════════════════════════
-        // FOCO — contraseña
-        // ═══════════════════════════════════════════
         private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e)
         {
             borderContrasena.BorderBrush =
@@ -64,16 +56,13 @@ namespace Login
             borderContrasena.BorderThickness = new Thickness(1.5);
         }
 
-        // ═══════════════════════════════════════════
-        // OJITO — mostrar / ocultar contraseña
-        // ═══════════════════════════════════════════
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
             _contrasenaVisible = !_contrasenaVisible;
 
             if (_contrasenaVisible)
             {
-                // Copiar texto del PasswordBox al TextBox y mostrar TextBox
+                
                 txtContrasenaVisible.Text = txtContrasena.Password;
                 txtContrasena.Visibility = Visibility.Collapsed;
                 txtContrasenaVisible.Visibility = Visibility.Visible;
@@ -83,7 +72,7 @@ namespace Login
             }
             else
             {
-                // Copiar texto del TextBox al PasswordBox y mostrar PasswordBox
+               
                 txtContrasena.Password = txtContrasenaVisible.Text;
                 txtContrasenaVisible.Visibility = Visibility.Collapsed;
                 txtContrasena.Visibility = Visibility.Visible;
@@ -92,9 +81,7 @@ namespace Login
             }
         }
 
-        // ═══════════════════════════════════════════
-        // OBTENER CONTRASEÑA — sea cual sea el control activo
-        // ═══════════════════════════════════════════
+
         private string ObtenerContrasena()
         {
             return _contrasenaVisible
@@ -102,9 +89,7 @@ namespace Login
                 : txtContrasena.Password;
         }
 
-        // ═══════════════════════════════════════════
-        // RECORDAR — guardar credenciales en archivo local
-        // ═══════════════════════════════════════════
+
         private void GuardarCredenciales(string correo, string contrasena)
         {
             var datos = new { Correo = correo, Contrasena = contrasena };
@@ -133,18 +118,15 @@ namespace Login
             }
             catch
             {
-                // Si el archivo está corrupto simplemente no carga nada
+                
             }
         }
 
-        // ═══════════════════════════════════════════
-        // BOTÓN INICIAR SESIÓN
-        // ═══════════════════════════════════════════
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             bool hayError = false;
 
-            // Validar correo
+
             if (string.IsNullOrWhiteSpace(txtCorreo.Text))
             {
                 txtErrorCorreo.Text = "⚠ El correo es obligatorio.";
@@ -159,7 +141,7 @@ namespace Login
                 borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             }
 
-            // Validar contraseña
+
             string contrasena = ObtenerContrasena();
             if (string.IsNullOrWhiteSpace(contrasena))
             {
@@ -177,7 +159,7 @@ namespace Login
 
             if (hayError) return;
 
-            // Guardar o eliminar credenciales según el checkbox
+
             if (chkRecordar.IsChecked == true)
                 GuardarCredenciales(txtCorreo.Text.Trim(), contrasena);
             else
@@ -186,9 +168,6 @@ namespace Login
             IniciarSesion(txtCorreo.Text.Trim(), contrasena);
         }
 
-        // ═══════════════════════════════════════════
-        // INICIAR SESIÓN — consulta BD
-        // ═══════════════════════════════════════════
         private void IniciarSesion(string correo, string contrasena)
         {
             try
