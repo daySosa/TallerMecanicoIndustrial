@@ -69,5 +69,12 @@ namespace Login
         {
 
         }
+
+        private void BtnRegresar_Click(object sender, RoutedEventArgs e)
+        {
+            OpcionSesion ventana = new OpcionSesion(userEmail);
+            ventana.Show();
+            this.Close();
+        }
     }
 }
