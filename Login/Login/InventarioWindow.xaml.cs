@@ -3,15 +3,16 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Login;
 
 namespace InterfazInventario
 {
-    public partial class MainWindow : Window
+    public partial class InventarioWindow : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        private clsConexionInvent _conexion = new clsConexionInvent();
         private int _productoIdSeleccionado = -1;
 
-        public MainWindow()
+        public InventarioWindow()
         {
             InitializeComponent();
         }

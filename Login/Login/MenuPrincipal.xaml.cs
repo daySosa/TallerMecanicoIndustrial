@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using Login;
 using Órdenes_de_Trabajo;
 using Vehículos;
+using InterfazInventario;
 
 namespace Dasboard_Prueba
 {
@@ -141,6 +142,13 @@ namespace Dasboard_Prueba
         {
             MenúPrincipalVehículos vehi = new MenúPrincipalVehículos();
             vehi.Show();
+            this.Close();
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalInventario invent = new MenúPrincipalInventario();
+            invent.Show();
             this.Close();
         }
     }

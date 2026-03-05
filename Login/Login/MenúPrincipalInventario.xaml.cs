@@ -202,7 +202,7 @@ namespace InterfazInventario
         {
             if (dgInventario.SelectedItem is Repuesto seleccionado)
             {
-                var ventana = new MainWindow();
+                var ventana = new InventarioWindow();
                 ventana.CargarProductoParaEditar(seleccionado);
                 ventana.ShowDialog();
 
@@ -214,7 +214,7 @@ namespace InterfazInventario
 
         private void btnAgregarRepuesto_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new MainWindow();
+            var ventana = new InventarioWindow();
             ventana.ShowDialog();
             CargarDatosDesdeDB();  
         }

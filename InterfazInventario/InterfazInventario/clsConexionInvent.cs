@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace InterfazInventario
 {
-    class clsConexion
+    class clsConexionInvent
     {
         string conexion = "Data Source=tallermecanic.database.windows.net;" +
                           "Initial Catalog=Taller_Mecanico_Sistema;" +
@@ -16,7 +16,7 @@ namespace InterfazInventario
 
         public SqlConnection SqlC = new SqlConnection();
 
-        public clsConexion()
+        public clsConexionInvent()
         {
             SqlC.ConnectionString = conexion;
         }

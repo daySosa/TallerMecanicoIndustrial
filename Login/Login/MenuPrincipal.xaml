@@ -32,7 +32,7 @@
                 </Button>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731" materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                    Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
+                    Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15" Click="Button_Click_2">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38" HorizontalAlignment="Center"/>
                         <TextBlock Foreground="White" FontSize="15" Width="142" Height="20">Inventario</TextBlock>
