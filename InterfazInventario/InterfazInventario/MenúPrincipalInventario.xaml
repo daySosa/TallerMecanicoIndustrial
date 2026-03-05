@@ -14,20 +14,17 @@
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
-
-        <!-- ═══════════════════════════════════════════════════
-             MENÚ LATERAL
-             ═══════════════════════════════════════════════════ -->
+->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
 
-                <!-- Logo -->
+
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
                     <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="184"/>
                 </WrapPanel>
 
-                <!-- Pantalla Principal -->
+
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
                     <WrapPanel Width="250">
@@ -36,7 +33,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Inventario -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
@@ -45,7 +41,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Vehículos -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
@@ -54,7 +49,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Clientes -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
@@ -63,7 +57,7 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Contabilidad -->
+
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13" BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
@@ -87,7 +81,7 @@
                     </StackPanel>
                 </Expander>
 
-                <!-- Órdenes -->
+
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
@@ -96,7 +90,7 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Cerrar Sesión -->
+
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White"
                         VerticalAlignment="Bottom" Margin="0,70,0,15">
@@ -109,9 +103,7 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- ═══════════════════════════════════════════════════
-             CONTENIDO PRINCIPAL
-             ═══════════════════════════════════════════════════ -->
+
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -119,7 +111,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP BAR -->
             <Border Grid.Row="0" Background="#1A1D2E" Height="80">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -171,7 +162,6 @@
                 </Grid>
             </Border>
 
-            <!-- TOOLBAR -->
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -196,7 +186,7 @@
                 </Button>
             </Grid>
 
-            <!-- DATAGRID -->
+
             <materialDesign:Card Grid.Row="2" Background="#1E2A3A" materialDesign:ElevationAssist.Elevation="Dp4" UniformCornerRadius="10" Margin="20,0,20,20">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -270,7 +260,7 @@
 
                         <DataGrid.Columns>
 
-                            <!-- ID -->
+
                             <DataGridTextColumn Header="ID" Binding="{Binding Producto_ID}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -282,7 +272,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- Nombre -->
+
                             <DataGridTemplateColumn Header="Nombre" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -300,7 +290,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Categoría -->
+
                             <DataGridTemplateColumn Header="Categoría" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -314,7 +304,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Marca -->
+
                             <DataGridTextColumn Header="Marca" Binding="{Binding Producto_Marca}" Width="120">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -326,7 +316,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- Modelo -->
+
                             <DataGridTextColumn Header="Modelo" Binding="{Binding Producto_Modelo}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -338,7 +328,6 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- Precio -->
                             <DataGridTextColumn Header="Precio"
                                                 Binding="{Binding Producto_Precio, StringFormat='Q {0:N2}'}"
                                                 Width="100">
@@ -353,7 +342,6 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- Stock -->
                             <DataGridTemplateColumn Header="Stock" Width="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -383,7 +371,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Estado -->
                             <DataGridTemplateColumn Header="Estado" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -425,9 +412,7 @@
 
         </Grid>
 
-        <!-- ═══════════════════════════════════════════════════
-             POPUP FILTROS
-             ═══════════════════════════════════════════════════ -->
+
         <Popup x:Name="popupFiltros"
        Grid.Column="1"
        PlacementTarget="{Binding ElementName=btnFiltrar}"
@@ -440,11 +425,11 @@
             Effect="{DynamicResource MaterialDesignShadowDepth3}">
                 <StackPanel>
 
-                    <!-- Título -->
+
                     <TextBlock Text="Filtrar Inventario" Foreground="White"
                        FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                    <!-- Categoría -->
+
                     <TextBlock Text="Categoría" Foreground="#8B9BB4"
                        FontSize="12" Margin="0,0,0,6"/>
                     <ComboBox x:Name="cmbCategoria"
@@ -464,7 +449,6 @@
                         </ComboBox.Resources>
                     </ComboBox>
 
-                    <!-- Precio mínimo -->
                     <TextBlock Text="Precio mínimo (Q)" Foreground="#8B9BB4"
                        FontSize="12" Margin="0,0,0,6"/>
                     <TextBox x:Name="txtPrecioMin"
@@ -513,7 +497,6 @@
                         </TextBox.Style>
                     </TextBox>
 
-                    <!-- Precio máximo -->
                     <TextBlock Text="Precio máximo (Q)" Foreground="#8B9BB4"
                        FontSize="12" Margin="0,0,0,6"/>
                     <TextBox x:Name="txtPrecioMax"
@@ -554,13 +537,12 @@
                         </TextBox.Style>
                     </TextBox>
 
-                    <!-- Solo Stock Bajo -->
                     <CheckBox x:Name="chkStockBajo"
                       Content="Solo productos con Stock Bajo"
                       Foreground="White" FontSize="13"
                       Margin="0,0,0,20"/>
 
-                    <!-- Botones -->
+
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>

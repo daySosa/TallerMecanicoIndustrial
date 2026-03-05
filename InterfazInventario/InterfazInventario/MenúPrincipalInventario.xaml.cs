@@ -13,30 +13,26 @@ using System.Windows.Data;
 
 namespace InterfazInventario
 {
-    // ═══════════════════════════════════════════════════════════════
-    // MODELO
-    // ═══════════════════════════════════════════════════════════════
+   
     public class Repuesto : INotifyPropertyChanged
     {
-        public int Producto_ID { get; set; }
-        public string Producto_Nombre { get; set; }
-        public string Producto_Categoria { get; set; }
-        public string Producto_Marca { get; set; }   // ← AÑADIDO
-        public string Producto_Modelo { get; set; }
+        public int? Producto_ID { get; set; }
+        public string? Producto_Nombre { get; set; }
+        public string? Producto_Categoria { get; set; }
+        public string? Producto_Marca { get; set; }   
+        public string? Producto_Modelo { get; set; }
         public int Producto_Cantidad_Actual { get; set; }
         public int Producto_Cantidad_Minima { get; set; }
         public decimal Producto_Precio { get; set; }
 
         public bool StockBajo => Producto_Cantidad_Actual < Producto_Cantidad_Minima;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // CODE-BEHIND
-    // ═══════════════════════════════════════════════════════════════
+
     public partial class MenúPrincipalInventario : Window
     {
         private clsConexion _conexion = new clsConexion();
@@ -55,9 +51,7 @@ namespace InterfazInventario
             CargarDatosDesdeDB();
         }
 
-        // ═══════════════════════════════════════════
-        // 1. CARGAR DATOS DESDE AZURE
-        // ═══════════════════════════════════════════
+
         private void CargarDatosDesdeDB()
         {
             _listaRepuestos.Clear();
@@ -89,7 +83,7 @@ namespace InterfazInventario
                             Producto_ID = reader.GetInt32(reader.GetOrdinal("Producto_ID")),
                             Producto_Nombre = reader["Producto_Nombre"].ToString(),
                             Producto_Categoria = reader["Producto_Categoria"].ToString(),
-                            Producto_Marca = reader["Producto_Marca"].ToString(),    // ← AÑADIDO
+                            Producto_Marca = reader["Producto_Marca"].ToString(),  
                             Producto_Modelo = reader["Producto_Modelo"].ToString(),
                             Producto_Cantidad_Actual = reader.GetInt32(reader.GetOrdinal("Producto_Cantidad_Actual")),
                             Producto_Cantidad_Minima = reader.GetInt32(reader.GetOrdinal("Producto_Stock_Minimo")),
@@ -98,7 +92,7 @@ namespace InterfazInventario
                     }
                 }
 
-                // Categorías para el ComboBox del popup filtros
+
                 var categorias = _listaRepuestos
                     .Select(r => r.Producto_Categoria)
                     .Distinct()
@@ -109,7 +103,7 @@ namespace InterfazInventario
                 cmbCategoria.ItemsSource = categorias;
                 cmbCategoria.SelectedIndex = 0;
 
-                // Vista con filtros
+
                 _vistaRepuestos = CollectionViewSource.GetDefaultView(_listaRepuestos);
                 _vistaRepuestos.Filter = AplicarFiltros;
                 dgInventario.ItemsSource = _vistaRepuestos;
@@ -127,60 +121,52 @@ namespace InterfazInventario
             }
         }
 
-        // ═══════════════════════════════════════════
-        // 2. FILTROS COMBINADOS
-        // ═══════════════════════════════════════════
+
         private bool AplicarFiltros(object item)
         {
             if (item is not Repuesto r) return false;
 
-            // Búsqueda por texto (nombre, categoría, marca, modelo)
+
             string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
             if (!string.IsNullOrEmpty(texto))
             {
                 bool coincide =
                     (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
                     (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||  // ← busca por marca también
+                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||  
                     (r.Producto_Modelo ?? "").ToLower().Contains(texto);
 
                 if (!coincide) return false;
             }
 
-            // Filtro categoría
+
             if (_filtroCategoria != null && _filtroCategoria != "Todas")
                 if (r.Producto_Categoria != _filtroCategoria) return false;
 
-            // Filtro precio
+
             if (r.Producto_Precio < _filtroPrecioMin) return false;
             if (r.Producto_Precio > _filtroPrecioMax) return false;
 
-            // Filtro stock bajo
+
             if (_filtroStockBajo && !r.StockBajo) return false;
 
             return true;
         }
 
-        // ═══════════════════════════════════════════
-        // 3. BUSCADOR EN TIEMPO REAL
-        // ═══════════════════════════════════════════
+
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaRepuestos?.Refresh();
             ActualizarContador();
         }
 
-        // ═══════════════════════════════════════════
-        // 4. POPUP FILTROS — abrir / cerrar
-        // ═══════════════════════════════════════════
+
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
         {
             popupFiltros.IsOpen = !popupFiltros.IsOpen;
         }
 
-        // ═══════════════════════════════════════════
-        // 5. APLICAR FILTROS
-        // ═══════════════════════════════════════════
+
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
@@ -193,9 +179,7 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-        // ═══════════════════════════════════════════
-        // 6. LIMPIAR FILTROS
-        // ═══════════════════════════════════════════
+
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
             cmbCategoria.SelectedIndex = 0;
@@ -213,9 +197,7 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-        // ═══════════════════════════════════════════
-        // 7. SELECCIÓN EN DATAGRID → abrir edición
-        // ═══════════════════════════════════════════
+
         private void dgInventario_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgInventario.SelectedItem is Repuesto seleccionado)
@@ -224,24 +206,19 @@ namespace InterfazInventario
                 ventana.CargarProductoParaEditar(seleccionado);
                 ventana.ShowDialog();
 
-                dgInventario.SelectedItem = null;  // limpia la selección al volver
-                CargarDatosDesdeDB();               // refresca el grid con los cambios
+                dgInventario.SelectedItem = null;  
+                CargarDatosDesdeDB();               
             }
         }
 
-        // ═══════════════════════════════════════════
-        // 8. BOTÓN AGREGAR REPUESTO → abre formulario vacío
-        // ═══════════════════════════════════════════
+
         private void btnAgregarRepuesto_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MainWindow();
             ventana.ShowDialog();
-            CargarDatosDesdeDB();   // refresca el grid tras agregar
+            CargarDatosDesdeDB();  
         }
 
-        // ═══════════════════════════════════════════
-        // 9. CONTADOR DE ITEMS VISIBLES
-        // ═══════════════════════════════════════════
         private void ActualizarContador()
         {
             int total = 0;

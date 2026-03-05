@@ -16,9 +16,7 @@ namespace InterfazInventario
             InitializeComponent();
         }
 
-        // ═══════════════════════════════════════════
-        // BOTONES + Y - DE CANTIDAD
-        // ═══════════════════════════════════════════
+
         private void BtnSumar_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(txtCantidad.Text, out int val))
@@ -35,10 +33,7 @@ namespace InterfazInventario
                 txtCantidad.Text = "0";
         }
 
-        // ═══════════════════════════════════════════
-        // 1. AGREGAR → INSERT
-        //    Guarda el producto con la cantidad inicial
-        // ═══════════════════════════════════════════
+
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos(out decimal precio, out int cantidad)) return;
@@ -88,11 +83,7 @@ namespace InterfazInventario
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 2. ACTUALIZAR → UPDATE
-        //    Stock nuevo = stock actual + cantidad ingresada
-        //    Si cantidad = 0, el stock no cambia
-        // ═══════════════════════════════════════════
+
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (_productoIdSeleccionado == -1)
@@ -137,7 +128,7 @@ namespace InterfazInventario
                     cmd.ExecuteNonQuery();
                 }
 
-                // Mensaje personalizado según si repuso stock o no
+
                 string msg = cantidad > 0
                     ? $"✅ Producto actualizado.\n+{cantidad} unidades sumadas al stock."
                     : "✅ Producto actualizado sin cambios en el stock.";
@@ -155,9 +146,6 @@ namespace InterfazInventario
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 3. CANCELAR
-        // ═══════════════════════════════════════════
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
             LimpiarFormulario();
@@ -165,11 +153,6 @@ namespace InterfazInventario
         }
 
 
-        // ═══════════════════════════════════════════
-        // 5. CARGAR DATOS PARA EDITAR
-        //    txtCantidad siempre arranca en 0
-        //    El usuario escribe cuánto quiere SUMAR hoy
-        // ═══════════════════════════════════════════
         public void CargarProductoParaEditar(Repuesto producto)
         {
             _productoIdSeleccionado = producto.Producto_ID;
@@ -190,9 +173,7 @@ namespace InterfazInventario
             }
         }
 
-        // ═══════════════════════════════════════════
-        // 6. VALIDACIÓN CENTRALIZADA
-        // ═══════════════════════════════════════════
+
         private bool ValidarCampos(out decimal precio, out int cantidad)
         {
             precio = 0;
@@ -225,9 +206,7 @@ namespace InterfazInventario
             return true;
         }
 
-        // ═══════════════════════════════════════════
-        // 7. LIMPIAR FORMULARIO
-        // ═══════════════════════════════════════════
+
         private void LimpiarFormulario()
         {
             txtNombre.Clear();

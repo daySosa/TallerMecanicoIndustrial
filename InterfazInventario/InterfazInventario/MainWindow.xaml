@@ -9,12 +9,9 @@
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
 
-        <Window.Resources>
-
-            <!-- ══════════════════════════════════════════
-             ESTILO BASE — TextBox oscuro funcional
-             ══════════════════════════════════════════ -->
-            <Style x:Key="DarkTextBox" TargetType="TextBox">
+    <Window.Resources>
+        
+        <Style x:Key="DarkTextBox" TargetType="TextBox">
                 <Setter Property="Background"               Value="#1e2130"/>
                 <Setter Property="Foreground"               Value="White"/>
                 <Setter Property="CaretBrush"               Value="White"/>
@@ -52,7 +49,7 @@
                 </Setter>
             </Style>
 
-            <!-- TextBox precio: sin borde izquierdo (tiene prefijo Q) -->
+
             <Style x:Key="DarkTextBoxNoBorderLeft" TargetType="TextBox"
                BasedOn="{StaticResource DarkTextBox}">
                 <Setter Property="Template">
@@ -78,7 +75,7 @@
                 </Setter>
             </Style>
 
-            <!-- TextBox centrado para cantidad -->
+
             <Style x:Key="DarkTextBoxCentered" TargetType="TextBox"
                BasedOn="{StaticResource DarkTextBox}">
                 <Setter Property="TextAlignment" Value="Center"/>
@@ -94,9 +91,7 @@
                 <ColumnDefinition Width="20*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ══════════════════════════════════════════
-             SIDEBAR
-             ══════════════════════════════════════════ -->
+
             <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
                                   Background="#242731" VerticalAlignment="Stretch">
                 <StackPanel Margin="15,0,15,0">
@@ -196,16 +191,13 @@
                 </StackPanel>
             </materialDesign:ColorZone>
 
-            <!-- ══════════════════════════════════════════
-             CONTENIDO PRINCIPAL
-             ══════════════════════════════════════════ -->
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="80"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- TOP BAR -->
+
                 <Border Grid.Row="0" Background="#1A1D2E">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -258,7 +250,7 @@
                     </Grid>
                 </Border>
 
-                <!-- FORMULARIO -->
+
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Background="#1a1d2e">
@@ -273,9 +265,6 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- ══════════════════════════════
-                         COLUMNA IZQUIERDA
-                         ══════════════════════════════ -->
                         <StackPanel Grid.Column="0" Grid.RowSpan="2">
                             <materialDesign:Card Background="#252836" UniformCornerRadius="12"
                                              Padding="22" Margin="0,0,0,16"
@@ -298,14 +287,12 @@
                                         </StackPanel>
                                     </StackPanel>
 
-                                    <!-- Nombre -->
                                     <TextBlock Text="Nombre *" Foreground="#6c7293"
                                            FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                                     <TextBox x:Name="txtNombre"
                                          Style="{StaticResource DarkTextBox}"
                                          Margin="0,0,0,16"/>
 
-                                    <!-- Categoría -->
                                     <TextBlock Text="Categoría *" Foreground="#6c7293"
                                            FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                                     <ComboBox x:Name="cmbCategoria"
@@ -329,14 +316,13 @@
                                         <ComboBoxItem Content="Otros"/>
                                     </ComboBox>
 
-                                    <!-- Marca -->
                                     <TextBlock Text="Marca *" Foreground="#6c7293"
                                            FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                                     <TextBox x:Name="txtMarca"
                                          Style="{StaticResource DarkTextBox}"
                                          Margin="0,0,0,16"/>
 
-                                    <!-- Modelo -->
+
                                     <TextBlock Text="Modelo (opcional)" Foreground="#6c7293"
                                            FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                                     <TextBox x:Name="txtModelo"
@@ -348,9 +334,6 @@
                             </materialDesign:Card>
                         </StackPanel>
 
-                        <!-- ══════════════════════════════
-                         COLUMNA DERECHA
-                         ══════════════════════════════ -->
                         <StackPanel Grid.Column="2" Grid.RowSpan="2">
                             <materialDesign:Card Background="#252836" UniformCornerRadius="12"
                                              Padding="22" Margin="0,0,0,16"
@@ -373,7 +356,7 @@
                                         </StackPanel>
                                     </StackPanel>
 
-                                    <!-- Precio -->
+
                                     <TextBlock Text="Precio *" Foreground="#6c7293"
                                            FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                                     <Grid Margin="0,0,0,16">
@@ -392,10 +375,6 @@
                                              Style="{StaticResource DarkTextBoxNoBorderLeft}"/>
                                     </Grid>
 
-
-                                <!-- ══════════════════════
-                                     CANTIDAD
-                                     ══════════════════════ -->
                                 <TextBlock Text="Cantidad ingresada" Foreground="#6c7293"
                                            FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                                 <Grid>
@@ -405,7 +384,7 @@
                                         <ColumnDefinition Width="44"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Botón − -->
+
                                     <Button Grid.Column="0"
                                             x:Name="btnRestar"
                                             Width="40" Height="40"
@@ -423,14 +402,13 @@
                                         <materialDesign:PackIcon Kind="Minus" Width="16" Height="16"/>
                                     </Button>
 
-                                    <!-- Cantidad -->
+
                                     <TextBox x:Name="txtCantidad"
                                              Grid.Column="1"
                                              Margin="8,0"
                                              Text="0"
                                              Style="{StaticResource DarkTextBoxCentered}"/>
 
-                                    <!-- Botón + -->
                                     <Button Grid.Column="2"
                                             x:Name="btnSumar"
                                             Width="40" Height="40"
@@ -453,9 +431,6 @@
                             </materialDesign:Card>
                         </StackPanel>
 
-                        <!-- ══════════════════════════════
-                         BOTONES
-                         ══════════════════════════════ -->
                         <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                          Background="#252836" UniformCornerRadius="12"
                                          Padding="20,16" Margin="0,262,0,-245"

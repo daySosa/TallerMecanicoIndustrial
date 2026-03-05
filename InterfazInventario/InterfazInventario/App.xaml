@@ -8,11 +8,11 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
 
-                <!-- HandyControl PRIMERO -->
+
                 <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
 
-                <!-- MaterialDesign DESPUÉS — sobreescribe y gana -->
+
                 <materialDesign:BundledTheme BaseTheme="Dark"
                                              PrimaryColor="Blue"
                                              SecondaryColor="Blue"/>
