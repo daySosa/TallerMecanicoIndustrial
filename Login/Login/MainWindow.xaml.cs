@@ -207,6 +207,9 @@ namespace Login
                         //Abrir ventana de verificación
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
                         OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
                         ventanaVerificacion.Show();
 =======
