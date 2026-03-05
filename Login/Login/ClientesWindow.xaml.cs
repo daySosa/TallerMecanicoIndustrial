@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using Login.Clases;
+using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Media;
 
@@ -136,7 +137,6 @@ namespace InterfazClientes
             }
         }
 
-        // Método agregado para satisfacer referencia en MainWindow.xaml
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) { }
 
         private bool ValidarCampos()

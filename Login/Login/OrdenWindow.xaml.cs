@@ -70,10 +70,8 @@ namespace Órdenes_de_Trabajo
                 return;
             }
             LimpiarResultados();
-            if (_buscarPorDNI)
-                BuscarPorDNI(valor);
-            else
-                BuscarPorPlaca(valor.ToUpper());
+            if (_buscarPorDNI) BuscarPorDNI(valor);
+            else BuscarPorPlaca(valor.ToUpper());
         }
 
         private void BuscarPorDNI(string dni)
@@ -81,11 +79,10 @@ namespace Órdenes_de_Trabajo
             try
             {
                 _conexion.Abrir();
-
                 string sqlCliente = @"
                     SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
                            Cliente_TelefonoPrincipal, Cliente_Email
-                    FROM   Cliente WHERE  Cliente_DNI = @DNI";
+                    FROM   Cliente WHERE Cliente_DNI = @DNI";
 
                 bool clienteEncontrado = false;
                 using (SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC))
@@ -112,7 +109,7 @@ namespace Órdenes_de_Trabajo
                            Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
                            Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
                            Vehiculo_Placa
-                    FROM   Vehiculo WHERE  Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
+                    FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
 
                 using (SqlCommand cmd2 = new SqlCommand(sqlVehiculo, _conexion.SqlC))
                 {
@@ -184,14 +181,12 @@ namespace Órdenes_de_Trabajo
                     "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             if (dpFecha.SelectedDate == null)
             {
                 MessageBox.Show("Selecciona la fecha de la orden.",
                     "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             if (!decimal.TryParse(
                     txtPrecioServicio.Text.Replace("S/", "").Replace(",", "").Trim(),
                     out decimal precioServicio) || precioServicio < 0)
@@ -200,7 +195,6 @@ namespace Órdenes_de_Trabajo
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             if (_repuestos.Count == 0)
             {
                 MessageBox.Show("Agrega al menos un repuesto antes de guardar la orden.",
@@ -219,7 +213,6 @@ namespace Órdenes_de_Trabajo
             try
             {
                 _conexion.Abrir();
-
                 string queryOrden = @"
                     INSERT INTO Orden_Trabajo
                         (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
@@ -278,7 +271,6 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // Botón + agregar repuestos (Button_Click en XAML)
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarRepuesto();
@@ -310,11 +302,9 @@ namespace Órdenes_de_Trabajo
                 if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
 
             txtPrecioRepuesto.Text = $"S/ {totalRepuestos:N2}";
-
             decimal.TryParse(
                 txtPrecioServicio.Text.Replace("S/", "").Replace(",", "").Trim(),
                 out decimal servicio);
-
             txtCostoTotal.Text = $"S/ {(totalRepuestos + servicio):N2}";
         }
 

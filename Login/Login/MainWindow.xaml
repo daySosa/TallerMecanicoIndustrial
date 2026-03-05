@@ -7,9 +7,7 @@
         MouseDown="Window_Drag">
 
     <Border CornerRadius="16" ClipToBounds="True">
-        
         <Grid>
-
             <Image Source="/fondo_login.png"
                    Stretch="UniformToFill"
                    RenderOptions.BitmapScalingMode="HighQuality"/>
@@ -24,22 +22,18 @@
                     <SolidColorBrush Color="#7A8BA0" Opacity="0.55"/>
                 </Border.Background>
                 <Border.Effect>
-                    <DropShadowEffect Color="#000000" Opacity="0.5"
-                                      BlurRadius="40" ShadowDepth="0"/>
+                    <DropShadowEffect Color="#000000" Opacity="0.5" BlurRadius="40" ShadowDepth="0"/>
                 </Border.Effect>
                 <Border.BorderBrush>
                     <SolidColorBrush Color="#ffffff" Opacity="0.15"/>
                 </Border.BorderBrush>
 
                 <StackPanel>
-
-
                     <Image Source="/OSM_Logo_AR.png"
                            Height="90" Width="90"
                            HorizontalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            Margin="0,0,0,2"/>
-
 
                     <TextBlock Text="Bienvenido!"
                                Foreground="White" FontSize="22" FontWeight="Bold"
@@ -76,14 +70,12 @@
                                      Padding="0,0,10,0"
                                      CaretBrush="#333"
                                      GotFocus="TxtCorreo_GotFocus"
-                                     LostFocus="TxtCorreo_LostFocus" Cursor="" TextChanged="txtCorreo_TextChanged">
+                                     LostFocus="TxtCorreo_LostFocus">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox"
                                            BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint"
-                                                Value="Example@email.com"/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground"
-                                                Value="#aaa"/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Example@email.com"/>
+                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#aaa"/>
                                     </Style>
                                 </TextBox.Style>
                             </TextBox>
@@ -92,7 +84,6 @@
                     <TextBlock x:Name="txtErrorCorreo" Text=""
                                Foreground="#f44336" FontSize="11"
                                Margin="4,0,0,8" Visibility="Collapsed"/>
-
 
                     <TextBlock Text="Contraseña" Foreground="White"
                                FontSize="11" FontWeight="SemiBold" Margin="0,4,0,5"/>
@@ -106,15 +97,12 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="42"/>
                             </Grid.ColumnDefinitions>
-
                             <materialDesign:PackIcon Grid.Column="0"
                                                      Kind="LockOutline"
                                                      Foreground="#5D5FEF"
                                                      Width="17" Height="17"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
-
-
                             <PasswordBox x:Name="txtContrasena"
                                          Grid.Column="1"
                                          Background="Transparent"
@@ -126,7 +114,6 @@
                                          GotFocus="TxtContrasena_GotFocus"
                                          LostFocus="TxtContrasena_LostFocus"
                                          Visibility="Visible"/>
-
                             <TextBox x:Name="txtContrasenaVisible"
                                      Grid.Column="1"
                                      Background="Transparent"
@@ -142,15 +129,11 @@
                                 <TextBox.Style>
                                     <Style TargetType="TextBox"
                                            BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint"
-                                                Value="••••••••"/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground"
-                                                Value="#aaa"/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="••••••••"/>
+                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#aaa"/>
                                     </Style>
                                 </TextBox.Style>
                             </TextBox>
-
-
                             <Button Grid.Column="2"
                                     x:Name="btnVerContrasena"
                                     Style="{StaticResource MaterialDesignIconButton}"
@@ -169,7 +152,6 @@
                                Foreground="#f44336" FontSize="11"
                                Margin="4,0,0,0" Visibility="Collapsed"/>
 
-
                     <CheckBox x:Name="chkRecordar"
                               Content="Recordar"
                               Foreground="White" FontSize="11"
@@ -177,12 +159,10 @@
                         <CheckBox.Style>
                             <Style TargetType="CheckBox"
                                    BasedOn="{StaticResource MaterialDesignCheckBox}">
-                                <Setter Property="materialDesign:CheckBoxAssist.CheckBoxSize"
-                                        Value="15"/>
+                                <Setter Property="materialDesign:CheckBoxAssist.CheckBoxSize" Value="15"/>
                             </Style>
                         </CheckBox.Style>
                     </CheckBox>
-
 
                     <Button Height="44"
                             FontSize="14" FontWeight="SemiBold"
@@ -201,10 +181,8 @@
                         </Button.Style>
                         <TextBlock Text="Iniciar Sesión" FontSize="14" FontWeight="SemiBold"/>
                     </Button>
-
                 </StackPanel>
             </Border>
-
         </Grid>
     </Border>
 </Window>
