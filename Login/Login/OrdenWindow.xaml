@@ -531,10 +531,10 @@
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                         Height="36" Padding="20,0" Margin="0,0,10,0"
-                                        materialDesign:ButtonAssist.CornerRadius="6" Click="Button_Click_1"/>
-                                <Button x:Name="btnActualizar1" Content="Añadir" Height="36" Padding="20,0"
+                                        materialDesign:ButtonAssist.CornerRadius="6" Click="btnActualizar_Click"/>
+                                <Button x:Name="btnAñadir" Content="Añadir" Height="36" Padding="20,0"
                                         materialDesign:ButtonAssist.CornerRadius="6"
-                                        materialDesign:ElevationAssist.Elevation="Dp0">
+                                        materialDesign:ElevationAssist.Elevation="Dp0" Click="btnAniadir_Click" Width="85">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                             <Setter Property="Background" Value="#4f6ef7"/>

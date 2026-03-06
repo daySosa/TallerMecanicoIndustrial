@@ -1,4 +1,5 @@
 ﻿using Login.Clases;
+using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SqlClient;
@@ -9,6 +10,9 @@ using System.Windows.Media;
 
 namespace Órdenes_de_Trabajo
 {
+    // ═══════════════════════════════════════════════════════════════
+    // MODELO — fila del DataGrid de repuestos en la orden
+    // ═══════════════════════════════════════════════════════════════
     public class RepuestoOrden
     {
         public int Numero { get; set; }
@@ -35,6 +39,9 @@ namespace Órdenes_de_Trabajo
             dgRepuestos.ItemsSource = _repuestos;
         }
 
+        // ═══════════════════════════════════════════
+        // TABS DNI / PLACA  ←  NO SE MODIFICAN
+        // ═══════════════════════════════════════════
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
@@ -74,6 +81,9 @@ namespace Órdenes_de_Trabajo
             else BuscarPorPlaca(valor.ToUpper());
         }
 
+        // ═══════════════════════════════════════════
+        // BUSCAR POR DNI  ←  NO SE MODIFICA
+        // ═══════════════════════════════════════════
         private void BuscarPorDNI(string dni)
         {
             try
@@ -131,6 +141,9 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
+        // ═══════════════════════════════════════════
+        // BUSCAR POR PLACA  ←  NO SE MODIFICA
+        // ═══════════════════════════════════════════
         private void BuscarPorPlaca(string placa)
         {
             try
@@ -173,7 +186,112 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        private void BtnAñadir_Click(object sender, RoutedEventArgs e)
+    
+        // ═══════════════════════════════════════════
+        // BOTÓN ACTUALIZAR
+        //    Por implementar cuando se necesite editar
+        //    órdenes existentes.
+        // ═══════════════════════════════════════════
+        private void btnActualizar_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Función de actualización próximamente.",
+                "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+
+        // ═══════════════════════════════════════════
+        // BOTÓN CANCELAR → limpia el formulario
+        // ═══════════════════════════════════════════
+
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            LimpiarFormulario();
+        }
+
+        // ═══════════════════════════════════════════
+        // CALCULAR TOTAL
+        // ═══════════════════════════════════════════
+        private void btnCalcular_Click(object sender, RoutedEventArgs e)
+        {
+            RecalcularPrecios();
+        }
+
+        // ═══════════════════════════════════════════
+        // RECALCULAR PRECIOS (interno)
+        // ═══════════════════════════════════════════
+        private void RecalcularPrecios()
+        {
+            decimal totalRepuestos = 0;
+            foreach (var r in _repuestos)
+                if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
+
+            txtPrecioRepuesto.Text = $"S/ {totalRepuestos:N2}";
+
+            decimal.TryParse(
+                txtPrecioServicio.Text.Replace("S/", "").Replace(",", "").Trim(),
+                out decimal servicio);
+
+            txtCostoTotal.Text = $"S/ {(totalRepuestos + servicio):N2}";
+        }
+
+        // ═══════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════
+        private void MostrarError(string mensaje)
+        {
+            borderError.Visibility = Visibility.Visible;
+            txtError.Text = mensaje;
+        }
+
+        private void LimpiarResultados()
+        {
+            borderClienteInfo.Visibility = Visibility.Collapsed;
+            borderVehiculoInfo.Visibility = Visibility.Collapsed;
+            borderError.Visibility = Visibility.Collapsed;
+            _clienteDNI = string.Empty;
+            _vehiculoPlaca = string.Empty;
+        }
+
+        private void LimpiarFormulario()
+        {
+            LimpiarResultados();
+            txtBuscar.Clear();
+            _repuestos.Clear();
+            txtPrecioRepuesto.Text = "S/ 0.00";
+            txtPrecioServicio.Text = "S/ 0.00";
+            txtCostoTotal.Text = "S/ 0.00";
+            dpFecha.SelectedDate = null;
+            dpEntrega.SelectedDate = null;
+            if (txtObservaciones != null) txtObservaciones.Clear();
+        }
+
+        // ═══════════════════════════════════════════
+        // BOTÓN + AGREGAR REPUESTOS
+        //    Versión unificada — elimina el Button_Click_1
+        //    duplicado que tenías antes.
+        // ═══════════════════════════════════════════
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            var ventana = new AgregarRepuesto();
+            ventana.Owner = this;
+            ventana.ShowDialog();
+
+            if (ventana.RepuestoResultado != null)
+            {
+                ventana.RepuestoResultado.Numero = _repuestos.Count + 1;
+                _repuestos.Add(ventana.RepuestoResultado);
+                RecalcularPrecios();
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // BOTÓN AÑADIR → INSERT orden en la BD
+        //    ✔ Guarda orden + repuestos
+        //    ✔ sp_AgregarRepuestoOrden descuenta stock
+        // ═══════════════════════════════════════════
+
+        private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
             {
@@ -207,12 +325,13 @@ namespace Órdenes_de_Trabajo
                 if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
 
             decimal total = totalRepuestos + precioServicio;
-            string estado = ((cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString()) ?? "En Espera";
+            string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "En Espera";
             int productoID = _repuestos[0].ProductoID;
 
             try
             {
                 _conexion.Abrir();
+
                 string queryOrden = @"
                     INSERT INTO Orden_Trabajo
                         (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
@@ -269,71 +388,6 @@ namespace Órdenes_de_Trabajo
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { _conexion.Cerrar(); }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new AgregarRepuesto();
-            ventana.Owner = this;
-            ventana.ShowDialog();
-        }
-
-        // Requerido por OrdenWindow.xaml líneas 435 y 534
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            LimpiarFormulario();
-        }
-
-        // Requerido por OrdenWindow.xaml línea 523
-        private void btnCancelar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
-        private void btnCalcular_Click(object sender, RoutedEventArgs e)
-        {
-            RecalcularPrecios();
-        }
-
-        private void RecalcularPrecios()
-        {
-            decimal totalRepuestos = 0;
-            foreach (var r in _repuestos)
-                if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
-
-            txtPrecioRepuesto.Text = $"S/ {totalRepuestos:N2}";
-            decimal.TryParse(
-                txtPrecioServicio.Text.Replace("S/", "").Replace(",", "").Trim(),
-                out decimal servicio);
-            txtCostoTotal.Text = $"S/ {(totalRepuestos + servicio):N2}";
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            borderError.Visibility = Visibility.Visible;
-            txtError.Text = mensaje;
-        }
-
-        private void LimpiarResultados()
-        {
-            borderClienteInfo.Visibility = Visibility.Collapsed;
-            borderVehiculoInfo.Visibility = Visibility.Collapsed;
-            borderError.Visibility = Visibility.Collapsed;
-            _clienteDNI = string.Empty;
-            _vehiculoPlaca = string.Empty;
-        }
-
-        private void LimpiarFormulario()
-        {
-            LimpiarResultados();
-            txtBuscar.Clear();
-            _repuestos.Clear();
-            txtPrecioRepuesto.Text = "S/ 0.00";
-            txtPrecioServicio.Text = "S/ 0.00";
-            txtCostoTotal.Text = "S/ 0.00";
-            dpFecha.SelectedDate = null;
-            dpEntrega.SelectedDate = null;
-            if (txtObservaciones != null) txtObservaciones.Clear();
         }
     }
 }
