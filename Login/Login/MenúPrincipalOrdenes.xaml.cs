@@ -1,0 +1,31 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace Órdenes_de_Trabajo
+{
+
+    public partial class MenúPrincipalOrdenes : Window
+    {
+        public MenúPrincipalOrdenes()
+        {
+            InitializeComponent();
+        }
+
+        private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
+        {
+
+            OrdenWindow ventana = new OrdenWindow();
+            ventana.Show();
+            this.Close();
+        }
+    }
+}

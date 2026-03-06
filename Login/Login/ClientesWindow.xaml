@@ -1,0 +1,450 @@
+﻿<Window x:Class="InterfazClientes.ClientesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:local="clr-namespace:InterfazClientes"
+        Title="Clientes" Height="850" Width="1200"
+        TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
+        Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
+
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="20*"/>
+        </Grid.ColumnDefinitions>
+
+
+        <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
+                                  Background="#242731" VerticalAlignment="Stretch">
+            <StackPanel Margin="15,0,15,0">
+                <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
+                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="199" Width="200"/>
+                </WrapPanel>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
+                        <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
+                        <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold">Clientes</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
+                          BorderThickness="0" Margin="0,0,0,15">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Width="250">
+                            <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
+                                                     Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
+                            <TextBlock Foreground="White" FontSize="15">Contabilidad</TextBlock>
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Background="#242731">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Width="250">
+                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
+                                <TextBlock Text="Egresos" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Width="250">
+                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
+                                <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Expander>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                    <WrapPanel Width="250">
+                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
+                        <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
+                    </WrapPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,200,0,15">
+                    <WrapPanel Width="175">
+                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
+                        <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
+                    </WrapPanel>
+                </Button>
+            </StackPanel>
+        </materialDesign:ColorZone>
+
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="80"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#1A1D2E">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
+                        <TextBlock Text="Nuevo Cliente" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Completa los datos del cliente" Foreground="#6B7280" FontSize="12"/>
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Background="#252836" CornerRadius="5"
+                            VerticalAlignment="Center" Height="40" MaxWidth="400"
+                            HorizontalAlignment="Left" Margin="20,0,0,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
+                            <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Background="Transparent" Foreground="#6B7280"
+                                     BorderThickness="0" VerticalAlignment="Center"
+                                     FontSize="13" Width="200" CaretBrush="White" Padding="0">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
+                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
+                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
+                            <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
+                        </Button>
+                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
+                                               HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
+
+                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="16,0,20,0">
+                        <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
+                                Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
+                            <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Background="#1a1d2e">
+                <Grid Margin="30,24,30,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="24"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Grid.RowSpan="2">
+                        <materialDesign:Card Background="#252836"
+                                             UniformCornerRadius="12"
+                                             Padding="22"
+                                             Margin="0,0,0,16"
+                                             materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <Border Background="#2e3250" CornerRadius="8"
+                                            Width="36" Height="36" Margin="0,0,12,0">
+                                        <materialDesign:PackIcon Kind="AccountOutline"
+                                                                 Foreground="#4f6ef7" Width="20" Height="20"
+                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Datos del Cliente" Foreground="White" FontSize="14" FontWeight="Medium"/>
+                                        <TextBlock Text="Información de identificación" Foreground="#6c7293" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+
+                                <TextBlock Text="DNI / Identificación" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtDPI"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Background="#1e2130" Foreground="White"
+                                     BorderBrush="#3a3f5c" CaretBrush="White"
+                                     Height="40" VerticalContentAlignment="Center"
+                                     Padding="10,0"
+                                     Margin="0,0,0,16"/>    
+
+                                <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtNombre"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White"
+                                         BorderBrush="#3a3f5c" CaretBrush="White"
+                                         Height="40" VerticalContentAlignment="Center"
+                                         Padding="10,0"
+                                         Margin="0,0,0,16"/>
+
+                             
+                                <TextBlock Text="Apellido" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtApellido"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White"
+                                         BorderBrush="#3a3f5c" CaretBrush="White"
+                                         Height="40" VerticalContentAlignment="Center"
+                                         Padding="10,0"
+                                         Margin="0,0,0,16"/>
+
+                                
+                                <TextBlock Text="Teléfono" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#2e3250"
+                                            BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
+                                            CornerRadius="4,0,0,4" Padding="10,0" Height="40">
+                                        <materialDesign:PackIcon Kind="Phone" Foreground="#4f6ef7"
+                                                                 Width="16" Height="16" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBox x:Name="txtTelefono"
+                                             Grid.Column="1"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Background="#1e2130" Foreground="White"
+                                             BorderBrush="#3a3f5c" CaretBrush="White"
+                                             Height="40" VerticalContentAlignment="Center"
+                                             Padding="10,0"/>
+                                </Grid>
+
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+
+                    <StackPanel Grid.Column="2" Grid.RowSpan="2">
+                        <materialDesign:Card Background="#252836"
+                                             UniformCornerRadius="12"
+                                             Padding="22"
+                                             Margin="0,0,0,16"
+                                             materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <Border Background="#2e3250" CornerRadius="8"
+                                            Width="36" Height="36" Margin="0,0,12,0">
+                                        <materialDesign:PackIcon Kind="CardAccountDetailsOutline"
+                                                                 Foreground="#4f6ef7" Width="20" Height="20"
+                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Contacto y Ubicación" Foreground="White" FontSize="14" FontWeight="Medium"/>
+                                        <TextBlock Text="Correo, dirección y estado del cliente" Foreground="#6c7293" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+
+                                <TextBlock Text="Correo Electrónico" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#2e3250"
+                                            BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
+                                            CornerRadius="4,0,0,4" Padding="10,0" Height="40">
+                                        <materialDesign:PackIcon Kind="Email" Foreground="#4f6ef7"
+                                                                 Width="16" Height="16" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBox x:Name="txtCorreo"
+                                             Grid.Column="1"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Background="#1e2130" Foreground="White"
+                                             BorderBrush="#3a3f5c" CaretBrush="White"
+                                             Height="40" VerticalContentAlignment="Center"
+                                             Padding="10,0"/>
+                                </Grid>
+
+
+                                <TextBlock Text="Dirección" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#2e3250"
+                                            BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
+                                            CornerRadius="4,0,0,4" Padding="10,0" Height="40">
+                                        <materialDesign:PackIcon Kind="MapMarker" Foreground="#4f6ef7"
+                                                                 Width="16" Height="16" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBox x:Name="txtDireccion"
+                                             Grid.Column="1"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Background="#1e2130" Foreground="White"
+                                             BorderBrush="#3a3f5c" CaretBrush="White"
+                                             Height="40" VerticalContentAlignment="Center"
+                                             Padding="10,0"/>
+                                </Grid>
+
+                                <Separator Background="#2e3250" Margin="0,6,0,18"/>
+
+
+                                <Border Background="#1e2130" CornerRadius="10" Padding="16,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                <materialDesign:PackIcon Kind="CheckCircleOutline"
+                                                                         x:Name="iconEstado"
+                                                                         Foreground="#4CAF50"
+                                                                         Width="16" Height="16"
+                                                                         VerticalAlignment="Center"
+                                                                         Margin="0,0,6,0"/>
+                                                <TextBlock Text="Estado del Cliente"
+                                                           Foreground="White" FontSize="13" FontWeight="Medium"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="txtEstadoLabel"
+                                                       Text="El cliente está activo"
+                                                       Foreground="#4CAF50" FontSize="11"/>
+                                        </StackPanel>
+                                        <ToggleButton x:Name="toggleActivo"
+                                                      Grid.Column="1" IsChecked="True"
+                                                      Checked="ToggleActivo_Checked"
+                                                      Unchecked="ToggleActivo_Unchecked"
+                                                      VerticalAlignment="Center">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Width" Value="54"/>
+                                                    <Setter Property="Height" Value="30"/>
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Grid>
+                                                                    <Border x:Name="switchBg" Background="#4CAF50"
+                                                                            CornerRadius="15" Width="54" Height="30"/>
+                                                                    <Border x:Name="switchThumb" Background="White"
+                                                                            CornerRadius="12" Width="24" Height="24"
+                                                                            HorizontalAlignment="Right" Margin="0,0,3,0">
+                                                                        <Border.Effect>
+                                                                            <DropShadowEffect Color="Black" Opacity="0.2" BlurRadius="4" ShadowDepth="1"/>
+                                                                        </Border.Effect>
+                                                                    </Border>
+                                                                </Grid>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsChecked" Value="False">
+                                                                        <Setter TargetName="switchBg" Property="Background" Value="#3a3f5c"/>
+                                                                        <Setter TargetName="switchThumb" Property="HorizontalAlignment" Value="Left"/>
+                                                                        <Setter TargetName="switchThumb" Property="Margin" Value="3,0,0,0"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </Grid>
+                                </Border>
+
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                    <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                         Background="#252836" UniformCornerRadius="12"
+                                         Padding="20,16" Margin="0,259,0,-250"
+                                         materialDesign:ElevationAssist.Elevation="Dp3">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                       Foreground="#6c7293" FontSize="12">
+                                <Run Text="⚠ "/>
+                                <Run Text="Verifica los datos antes de guardar"/>
+                            </TextBlock>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Cancelar"
+                                        Height="38" Padding="24,0" Margin="0,0,10,0"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#6c7293" Foreground="#6c7293"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Click="BtnCancelar_Click"/>
+                                <Button Content="Actualizar"
+                                        Height="38" Padding="24,0" Margin="0,0,10,0"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#4f6ef7" Foreground="#4f6ef7"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Click="BtnActualizar_Click"/>
+                                <Button Height="38" Padding="24,0"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        materialDesign:ElevationAssist.Elevation="Dp0"
+                                        Click="BtnAgregar_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Background" Value="#4f6ef7"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderBrush" Value="#4f6ef7"/>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Agregar Cliente" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </materialDesign:Card>
+
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>
