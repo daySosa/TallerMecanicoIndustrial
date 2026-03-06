@@ -14,7 +14,7 @@ namespace Órdenes_de_Trabajo
     public class OrdenTrabajo
     {
         public int Orden_ID { get; set; }
-        public int Cliente_DNI { get; set; }
+        public string Cliente_DNI { get; set; }
         public string? Cliente_NombreCompleto { get; set; }
         public string? Vehiculo_Placa { get; set; }
         public int? Producto_ID { get; set; }
@@ -135,7 +135,7 @@ namespace Órdenes_de_Trabajo
                         _listaOrdenes.Add(new OrdenTrabajo
                         {
                             Orden_ID = rd.GetInt32(rd.GetOrdinal("Orden_ID")),
-                            Cliente_DNI = rd.GetInt32(rd.GetOrdinal("Cliente_DNI")),
+                            Cliente_DNI = rd["Cliente_DNI"].ToString(),
                             Cliente_NombreCompleto = rd["Cliente_NombreCompleto"].ToString(),
                             Vehiculo_Placa = rd["Vehiculo_Placa"].ToString(),
                             Producto_Nombre = rd["Producto_Nombre"].ToString(),
@@ -168,6 +168,9 @@ namespace Órdenes_de_Trabajo
         private bool AplicarFiltros(object item)
         {
             if (item is not OrdenTrabajo o) return false;
+
+            // ✅ Ocultar finalizadas por defecto (a menos que el filtro las pida)
+            if (_filtroEstado != "Finalizado" && o.Estado == "Finalizado") return false;
 
             string busqueda = txtBuscar.Text?.Trim().ToLower() ?? "";
             if (!string.IsNullOrEmpty(busqueda))
@@ -232,24 +235,29 @@ namespace Órdenes_de_Trabajo
             tbTotalOrdenes.Text = $"{total} orden{(total != 1 ? "es" : "")}";
         }
 
+        // ✅ SelectionChanged — solo editar, recargar al cerrar
         private async void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (dgOrdenes.SelectedItem is OrdenTrabajo seleccionada)
-            {
-                var ventana = new OrdenWindow();
-                ventana.Show();
-                await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
+            if (dgOrdenes.SelectedItem is not OrdenTrabajo seleccionada) return;
 
-                dgOrdenes.SelectedItem = null;
+            dgOrdenes.SelectedItem = null; // limpiar selección PRIMERO para evitar doble disparo
+
+            var ventana = new OrdenWindow();
+            ventana.Closed += (s, args) =>
+            {
                 CargarDatosDesdeDB();
                 CargarNotificaciones();
-            }
+            };
+
+            ventana.Show();
+            await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
         }
 
+        // ✅ Nueva Orden — ShowDialog ya es bloqueante, recargar al terminar
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new OrdenWindow();
-            ventana.ShowDialog();
+            ventana.ShowDialog(); // bloquea hasta cerrar
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }

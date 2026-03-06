@@ -6,10 +6,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Órdenes_de_Trabajo
 {
-
     public class RepuestoOrden
     {
         public int Numero { get; set; }
@@ -27,6 +27,7 @@ namespace Órdenes_de_Trabajo
         private string _vehiculoPlaca = string.Empty;
         private bool _buscarPorDNI = true;
         private int _ordenIDEditar = 0;
+        private string _rutaFoto = string.Empty;
 
         private ObservableCollection<RepuestoOrden> _repuestos
             = new ObservableCollection<RepuestoOrden>();
@@ -36,26 +37,29 @@ namespace Órdenes_de_Trabajo
             InitializeComponent();
             dgRepuestos.ItemsSource = _repuestos;
             dpFecha.SelectedDate = DateTime.Today;
+
+            txtPrecioServicio.TextChanged += (s, e) => RecalcularPrecios();
         }
 
-
+        // ════════════════════════════════════════════════════
+        // CARGAR ORDEN PARA EDITAR
+        // ════════════════════════════════════════════════════
         public async Task CargarOrdenParaEditar(int ordenID)
         {
             _ordenIDEditar = ordenID;
-            txtOrdenNumero.Text = ordenID.ToString();
 
             try
             {
                 _conexion.Abrir();
 
-
                 string sqlOrden = @"
                     SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
                            o.Fecha, o.Fecha_Entrega, o.Observaciones,
                            o.Servicio_Precio, o.OrdenPrecio_Total,
+                           o.Adjuntos_Fotos,
                            c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
                            c.Cliente_TelefonoPrincipal, c.Cliente_Email,
-                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo  AS NombreVehiculo,
+                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
                            v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
                     FROM   Orden_Trabajo o
                     INNER JOIN Cliente  c ON o.Cliente_DNI    = c.Cliente_DNI
@@ -72,26 +76,31 @@ namespace Órdenes_de_Trabajo
                             _clienteDNI = rd["Cliente_DNI"].ToString();
                             _vehiculoPlaca = rd["Vehiculo_Placa"].ToString();
 
-
                             txtClienteNombre.Text = rd["NombreCompleto"].ToString();
                             txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
                             txtClienteEmail.Text = rd["Cliente_Email"].ToString();
                             borderClienteInfo.Visibility = Visibility.Visible;
-
 
                             txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
                             txtVehiculoTipo.Text = rd["TipoAño"].ToString();
                             txtVehiculoPropietario.Text = rd["NombreCompleto"].ToString();
                             borderVehiculoInfo.Visibility = Visibility.Visible;
 
-
                             dpFecha.SelectedDate = rd["Fecha"] as DateTime?;
                             dpEntrega.SelectedDate = rd["Fecha_Entrega"] as DateTime?;
 
-
                             txtObservaciones.Text = rd["Observaciones"].ToString();
-                            txtPrecioServicio.Text = $"Q {Convert.ToDecimal(rd["Servicio_Precio"]):N2}";
+                            txtPrecioServicio.Text = Convert.ToDecimal(rd["Servicio_Precio"]).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
 
+                            // Cargar foto si existe
+                            string foto = rd["Adjuntos_Fotos"]?.ToString() ?? string.Empty;
+                            if (!string.IsNullOrEmpty(foto) && System.IO.File.Exists(foto))
+                            {
+                                _rutaFoto = foto;
+                                imgFoto.Source = new BitmapImage(new Uri(foto));
+                                imgFoto.Visibility = Visibility.Visible;
+                                txtFotoPlaceholder.Visibility = Visibility.Collapsed;
+                            }
 
                             string estado = rd["Estado"].ToString();
                             foreach (ComboBoxItem item in cmbEstado.Items)
@@ -105,7 +114,6 @@ namespace Órdenes_de_Trabajo
                         }
                     }
                 }
-
 
                 string sqlRepuestos = @"
                     SELECT r.Producto_ID,
@@ -142,6 +150,9 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
+        // ════════════════════════════════════════════════════
+        // TABS DNI / PLACA
+        // ════════════════════════════════════════════════════
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
@@ -164,7 +175,9 @@ namespace Órdenes_de_Trabajo
             LimpiarResultados();
         }
 
-
+        // ════════════════════════════════════════════════════
+        // BUSCAR
+        // ════════════════════════════════════════════════════
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
             string valor = txtBuscar.Text.Trim();
@@ -278,9 +291,11 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
+        // ════════════════════════════════════════════════════
+        // BOTÓN AÑADIR — INSERT
+        // ════════════════════════════════════════════════════
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
-
             if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
             {
                 MessageBox.Show("Busca y selecciona un cliente y su vehículo antes de guardar.",
@@ -292,8 +307,8 @@ namespace Órdenes_de_Trabajo
                     "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning); return;
             }
 
-            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Trim();
-            if (!decimal.TryParse(precioTexto, out decimal precioServicio) || precioServicio < 0)
+            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Replace(" ", "").Trim();
+            if (!decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal precioServicio) || precioServicio < 0)
             {
                 MessageBox.Show("Ingresa un precio de servicio válido.",
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
@@ -320,11 +335,11 @@ namespace Órdenes_de_Trabajo
                     INSERT INTO Orden_Trabajo
                         (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
                          Fecha, Fecha_Entrega, Observaciones,
-                         Servicio_Precio, OrdenPrecio_Total)
+                         Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
                     VALUES
                         (@ClienteDNI, @Placa, @ProductoID, @Estado,
                          @Fecha, @FechaEntrega, @Observaciones,
-                         @ServicioPrecio, @Total);
+                         @ServicioPrecio, @Total, @Foto);
                     SELECT SCOPE_IDENTITY();";
 
                 int ordenID;
@@ -343,9 +358,10 @@ namespace Órdenes_de_Trabajo
                                                                     : txtObservaciones.Text.Trim());
                     cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
                     cmd.Parameters.AddWithValue("@Total", total);
+                    cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(_rutaFoto)
+                                                                    ? (object)DBNull.Value : _rutaFoto);
                     ordenID = Convert.ToInt32(Convert.ToDecimal(cmd.ExecuteScalar()));
                 }
-
 
                 foreach (var rep in _repuestos)
                 {
@@ -356,6 +372,7 @@ namespace Órdenes_de_Trabajo
                         cmdRep.Parameters.AddWithValue("@OrdenID", ordenID);
                         cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
                         cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
+                        cmdRep.Parameters.AddWithValue("@OrdenPrecio_Total", rep.Precio * rep.Cantidad);
                         cmdRep.ExecuteNonQuery();
                     }
                 }
@@ -377,6 +394,9 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
+        // ════════════════════════════════════════════════════
+        // BOTÓN ACTUALIZAR — UPDATE
+        // ════════════════════════════════════════════════════
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (_ordenIDEditar == 0)
@@ -403,6 +423,7 @@ namespace Órdenes_de_Trabajo
             {
                 _conexion.Abrir();
 
+                // 1 — Actualizar orden
                 string sqlUpdate = @"
                     UPDATE Orden_Trabajo SET
                         Estado            = @Estado,
@@ -410,7 +431,8 @@ namespace Órdenes_de_Trabajo
                         Fecha_Entrega     = @FechaEntrega,
                         Observaciones     = @Observaciones,
                         Servicio_Precio   = @ServicioPrecio,
-                        OrdenPrecio_Total = @Total
+                        OrdenPrecio_Total = @Total,
+                        Adjuntos_Fotos    = @Foto
                     WHERE Orden_ID = @OrdenID";
 
                 using (SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC))
@@ -425,8 +447,33 @@ namespace Órdenes_de_Trabajo
                                                                     : txtObservaciones.Text.Trim());
                     cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
                     cmd.Parameters.AddWithValue("@Total", total);
+                    cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(_rutaFoto)
+                                                                    ? (object)DBNull.Value : _rutaFoto);
                     cmd.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
                     cmd.ExecuteNonQuery();
+                }
+
+                // 2 — Borrar repuestos anteriores
+                using (SqlCommand cmd = new SqlCommand(
+                    "DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", _conexion.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
+                    cmd.ExecuteNonQuery();
+                }
+
+                // 3 — Reinsertar repuestos
+                foreach (var rep in _repuestos)
+                {
+                    if (!rep.Incluido) continue;
+                    using (SqlCommand cmdRep = new SqlCommand("sp_AgregarRepuestoOrden", _conexion.SqlC))
+                    {
+                        cmdRep.CommandType = CommandType.StoredProcedure;
+                        cmdRep.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
+                        cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
+                        cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
+                        cmdRep.Parameters.AddWithValue("@OrdenPrecio_Total", rep.Precio * rep.Cantidad); // ← AGREGAR
+                        cmdRep.ExecuteNonQuery();
+                    }
                 }
 
                 MessageBox.Show($"✅ Orden #{_ordenIDEditar} actualizada correctamente.",
@@ -441,6 +488,29 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
+        // ════════════════════════════════════════════════════
+        // FOTO
+        // ════════════════════════════════════════════════════
+        private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Imágenes|*.jpg;*.jpeg;*.png;*.bmp",
+                Title = "Seleccionar foto del vehículo"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                _rutaFoto = dialog.FileName;
+                imgFoto.Source = new BitmapImage(new Uri(_rutaFoto));
+                imgFoto.Visibility = Visibility.Visible;
+                txtFotoPlaceholder.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // ════════════════════════════════════════════════════
+        // REPUESTOS
+        // ════════════════════════════════════════════════════
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarRepuesto();
@@ -455,16 +525,9 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
-        private void btnCancelar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
-        private void btnCalcular_Click(object sender, RoutedEventArgs e)
-        {
-            RecalcularPrecios();
-        }
+        private void btnCalcular_Click(object sender, RoutedEventArgs e) => RecalcularPrecios();
 
         private void RecalcularPrecios()
         {
@@ -474,22 +537,24 @@ namespace Órdenes_de_Trabajo
 
             txtPrecioRepuesto.Text = $"Q {totalRepuestos:N2}";
 
-            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Trim();
-            decimal.TryParse(precioTexto, out decimal servicio);
+
+            string precioTexto = txtPrecioServicio.Text
+                .Replace("L", "")
+                .Replace(",", "")
+                .Replace(" ", "")
+                .Trim();
+
+            decimal.TryParse(precioTexto,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal servicio);
 
             txtCostoTotal.Text = $"Q {(totalRepuestos + servicio):N2}";
         }
 
-        private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "Imágenes|*.jpg;*.jpeg;*.png;*.bmp",
-                Title = "Seleccionar foto del vehículo"
-            };
-            dialog.ShowDialog();
-        }
-
+        // ════════════════════════════════════════════════════
+        // HELPERS
+        // ════════════════════════════════════════════════════
         private void MostrarError(string mensaje)
         {
             borderError.Visibility = Visibility.Visible;
@@ -511,14 +576,17 @@ namespace Órdenes_de_Trabajo
             txtBuscar.Clear();
             _repuestos.Clear();
             _ordenIDEditar = 0;
-            txtOrdenNumero.Text = "Auto";
-            txtPrecioRepuesto.Text = "Q 0.00";
-            txtPrecioServicio.Text = "Q 0.00";
-            txtCostoTotal.Text = "Q 0.00";
+            _rutaFoto = string.Empty;
+            txtPrecioRepuesto.Text = "0";
+            txtPrecioServicio.Text = "0";
+            txtCostoTotal.Text = "L 0.00";
             dpFecha.SelectedDate = DateTime.Today;
             dpEntrega.SelectedDate = null;
             txtObservaciones?.Clear();
             cmbEstado.SelectedIndex = 0;
+            imgFoto.Source = null;
+            imgFoto.Visibility = Visibility.Collapsed;
+            txtFotoPlaceholder.Visibility = Visibility.Visible;
         }
     }
 }
