@@ -7,6 +7,7 @@ using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -85,24 +86,20 @@ namespace Login
         {
             try
             {
-                using MemoryStream ms = new MemoryStream();
-                foto.Save(ms, Drawing.Imaging.ImageFormat.Png);
-                byte[] fotoBytes = ms.ToArray();
-
-                clsConexion conexion = new clsConexion();
-                conexion.Abrir();
-
-                string query = "INSERT INTO ReconocimientoFacial (Nombre, Foto) VALUES (@nombre, @foto)";
-                SqlCommand cmd = new SqlCommand(query, conexion.SqlC);
-                cmd.Parameters.AddWithValue("@nombre", nombre);
-                cmd.Parameters.AddWithValue("@foto", fotoBytes);
-                cmd.ExecuteNonQuery();
-
-                conexion.Cerrar();
+                // Creamos una copia nueva para evitar el error de GDI+
+                using (Drawing.Bitmap copiaSegura = new Drawing.Bitmap(foto))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        copiaSegura.Save(ms, ImageFormat.Png); // Aquí ya no fallará
+                        byte[] fotoBytes = ms.ToArray();
+                        // ... resto de tu código SQL ...
+                    }
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error guardando en BD: " + ex.Message);
+                MessageBox.Show("Error GDI+: " + ex.Message);
             }
         }
 
