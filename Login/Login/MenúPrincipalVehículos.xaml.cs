@@ -59,18 +59,18 @@ namespace Vehículos
 
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
-            //var ventana = new MenúPrincipalEgresos();
-            // ventana.Show();
-            // this.Close();
-            MessageBox.Show("Módulo de Egresos próximamente.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var ventana = new Contabilidad.ContaWindow();
+            ventana.Show();
+            this.Close();
+
         }
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
-            // var ventana = new MenúPrincipalIngresos();
-            // ventana.Show();
-            // this.Close();
-            MessageBox.Show("Módulo de Ingresos próximamente.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var ventana = new Contabilidad.MenuDePagos();
+            ventana.Show();
+            this.Close();
+
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
@@ -119,7 +119,7 @@ namespace Vehículos
                             Vehiculo_Año = reader.GetInt32(reader.GetOrdinal("Vehiculo_Año")),
                             Vehiculo_Tipo = reader["Vehiculo_Tipo"].ToString(),
                             Vehiculo_Observaciones = reader["Vehiculo_Observaciones"].ToString(),
-                            Cliente_DNI = reader.GetInt32(reader.GetOrdinal("Cliente_DNI")),
+                            Cliente_DNI = reader["Cliente_DNI"].ToString(),
                             Cliente_NombreCompleto = reader["Cliente_NombreCompleto"].ToString(),
                             EstaActivo = reader["Vehiculo_Activo"] != DBNull.Value
                                                      && (bool)reader["Vehiculo_Activo"]

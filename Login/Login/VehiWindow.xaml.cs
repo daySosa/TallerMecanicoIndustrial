@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Login.Clases;
 using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
-using Login.Clases;
 
 namespace Vehículos
 {
@@ -16,7 +17,7 @@ namespace Vehículos
         public int Vehiculo_Año { get; set; }
         public string? Vehiculo_Tipo { get; set; }
         public string? Vehiculo_Observaciones { get; set; }
-        public int Cliente_DNI { get; set; }
+        public string Cliente_DNI { get; set; }
         public string? Cliente_NombreCompleto { get; set; }
         public bool EstaActivo { get; set; } = true;
 
@@ -29,32 +30,50 @@ namespace Vehículos
     {
         private clsConexion _conexion = new clsConexion();
         private string _placaSeleccionada = string.Empty;
-        private int _clienteDNI = -1;
-        private ICollectionView? _vistaVehiculos;
+        private string _clienteDNI = string.Empty;
 
         public VehiWindow()
         {
             InitializeComponent();
         }
 
+        private void txtClienteDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+        }
+
+        private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (borderClienteInfo != null)
+                borderClienteInfo.Visibility = Visibility.Collapsed;
+            _clienteDNI = string.Empty;
+        }
+
+        private bool ValidarDNIHondureño(string dni)
+        {
+            return Regex.IsMatch(dni, @"^\d{13}$");
+        }
+
         public void EstablecerCliente(int clienteDNI)
         {
-            _clienteDNI = clienteDNI;
             txtClienteDNI.Text = clienteDNI.ToString();
-            VerificarClienteEnBD(clienteDNI);
+            VerificarClienteEnBD(clienteDNI.ToString());
         }
 
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
-            if (!int.TryParse(txtClienteDNI.Text.Trim(), out int dni) || dni <= 0)
+            string dni = txtClienteDNI.Text.Trim();
+
+            if (!ValidarDNIHondureño(dni))
             {
-                MostrarClienteError("DNI inválido. Ingresa un número entero positivo.");
+                MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.\nEj: 0801199012345");
                 return;
             }
+
             VerificarClienteEnBD(dni);
         }
 
-        private void VerificarClienteEnBD(int dni)
+        private void VerificarClienteEnBD(string dni)
         {
             try
             {
@@ -77,7 +96,7 @@ namespace Vehículos
                         }
                         else
                         {
-                            _clienteDNI = -1;
+                            _clienteDNI = string.Empty;
                             MostrarClienteError($"No existe ningún cliente con DNI {dni}.");
                         }
                     }
@@ -85,7 +104,7 @@ namespace Vehículos
             }
             catch (Exception ex)
             {
-                _clienteDNI = -1;
+                _clienteDNI = string.Empty;
                 MostrarClienteError("Error al consultar: " + ex.Message);
             }
             finally { _conexion.Cerrar(); }
@@ -111,44 +130,14 @@ namespace Vehículos
             txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
-        private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (borderClienteInfo != null)
-                borderClienteInfo.Visibility = Visibility.Collapsed;
-            _clienteDNI = -1;
-        }
 
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
-                string.IsNullOrWhiteSpace(txtMarca.Text) ||
-                string.IsNullOrWhiteSpace(txtModelo.Text) ||
-                !int.TryParse(txtAnio.Text, out int año) ||
-                cmbTipo.SelectedItem == null)
-            {
-                MessageBox.Show("Complete todos los campos obligatorios.",
-                    "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (año < 1900 || año > DateTime.Now.Year + 1)
-            {
-                MessageBox.Show($"El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (_clienteDNI == -1)
-            {
-                MessageBox.Show("Debes verificar el DNI del cliente antes de guardar.",
-                    "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!ValidarCampos(out int año)) return;
 
             try
             {
                 _conexion.Abrir();
-
                 using (SqlCommand cmd = new SqlCommand("sp_RegistrarVehiculo", _conexion.SqlC))
                 {
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
@@ -181,25 +170,10 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
+
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
-                string.IsNullOrWhiteSpace(txtMarca.Text) ||
-                string.IsNullOrWhiteSpace(txtModelo.Text) ||
-                !int.TryParse(txtAnio.Text, out int anio) ||
-                cmbTipo.SelectedItem == null)
-            {
-                MessageBox.Show("Complete todos los campos obligatorios.",
-                    "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (anio < 1900 || anio > DateTime.Now.Year + 1)
-            {
-                MessageBox.Show($"El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!ValidarCampos(out int año)) return;
 
             if (string.IsNullOrEmpty(_placaSeleccionada))
             {
@@ -211,28 +185,24 @@ namespace Vehículos
             try
             {
                 _conexion.Abrir();
-
                 string query = @"
                     UPDATE Vehiculo SET
                         Vehiculo_Marca         = @Marca,
                         Vehiculo_Modelo        = @Modelo,
                         Vehiculo_Año           = @Año,
                         Vehiculo_Tipo          = @Tipo,
-                        Vehiculo_Observaciones = @Observaciones,
-                        Vehiculo_Activo        = @Activo
+                        Vehiculo_Observaciones = @Observaciones
                     WHERE Vehiculo_Placa = @Placa";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
                 {
                     cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
                     cmd.Parameters.AddWithValue("@Modelo", txtModelo.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Año", anio);
+                    cmd.Parameters.AddWithValue("@Año", año);
                     cmd.Parameters.AddWithValue("@Tipo", (cmbTipo.SelectedItem as ComboBoxItem)?.Content.ToString());
                     cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
                         ? (object)DBNull.Value : txtObservaciones.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
                     cmd.Parameters.AddWithValue("@Placa", _placaSeleccionada);
-
                     cmd.ExecuteNonQuery();
                 }
 
@@ -249,10 +219,8 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-        private void BtnCancelar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
+
 
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
@@ -277,13 +245,14 @@ namespace Vehículos
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
             _clienteDNI = vehiculo.Cliente_DNI;
 
+
             txtPlaca.Text = vehiculo.Vehiculo_Placa;
             txtPlaca.IsReadOnly = true;
             txtMarca.Text = vehiculo.Vehiculo_Marca;
             txtModelo.Text = vehiculo.Vehiculo_Modelo;
             txtAnio.Text = vehiculo.Vehiculo_Año.ToString();
             txtObservaciones.Text = vehiculo.Vehiculo_Observaciones;
-            txtClienteDNI.Text = vehiculo.Cliente_DNI.ToString();
+            txtClienteDNI.Text = vehiculo.Cliente_DNI;
             txtClienteDNI.IsReadOnly = true;
 
             MostrarClienteOk(vehiculo.Cliente_NombreCompleto);
@@ -299,6 +268,40 @@ namespace Vehículos
 
             toggleActivo.IsChecked = vehiculo.EstaActivo;
         }
+
+
+        private bool ValidarCampos(out int año)
+        {
+            año = 0;
+
+            if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
+                string.IsNullOrWhiteSpace(txtMarca.Text) ||
+                string.IsNullOrWhiteSpace(txtModelo.Text) ||
+                !int.TryParse(txtAnio.Text, out año) ||
+                cmbTipo.SelectedItem == null)
+            {
+                MessageBox.Show("Completa todos los campos obligatorios.",
+                    "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (año < 1900 || año > DateTime.Now.Year + 1)
+            {
+                MessageBox.Show($"El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(_clienteDNI))
+            {
+                MessageBox.Show("Debes verificar el DNI del cliente antes de guardar.",
+                    "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtPlaca.IsReadOnly) return;
@@ -306,6 +309,7 @@ namespace Vehículos
             txtPlaca.Text = txtPlaca.Text.ToUpper();
             txtPlaca.CaretIndex = caret;
         }
+
         private void LimpiarFormulario()
         {
             txtPlaca.Clear();
@@ -320,7 +324,7 @@ namespace Vehículos
             txtClienteDNI.IsReadOnly = false;
             borderClienteInfo.Visibility = Visibility.Collapsed;
             _placaSeleccionada = string.Empty;
-            _clienteDNI = -1;
+            _clienteDNI = string.Empty;
         }
     }
 }

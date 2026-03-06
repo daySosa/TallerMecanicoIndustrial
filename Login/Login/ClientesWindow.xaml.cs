@@ -1,6 +1,8 @@
 ﻿using Login.Clases;
 using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace InterfazClientes
@@ -26,21 +28,26 @@ namespace InterfazClientes
             InitializeComponent();
         }
 
+        private void txtDPI_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+        }
+
+        private bool ValidarDNIHondureño(string dni)
+        {
+            return Regex.IsMatch(dni, @"^\d{13}$");
+        }
+
         public void CargarClienteParaEditar(Cliente c)
         {
             _dniEditando = c.Cliente_DPI;
             txtDPI.Text = c.Cliente_DPI;
             txtDPI.IsReadOnly = false;
             txtNombre.Text = c.Cliente_Nombre;
-            txtNombre.IsReadOnly = false;
             txtApellido.Text = c.Cliente_Apellido;
-            txtApellido.IsReadOnly = false;
             txtTelefono.Text = c.Cliente_Telefono;
-            txtTelefono.IsReadOnly = false;
             txtCorreo.Text = c.Cliente_Correo;
-            txtCorreo.IsReadOnly = false;
             txtDireccion.Text = c.Cliente_Direccion;
-            txtDireccion.IsReadOnly = false;
             toggleActivo.IsChecked = c.Cliente_Activo;
         }
 
@@ -62,29 +69,78 @@ namespace InterfazClientes
             iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CloseCircleOutline;
         }
 
-        private void BtnCancelar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos()) return;
 
-            ClienteResultado = new Cliente
+            try
             {
-                Cliente_DPI = txtDPI.Text.Trim(),
-                Cliente_Nombre = txtNombre.Text.Trim(),
-                Cliente_Apellido = txtApellido.Text.Trim(),
-                Cliente_Telefono = txtTelefono.Text.Trim(),
-                Cliente_Correo = txtCorreo.Text.Trim(),
-                Cliente_Direccion = txtDireccion.Text.Trim(),
-                Cliente_Activo = toggleActivo.IsChecked == true
-            };
+                var db = new clsConexion();
+                db.Abrir();
 
-            this.DialogResult = true;
-            this.Close();
+
+                string sqlCheck = "SELECT COUNT(1) FROM Cliente WHERE Cliente_DNI = @DNI";
+                using (SqlCommand chk = new SqlCommand(sqlCheck, db.SqlC))
+                {
+                    chk.Parameters.AddWithValue("@DNI", txtDPI.Text.Trim());
+                    int existe = (int)chk.ExecuteScalar();
+                    if (existe > 0)
+                    {
+                        MessageBox.Show("Ya existe un cliente con ese DNI.",
+                            "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        db.Cerrar();
+                        return;
+                    }
+                }
+
+                string sql = @"
+            INSERT INTO Cliente
+                (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                 Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Direccion)
+            VALUES
+                (@DNI, @Nombres, @Apellidos, @Telefono, @Email, @Direccion)";
+
+                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@DNI", txtDPI.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Nombres", txtNombre.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Apellidos", txtApellido.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Telefono", txtTelefono.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(txtCorreo.Text)
+                        ? (object)DBNull.Value : txtCorreo.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(txtDireccion.Text)
+                        ? (object)DBNull.Value : txtDireccion.Text.Trim());
+                    cmd.ExecuteNonQuery();
+                }
+
+                db.Cerrar();
+
+                ClienteResultado = new Cliente
+                {
+                    Cliente_DPI = txtDPI.Text.Trim(),
+                    Cliente_Nombre = txtNombre.Text.Trim(),
+                    Cliente_Apellido = txtApellido.Text.Trim(),
+                    Cliente_Telefono = txtTelefono.Text.Trim(),
+                    Cliente_Correo = txtCorreo.Text.Trim(),
+                    Cliente_Direccion = txtDireccion.Text.Trim(),
+                    Cliente_Activo = toggleActivo.IsChecked == true
+                };
+
+                MessageBox.Show("✅ Cliente agregado correctamente.",
+                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                this.DialogResult = true;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al agregar cliente:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
@@ -108,20 +164,22 @@ namespace InterfazClientes
                         Cliente_Apellidos         = @Apellidos,
                         Cliente_TelefonoPrincipal = @Telefono,
                         Cliente_Email             = @Email,
-                        Cliente_Direccion         = @Direccion,
-                        Cliente_Activo            = @Activo
+                        Cliente_Direccion         = @Direccion
                     WHERE Cliente_DNI = @DNI";
 
-                SqlCommand cmd = new SqlCommand(sql, db.SqlC);
-                cmd.Parameters.AddWithValue("@Nombres", txtNombre.Text.Trim());
-                cmd.Parameters.AddWithValue("@Apellidos", txtApellido.Text.Trim());
-                cmd.Parameters.AddWithValue("@Telefono", txtTelefono.Text.Trim());
-                cmd.Parameters.AddWithValue("@Email", txtCorreo.Text.Trim());
-                cmd.Parameters.AddWithValue("@Direccion", txtDireccion.Text.Trim());
-                cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
-                cmd.Parameters.AddWithValue("@DNI", _dniEditando);
+                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@Nombres", txtNombre.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Apellidos", txtApellido.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Telefono", txtTelefono.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(txtCorreo.Text)
+                        ? (object)DBNull.Value : txtCorreo.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(txtDireccion.Text)
+                        ? (object)DBNull.Value : txtDireccion.Text.Trim());
+                    cmd.Parameters.AddWithValue("@DNI", _dniEditando);
+                    cmd.ExecuteNonQuery();
+                }
 
-                cmd.ExecuteNonQuery();
                 db.Cerrar();
 
                 MessageBox.Show("✅ Cliente actualizado correctamente.",
@@ -132,19 +190,18 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al actualizar: " + ex.Message,
+                MessageBox.Show("Error al actualizar:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) { }
-
         private bool ValidarCampos()
         {
-            if (string.IsNullOrWhiteSpace(txtDPI.Text))
+            if (!ValidarDNIHondureño(txtDPI.Text.Trim()))
             {
-                MessageBox.Show("El DNI es obligatorio.",
-                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("El DNI debe tener exactamente 13 dígitos numéricos.\nEjemplo: 0801199012345",
+                    "DNI inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtDPI.Focus();
                 return false;
             }
 
@@ -156,6 +213,7 @@ namespace InterfazClientes
                     "Campos requeridos", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+
             return true;
         }
     }

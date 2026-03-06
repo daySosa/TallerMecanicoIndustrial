@@ -24,7 +24,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- TÍTULO -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -45,15 +44,12 @@
             </Border>
         </Grid>
 
-        <!-- SEPARADOR -->
         <Rectangle Grid.Row="2" Height="1" Fill="#2A3A4D"/>
 
-        <!-- LISTA DE NOTIFICACIONES -->
         <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="panelNotificaciones"/>
         </ScrollViewer>
 
-        <!-- BOTÓN MARCAR TODAS LEÍDAS -->
         <Button Grid.Row="6" x:Name="btnMarcarTodas"
                 Style="{StaticResource MaterialDesignOutlinedButton}"
                 Foreground="#3D7EFF" BorderBrush="#3D7EFF"

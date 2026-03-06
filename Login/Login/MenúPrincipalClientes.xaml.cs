@@ -57,18 +57,16 @@ namespace InterfazClientes
 
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
-            //var ventana = new MenúPrincipalEgresos();
-            // ventana.Show();
-            // this.Close();
-            MessageBox.Show("Módulo de Egresos próximamente.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var ventana = new Contabilidad.ContaWindow();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
-            // var ventana = new MenúPrincipalIngresos();
-            // ventana.Show();
-            // this.Close();
-            MessageBox.Show("Módulo de Ingresos próximamente.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            var ventana = new Contabilidad.MenuDePagos();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)

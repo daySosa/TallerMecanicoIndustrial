@@ -1,17 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.ComponentModel;
 using System.Data;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Contabilidad
 {
@@ -20,7 +11,7 @@ namespace Contabilidad
     public partial class ContaWindow : Window
     {
 
-        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
+        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         public ContaWindow()
         {
@@ -36,7 +27,7 @@ namespace Contabilidad
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = @"
                         SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto
@@ -189,7 +180,7 @@ namespace Contabilidad
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
                     SqlCommand cmd = new SqlCommand(query, conn);
@@ -214,7 +205,7 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = @"
                         SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
@@ -367,7 +358,7 @@ namespace Contabilidad
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
                     cmd.CommandType = CommandType.StoredProcedure;

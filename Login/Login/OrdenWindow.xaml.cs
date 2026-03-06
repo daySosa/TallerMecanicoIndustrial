@@ -9,9 +9,7 @@ using System.Windows.Media;
 
 namespace Órdenes_de_Trabajo
 {
-    // ═══════════════════════════════════════════════════════════════
-    // MODELO — fila del DataGrid de repuestos en la orden
-    // ═══════════════════════════════════════════════════════════════
+
     public class RepuestoOrden
     {
         public int Numero { get; set; }
@@ -28,29 +26,41 @@ namespace Órdenes_de_Trabajo
         private string _clienteDNI = string.Empty;
         private string _vehiculoPlaca = string.Empty;
         private bool _buscarPorDNI = true;
+        private int _ordenIDEditar = 0;
 
         private ObservableCollection<RepuestoOrden> _repuestos
             = new ObservableCollection<RepuestoOrden>();
 
+        public OrdenWindow()
+        {
+            InitializeComponent();
+            dgRepuestos.ItemsSource = _repuestos;
+            dpFecha.SelectedDate = DateTime.Today;
+        }
+
+
         public async Task CargarOrdenParaEditar(int ordenID)
         {
+            _ordenIDEditar = ordenID;
+            txtOrdenNumero.Text = ordenID.ToString();
+
             try
             {
                 _conexion.Abrir();
 
-                // 1. Cargar datos principales de la orden
+
                 string sqlOrden = @"
-            SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
-                   o.Fecha, o.Fecha_Entrega, o.Observaciones,
-                   o.Servicio_Precio, o.OrdenPrecio_Total,
-                   c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                   c.Cliente_TelefonoPrincipal, c.Cliente_Email,
-                   v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                   v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
-            FROM   Orden_Trabajo o
-            INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
-            INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
-            WHERE  o.Orden_ID = @OrdenID";
+                    SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
+                           o.Fecha, o.Fecha_Entrega, o.Observaciones,
+                           o.Servicio_Precio, o.OrdenPrecio_Total,
+                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                           c.Cliente_TelefonoPrincipal, c.Cliente_Email,
+                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo  AS NombreVehiculo,
+                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
+                    FROM   Orden_Trabajo o
+                    INNER JOIN Cliente  c ON o.Cliente_DNI    = c.Cliente_DNI
+                    INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
+                    WHERE  o.Orden_ID = @OrdenID";
 
                 using (SqlCommand cmd = new SqlCommand(sqlOrden, _conexion.SqlC))
                 {
@@ -62,25 +72,27 @@ namespace Órdenes_de_Trabajo
                             _clienteDNI = rd["Cliente_DNI"].ToString();
                             _vehiculoPlaca = rd["Vehiculo_Placa"].ToString();
 
-                            // Cliente
+
                             txtClienteNombre.Text = rd["NombreCompleto"].ToString();
                             txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
                             txtClienteEmail.Text = rd["Cliente_Email"].ToString();
                             borderClienteInfo.Visibility = Visibility.Visible;
 
-                            // Vehículo
+
                             txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
                             txtVehiculoTipo.Text = rd["TipoAño"].ToString();
                             txtVehiculoPropietario.Text = rd["NombreCompleto"].ToString();
                             borderVehiculoInfo.Visibility = Visibility.Visible;
 
-                            // Datos de la orden
+
                             dpFecha.SelectedDate = rd["Fecha"] as DateTime?;
                             dpEntrega.SelectedDate = rd["Fecha_Entrega"] as DateTime?;
-                            txtObservaciones.Text = rd["Observaciones"].ToString();
-                            txtPrecioServicio.Text = $"S/ {rd["Servicio_Precio"]:N2}";
 
-                            // Estado en el ComboBox
+
+                            txtObservaciones.Text = rd["Observaciones"].ToString();
+                            txtPrecioServicio.Text = $"Q {Convert.ToDecimal(rd["Servicio_Precio"]):N2}";
+
+
                             string estado = rd["Estado"].ToString();
                             foreach (ComboBoxItem item in cmbEstado.Items)
                             {
@@ -94,13 +106,14 @@ namespace Órdenes_de_Trabajo
                     }
                 }
 
-                // 2. Cargar repuestos de la orden
+
                 string sqlRepuestos = @"
-            SELECT p.Producto_ID, p.Producto_Nombre,
-                   r.Cantidad, p.Producto_Precio
-            FROM   Orden_Repuesto r
-            INNER JOIN Producto p ON r.Producto_ID = p.Producto_ID
-            WHERE  r.Orden_ID = @OrdenID";
+                    SELECT r.Producto_ID,
+                           r.Repuesto_Nombre,
+                           r.Repuesto_Cantidad,
+                           r.Repuesto_Precio
+                    FROM   Orden_Repuesto r
+                    WHERE  r.Orden_ID = @OrdenID";
 
                 using (SqlCommand cmd2 = new SqlCommand(sqlRepuestos, _conexion.SqlC))
                 {
@@ -114,9 +127,9 @@ namespace Órdenes_de_Trabajo
                             {
                                 Numero = numero++,
                                 ProductoID = Convert.ToInt32(rd2["Producto_ID"]),
-                                Nombre = rd2["Producto_Nombre"].ToString(),
-                                Cantidad = Convert.ToInt32(rd2["Cantidad"]),
-                                Precio = Convert.ToDecimal(rd2["Producto_Precio"]),
+                                Nombre = rd2["Repuesto_Nombre"].ToString(),
+                                Cantidad = Convert.ToInt32(rd2["Repuesto_Cantidad"]),
+                                Precio = Convert.ToDecimal(rd2["Repuesto_Precio"]),
                                 Incluido = true
                             });
                         }
@@ -125,31 +138,16 @@ namespace Órdenes_de_Trabajo
 
                 RecalcularPrecios();
             }
-            catch (Exception ex)
-            {
-                MostrarError("Error al cargar la orden: " + ex.Message);
-            }
+            catch (Exception ex) { MostrarError("Error al cargar la orden: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
-
-        public OrdenWindow()
-        {
-            InitializeComponent();
-            dgRepuestos.ItemsSource = _repuestos;
-        }
-
-
-        // ═══════════════════════════════════════════
-        // TABS DNI / PLACA  ←  NO SE MODIFICAN
-        // ═══════════════════════════════════════════
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
             tabDNI.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6ef7"));
             tabPlaca.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e2130"));
-            var tb = tabPlaca.Child as TextBlock;
-            if (tb != null) tb.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6c7293"));
+            if (tabPlaca.Child is TextBlock tb) tb.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6c7293"));
             lblBuscar.Text = "DNI del Cliente";
             txtBuscar.Text = string.Empty;
             LimpiarResultados();
@@ -160,14 +158,12 @@ namespace Órdenes_de_Trabajo
             _buscarPorDNI = false;
             tabPlaca.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6ef7"));
             tabDNI.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e2130"));
-            var tb = tabPlaca.Child as TextBlock;
-            if (tb != null) tb.Foreground = new SolidColorBrush(Colors.White);
+            if (tabPlaca.Child is TextBlock tb) tb.Foreground = new SolidColorBrush(Colors.White);
             lblBuscar.Text = "Placa del Vehículo";
             txtBuscar.Text = string.Empty;
             LimpiarResultados();
         }
 
-        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e) { }
 
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
@@ -182,20 +178,18 @@ namespace Órdenes_de_Trabajo
             else BuscarPorPlaca(valor.ToUpper());
         }
 
-        // ═══════════════════════════════════════════
-        // BUSCAR POR DNI  ←  NO SE MODIFICA
-        // ═══════════════════════════════════════════
         private void BuscarPorDNI(string dni)
         {
             try
             {
                 _conexion.Abrir();
+
                 string sqlCliente = @"
                     SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
                            Cliente_TelefonoPrincipal, Cliente_Email
                     FROM   Cliente WHERE Cliente_DNI = @DNI";
 
-                bool clienteEncontrado = false;
+                bool encontrado = false;
                 using (SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC))
                 {
                     cmd.Parameters.AddWithValue("@DNI", dni);
@@ -203,7 +197,7 @@ namespace Órdenes_de_Trabajo
                     {
                         if (rd.Read())
                         {
-                            clienteEncontrado = true;
+                            encontrado = true;
                             _clienteDNI = dni;
                             txtClienteNombre.Text = rd["NombreCompleto"].ToString();
                             txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
@@ -213,7 +207,7 @@ namespace Órdenes_de_Trabajo
                     }
                 }
 
-                if (!clienteEncontrado) { MostrarError($"No existe cliente con DNI '{dni}'."); return; }
+                if (!encontrado) { MostrarError($"No existe cliente con DNI '{dni}'."); return; }
 
                 string sqlVehiculo = @"
                     SELECT TOP 1
@@ -242,9 +236,6 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // BUSCAR POR PLACA  ←  NO SE MODIFICA
-        // ═══════════════════════════════════════════
         private void BuscarPorPlaca(string placa)
         {
             try
@@ -269,14 +260,14 @@ namespace Órdenes_de_Trabajo
                         if (rd.Read())
                         {
                             _vehiculoPlaca = placa;
+                            _clienteDNI = rd["Cliente_DNI"].ToString();
                             txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
                             txtVehiculoTipo.Text = rd["TipoAño"].ToString();
                             txtVehiculoPropietario.Text = rd["NombreCompleto"].ToString();
-                            borderVehiculoInfo.Visibility = Visibility.Visible;
-                            _clienteDNI = rd["Cliente_DNI"].ToString();
                             txtClienteNombre.Text = rd["NombreCompleto"].ToString();
                             txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
                             txtClienteEmail.Text = rd["Cliente_Email"].ToString();
+                            borderVehiculoInfo.Visibility = Visibility.Visible;
                             borderClienteInfo.Visibility = Visibility.Visible;
                         }
                         else { MostrarError($"No existe vehículo con placa '{placa}'."); }
@@ -287,138 +278,30 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-
-        // ═══════════════════════════════════════════
-        // BOTÓN ACTUALIZAR
-        //    Por implementar cuando se necesite editar
-        //    órdenes existentes.
-        // ═══════════════════════════════════════════
-        private void btnActualizar_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Función de actualización próximamente.",
-                "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-
-        // ═══════════════════════════════════════════
-        // BOTÓN CANCELAR → limpia el formulario
-        // ═══════════════════════════════════════════
-
-        private void btnCancelar_Click(object sender, RoutedEventArgs e)
-        {
-            LimpiarFormulario();
-        }
-
-        // ═══════════════════════════════════════════
-        // CALCULAR TOTAL
-        // ═══════════════════════════════════════════
-        private void btnCalcular_Click(object sender, RoutedEventArgs e)
-        {
-            RecalcularPrecios();
-        }
-
-        // ═══════════════════════════════════════════
-        // RECALCULAR PRECIOS (interno)
-        // ═══════════════════════════════════════════
-        private void RecalcularPrecios()
-        {
-            decimal totalRepuestos = 0;
-            foreach (var r in _repuestos)
-                if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
-
-            txtPrecioRepuesto.Text = $"S/ {totalRepuestos:N2}";
-
-            decimal.TryParse(
-                txtPrecioServicio.Text.Replace("S/", "").Replace(",", "").Trim(),
-                out decimal servicio);
-
-            txtCostoTotal.Text = $"S/ {(totalRepuestos + servicio):N2}";
-        }
-
-        // ═══════════════════════════════════════════
-        // HELPERS
-        // ═══════════════════════════════════════════
-        private void MostrarError(string mensaje)
-        {
-            borderError.Visibility = Visibility.Visible;
-            txtError.Text = mensaje;
-        }
-
-        private void LimpiarResultados()
-        {
-            borderClienteInfo.Visibility = Visibility.Collapsed;
-            borderVehiculoInfo.Visibility = Visibility.Collapsed;
-            borderError.Visibility = Visibility.Collapsed;
-            _clienteDNI = string.Empty;
-            _vehiculoPlaca = string.Empty;
-        }
-
-        private void LimpiarFormulario()
-        {
-            LimpiarResultados();
-            txtBuscar.Clear();
-            _repuestos.Clear();
-            txtPrecioRepuesto.Text = "S/ 0.00";
-            txtPrecioServicio.Text = "S/ 0.00";
-            txtCostoTotal.Text = "S/ 0.00";
-            dpFecha.SelectedDate = null;
-            dpEntrega.SelectedDate = null;
-            if (txtObservaciones != null) txtObservaciones.Clear();
-        }
-
-        // ═══════════════════════════════════════════
-        // BOTÓN + AGREGAR REPUESTOS
-        //    Versión unificada — elimina el Button_Click_1
-        //    duplicado que tenías antes.
-        // ═══════════════════════════════════════════
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            var ventana = new AgregarRepuesto();
-            ventana.Owner = this;
-            ventana.ShowDialog();
-
-            if (ventana.RepuestoResultado != null)
-            {
-                ventana.RepuestoResultado.Numero = _repuestos.Count + 1;
-                _repuestos.Add(ventana.RepuestoResultado);
-                RecalcularPrecios();
-            }
-        }
-
-        // ═══════════════════════════════════════════
-        // BOTÓN AÑADIR → INSERT orden en la BD
-        //    ✔ Guarda orden + repuestos
-        //    ✔ sp_AgregarRepuestoOrden descuenta stock
-        // ═══════════════════════════════════════════
-
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
+
             if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
             {
                 MessageBox.Show("Busca y selecciona un cliente y su vehículo antes de guardar.",
-                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning); return;
             }
             if (dpFecha.SelectedDate == null)
             {
                 MessageBox.Show("Selecciona la fecha de la orden.",
-                    "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                    "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning); return;
             }
-            if (!decimal.TryParse(
-                    txtPrecioServicio.Text.Replace("S/", "").Replace(",", "").Trim(),
-                    out decimal precioServicio) || precioServicio < 0)
+
+            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Trim();
+            if (!decimal.TryParse(precioTexto, out decimal precioServicio) || precioServicio < 0)
             {
-                MessageBox.Show("Ingresa un precio de servicio válido (mayor o igual a 0).",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                MessageBox.Show("Ingresa un precio de servicio válido.",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
             }
             if (_repuestos.Count == 0)
             {
                 MessageBox.Show("Agrega al menos un repuesto antes de guardar la orden.",
-                    "Sin repuestos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                    "Sin repuestos", MessageBoxButton.OK, MessageBoxImage.Warning); return;
             }
 
             decimal totalRepuestos = 0;
@@ -426,7 +309,7 @@ namespace Órdenes_de_Trabajo
                 if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
 
             decimal total = totalRepuestos + precioServicio;
-            string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "En Espera";
+            string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
             int productoID = _repuestos[0].ProductoID;
 
             try
@@ -447,19 +330,22 @@ namespace Órdenes_de_Trabajo
                 int ordenID;
                 using (SqlCommand cmd = new SqlCommand(queryOrden, _conexion.SqlC))
                 {
-                    cmd.Parameters.AddWithValue("@ClienteDNI", int.Parse(_clienteDNI));
+                    cmd.Parameters.AddWithValue("@ClienteDNI", _clienteDNI);
                     cmd.Parameters.AddWithValue("@Placa", _vehiculoPlaca);
                     cmd.Parameters.AddWithValue("@ProductoID", productoID);
                     cmd.Parameters.AddWithValue("@Estado", estado);
                     cmd.Parameters.AddWithValue("@Fecha", dpFecha.SelectedDate.Value);
-                    cmd.Parameters.AddWithValue("@FechaEntrega",
-                        dpEntrega.SelectedDate.HasValue ? (object)dpEntrega.SelectedDate.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Observaciones",
-                        string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim());
+                    cmd.Parameters.AddWithValue("@FechaEntrega", dpEntrega.SelectedDate.HasValue
+                                                                    ? (object)dpEntrega.SelectedDate.Value
+                                                                    : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
+                                                                    ? (object)DBNull.Value
+                                                                    : txtObservaciones.Text.Trim());
                     cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
                     cmd.Parameters.AddWithValue("@Total", total);
-                    ordenID = Convert.ToInt32(cmd.ExecuteScalar());
+                    ordenID = Convert.ToInt32(Convert.ToDecimal(cmd.ExecuteScalar()));
                 }
+
 
                 foreach (var rep in _repuestos)
                 {
@@ -489,6 +375,150 @@ namespace Órdenes_de_Trabajo
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { _conexion.Cerrar(); }
+        }
+
+        private void btnActualizar_Click(object sender, RoutedEventArgs e)
+        {
+            if (_ordenIDEditar == 0)
+            {
+                MessageBox.Show("No hay una orden cargada para actualizar.",
+                    "Info", MessageBoxButton.OK, MessageBoxImage.Information); return;
+            }
+
+            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Trim();
+            if (!decimal.TryParse(precioTexto, out decimal precioServicio) || precioServicio < 0)
+            {
+                MessageBox.Show("Ingresa un precio de servicio válido.",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
+            }
+
+            decimal totalRepuestos = 0;
+            foreach (var r in _repuestos)
+                if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
+
+            decimal total = totalRepuestos + precioServicio;
+            string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
+
+            try
+            {
+                _conexion.Abrir();
+
+                string sqlUpdate = @"
+                    UPDATE Orden_Trabajo SET
+                        Estado            = @Estado,
+                        Fecha             = @Fecha,
+                        Fecha_Entrega     = @FechaEntrega,
+                        Observaciones     = @Observaciones,
+                        Servicio_Precio   = @ServicioPrecio,
+                        OrdenPrecio_Total = @Total
+                    WHERE Orden_ID = @OrdenID";
+
+                using (SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@Estado", estado);
+                    cmd.Parameters.AddWithValue("@Fecha", dpFecha.SelectedDate ?? DateTime.Today);
+                    cmd.Parameters.AddWithValue("@FechaEntrega", dpEntrega.SelectedDate.HasValue
+                                                                    ? (object)dpEntrega.SelectedDate.Value
+                                                                    : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
+                                                                    ? (object)DBNull.Value
+                                                                    : txtObservaciones.Text.Trim());
+                    cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
+                    cmd.Parameters.AddWithValue("@Total", total);
+                    cmd.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
+                    cmd.ExecuteNonQuery();
+                }
+
+                MessageBox.Show($"✅ Orden #{_ordenIDEditar} actualizada correctamente.",
+                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al actualizar:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            var ventana = new AgregarRepuesto();
+            ventana.Owner = this;
+            ventana.ShowDialog();
+
+            if (ventana.RepuestoResultado != null)
+            {
+                ventana.RepuestoResultado.Numero = _repuestos.Count + 1;
+                _repuestos.Add(ventana.RepuestoResultado);
+                RecalcularPrecios();
+            }
+        }
+
+
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void btnCalcular_Click(object sender, RoutedEventArgs e)
+        {
+            RecalcularPrecios();
+        }
+
+        private void RecalcularPrecios()
+        {
+            decimal totalRepuestos = 0;
+            foreach (var r in _repuestos)
+                if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
+
+            txtPrecioRepuesto.Text = $"Q {totalRepuestos:N2}";
+
+            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Trim();
+            decimal.TryParse(precioTexto, out decimal servicio);
+
+            txtCostoTotal.Text = $"Q {(totalRepuestos + servicio):N2}";
+        }
+
+        private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Imágenes|*.jpg;*.jpeg;*.png;*.bmp",
+                Title = "Seleccionar foto del vehículo"
+            };
+            dialog.ShowDialog();
+        }
+
+        private void MostrarError(string mensaje)
+        {
+            borderError.Visibility = Visibility.Visible;
+            txtError.Text = mensaje;
+        }
+
+        private void LimpiarResultados()
+        {
+            borderClienteInfo.Visibility = Visibility.Collapsed;
+            borderVehiculoInfo.Visibility = Visibility.Collapsed;
+            borderError.Visibility = Visibility.Collapsed;
+            _clienteDNI = string.Empty;
+            _vehiculoPlaca = string.Empty;
+        }
+
+        private void LimpiarFormulario()
+        {
+            LimpiarResultados();
+            txtBuscar.Clear();
+            _repuestos.Clear();
+            _ordenIDEditar = 0;
+            txtOrdenNumero.Text = "Auto";
+            txtPrecioRepuesto.Text = "Q 0.00";
+            txtPrecioServicio.Text = "Q 0.00";
+            txtCostoTotal.Text = "Q 0.00";
+            dpFecha.SelectedDate = DateTime.Today;
+            dpEntrega.SelectedDate = null;
+            txtObservaciones?.Clear();
+            cmbEstado.SelectedIndex = 0;
         }
     }
 }
