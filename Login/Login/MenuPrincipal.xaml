@@ -64,13 +64,13 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left" Click="Button_Click_4">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15 0 20 0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left" Click="Button_Click_5">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15 0 20 0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>

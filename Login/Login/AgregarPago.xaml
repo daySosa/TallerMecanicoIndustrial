@@ -1,0 +1,176 @@
+﻿<Window x:Class="Contabilidad.AgregarPago"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:local="clr-namespace:Contabilidad"
+        mc:Ignorable="d"
+        Title="AgregarPago" Height="420" Width="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#1e2130"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Título -->
+        <TextBlock Grid.Row="0" Text="Nuevo Pago"
+                   Foreground="White" FontSize="22" FontWeight="Bold"/>
+
+        <!-- DNI DEL CLIENTE -->
+        <StackPanel Grid.Row="2">
+            <TextBlock Text="DNI DEL CLIENTE" Foreground="#8B9BB4"
+                       FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="#252836" CornerRadius="6" Height="44">
+                    <TextBox x:Name="txtDNI"
+                             Background="Transparent" Foreground="White"
+                             BorderThickness="0" VerticalAlignment="Center"
+                             Margin="14,0" FontSize="14" CaretBrush="White">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>
+                                <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                </Border>
+
+                <Button Grid.Column="2" x:Name="btnBuscar"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="#3D7EFF" BorderBrush="#3D7EFF"
+                        materialDesign:ButtonAssist.CornerRadius="6"
+                        Height="44" Padding="18,0"
+                        Click="btnBuscar_Click">
+                    <TextBlock Text="Buscar" FontSize="14" FontWeight="SemiBold"/>
+                </Button>
+            </Grid>
+        </StackPanel>
+
+        <!-- NOMBRE DEL CLIENTE -->
+        <StackPanel Grid.Row="4">
+            <TextBlock Text="NOMBRE DEL CLIENTE" Foreground="#8B9BB4"
+                       FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <Border Background="#1A1D2E" CornerRadius="6" Height="44"
+                    BorderBrush="#2A3A4D" BorderThickness="1">
+                <TextBox x:Name="txtNombre"
+                         Background="Transparent" Foreground="#6B7280"
+                         BorderThickness="0" VerticalAlignment="Center"
+                         Margin="14,0" FontSize="14" IsReadOnly="True">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                            <Setter Property="materialDesign:HintAssist.Hint" Value="Se llena automáticamente..."/>
+                            <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+            </Border>
+        </StackPanel>
+
+        <!-- ID DE LA ORDEN + MONTO A PAGAR -->
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ID de la Orden -->
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="ID DE LA ORDEN" Foreground="#8B9BB4"
+                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <Border Background="#252836" CornerRadius="6" Height="44">
+                    <TextBox x:Name="txtOrdenID"
+                             Background="Transparent" Foreground="White"
+                             BorderThickness="0" VerticalAlignment="Center"
+                             Margin="14,0" FontSize="14" CaretBrush="White"
+                             TextChanged="txtOrdenID_TextChanged">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                <Setter Property="materialDesign:HintAssist.Hint" Value="Ej: 1"/>
+                                <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                </Border>
+            </StackPanel>
+
+            <!-- Monto a Pagar -->
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="MONTO A PAGAR" Foreground="#8B9BB4"
+                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <Border Background="#1A1D2E" CornerRadius="6" Height="44"
+                        BorderBrush="#2A3A4D" BorderThickness="1">
+                    <TextBox x:Name="txtMonto"
+                             Background="Transparent" Foreground="#4CAF50"
+                             BorderThickness="0" VerticalAlignment="Center"
+                             Margin="14,0" FontSize="14" FontWeight="SemiBold"
+                             IsReadOnly="True">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                <Setter Property="materialDesign:HintAssist.Hint" Value="0.00"/>
+                                <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- Mensaje de error/info -->
+        <TextBlock Grid.Row="8" x:Name="txtMensaje"
+                   Foreground="#FF5252" FontSize="12"
+                   TextWrapping="Wrap" Visibility="Collapsed"/>
+
+        <!-- BOTONES -->
+        <Grid Grid.Row="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" x:Name="btnCancelar"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Foreground="#6B7280" BorderBrush="#3D4458"
+                    materialDesign:ButtonAssist.CornerRadius="8"
+                    Height="44" FontSize="14"
+                    Click="btnCancelar_Click">
+                Cancelar
+            </Button>
+
+            <Button Grid.Column="2" x:Name="btnGuardar"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="#3D7EFF" Foreground="White"
+                    materialDesign:ButtonAssist.CornerRadius="8"
+                    materialDesign:ElevationAssist.Elevation="Dp0"
+                    Height="44" FontSize="14" FontWeight="SemiBold"
+                    Click="btnGuardar_Click">
+                Guardar Pago
+            </Button>
+        </Grid>
+
+    </Grid>
+</Window>

@@ -16,6 +16,7 @@ using Órdenes_de_Trabajo;
 using Vehículos;
 using InterfazInventario;
 using InterfazClientes;
+using Contabilidad;
 
 namespace Dasboard_Prueba
 {
@@ -157,6 +158,20 @@ namespace Dasboard_Prueba
         {
             MenúPrincipalClientes cli = new MenúPrincipalClientes();
             cli.Show();
+            this.Close();
+        }
+
+        private void Button_Click_4(object sender, RoutedEventArgs e)
+        {
+            ContaWindow conta = new ContaWindow();
+            conta.Show();
+            this.Close();
+        }
+
+        private void Button_Click_5(object sender, RoutedEventArgs e)
+        {
+            MenuDePagos pago = new MenuDePagos();
+            pago.Show();
             this.Close();
         }
     }
