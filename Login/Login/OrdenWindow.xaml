@@ -520,7 +520,7 @@
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#6c7293" Foreground="#6c7293"
                                         Height="36" Padding="20,0" Margin="0,0,10,0"
-                                        materialDesign:ButtonAssist.CornerRadius="6" Click="btnCancelar_Click"/>
+                                        materialDesign:ButtonAssist.CornerRadius="6" Click="btnCancelar_Click" Cursor="Hand"/>
                                 <Button x:Name="btnCalcularTotal" Content="Calcular Total"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"

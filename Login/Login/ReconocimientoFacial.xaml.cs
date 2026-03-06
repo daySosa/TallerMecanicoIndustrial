@@ -86,20 +86,31 @@ namespace Login
         {
             try
             {
-                // Creamos una copia nueva para evitar el error de GDI+
-                using (Drawing.Bitmap copiaSegura = new Drawing.Bitmap(foto))
+                // Creamos una copia física de la foto para liberar la original
+                using (Drawing.Bitmap copiaParaGuardar = new Drawing.Bitmap(foto))
                 {
                     using (MemoryStream ms = new MemoryStream())
                     {
-                        copiaSegura.Save(ms, ImageFormat.Png); // Aquí ya no fallará
+                        // Guardamos la copia en el stream. Aquí ya no dará error GDI+.
+                        copiaParaGuardar.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                         byte[] fotoBytes = ms.ToArray();
-                        // ... resto de tu código SQL ...
+
+                        clsConexion conexion = new clsConexion();
+                        conexion.Abrir();
+
+                        string query = "INSERT INTO ReconocimientoFacial (Nombre, Foto) VALUES (@nombre, @foto)";
+                        SqlCommand cmd = new SqlCommand(query, conexion.SqlC);
+                        cmd.Parameters.AddWithValue("@nombre", nombre);
+                        cmd.Parameters.AddWithValue("@foto", fotoBytes);
+                        cmd.ExecuteNonQuery();
+
+                        conexion.Cerrar();
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error GDI+: " + ex.Message);
+                MessageBox.Show("Error al guardar: " + ex.Message);
             }
         }
 
@@ -299,6 +310,7 @@ namespace Login
         private void btnRegresar_Click(object sender, RoutedEventArgs e)
         {
             DetenerCamara();
+            // Abrimos la ventana de opciones de sesión
             OpcionSesion ventana = new OpcionSesion("");
             ventana.Show();
             this.Close();
