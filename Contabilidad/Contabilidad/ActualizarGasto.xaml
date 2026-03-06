@@ -1,0 +1,211 @@
+﻿<Window x:Class="Contabilidad.ActualizarGasto"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:local="clr-namespace:Contabilidad"
+        mc:Ignorable="d"
+        Title="ActualizarGasto" Height="480" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#1e2130"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+   
+    <Border Padding="24" Background="#1e2130">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- TÍTULO -->
+            <TextBlock Grid.Row="0"
+                       Text="Editar Gasto"
+                       Foreground="White"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Margin="0,0,0,16"/>
+
+            <!-- TABS -->
+            <Border Grid.Row="1"
+                    Background="#1e2130"
+                    CornerRadius="8"
+                    Margin="0,0,0,20">
+                <TabControl Background="Transparent"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="#3a3f5c"
+                            materialDesign:ColorZoneAssist.Mode="Dark">
+
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="#6B7280"/>
+                            <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="Padding" Value="16,8"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabItem">
+                                        <Border x:Name="border"
+                                                BorderThickness="0,0,0,2"
+                                                BorderBrush="Transparent"
+                                                Padding="16,8"
+                                                Background="Transparent">
+                                            <ContentPresenter ContentSource="Header"
+                                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="border" Property="BorderBrush" Value="#3D7EFF"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Foreground" Value="#a0a8c8"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TabControl.Resources>
+
+                    <!-- ===== TAB 1: DETALLES BÁSICOS ===== -->
+                    <TabItem Header="Detalles Básicos">
+                        <Border Background="#1e2130" Padding="0,16,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Tipo de Gasto -->
+                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,14">
+                                    <TextBlock Text="Tipo de Gasto"
+                                               Foreground="#6B7280" FontSize="11"
+                                               Margin="0,0,0,6"/>
+                                    <ComboBox x:Name="cmbTipoGasto"
+                                              Height="42"
+                                              Foreground="White"
+                                              Background="#252836"
+                                              BorderBrush="#3a3f5c"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                                        <ComboBoxItem Content="Gasto en Repuesto"/>
+                                        <ComboBoxItem Content="Gasto Adicional"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Nombre del Gasto -->
+                                <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,14">
+                                    <TextBlock Text="Nombre del Gasto"
+                                               Foreground="#6B7280" FontSize="11"
+                                               Margin="0,0,0,6"/>
+                                    <TextBox x:Name="txtNombre"
+                                             Height="42"
+                                             Foreground="White"
+                                             CaretBrush="White"
+                                             Background="#252836"
+                                             BorderBrush="#3a3f5c"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </StackPanel>
+
+                                <!-- Precio -->
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
+                                    <TextBlock Text="Precio"
+                                               Foreground="#6B7280" FontSize="11"
+                                               Margin="0,0,0,6"/>
+                                    <TextBox x:Name="txtPrecio"
+                                             Height="42"
+                                             Foreground="White"
+                                             CaretBrush="White"
+                                             Background="#252836"
+                                             BorderBrush="#3a3f5c"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </StackPanel>
+
+                                <!-- Fecha solo lectura -->
+                                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,14">
+                                    <TextBlock Text="Fecha de Registro"
+                                               Foreground="#6B7280" FontSize="11"
+                                               Margin="0,0,0,6"/>
+                                    <TextBox x:Name="txtFecha"
+                                             Height="42"
+                                             Foreground="#6B7280"
+                                             IsReadOnly="True"
+                                             Background="#1a1d2e"
+                                             BorderBrush="#3a3f5c"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </StackPanel>
+
+                            </Grid>
+                        </Border>
+                    </TabItem>
+
+                    <!-- ===== TAB 2: OBSERVACIONES ===== -->
+                    <TabItem Header="Observaciones">
+                        <Border Background="#1e2130" Padding="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Observaciones del Gasto"
+                                           Foreground="#6B7280" FontSize="11"
+                                           Margin="0,0,0,6"/>
+                                <TextBox x:Name="txtObservaciones"
+                                         Height="220"
+                                         Foreground="White"
+                                         CaretBrush="White"
+                                         Background="#252836"
+                                         BorderBrush="#3a3f5c"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         VerticalContentAlignment="Top"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         materialDesign:HintAssist.Hint="Escribe los detalles del gasto..."/>
+                            </StackPanel>
+                        </Border>
+                    </TabItem>
+
+                </TabControl>
+            </Border>
+
+            <!-- BOTONES -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="btnCancelar" Grid.Column="0"
+                        Content="Cancelar"
+                        Height="40"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        BorderBrush="#6c7293"
+                        Foreground="#6c7293"
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnCancelar_Click"/>
+
+                <Button x:Name="btnGuardar" Grid.Column="2"
+                        Content="Guardar Cambios"
+                        Height="40"
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnGuardar_Click">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                            <Setter Property="Background" Value="#3D7EFF"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="BorderBrush" Value="#3D7EFF"/>
+                            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp0"/>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

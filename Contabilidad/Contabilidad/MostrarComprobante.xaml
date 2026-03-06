@@ -1,0 +1,251 @@
+﻿<Window x:Class="Contabilidad.MostrarComprobante"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:local="clr-namespace:Contabilidad"
+        mc:Ignorable="d"
+        Title="MostrarComprobante" Height="480" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#1e2130"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Border Padding="24" Background="#1e2130">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- TÍTULO -->
+            <TextBlock Grid.Row="0"
+                       Text="Comprobante de Gasto"
+                       Foreground="White"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Margin="0,0,0,16"/>
+
+            <!-- TABS -->
+            <TabControl Grid.Row="1"
+                        Background="#1e2130"
+                        BorderThickness="0"
+                        Margin="0,0,0,20">
+
+                <TabControl.Template>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid Background="#1e2130">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    BorderThickness="0,0,0,1"
+                                    BorderBrush="#3a3f5c"
+                                    Background="#1e2130">
+                                <TabPanel IsItemsHost="True" Background="#1e2130"/>
+                            </Border>
+                            <Border Grid.Row="1" Background="#1e2130" Padding="0,16,0,0">
+                                <ContentPresenter ContentSource="SelectedContent"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </TabControl.Template>
+
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="#6B7280"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabItem">
+                                    <Border x:Name="border"
+                                            BorderThickness="0,0,0,2"
+                                            BorderBrush="Transparent"
+                                            Padding="16,8"
+                                            Background="Transparent">
+                                        <ContentPresenter ContentSource="Header"
+                                                          TextBlock.Foreground="{TemplateBinding Foreground}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="border" Property="BorderBrush" Value="#3D7EFF"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="#a0a8c8"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.Resources>
+
+                <!-- ===== TAB 1: DETALLES BÁSICOS ===== -->
+                <TabItem Header="Detalles Básicos">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- FILA 1: ID, TIPO, PRECIO, FECHA -->
+                        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                            <TextBlock Text="INFORMACIÓN DEL GASTO"
+                                       Foreground="#6B7280"
+                                       FontSize="10"
+                                       FontWeight="Medium"
+                                       Margin="0,0,0,12"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- ID -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="ID"
+                                               Foreground="#6B7280" FontSize="10"
+                                               Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="lblID"
+                                               Foreground="White"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"/>
+                                </StackPanel>
+
+                                <!-- Tipo -->
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="TIPO"
+                                               Foreground="#6B7280" FontSize="10"
+                                               Margin="0,0,0,4"/>
+                                    <Border x:Name="borderTipo"
+                                            CornerRadius="10" Padding="8,3"
+                                            HorizontalAlignment="Left">
+                                        <TextBlock x:Name="lblTipo"
+                                                   FontSize="11" FontWeight="Medium"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Precio -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="PRECIO"
+                                               Foreground="#6B7280" FontSize="10"
+                                               Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="lblPrecio"
+                                               Foreground="#FF6B6B"
+                                               FontSize="14"
+                                               FontWeight="Bold"/>
+                                </StackPanel>
+
+                                <!-- Fecha -->
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Text="FECHA"
+                                               Foreground="#6B7280" FontSize="10"
+                                               Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="lblFecha"
+                                               Foreground="White"
+                                               FontSize="13"/>
+                                </StackPanel>
+
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- SEPARADOR -->
+                        <Separator Grid.Row="1" Background="#3a3f5c" Margin="0,0,0,20"/>
+
+                        <!-- FILA 2: MÁS INFORMACIÓN -->
+                        <StackPanel Grid.Row="2">
+                            <TextBlock Text="MÁS INFORMACIÓN"
+                                       Foreground="#6B7280"
+                                       FontSize="10"
+                                       FontWeight="Medium"
+                                       Margin="0,0,0,12"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto" MinWidth="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Nombre -->
+                                <TextBlock Grid.Column="0"
+                                           Text="Nombre:"
+                                           Foreground="#6B7280" FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,0,12"/>
+                                <TextBlock Grid.Column="1" x:Name="lblNombre"
+                                           Foreground="White" FontSize="13"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,0,12"/>
+
+                                <!-- ID del gasto -->
+                                <TextBlock Grid.Column="2"
+                                           Text="Gasto ID:"
+                                           Foreground="#6B7280" FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,0,12"/>
+                                <TextBlock Grid.Column="3" x:Name="lblIDExtra"
+                                           Foreground="White" FontSize="13"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,0,12"/>
+                            </Grid>
+                        </StackPanel>
+
+                    </Grid>
+                </TabItem>
+
+                <!-- ===== TAB 2: OBSERVACIONES ===== -->
+                <TabItem Header="Observaciones">
+                    <StackPanel>
+                        <TextBlock Text="OBSERVACIONES"
+                                   Foreground="#6B7280"
+                                   FontSize="10"
+                                   FontWeight="Medium"
+                                   Margin="0,0,0,12"/>
+                        <Border Background="#252836"
+                                BorderBrush="#3a3f5c"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="16"
+                                MinHeight="180">
+                            <TextBlock x:Name="lblObservaciones"
+                                       Foreground="White"
+                                       FontSize="13"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Top"/>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+            </TabControl>
+
+            <!-- BOTÓN CERRAR -->
+            <Grid Grid.Row="2">
+                <Button x:Name="btnCerrar" HorizontalAlignment="Right"
+                        Content="Cerrar"
+                        Height="40"
+                        Width="140"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        BorderBrush="#6c7293"
+                        Foreground="#6c7293"
+                        materialDesign:ButtonAssist.CornerRadius="8" Click="btnCerrar_Click"/>
+            </Grid>
+
+        </Grid>
+    </Border>
+</Window>
