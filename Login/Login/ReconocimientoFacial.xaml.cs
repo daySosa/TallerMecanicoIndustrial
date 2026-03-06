@@ -1,16 +1,18 @@
-﻿using AForge.Video;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Threading.Tasks; // Necesario para el delay
+using System.Windows;
+using System.Windows.Media.Imaging;
+using AForge.Video;
 using AForge.Video.DirectShow;
-using Dasboard_Prueba;
 using Emgu.CV;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Windows;
-using System.Windows.Media.Imaging;
 using Drawing = System.Drawing;
 
 namespace Login
@@ -37,7 +39,7 @@ namespace Login
             if (File.Exists(rutaXml))
                 detectorRostros = new CascadeClassifier(rutaXml);
             else
-                txtEstado.Text = "No se encontro haarcascade_frontalface_default.xml";
+                txtEstado.Text = "No se encontró XML de rostros";
 
             CargarPersonasDesdeBD();
         }
@@ -47,6 +49,7 @@ namespace Login
         {
             try
             {
+                foreach (var p in personasRegistradas) p.Foto?.Dispose();
                 personasRegistradas.Clear();
 
                 clsConexion conexion = new clsConexion();
@@ -54,7 +57,7 @@ namespace Login
 
                 string query = "SELECT Id, Nombre, Foto FROM ReconocimientoFacial";
                 SqlCommand cmd = new SqlCommand(query, conexion.SqlC);
-                SqlDataReader reader = cmd.ExecuteReader();
+                using SqlDataReader reader = cmd.ExecuteReader();
 
                 while (reader.Read())
                 {
@@ -63,17 +66,16 @@ namespace Login
                     byte[] fotoBytes = (byte[])reader[2];
 
                     using MemoryStream ms = new MemoryStream(fotoBytes);
-                    Drawing.Bitmap foto = new Drawing.Bitmap(ms);
+                    Drawing.Bitmap foto = new Drawing.Bitmap(new Drawing.Bitmap(ms));
                     personasRegistradas.Add((id, nombre, foto));
                 }
 
-                reader.Close();
                 conexion.Cerrar();
 
                 if (personasRegistradas.Count > 0)
                     EntrenarReconocedor();
 
-                txtEstado.Text = $"{personasRegistradas.Count} persona(s) cargadas de BD";
+                txtEstado.Text = $"{personasRegistradas.Count} persona(s) cargadas";
             }
             catch (Exception ex)
             {
@@ -86,44 +88,26 @@ namespace Login
         {
             try
             {
-                // Creamos una copia física de la foto para liberar la original
-                using (Drawing.Bitmap copiaParaGuardar = new Drawing.Bitmap(foto))
+                // Creamos una copia para que la cámara no bloquee el archivo
+                using (Drawing.Bitmap copia = new Drawing.Bitmap(foto))
                 {
                     using (MemoryStream ms = new MemoryStream())
                     {
-                        // Guardamos la copia en el stream. Aquí ya no dará error GDI+.
-                        copiaParaGuardar.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                        copia.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                         byte[] fotoBytes = ms.ToArray();
-
-                        clsConexion conexion = new clsConexion();
-                        conexion.Abrir();
-
-                        string query = "INSERT INTO ReconocimientoFacial (Nombre, Foto) VALUES (@nombre, @foto)";
-                        SqlCommand cmd = new SqlCommand(query, conexion.SqlC);
-                        cmd.Parameters.AddWithValue("@nombre", nombre);
-                        cmd.Parameters.AddWithValue("@foto", fotoBytes);
-                        cmd.ExecuteNonQuery();
-
-                        conexion.Cerrar();
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al guardar: " + ex.Message);
+                MessageBox.Show("Error: " + ex.Message);
             }
         }
-
-        // ══ CÁMARA ══
+        // ══ CÁMARA Y PROCESAMIENTO ══
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
             camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-
-            if (camarasDisponibles.Count == 0)
-            {
-                txtEstado.Text = "No se encontro camara";
-                return;
-            }
+            if (camarasDisponibles.Count == 0) return;
 
             accesoOtorgado = false;
             camaraActiva = new VideoCaptureDevice(camarasDisponibles[0].MonikerString);
@@ -134,213 +118,77 @@ namespace Login
             btnIniciarCamara.IsEnabled = false;
             btnDetenerCamara.IsEnabled = true;
             btnCapturarFoto.IsEnabled = true;
-            txtEstado.Text = "Estado: Camara activa";
         }
 
         private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
             if (accesoOtorgado) return;
 
-            Drawing.Bitmap bitmap = (Drawing.Bitmap)eventArgs.Frame.Clone();
-
-            if (detectorRostros != null)
+            using (Drawing.Bitmap bitmap = (Drawing.Bitmap)eventArgs.Frame.Clone())
             {
-                using Image<Bgr, byte> imgEmgu = bitmap.ToImage<Bgr, byte>();
-                using Image<Gray, byte> imgGris = imgEmgu.Convert<Gray, byte>();
-
-                var rostros = detectorRostros.DetectMultiScale(
-                    imgGris, 1.1, 10, new Drawing.Size(80, 80));
-
-                rostroDetectado = rostros.Length > 0;
-
-                foreach (var rostro in rostros)
+                if (detectorRostros != null)
                 {
-                    using Drawing.Graphics g = Drawing.Graphics.FromImage(bitmap);
-                    g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 3), rostro);
+                    using var imgEmgu = bitmap.ToImage<Bgr, byte>();
+                    using var imgGris = imgEmgu.Convert<Gray, byte>();
 
-                    if (reconocedorEntrenado && reconocedor != null)
+                    var rostros = detectorRostros.DetectMultiScale(imgGris, 1.1, 10, new Drawing.Size(80, 80));
+                    rostroDetectado = rostros.Length > 0;
+
+                    foreach (var rostro in rostros)
                     {
-                        using Image<Gray, byte> rostroRecortado = imgGris
-                            .Copy(rostro)
-                            .Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear);
-
-                        var resultado = reconocedor.Predict(rostroRecortado.Mat);
-
-                        if (resultado.Distance < 5000 && resultado.Label >= 0
-                            && resultado.Label < personasRegistradas.Count)
+                        using (Drawing.Graphics g = Drawing.Graphics.FromImage(bitmap))
                         {
-                            string nombre = personasRegistradas[resultado.Label].Nombre;
-                            accesoOtorgado = true;
-
-                            Dispatcher.Invoke(() =>
-                            {
-                                txtNombreReconocido.Text = $"Bienvenido, {nombre}!";
-                                txtEstado.Text = "Acceso concedido, abriendo menu...";
-                                DetenerCamara();
-
-                                MenuPrincipal menu = new MenuPrincipal();
-                                menu.Show();
-                                this.Close();
-                            });
+                            g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 3), rostro);
                         }
-                        else
+
+                        if (reconocedorEntrenado && reconocedor != null)
                         {
-                            Dispatcher.Invoke(() =>
+                            using var rostroRecortado = imgGris.Copy(rostro).Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear);
+                            var resultado = reconocedor.Predict(rostroRecortado.Mat);
+
+                            // Umbral de reconocimiento
+                            if (resultado.Distance < 3500 && resultado.Label >= 0)
                             {
-                                txtNombreReconocido.Text = "Persona no reconocida";
-                                txtEstado.Text = "Rostro no registrado";
-                            });
+                                string nombre = personasRegistradas[resultado.Label].Nombre;
+                                FinalizarAcceso(nombre); // Llamada al método con delay
+                            }
                         }
-                    }
-                    else
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            txtEstado.Text = "Rostro detectado";
-                        });
                     }
                 }
 
-                if (!rostroDetectado)
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        txtEstado.Text = "Buscando rostro...";
-                        txtNombreReconocido.Text = "";
-                    });
-                }
+                Dispatcher.Invoke(() => {
+                    imgCamara.Source = BitmapToImageSource(bitmap);
+                    txtEstado.Text = rostroDetectado ? "Rostro detectado" : "Buscando...";
+                });
             }
+        }
 
-            Dispatcher.Invoke(() =>
-            {
-                imgCamara.Source = BitmapToImageSource(bitmap);
+        // MÉTODO MODIFICADO: Espera 5 segundos antes de entrar
+        private async void FinalizarAcceso(string nombre)
+        {
+            if (accesoOtorgado) return;
+            accesoOtorgado = true; // Bloquea futuros escaneos mientras espera
+
+            Dispatcher.Invoke(() => {
+                txtNombreReconocido.Text = $"Bienvenido, {nombre}!";
+                txtEstado.Text = "Acceso concedido. Entrando en 5 segundos...";
             });
 
-            bitmap.Dispose();
-        }
+            // Espera asíncrona para no congelar la cámara
+            await Task.Delay(5000);
 
-        // ══ CAPTURAR FOTO ══
-        private void btnCapturarFoto_Click(object sender, RoutedEventArgs e)
-        {
-            if (!rostroDetectado)
-            {
-                MessageBox.Show("Asegurate de que haya un rostro visible.",
-                    "Sin rostro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            fotoCapturada = ObtenerFrameActual();
-            txtEstado.Text = "Foto capturada correctamente";
-        }
-
-        // ══ REGISTRAR PERSONA ══
-        private void btnRegistrar_Click(object sender, RoutedEventArgs e)
-        {
-            string nombre = txtNombrePersona.Text.Trim();
-
-            if (string.IsNullOrEmpty(nombre))
-            {
-                MessageBox.Show("Escribe el nombre.", "Campo vacio",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (fotoCapturada == null)
-            {
-                MessageBox.Show("Captura una foto primero.", "Sin foto",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            GuardarPersonaEnBD(nombre, fotoCapturada);
-            CargarPersonasDesdeBD();
-
-            fotoCapturada = null;
-            txtNombrePersona.Text = "";
-
-            MessageBox.Show($"'{nombre}' registrado exitosamente.", "Registrado",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        // ══ ENTRENAR RECONOCEDOR ══
-        private void EntrenarReconocedor()
-        {
-            if (personasRegistradas.Count == 0) return;
-
-            reconocedor = new EigenFaceRecognizer(personasRegistradas.Count, 5000);
-
-            var matVector = new VectorOfMat();
-            var etiquetas = new VectorOfInt();
-
-            for (int i = 0; i < personasRegistradas.Count; i++)
-            {
-                using Image<Bgr, byte> imgColor = personasRegistradas[i].Foto
-                    .ToImage<Bgr, byte>();
-                using Image<Gray, byte> imgGris = imgColor
-                    .Convert<Gray, byte>()
-                    .Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear);
-
-                matVector.Push(imgGris.Mat);
-                etiquetas.Push(new int[] { i });
-            }
-
-            reconocedor.Train(matVector, etiquetas);
-            reconocedorEntrenado = true;
-        }
-
-        private Drawing.Bitmap? ObtenerFrameActual()
-        {
-            if (imgCamara.Source is BitmapImage bmp)
-            {
-                using MemoryStream ms = new MemoryStream();
-                BitmapEncoder encoder = new BmpBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(bmp));
-                encoder.Save(ms);
-                ms.Position = 0;
-                return new Drawing.Bitmap(ms);
-            }
-            return null;
-        }
-
-        private void btnDetenerCamara_Click(object sender, RoutedEventArgs e)
-        {
-            DetenerCamara();
-        }
-
-        private void btnRegresar_Click(object sender, RoutedEventArgs e)
-        {
-            DetenerCamara();
-            // Abrimos la ventana de opciones de sesión
-            OpcionSesion ventana = new OpcionSesion("");
-            ventana.Show();
-            this.Close();
-        }
-
-        private void DetenerCamara()
-        {
-            if (camaraActiva != null)
-            {
-                camaraActiva.NewFrame -= CamaraActiva_NewFrame;
-                camaraActiva.SignalToStop();
-                camaraActiva = null;
-            }
-
-            Dispatcher.Invoke(() =>
-            {
-                imgCamara.Source = null;
-                txtSinCamara.Visibility = Visibility.Visible;
-                txtEstado.Text = "Estado: En espera...";
-                txtNombreReconocido.Text = "";
-                btnIniciarCamara.IsEnabled = true;
-                btnDetenerCamara.IsEnabled = false;
-                btnCapturarFoto.IsEnabled = false;
+            Dispatcher.Invoke(() => {
+                DetenerCamara();
+                new Dasboard_Prueba.MenuPrincipal().Show();
+                this.Close();
             });
         }
 
+        // ══ CONVERSIÓN Y CAPTURA ══
         private BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
         {
             using MemoryStream memory = new MemoryStream();
-            bitmap.Save(memory, Drawing.Imaging.ImageFormat.Bmp);
+            bitmap.Save(memory, ImageFormat.Bmp);
             memory.Position = 0;
 
             BitmapImage bitmapImage = new BitmapImage();
@@ -352,10 +200,84 @@ namespace Login
             return bitmapImage;
         }
 
-        protected override void OnClosed(System.EventArgs e)
+        private Drawing.Bitmap? ObtenerFrameActual()
+        {
+            if (imgCamara.Source is BitmapSource bitmapSource)
+            {
+                Drawing.Bitmap bmp = new Drawing.Bitmap(
+                    bitmapSource.PixelWidth, bitmapSource.PixelHeight, PixelFormat.Format32bppPArgb);
+
+                BitmapData data = bmp.LockBits(
+                    new Drawing.Rectangle(Drawing.Point.Empty, bmp.Size),
+                    ImageLockMode.WriteOnly, PixelFormat.Format32bppPArgb);
+
+                bitmapSource.CopyPixels(Int32Rect.Empty, data.Scan0, data.Height * data.Stride, data.Stride);
+                bmp.UnlockBits(data);
+                return bmp;
+            }
+            return null;
+        }
+
+        private void EntrenarReconocedor()
+        {
+            if (personasRegistradas.Count == 0) return;
+            reconocedor = new EigenFaceRecognizer(personasRegistradas.Count, 5000);
+
+            using var matVector = new VectorOfMat();
+            using var etiquetas = new VectorOfInt();
+
+            for (int i = 0; i < personasRegistradas.Count; i++)
+            {
+                using var imgColor = personasRegistradas[i].Foto.ToImage<Bgr, byte>();
+                using var imgGris = imgColor.Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear);
+                matVector.Push(imgGris.Mat);
+                etiquetas.Push(new int[] { i });
+            }
+            reconocedor.Train(matVector, etiquetas);
+            reconocedorEntrenado = true;
+        }
+
+        // ══ EVENTOS DE BOTONES ══
+        private void btnCapturarFoto_Click(object sender, RoutedEventArgs e)
+        {
+            if (!rostroDetectado) { MessageBox.Show("No hay rostro."); return; }
+            fotoCapturada?.Dispose();
+            fotoCapturada = ObtenerFrameActual();
+            txtEstado.Text = "Foto capturada";
+        }
+
+        private void btnRegistrar_Click(object sender, RoutedEventArgs e)
+        {
+            string nombre = txtNombrePersona.Text.Trim();
+            if (string.IsNullOrEmpty(nombre) || fotoCapturada == null) return;
+
+            GuardarPersonaEnBD(nombre, fotoCapturada);
+            CargarPersonasDesdeBD();
+            txtNombrePersona.Text = "";
+            fotoCapturada = null;
+        }
+
+        private void DetenerCamara()
+        {
+            if (camaraActiva != null && camaraActiva.IsRunning)
+            {
+                camaraActiva.SignalToStop();
+                camaraActiva.NewFrame -= CamaraActiva_NewFrame;
+                camaraActiva = null;
+            }
+        }
+
+        private void btnRegresar_Click(object sender, RoutedEventArgs e)
         {
             DetenerCamara();
-            base.OnClosed(e);
+            // Abrimos la ventana de opciones de sesión
+            OpcionSesion ventana = new OpcionSesion("");
+            ventana.Show();
+            this.Close();
         }
+
+        private void btnDetenerCamara_Click(object sender, RoutedEventArgs e) => DetenerCamara();
+
+        protected override void OnClosed(EventArgs e) { DetenerCamara(); base.OnClosed(e); }
     }
 }

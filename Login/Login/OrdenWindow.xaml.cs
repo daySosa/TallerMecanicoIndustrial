@@ -429,5 +429,8 @@ namespace Órdenes_de_Trabajo
             dpEntrega.SelectedDate = null;
             if (txtObservaciones != null) txtObservaciones.Clear();
         }
+
+
+
     }
 }
