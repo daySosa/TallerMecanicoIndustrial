@@ -143,7 +143,7 @@ namespace Vehículos
         private bool AplicarFiltros(object item)
         {
             if (item is not Vehiculo v) return false;
-            a
+
             string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
             if (!string.IsNullOrEmpty(texto))
             {
