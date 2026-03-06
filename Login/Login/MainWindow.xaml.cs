@@ -22,13 +22,11 @@ namespace Login
             CargarCredencialesRecordadas();
         }
 
-
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 this.DragMove();
         }
-
 
         private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -62,7 +60,6 @@ namespace Login
 
             if (_contrasenaVisible)
             {
-                
                 txtContrasenaVisible.Text = txtContrasena.Password;
                 txtContrasena.Visibility = Visibility.Collapsed;
                 txtContrasenaVisible.Visibility = Visibility.Visible;
@@ -72,7 +69,6 @@ namespace Login
             }
             else
             {
-               
                 txtContrasena.Password = txtContrasenaVisible.Text;
                 txtContrasenaVisible.Visibility = Visibility.Collapsed;
                 txtContrasena.Visibility = Visibility.Visible;
@@ -81,14 +77,12 @@ namespace Login
             }
         }
 
-
         private string ObtenerContrasena()
         {
             return _contrasenaVisible
                 ? txtContrasenaVisible.Text
                 : txtContrasena.Password;
         }
-
 
         private void GuardarCredenciales(string correo, string contrasena)
         {
@@ -116,16 +110,12 @@ namespace Login
                 txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
                 chkRecordar.IsChecked = true;
             }
-            catch
-            {
-                
-            }
+            catch { }
         }
 
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             bool hayError = false;
-
 
             if (string.IsNullOrWhiteSpace(txtCorreo.Text))
             {
@@ -140,7 +130,6 @@ namespace Login
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
                 borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             }
-
 
             string contrasena = ObtenerContrasena();
             if (string.IsNullOrWhiteSpace(contrasena))
@@ -159,7 +148,6 @@ namespace Login
 
             if (hayError) return;
 
-
             if (chkRecordar.IsChecked == true)
                 GuardarCredenciales(txtCorreo.Text.Trim(), contrasena);
             else
@@ -176,8 +164,8 @@ namespace Login
                 conexion.Abrir();
 
                 string consulta = @"SELECT * FROM LOGIN
-                                    WHERE Usuario_Email     = @correo
-                                    AND   Usuario_Contraseña = @contrasena";
+                                    WHERE Usuario_Email = @correo
+                                    AND Usuario_Contraseña = @contrasena";
 
                 SqlCommand comando = new SqlCommand(consulta, conexion.SqlC);
                 comando.Parameters.AddWithValue("@correo", correo);
@@ -190,36 +178,14 @@ namespace Login
                     lector.Close();
                     conexion.Cerrar();
 
-<<<<<<< Updated upstream
-                    Dasboard_Prueba.MenuPrincipal ventanaPrincipal =
-                        new Dasboard_Prueba.MenuPrincipal();
-                    ventanaPrincipal.Show();
-                    this.Hide();
-=======
-                    /*MessageBox.Show("¡Bienvenido!", "Inicio de sesión exitoso",
-                        MessageBoxButton.OK, MessageBoxImage.Information);*/
                     clsAutenticacion autenticacion = new clsAutenticacion();
                     string codigo2FA = autenticacion.GenerarCodigo(correo);
                     bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
 
                     if (enviado)
                     {
-                        //Abrir ventana de verificación
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
-                        OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
-                        ventanaVerificacion.Show();
-=======
-                        Verificacion2FA ventanaOpcion = new OpcionSesion(correo);
-                        ventanaOpcion.Show();
->>>>>>> Stashed changes
-=======
-                        Verificacion2FA ventanaOpcion = new OpcionSesion(correo);
-                        ventanaOpcion.Show();
->>>>>>> Stashed changes
+                        OpcionSesion ventana = new OpcionSesion(correo);
+                        ventana.Show();
                         this.Close();
                     }
                     else
@@ -227,7 +193,6 @@ namespace Login
                         MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
                             "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
->>>>>>> Stashed changes
                 }
                 else
                 {
@@ -247,6 +212,13 @@ namespace Login
                 MessageBox.Show("Error al conectar: " + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) { }
+
+        private void BtnCerrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

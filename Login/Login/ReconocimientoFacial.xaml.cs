@@ -6,6 +6,7 @@ using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -21,7 +22,7 @@ namespace Login
         private bool rostroDetectado = false;
         private bool accesoOtorgado = false;
 
-        private List<(string Nombre, Drawing.Bitmap Foto)> personasRegistradas = new();
+        private List<(int Id, string Nombre, Drawing.Bitmap Foto)> personasRegistradas = new();
         private Drawing.Bitmap? fotoCapturada = null;
 
         private EigenFaceRecognizer? reconocedor;
@@ -36,8 +37,76 @@ namespace Login
                 detectorRostros = new CascadeClassifier(rutaXml);
             else
                 txtEstado.Text = "No se encontro haarcascade_frontalface_default.xml";
+
+            CargarPersonasDesdeBD();
         }
 
+        // ══ CARGAR PERSONAS DESDE BD ══
+        private void CargarPersonasDesdeBD()
+        {
+            try
+            {
+                personasRegistradas.Clear();
+
+                clsConexion conexion = new clsConexion();
+                conexion.Abrir();
+
+                string query = "SELECT Id, Nombre, Foto FROM ReconocimientoFacial";
+                SqlCommand cmd = new SqlCommand(query, conexion.SqlC);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string nombre = reader.GetString(1);
+                    byte[] fotoBytes = (byte[])reader[2];
+
+                    using MemoryStream ms = new MemoryStream(fotoBytes);
+                    Drawing.Bitmap foto = new Drawing.Bitmap(ms);
+                    personasRegistradas.Add((id, nombre, foto));
+                }
+
+                reader.Close();
+                conexion.Cerrar();
+
+                if (personasRegistradas.Count > 0)
+                    EntrenarReconocedor();
+
+                txtEstado.Text = $"{personasRegistradas.Count} persona(s) cargadas de BD";
+            }
+            catch (Exception ex)
+            {
+                txtEstado.Text = "Error cargando BD: " + ex.Message;
+            }
+        }
+
+        // ══ GUARDAR PERSONA EN BD ══
+        private void GuardarPersonaEnBD(string nombre, Drawing.Bitmap foto)
+        {
+            try
+            {
+                using MemoryStream ms = new MemoryStream();
+                foto.Save(ms, Drawing.Imaging.ImageFormat.Png);
+                byte[] fotoBytes = ms.ToArray();
+
+                clsConexion conexion = new clsConexion();
+                conexion.Abrir();
+
+                string query = "INSERT INTO ReconocimientoFacial (Nombre, Foto) VALUES (@nombre, @foto)";
+                SqlCommand cmd = new SqlCommand(query, conexion.SqlC);
+                cmd.Parameters.AddWithValue("@nombre", nombre);
+                cmd.Parameters.AddWithValue("@foto", fotoBytes);
+                cmd.ExecuteNonQuery();
+
+                conexion.Cerrar();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error guardando en BD: " + ex.Message);
+            }
+        }
+
+        // ══ CÁMARA ══
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
             camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
@@ -142,6 +211,7 @@ namespace Login
             bitmap.Dispose();
         }
 
+        // ══ CAPTURAR FOTO ══
         private void btnCapturarFoto_Click(object sender, RoutedEventArgs e)
         {
             if (!rostroDetectado)
@@ -155,6 +225,7 @@ namespace Login
             txtEstado.Text = "Foto capturada correctamente";
         }
 
+        // ══ REGISTRAR PERSONA ══
         private void btnRegistrar_Click(object sender, RoutedEventArgs e)
         {
             string nombre = txtNombrePersona.Text.Trim();
@@ -173,17 +244,17 @@ namespace Login
                 return;
             }
 
-            personasRegistradas.Add((nombre, fotoCapturada));
+            GuardarPersonaEnBD(nombre, fotoCapturada);
+            CargarPersonasDesdeBD();
+
             fotoCapturada = null;
             txtNombrePersona.Text = "";
 
-            EntrenarReconocedor();
-
-            txtEstado.Text = $"'{nombre}' registrado. Total: {personasRegistradas.Count}";
             MessageBox.Show($"'{nombre}' registrado exitosamente.", "Registrado",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        // ══ ENTRENAR RECONOCEDOR ══
         private void EntrenarReconocedor()
         {
             if (personasRegistradas.Count == 0) return;
