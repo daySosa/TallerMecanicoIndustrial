@@ -16,7 +16,7 @@ namespace Contabilidad
     public partial class ActualizarPago : Window
     {
 
-        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
+        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         private MenuDePagos _menuRef;
         private int _pagoId;
@@ -57,7 +57,7 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
                     SqlCommand cmd = new SqlCommand(query, conn);
@@ -94,7 +94,7 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
                     SqlCommand cmd = new SqlCommand(query, conn);
@@ -138,7 +138,7 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     conn.Open();
                     string query = @"

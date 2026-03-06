@@ -19,7 +19,7 @@ namespace Contabilidad
     public partial class ActualizarGasto : Window
     {
 
-        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
+        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         private int _gastoId;
 
@@ -81,7 +81,7 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = @"
                         UPDATE Contabilidad_Gastos SET
