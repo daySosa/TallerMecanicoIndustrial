@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SqlClient;
@@ -33,11 +32,113 @@ namespace Órdenes_de_Trabajo
         private ObservableCollection<RepuestoOrden> _repuestos
             = new ObservableCollection<RepuestoOrden>();
 
+        public async Task CargarOrdenParaEditar(int ordenID)
+        {
+            try
+            {
+                _conexion.Abrir();
+
+                // 1. Cargar datos principales de la orden
+                string sqlOrden = @"
+            SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
+                   o.Fecha, o.Fecha_Entrega, o.Observaciones,
+                   o.Servicio_Precio, o.OrdenPrecio_Total,
+                   c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                   c.Cliente_TelefonoPrincipal, c.Cliente_Email,
+                   v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
+                   v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
+            FROM   Orden_Trabajo o
+            INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
+            INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
+            WHERE  o.Orden_ID = @OrdenID";
+
+                using (SqlCommand cmd = new SqlCommand(sqlOrden, _conexion.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@OrdenID", ordenID);
+                    using (SqlDataReader rd = cmd.ExecuteReader())
+                    {
+                        if (rd.Read())
+                        {
+                            _clienteDNI = rd["Cliente_DNI"].ToString();
+                            _vehiculoPlaca = rd["Vehiculo_Placa"].ToString();
+
+                            // Cliente
+                            txtClienteNombre.Text = rd["NombreCompleto"].ToString();
+                            txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
+                            txtClienteEmail.Text = rd["Cliente_Email"].ToString();
+                            borderClienteInfo.Visibility = Visibility.Visible;
+
+                            // Vehículo
+                            txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
+                            txtVehiculoTipo.Text = rd["TipoAño"].ToString();
+                            txtVehiculoPropietario.Text = rd["NombreCompleto"].ToString();
+                            borderVehiculoInfo.Visibility = Visibility.Visible;
+
+                            // Datos de la orden
+                            dpFecha.SelectedDate = rd["Fecha"] as DateTime?;
+                            dpEntrega.SelectedDate = rd["Fecha_Entrega"] as DateTime?;
+                            txtObservaciones.Text = rd["Observaciones"].ToString();
+                            txtPrecioServicio.Text = $"S/ {rd["Servicio_Precio"]:N2}";
+
+                            // Estado en el ComboBox
+                            string estado = rd["Estado"].ToString();
+                            foreach (ComboBoxItem item in cmbEstado.Items)
+                            {
+                                if (item.Content.ToString() == estado)
+                                {
+                                    cmbEstado.SelectedItem = item;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. Cargar repuestos de la orden
+                string sqlRepuestos = @"
+            SELECT p.Producto_ID, p.Producto_Nombre,
+                   r.Cantidad, p.Producto_Precio
+            FROM   Orden_Repuesto r
+            INNER JOIN Producto p ON r.Producto_ID = p.Producto_ID
+            WHERE  r.Orden_ID = @OrdenID";
+
+                using (SqlCommand cmd2 = new SqlCommand(sqlRepuestos, _conexion.SqlC))
+                {
+                    cmd2.Parameters.AddWithValue("@OrdenID", ordenID);
+                    using (SqlDataReader rd2 = cmd2.ExecuteReader())
+                    {
+                        int numero = 1;
+                        while (rd2.Read())
+                        {
+                            _repuestos.Add(new RepuestoOrden
+                            {
+                                Numero = numero++,
+                                ProductoID = Convert.ToInt32(rd2["Producto_ID"]),
+                                Nombre = rd2["Producto_Nombre"].ToString(),
+                                Cantidad = Convert.ToInt32(rd2["Cantidad"]),
+                                Precio = Convert.ToDecimal(rd2["Producto_Precio"]),
+                                Incluido = true
+                            });
+                        }
+                    }
+                }
+
+                RecalcularPrecios();
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cargar la orden: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
+
         public OrdenWindow()
         {
             InitializeComponent();
             dgRepuestos.ItemsSource = _repuestos;
         }
+
 
         // ═══════════════════════════════════════════
         // TABS DNI / PLACA  ←  NO SE MODIFICAN
@@ -186,7 +287,7 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-    
+
         // ═══════════════════════════════════════════
         // BOTÓN ACTUALIZAR
         //    Por implementar cuando se necesite editar

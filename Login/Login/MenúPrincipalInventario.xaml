@@ -8,7 +8,6 @@
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
@@ -19,14 +18,14 @@
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
 
-
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="184"/>
+                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/Imagenes/OSM_LOGO.png" Height="184"/>
                 </WrapPanel>
 
-
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
+                        materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15"
+                        Click="btnHome_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
@@ -34,45 +33,53 @@
                 </Button>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
+                        materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
+                        materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnVehiculos_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
+                        materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnClientes_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
 
-
-                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13" BorderThickness="0" Margin="0,0,0,15">
+                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
+                          BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
-                            <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center" Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
+                            <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
+                                                     Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
                             <TextBlock Foreground="White" FontSize="15">Contabilidad</TextBlock>
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15"
+                                HorizontalContentAlignment="Left" Click="btnEgresos_Click">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15"
+                                HorizontalContentAlignment="Left" Click="btnIngresos_Click">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
@@ -81,19 +88,20 @@
                     </StackPanel>
                 </Expander>
 
-
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
+                        materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
+                        Click="btnOrdenes_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
 
-
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35" materialDesign:RippleAssist.Feedback="White"
-                        VerticalAlignment="Bottom" Margin="0,70,0,15">
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
+                        materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom" Margin="0,70,0,15"
+                        Click="btnCerrarSesion_Click">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
@@ -102,7 +110,6 @@
 
             </StackPanel>
         </materialDesign:ColorZone>
-
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
@@ -126,12 +133,16 @@
                         <TextBlock Text="Revisemos tu taller hoy" Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
 
-                    <Border Grid.Column="1" Background="#252836" CornerRadius="5" VerticalAlignment="Center" Height="40" MaxWidth="400"
-                            HorizontalAlignment="Left" Margin="20,0,0,0" Width="400">
+                    <Border Grid.Column="1" Background="#252836" CornerRadius="5"
+                            VerticalAlignment="Center" Height="40" MaxWidth="400"
+                            HorizontalAlignment="Left" Margin="95,0,0,0" Width="400">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
-                            <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="#6B7280" BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White" TextChanged="txtBuscar_TextChanged">
+                            <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="#6B7280"
+                                     BorderThickness="0" VerticalAlignment="Center"
+                                     FontSize="13" Width="200" CaretBrush="White"
+                                     TextChanged="txtBuscar_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                         <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
@@ -143,17 +154,89 @@
                     </Border>
 
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                Foreground="#6B7280" Width="38" Height="38">
+                        <Button x:Name="btnNotificaciones"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Foreground="#6B7280" Width="38" Height="38"
+                                Click="btnNotificaciones_Click">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
-                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                        <Border x:Name="badgeNotificaciones"
+                                Background="#FF4444" CornerRadius="8"
+                                Width="16" Height="16"
+                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Visibility="Collapsed">
+                            <TextBlock x:Name="txtContadorNotificaciones"
+                                       Text="0" Foreground="White"
+                                       FontSize="9" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <Popup x:Name="popupNotificaciones"
+                               PlacementTarget="{Binding ElementName=btnNotificaciones}"
+                               Placement="Bottom" StaysOpen="False"
+                               AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="#252836" CornerRadius="10"
+                                    BorderBrush="#2A3A4D" BorderThickness="1"
+                                    Width="360" MaxHeight="480"
+                                    Effect="{DynamicResource MaterialDesignShadowDepth3}">
+                                <Grid Margin="16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="10"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="10"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="10"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="BellOutline" Foreground="White"
+                                                                     Width="18" Height="18"
+                                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Notificaciones" Foreground="White"
+                                                       FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" x:Name="badgeContadorPopup"
+                                                Background="#FF4444" CornerRadius="10"
+                                                Padding="8,2" VerticalAlignment="Center"
+                                                Visibility="Collapsed">
+                                            <TextBlock x:Name="txtContadorPopup"
+                                                       Text="0" Foreground="White"
+                                                       FontSize="11" FontWeight="Bold"/>
+                                        </Border>
+                                    </Grid>
+                                    <Rectangle Grid.Row="2" Height="1" Fill="#2A3A4D"/>
+                                    <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" MaxHeight="320">
+                                        <StackPanel x:Name="panelNotificaciones"/>
+                                    </ScrollViewer>
+                                    <Button Grid.Row="6" x:Name="btnMarcarTodas"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Foreground="#3D7EFF" BorderBrush="#3D7EFF"
+                                            materialDesign:ButtonAssist.CornerRadius="8"
+                                            Height="36" FontSize="12"
+                                            Visibility="Collapsed"
+                                            Click="btnMarcarTodas_Click">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CheckAll" Width="16" Height="16"
+                                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Marcar todas como leídas" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Popup>
                     </Grid>
 
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
 
-                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,20,0">
-                        <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True" Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
+                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="16,0,20,0">
+                        <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
+                                Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
                             <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
@@ -168,32 +251,40 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-
-                <Button x:Name="btnAgregarRepuesto" Grid.Column="0" Style="{StaticResource MaterialDesignRaisedButton}" Background="#3D7EFF" Foreground="White"
-                        materialDesign:ButtonAssist.CornerRadius="8" Height="38" Padding="16,0" Click="btnAgregarRepuesto_Click">
+                <Button x:Name="btnAgregarRepuesto" Grid.Column="0"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#3D7EFF" Foreground="White"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Height="38" Padding="16,0"
+                        Click="btnAgregarRepuesto_Click">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Agregar Repuesto" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-
-                <Button x:Name="btnFiltrar" Grid.Column="2" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#6B7280" BorderBrush="#3D4458" 
-                        materialDesign:ButtonAssist.CornerRadius="8" Height="38" Padding="14,0" Click="btnFiltrar_Click">
+                <Button x:Name="btnFiltrar" Grid.Column="2"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="#6B7280" BorderBrush="#3D4458"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Height="38" Padding="14,0"
+                        Click="btnFiltrar_Click">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Filtrar" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
             </Grid>
-
-
-            <materialDesign:Card Grid.Row="2" Background="#1E2A3A" materialDesign:ElevationAssist.Elevation="Dp4" UniformCornerRadius="10" Margin="20,0,20,20">
+            
+            <materialDesign:Card Grid.Row="2" Background="#1E2A3A"
+                                 materialDesign:ElevationAssist.Elevation="Dp4"
+                                 UniformCornerRadius="10" Margin="20,0,20,20">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-
                     <Border Grid.Row="0" Padding="20,16" BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Repuestos en Inventario" Foreground="White" FontSize="15" FontWeight="Medium"/>
@@ -202,7 +293,6 @@
                             </Border>
                         </StackPanel>
                     </Border>
-
                     <DataGrid Grid.Row="1" x:Name="dgInventario"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False"
@@ -215,7 +305,6 @@
                               AlternatingRowBackground="#162030"
                               ColumnHeaderHeight="40" RowHeight="52"
                               SelectionChanged="dgInventario_SelectionChanged">
-
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
                                 <Setter Property="Background" Value="Transparent"/>
@@ -228,7 +317,6 @@
                                 <Setter Property="SeparatorVisibility" Value="Collapsed"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
-
                         <DataGrid.RowStyle>
                             <Style TargetType="{x:Type DataGridRow}">
                                 <Setter Property="Background" Value="Transparent"/>
@@ -242,7 +330,6 @@
                                 </Style.Triggers>
                             </Style>
                         </DataGrid.RowStyle>
-
                         <DataGrid.CellStyle>
                             <Style TargetType="{x:Type DataGridCell}">
                                 <Setter Property="Background" Value="Transparent"/>
@@ -257,10 +344,7 @@
                                 </Style.Triggers>
                             </Style>
                         </DataGrid.CellStyle>
-
                         <DataGrid.Columns>
-
-
                             <DataGridTextColumn Header="ID" Binding="{Binding Producto_ID}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -271,8 +355,6 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-
-
                             <DataGridTemplateColumn Header="Nombre" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -284,27 +366,23 @@
                                                                          HorizontalAlignment="Center"
                                                                          VerticalAlignment="Center"/>
                                             </Border>
-                                            <TextBlock Text="{Binding Producto_Nombre}" Foreground="White" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Producto_Nombre}" Foreground="White"
+                                                       FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
-
                             <DataGridTemplateColumn Header="Categoría" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="4" Padding="8,4"
                                                 HorizontalAlignment="Left" Margin="12,0"
                                                 VerticalAlignment="Center" Background="#1A2D40">
-                                            <TextBlock Text="{Binding Producto_Categoria}"
-                                                       Foreground="#4A9EFF" FontSize="11"/>
+                                            <TextBlock Text="{Binding Producto_Categoria}" Foreground="#4A9EFF" FontSize="11"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
-
                             <DataGridTextColumn Header="Marca" Binding="{Binding Producto_Marca}" Width="120">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -315,8 +393,6 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-
-
                             <DataGridTextColumn Header="Modelo" Binding="{Binding Producto_Modelo}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -327,7 +403,6 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-
                             <DataGridTextColumn Header="Precio"
                                                 Binding="{Binding Producto_Precio, StringFormat='Q {0:N2}'}"
                                                 Width="100">
@@ -341,7 +416,6 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-
                             <DataGridTemplateColumn Header="Stock" Width="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -359,8 +433,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <TextBlock Foreground="#8B9BB4" FontSize="11"
-                                                       VerticalAlignment="Center" Margin="5,0,0,0">
+                                            <TextBlock Foreground="#8B9BB4" FontSize="11" VerticalAlignment="Center" Margin="5,0,0,0">
                                                 <Run Text="/ mín"/>
                                             </TextBlock>
                                             <TextBlock Text="{Binding Producto_Cantidad_Minima}"
@@ -370,7 +443,6 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
                             <DataGridTemplateColumn Header="Estado" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -404,43 +476,25 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </materialDesign:Card>
-
         </Grid>
 
-
-        <Popup x:Name="popupFiltros"
-       Grid.Column="1"
-       PlacementTarget="{Binding ElementName=btnFiltrar}"
-       Placement="Bottom"
-       StaysOpen="False"
-       AllowsTransparency="True">
-
-            <Border Background="#252836" CornerRadius="10"
-            Padding="20" MinWidth="280"
-            Effect="{DynamicResource MaterialDesignShadowDepth3}">
+        <Popup x:Name="popupFiltros" Grid.Column="1"
+               PlacementTarget="{Binding ElementName=btnFiltrar}"
+               Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+            <Border Background="#252836" CornerRadius="10" Padding="20" MinWidth="280"
+                    Effect="{DynamicResource MaterialDesignShadowDepth3}">
                 <StackPanel>
-
-
                     <TextBlock Text="Filtrar Inventario" Foreground="White"
-                       FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16"/>
-
-
-                    <TextBlock Text="Categoría" Foreground="#8B9BB4"
-                       FontSize="12" Margin="0,0,0,6"/>
-                    <ComboBox x:Name="cmbCategoria"
-                      Height="38"
-                      Margin="0,0,0,14"
-                      Background="#1A1D2E"
-                      Foreground="White"
-                      BorderBrush="#3D4458"
-                      BorderThickness="1"
-                      FontSize="13"
-                      Padding="8,0">
+                               FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                    <TextBlock Text="Categoría" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="cmbCategoria" Height="38" Margin="0,0,0,14"
+                              Background="#1A1D2E" Foreground="White"
+                              BorderBrush="#3D4458" BorderThickness="1"
+                              FontSize="13" Padding="8,0">
                         <ComboBox.Resources>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="Foreground" Value="White"/>
@@ -448,41 +502,29 @@
                             </Style>
                         </ComboBox.Resources>
                     </ComboBox>
-
-                    <TextBlock Text="Precio mínimo (Q)" Foreground="#8B9BB4"
-                       FontSize="12" Margin="0,0,0,6"/>
-                    <TextBox x:Name="txtPrecioMin"
-                     Height="38"
-                     Margin="0,0,0,12"
-                     Background="#1A1D2E"
-                     Foreground="White"
-                     CaretBrush="White"
-                     BorderBrush="#3D4458"
-                     BorderThickness="1"
-                     FontSize="13"
-                     Padding="10,0"
-                     VerticalContentAlignment="Center">
+                    <TextBlock Text="Precio mínimo (Q)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtPrecioMin" Height="38" Margin="0,0,0,12">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
-                                <Setter Property="Background"      Value="#1A1D2E"/>
-                                <Setter Property="Foreground"      Value="White"/>
-                                <Setter Property="CaretBrush"      Value="White"/>
-                                <Setter Property="BorderBrush"     Value="#3D4458"/>
+                                <Setter Property="Background" Value="#1A1D2E"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="CaretBrush" Value="White"/>
+                                <Setter Property="BorderBrush" Value="#3D4458"/>
                                 <Setter Property="BorderThickness" Value="1"/>
-                                <Setter Property="Padding"         Value="10,0"/>
+                                <Setter Property="Padding" Value="10,0"/>
                                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="TextBox">
                                             <Border x:Name="border"
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="6">
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="6">
                                                 <ScrollViewer x:Name="PART_ContentHost"
-                                                      Margin="{TemplateBinding Padding}"
-                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                      Focusable="False"/>
+                                                              Margin="{TemplateBinding Padding}"
+                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                              Focusable="False"/>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsFocused" Value="True">
@@ -496,33 +538,29 @@
                             </Style>
                         </TextBox.Style>
                     </TextBox>
-
-                    <TextBlock Text="Precio máximo (Q)" Foreground="#8B9BB4"
-                       FontSize="12" Margin="0,0,0,6"/>
-                    <TextBox x:Name="txtPrecioMax"
-                     Height="38"
-                     Margin="0,0,0,16">
+                    <TextBlock Text="Precio máximo (Q)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtPrecioMax" Height="38" Margin="0,0,0,16">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
-                                <Setter Property="Background"      Value="#1A1D2E"/>
-                                <Setter Property="Foreground"      Value="White"/>
-                                <Setter Property="CaretBrush"      Value="White"/>
-                                <Setter Property="BorderBrush"     Value="#3D4458"/>
+                                <Setter Property="Background" Value="#1A1D2E"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="CaretBrush" Value="White"/>
+                                <Setter Property="BorderBrush" Value="#3D4458"/>
                                 <Setter Property="BorderThickness" Value="1"/>
-                                <Setter Property="Padding"         Value="10,0"/>
+                                <Setter Property="Padding" Value="10,0"/>
                                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="TextBox">
                                             <Border x:Name="border"
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="6">
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="6">
                                                 <ScrollViewer x:Name="PART_ContentHost"
-                                                      Margin="{TemplateBinding Padding}"
-                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                      Focusable="False"/>
+                                                              Margin="{TemplateBinding Padding}"
+                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                              Focusable="False"/>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsFocused" Value="True">
@@ -536,36 +574,24 @@
                             </Style>
                         </TextBox.Style>
                     </TextBox>
-
-                    <CheckBox x:Name="chkStockBajo"
-                      Content="Solo productos con Stock Bajo"
-                      Foreground="White" FontSize="13"
-                      Margin="0,0,0,20"/>
-
-
+                    <CheckBox x:Name="chkStockBajo" Content="Solo productos con Stock Bajo"
+                              Foreground="White" FontSize="13" Margin="0,0,0,20"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="10"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-
-                        <Button Grid.Column="0"
-                        Content="Limpiar"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Foreground="#6B7280" BorderBrush="#3D4458"
-                        Height="36"
-                        Click="btnLimpiarFiltros_Click"/>
-
-                        <Button Grid.Column="2"
-                        Content="Aplicar"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        Background="#3D7EFF" Foreground="White"
-                        materialDesign:ButtonAssist.CornerRadius="6"
-                        Height="36"
-                        Click="btnAplicarFiltros_Click"/>
+                        <Button Grid.Column="0" Content="Limpiar"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="#6B7280" BorderBrush="#3D4458"
+                                Height="36" Click="btnLimpiarFiltros_Click"/>
+                        <Button Grid.Column="2" Content="Aplicar"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#3D7EFF" Foreground="White"
+                                materialDesign:ButtonAssist.CornerRadius="6"
+                                Height="36" Click="btnAplicarFiltros_Click"/>
                     </Grid>
-
                 </StackPanel>
             </Border>
         </Popup>
