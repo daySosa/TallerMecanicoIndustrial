@@ -26,13 +26,9 @@ namespace InterfazClientes
             CargarNotificaciones();
         }
 
-        // ═══════════════════════════════════════════
-        // NAVEGACIÓN SIDEBAR
-        // ═══════════════════════════════════════════
-
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new MenuPrincipal(); // ← cambia por tu ventana principal
+            var ventana = new MenuPrincipal();
             ventana.Show();
             this.Close();
         }
@@ -87,10 +83,6 @@ namespace InterfazClientes
             }
         }
 
-        // ═══════════════════════════════════════════
-        // CARGAR CLIENTES
-        // ═══════════════════════════════════════════
-
         public void CargarClientes()
         {
             _listaClientes.Clear();
@@ -136,17 +128,13 @@ namespace InterfazClientes
             AplicarFiltros();
         }
 
-        // ═══════════════════════════════════════════
-        // FILTROS
-        // ═══════════════════════════════════════════
-
         private void AplicarFiltros()
         {
             string busqueda = txtBuscar.Text?.Trim().ToLower() ?? "";
 
             _listaFiltrada = _listaClientes.FindAll(c =>
             {
-                // Barra de búsqueda general
+
                 if (!string.IsNullOrEmpty(busqueda))
                 {
                     bool coincide =
@@ -157,18 +145,15 @@ namespace InterfazClientes
                     if (!coincide) return false;
                 }
 
-                // Filtro popup — nombre
                 if (!string.IsNullOrEmpty(_filtroNombre))
                     if (!(c.Cliente_Nombre ?? "").ToLower().Contains(_filtroNombre) &&
                         !(c.Cliente_Apellido ?? "").ToLower().Contains(_filtroNombre))
                         return false;
 
-                // Filtro popup — teléfono
                 if (!string.IsNullOrEmpty(_filtroTelefono))
                     if (!(c.Cliente_Telefono ?? "").ToLower().Contains(_filtroTelefono))
                         return false;
 
-                // Filtro popup — estado
                 if (_filtroEstado == "Activo" && !c.Cliente_Activo) return false;
                 if (_filtroEstado == "Inactivo" && c.Cliente_Activo) return false;
 
@@ -212,10 +197,6 @@ namespace InterfazClientes
             popupFiltros.IsOpen = false;
             AplicarFiltros();
         }
-
-        // ═══════════════════════════════════════════
-        // DATAGRID
-        // ═══════════════════════════════════════════
 
         private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
         {
@@ -276,10 +257,6 @@ namespace InterfazClientes
                 CargarClientes();
             }
         }
-
-        // ═══════════════════════════════════════════
-        // NOTIFICACIONES
-        // ═══════════════════════════════════════════
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {

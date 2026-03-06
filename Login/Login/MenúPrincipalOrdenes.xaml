@@ -17,7 +17,6 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SIDEBAR -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
@@ -26,7 +25,6 @@
                     <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/Imagenes/OSM_LOGO.png" Height="184"/>
                 </WrapPanel>
 
-                <!-- Pantalla Principal -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15"
@@ -37,7 +35,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Inventario -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
@@ -48,7 +45,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Vehículos -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
@@ -59,7 +55,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Clientes -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
@@ -70,7 +65,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Contabilidad -->
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
@@ -98,7 +92,6 @@
                     </StackPanel>
                 </Expander>
 
-                <!-- Órdenes ACTIVO -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -108,7 +101,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Cerrar Sesión -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom" Margin="0,70,0,15"
@@ -122,7 +114,6 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- CONTENIDO PRINCIPAL -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -130,7 +121,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP BAR -->
             <Border Grid.Row="0" Background="#1A1D2E" Height="80">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -166,7 +156,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- CAMPANA CON BADGE Y POPUP -->
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
                         <Button x:Name="btnNotificaciones"
                                 Style="{StaticResource MaterialDesignIconButton}"
@@ -261,7 +250,6 @@
                 </Grid>
             </Border>
 
-            <!-- TOOLBAR -->
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -296,7 +284,6 @@
                 </Button>
             </Grid>
 
-            <!-- DATAGRID -->
             <materialDesign:Card Grid.Row="2" Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
                                  UniformCornerRadius="10" Margin="20,0,20,20">
@@ -372,7 +359,6 @@
 
                         <DataGrid.Columns>
 
-                            <!-- No. Orden -->
                             <DataGridTextColumn Header="No." Binding="{Binding Orden_ID}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -384,7 +370,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- Cliente -->
+
                             <DataGridTemplateColumn Header="Cliente" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -407,7 +393,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Repuesto -->
                             <DataGridTemplateColumn Header="Repuesto" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -421,7 +406,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Fecha Orden -->
                             <DataGridTemplateColumn Header="Fecha Orden" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -435,7 +419,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Fecha Entrega -->
                             <DataGridTextColumn Header="F. Entrega"
                                                Binding="{Binding Fecha_Entrega, StringFormat='dd/MM/yyyy'}"
                                                Width="110">
@@ -448,8 +431,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-
-                            <!-- Estado -->
+                            
                             <DataGridTemplateColumn Header="Estado" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -500,7 +482,6 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Precio Servicio -->
                             <DataGridTextColumn Header="Servicio"
                                                Binding="{Binding Servicio_Precio, StringFormat='Q {0:N2}'}"
                                                Width="100">
@@ -514,7 +495,6 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <!-- Total -->
                             <DataGridTextColumn Header="Total"
                                                Binding="{Binding OrdenPrecio_Total, StringFormat='Q {0:N2}'}"
                                                Width="100">
@@ -535,7 +515,6 @@
             </materialDesign:Card>
         </Grid>
 
-        <!-- POPUP FILTROS -->
         <Popup x:Name="popupFiltros"
                Grid.Column="1"
                PlacementTarget="{Binding ElementName=btnFiltrar}"

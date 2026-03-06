@@ -44,13 +44,10 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-        // ═══════════════════════════════════════════
-        // NAVEGACIÓN SIDEBAR
-        // ═══════════════════════════════════════════
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new MenuPrincipal(); // ← cambia por tu ventana principal
+            var ventana = new MenuPrincipal();
             ventana.Show();
             this.Close();
         }
@@ -173,10 +170,6 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // FILTROS
-        // ═══════════════════════════════════════════
-
         private bool AplicarFiltros(object item)
         {
             if (item is not OrdenTrabajo o) return false;
@@ -244,16 +237,12 @@ namespace Órdenes_de_Trabajo
             tbTotalOrdenes.Text = $"{total} orden{(total != 1 ? "es" : "")}";
         }
 
-        // ═══════════════════════════════════════════
-        // DATAGRID
-        // ═══════════════════════════════════════════
-
         private async void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgOrdenes.SelectedItem is OrdenTrabajo seleccionada)
             {
                 var ventana = new OrdenWindow();
-                ventana.Show(); // Show primero para que los controles estén inicializados
+                ventana.Show();
                 await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
 
                 dgOrdenes.SelectedItem = null;
@@ -270,9 +259,6 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-        // ═══════════════════════════════════════════
-        // NOTIFICACIONES
-        // ═══════════════════════════════════════════
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {

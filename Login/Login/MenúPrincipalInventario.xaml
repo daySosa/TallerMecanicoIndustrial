@@ -14,7 +14,6 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SIDEBAR -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
@@ -23,7 +22,6 @@
                     <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/Imagenes/OSM_LOGO.png" Height="184"/>
                 </WrapPanel>
 
-                <!-- Pantalla Principal -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15"
@@ -34,7 +32,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Inventario ACTIVO -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -44,7 +41,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Vehículos -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
@@ -55,7 +51,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Clientes -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
@@ -66,7 +61,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Contabilidad -->
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
@@ -94,7 +88,6 @@
                     </StackPanel>
                 </Expander>
 
-                <!-- Órdenes -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15"
@@ -105,7 +98,6 @@
                     </WrapPanel>
                 </Button>
 
-                <!-- Cerrar Sesión -->
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
                         materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom" Margin="0,70,0,15"
@@ -119,7 +111,6 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- CONTENIDO PRINCIPAL -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -127,7 +118,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP BAR -->
             <Border Grid.Row="0" Background="#1A1D2E" Height="80">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -255,7 +245,6 @@
                 </Grid>
             </Border>
 
-            <!-- TOOLBAR -->
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -287,8 +276,7 @@
                     </StackPanel>
                 </Button>
             </Grid>
-
-            <!-- DATAGRID -->
+            
             <materialDesign:Card Grid.Row="2" Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
                                  UniformCornerRadius="10" Margin="20,0,20,20">
@@ -494,7 +482,6 @@
             </materialDesign:Card>
         </Grid>
 
-        <!-- POPUP FILTROS -->
         <Popup x:Name="popupFiltros" Grid.Column="1"
                PlacementTarget="{Binding ElementName=btnFiltrar}"
                Placement="Bottom" StaysOpen="False" AllowsTransparency="True">

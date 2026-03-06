@@ -1,5 +1,4 @@
-﻿// MenúPrincipalVehículos.xaml.cs - COMPLETO
-using Dasboard_Prueba;
+﻿using Dasboard_Prueba;
 using InterfazClientes;
 using Login.Clases;
 using System.Collections.ObjectModel;
@@ -29,13 +28,10 @@ namespace Vehículos
             CargarNotificaciones();
         }
 
-        // ═══════════════════════════════════════════
-        // NAVEGACIÓN SIDEBAR
-        // ═══════════════════════════════════════════
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new MenuPrincipal(); // ← cambia por tu ventana principal
+            var ventana = new MenuPrincipal();
             ventana.Show();
             this.Close();
         }
@@ -88,10 +84,6 @@ namespace Vehículos
                 this.Close();
             }
         }
-
-        // ═══════════════════════════════════════════
-        // CARGAR VEHÍCULOS
-        // ═══════════════════════════════════════════
 
         private void CargarDatosDesdeDB()
         {
@@ -148,15 +140,10 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // FILTROS
-        // ═══════════════════════════════════════════
-
         private bool AplicarFiltros(object item)
         {
             if (item is not Vehiculo v) return false;
-
-            // Filtro barra de búsqueda
+            a
             string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
             if (!string.IsNullOrEmpty(texto))
             {
@@ -169,11 +156,9 @@ namespace Vehículos
                 if (!coincide) return false;
             }
 
-            // Filtro popup — placa
             if (!string.IsNullOrEmpty(_filtroPlaca))
                 if (!(v.Vehiculo_Placa ?? "").ToLower().Contains(_filtroPlaca)) return false;
 
-            // Filtro popup — modelo
             if (!string.IsNullOrEmpty(_filtroModelo))
                 if (!(v.Vehiculo_Modelo ?? "").ToLower().Contains(_filtroModelo)) return false;
 
@@ -221,10 +206,6 @@ namespace Vehículos
             tbTotalVehiculos.Text = $"{total} vehículo{(total != 1 ? "s" : "")}";
         }
 
-        // ═══════════════════════════════════════════
-        // DATAGRID
-        // ═══════════════════════════════════════════
-
         private void dgVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgVehiculos.SelectedItem is Vehiculo seleccionado)
@@ -244,10 +225,6 @@ namespace Vehículos
             ventana.ShowDialog();
             CargarDatosDesdeDB();
         }
-
-        // ═══════════════════════════════════════════
-        // NOTIFICACIONES
-        // ═══════════════════════════════════════════
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {

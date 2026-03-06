@@ -48,13 +48,11 @@ namespace InterfazInventario
             CargarNotificaciones();
         }
 
-        // ═══════════════════════════════════════════
-        // NAVEGACIÓN SIDEBAR
-        // ═══════════════════════════════════════════
+
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new MenuPrincipal(); // ← cambia por el nombre real de tu ventana
+            var ventana = new MenuPrincipal();
             ventana.Show();
             this.Close();
         }
@@ -108,10 +106,6 @@ namespace InterfazInventario
                 this.Close();
             }
         }
-
-        // ═══════════════════════════════════════════
-        // CARGAR INVENTARIO
-        // ═══════════════════════════════════════════
 
         private void CargarDatosDesdeDB()
         {
@@ -172,10 +166,6 @@ namespace InterfazInventario
             }
             finally { _conexion.Cerrar(); }
         }
-
-        // ═══════════════════════════════════════════
-        // FILTROS
-        // ═══════════════════════════════════════════
 
         private bool AplicarFiltros(object item)
         {
@@ -242,10 +232,6 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-        // ═══════════════════════════════════════════
-        // DATAGRID
-        // ═══════════════════════════════════════════
-
         private void dgInventario_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgInventario.SelectedItem is Repuesto seleccionado)
@@ -275,10 +261,6 @@ namespace InterfazInventario
                 foreach (var _ in _vistaRepuestos) total++;
             tbTotalItems.Text = $"{total} item{(total != 1 ? "s" : "")}";
         }
-
-        // ═══════════════════════════════════════════
-        // NOTIFICACIONES
-        // ═══════════════════════════════════════════
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
