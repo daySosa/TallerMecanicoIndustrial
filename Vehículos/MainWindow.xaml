@@ -6,9 +6,8 @@
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Vehículos"
         Title="MenúPrincipalVehiculos" Height="850" Width="1200"
-        TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
+        TextElement.Foreground="White" WindowStyle="ThreeDBorderWindow"
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
-
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -19,11 +18,9 @@
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
-
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
                     <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="199" Width="200"/>
                 </WrapPanel>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
@@ -32,7 +29,6 @@
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -41,7 +37,6 @@
                         <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -50,7 +45,6 @@
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -59,7 +53,6 @@
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
@@ -86,7 +79,6 @@
                         </Button>
                     </StackPanel>
                 </Expander>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -95,7 +87,6 @@
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,200,0,15">
@@ -104,10 +95,8 @@
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
-
             </StackPanel>
         </materialDesign:ColorZone>
-
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
@@ -124,12 +113,10 @@
                         <ColumnDefinition Width="1"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
                         <TextBlock Text="Nuevo Vehículo" Foreground="White" FontSize="18" FontWeight="Bold"/>
                         <TextBlock Text="Completa los datos del vehículo" Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
-
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
                             VerticalAlignment="Center" Height="40" MaxWidth="400"
                             HorizontalAlignment="Left" Margin="20,0,0,0">
@@ -149,7 +136,6 @@
                             </TextBox>
                         </StackPanel>
                     </Border>
-
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
                         <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
@@ -157,9 +143,7 @@
                         <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
                                                HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     </Grid>
-
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
-
                     <StackPanel Grid.Column="4" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="16,0,20,0">
                         <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
@@ -172,9 +156,7 @@
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <Grid Margin="30,24,30,24">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -187,13 +169,10 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Column="0" Grid.RowSpan="2">
-                        <materialDesign:Card Background="#252836"
-                                             UniformCornerRadius="12"
-                                             Padding="22"
-                                             Margin="0,0,0,16"
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12"
+                                             Padding="22" Margin="0,0,0,16"
                                              materialDesign:ElevationAssist.Elevation="Dp3">
                             <StackPanel>
-                                
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <Border Background="#2e3250" CornerRadius="8"
                                             Width="36" Height="36" Margin="0,0,12,0">
@@ -206,7 +185,6 @@
                                         <TextBlock Text="Información de identificación" Foreground="#6c7293" FontSize="11"/>
                                     </StackPanel>
                                 </StackPanel>
-
                                 <TextBlock Text="Placa" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtPlaca"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -215,7 +193,6 @@
                                          Height="40" VerticalContentAlignment="Center"
                                          Padding="10,0" Margin="0,0,0,14"
                                          TextChanged="txtPlaca_TextChanged" Text=""/>
-
                                 <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtMarca"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -223,7 +200,6 @@
                                          BorderBrush="#3a3f5c" CaretBrush="White"
                                          Height="40" VerticalContentAlignment="Center"
                                          Padding="10,0" Margin="0,0,0,14"/>
-
                                 <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -247,18 +223,56 @@
                                                  Height="40" VerticalContentAlignment="Center" Padding="10,0"/>
                                     </StackPanel>
                                 </Grid>
-
                                 <TextBlock Text="Tipo de Vehículo" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+
                                 <ComboBox x:Name="cmbTipo"
                                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                          Background="#1e2130" Foreground="White"
-                                          BorderBrush="#3a3f5c" Height="40" Margin="0,0,0,20">
+                                          Background="#1e2130"
+                                          BorderBrush="#3a3f5c"
+                                          Foreground="White"
+                                          Height="40"
+                                          Margin="0,0,0,30"
+                                          SelectionChanged="cmbTipo_SelectionChanged"
+                                          materialDesign:HintAssist.Foreground="#6c7293"
+                                          materialDesign:TextFieldAssist.UnderlineBrush="Transparent">
                                     <ComboBox.Resources>
                                         <Style TargetType="ComboBoxItem">
                                             <Setter Property="Foreground" Value="White"/>
                                             <Setter Property="Background" Value="#252836"/>
                                         </Style>
                                     </ComboBox.Resources>
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Background" Value="#252836"/>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                    <ComboBox.Template>
+                                        <ControlTemplate TargetType="ComboBox">
+                                            <Grid>
+                                                <Border Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="4"/>
+                                                <TextBlock Text="{TemplateBinding SelectionBoxItem}"
+                                                           Foreground="White"
+                                                           Margin="10,0,30,0"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Left"
+                                                           FontSize="13"/>
+                                                <ToggleButton HorizontalAlignment="Right" Width="30"
+                                                              Focusable="False" Background="Transparent" BorderThickness="0"
+                                                              IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                                    <materialDesign:PackIcon Kind="ChevronDown" Foreground="White" Width="16" Height="16"/>
+                                                </ToggleButton>
+                                                <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                                                       AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                                    <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}">
+                                                        <ScrollViewer MaxHeight="200">
+                                                            <ItemsPresenter/>
+                                                        </ScrollViewer>
+                                                    </Border>
+                                                </Popup>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </ComboBox.Template>
                                     <ComboBoxItem Content="Turismo"/>
                                     <ComboBoxItem Content="MotoTaxi"/>
                                     <ComboBoxItem Content="Pickup"/>
@@ -268,19 +282,15 @@
                                 </ComboBox>
 
                                 <Separator Background="#3a3f5c" Margin="0,0,0,16"/>
-
                             </StackPanel>
                         </materialDesign:Card>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Grid.RowSpan="2">
-                        <materialDesign:Card Background="#252836"
-                                             UniformCornerRadius="12"
-                                             Padding="22"
-                                             Margin="0,0,0,16"
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12"
+                                             Padding="22" Margin="0,0,0,16"
                                              materialDesign:ElevationAssist.Elevation="Dp3">
                             <StackPanel>
-
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <Border Background="#2e3250" CornerRadius="8"
                                             Width="36" Height="36" Margin="0,0,12,0">
@@ -293,7 +303,6 @@
                                         <TextBlock Text="Observaciones y estado" Foreground="#6c7293" FontSize="11"/>
                                     </StackPanel>
                                 </StackPanel>
-
                                 <TextBlock Text="DNI del Cliente" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
@@ -310,12 +319,12 @@
                                              Padding="10,0"
                                              TextChanged="txtClienteDNI_TextChanged"/>
                                     <Button Grid.Column="2"
-                                            x:Name="btnVerificarCliente"
-                                            Content="Verificar"
+                                            x:Name="btnBuscarCliente"
+                                            Content="Buscar"
                                             Height="40" Padding="14,0"
                                             materialDesign:ButtonAssist.CornerRadius="8"
                                             materialDesign:ElevationAssist.Elevation="Dp0"
-                                            Click="BtnVerificarCliente_Click">  
+                                            Click="BtnVerificarCliente_Click">
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                                 <Setter Property="Background" Value="#4f6ef7"/>
@@ -326,35 +335,27 @@
                                         </Button.Style>
                                     </Button>
                                 </Grid>
-
                                 <Border x:Name="borderClienteInfo"
                                         Background="#1e2130" CornerRadius="8" Padding="12,10"
-                                        Visibility="Collapsed"> 
+                                        Margin="0,0,0,14" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon x:Name="iconClienteEstado"
-                                         Kind="AccountCheck"
-                                         Foreground="#4CAF50"
-                                         Width="18" Height="18"
-                                         VerticalAlignment="Center"
-                                         Margin="0,0,8,0"/>     
+                                                                 Kind="AccountCheck" Foreground="#4CAF50"
+                                                                 Width="18" Height="18"
+                                                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock x:Name="txtClienteNombre" Foreground="White" FontSize="13" FontWeight="Medium"/>
                                             <TextBlock x:Name="txtClienteEstado" Foreground="#4CAF50" FontSize="11"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
-
                                 <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtObservaciones"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Background="#1e2130" Foreground="White"
                                          BorderBrush="#3a3f5c" CaretBrush="White"
-                                         Height="120" TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         VerticalContentAlignment="Top"
-                                         Padding="10,8"
-                                         Margin="0,0,0,20"/>
-
+                                         Height="120" TextWrapping="Wrap" AcceptsReturn="True"
+                                         VerticalContentAlignment="Top" Padding="10,8" Margin="0,0,0,20"/>
                                 <Border Background="#1e2130" CornerRadius="10" Padding="16,14">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -364,16 +365,12 @@
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                                 <materialDesign:PackIcon Kind="CheckCircleOutline"
-                                                                         x:Name="iconEstado"
-                                                                         Foreground="#4CAF50"
+                                                                         x:Name="iconEstado" Foreground="#4CAF50"
                                                                          Width="16" Height="16"
-                                                                         VerticalAlignment="Center"
-                                                                         Margin="0,0,6,0"/>
-                                                <TextBlock Text="Estado del Vehículo"
-                                                           Foreground="White" FontSize="13" FontWeight="Medium"/>
+                                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Estado del Vehículo" Foreground="White" FontSize="13" FontWeight="Medium"/>
                                             </StackPanel>
-                                            <TextBlock x:Name="txtEstadoLabel"
-                                                       Text="El vehículo está activo"
+                                            <TextBlock x:Name="txtEstadoLabel" Text="El vehículo está activo"
                                                        Foreground="#4CAF50" FontSize="11"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="toggleActivo"
@@ -396,8 +393,7 @@
                                                                             CornerRadius="12" Width="24" Height="24"
                                                                             HorizontalAlignment="Right" Margin="0,0,3,0">
                                                                         <Border.Effect>
-                                                                            <DropShadowEffect Color="Black" Opacity="0.2"
-                                                                                              BlurRadius="4" ShadowDepth="1"/>
+                                                                            <DropShadowEffect Color="Black" Opacity="0.2" BlurRadius="4" ShadowDepth="1"/>
                                                                         </Border.Effect>
                                                                     </Border>
                                                                 </Grid>
@@ -416,22 +412,20 @@
                                         </ToggleButton>
                                     </Grid>
                                 </Border>
-
                             </StackPanel>
                         </materialDesign:Card>
                     </StackPanel>
 
-                    <materialDesign:Card Grid.Column="0" Grid.ColumnSpan="3"
+                    <materialDesign:Card Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
                                          Background="#252836" UniformCornerRadius="12"
                                          Padding="20,16" Margin="0,260,0,-244"
-                                         materialDesign:ElevationAssist.Elevation="Dp3" Grid.Row="1">
+                                         materialDesign:ElevationAssist.Elevation="Dp3">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center"
-                                       Foreground="#6c7293" FontSize="12">
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="#6c7293" FontSize="12">
                                 <Run Text="⚠ "/>
                                 <Run Text="Recuerda verificar los datos antes de guardar"/>
                             </TextBlock>
@@ -442,13 +436,15 @@
                                         BorderBrush="#6c7293" Foreground="#6c7293"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         Click="BtnCancelar_Click"/>
-                                <Button Content="Actualizar"
+                                <Button x:Name="btnActualizar"
+                                        Content="Actualizar"
                                         Height="38" Padding="24,0" Margin="0,0,10,0"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         Click="BtnActualizar_Click"/>
-                                <Button Height="38" Padding="24,0"
+                                <Button x:Name="btnGuardar"
+                                        Height="38" Padding="24,0"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         materialDesign:ElevationAssist.Elevation="Dp0"
                                         Click="BtnGuardar_Click">

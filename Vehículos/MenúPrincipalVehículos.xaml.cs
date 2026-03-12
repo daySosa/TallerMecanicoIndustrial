@@ -53,14 +53,13 @@ namespace Vehículos
                             Vehiculo_Placa = reader["Vehiculo_Placa"].ToString(),
                             Vehiculo_Marca = reader["Vehiculo_Marca"].ToString(),
                             Vehiculo_Modelo = reader["Vehiculo_Modelo"].ToString(),
-                            Vehiculo_Año = reader.GetInt32(reader.GetOrdinal("Vehiculo_Año")),
+                            Vehiculo_Año = Convert.ToInt32(reader["Vehiculo_Año"]),
                             Vehiculo_Tipo = reader["Vehiculo_Tipo"].ToString(),
                             Vehiculo_Observaciones = reader["Vehiculo_Observaciones"].ToString(),
-                            Cliente_DNI = reader.GetInt32(reader.GetOrdinal("Cliente_DNI")),
+                            Cliente_DNI = Convert.ToInt32(reader["Cliente_DNI"]),
                             Cliente_NombreCompleto = reader["Cliente_NombreCompleto"].ToString(),
-
                             EstaActivo = reader["Vehiculo_Activo"] != DBNull.Value
-                                         && (bool)reader["Vehiculo_Activo"]
+                                                     && Convert.ToBoolean(reader["Vehiculo_Activo"])
                         });
                     }
                 }
