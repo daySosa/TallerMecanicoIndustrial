@@ -480,7 +480,7 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="Precio"
-                                                Binding="{Binding Precio_Gasto, StringFormat=S/\{0:N2\}}"
+                                                Binding="{Binding Precio_Gasto, StringFormat=L/\{0:N2\}}"
                                                 Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="{x:Type TextBlock}">
