@@ -14,7 +14,7 @@
         <Grid>
 
             <!-- FONDO IMAGEN -->
-            <Image Source="/fondo_login.png"
+            <Image Source="/Imagenes/fondo_login.png"
                    Stretch="UniformToFill"
                    RenderOptions.BitmapScalingMode="HighQuality"/>
 
@@ -39,7 +39,7 @@
                 <StackPanel>
 
                     <!-- Logo -->
-                    <Image Source="/OSM_Logo_AR.png"
+                    <Image Source="/Imagenes/OSM_Logo_AR.png"
                            Height="90" Width="90"
                            HorizontalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"
