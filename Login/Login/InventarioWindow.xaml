@@ -195,7 +195,7 @@
                             <Border Grid.Column="0" Background="#2e3250"
                                     BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
                                     CornerRadius="6,0,0,6" Padding="12,0" Height="40">
-                                <TextBlock Text="Q" Foreground="#4f6ef7" FontSize="16"
+                                <TextBlock Text="L" Foreground="#4f6ef7" FontSize="16"
                                            FontWeight="Bold" VerticalAlignment="Center"/>
                             </Border>
                             <TextBox x:Name="txtPrecio"

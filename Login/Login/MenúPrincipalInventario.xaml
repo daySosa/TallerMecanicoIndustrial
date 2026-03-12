@@ -404,7 +404,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Precio"
-                                                Binding="{Binding Producto_Precio, StringFormat='Q {0:N2}'}"
+                                                Binding="{Binding Producto_Precio, StringFormat='L {0:N2}'}"
                                                 Width="100">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -502,7 +502,7 @@
                             </Style>
                         </ComboBox.Resources>
                     </ComboBox>
-                    <TextBlock Text="Precio mínimo (Q)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <TextBlock Text="Precio mínimo (L)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
                     <TextBox x:Name="txtPrecioMin" Height="38" Margin="0,0,0,12">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
@@ -538,7 +538,7 @@
                             </Style>
                         </TextBox.Style>
                     </TextBox>
-                    <TextBlock Text="Precio máximo (Q)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
+                    <TextBlock Text="Precio máximo (L)" Foreground="#8B9BB4" FontSize="12" Margin="0,0,0,6"/>
                     <TextBox x:Name="txtPrecioMax" Height="38" Margin="0,0,0,16">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
