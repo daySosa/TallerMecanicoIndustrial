@@ -22,7 +22,11 @@
             <StackPanel Margin="15,0,15,0">
 
                 <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <Image Source="/Imagenes/OSM_LOGO.png" Height="204" Width="195"/>
+                    <Image Source="/Imagenes/OSM_LOGO.png" Height="204" Width="195">
+                        <Image.BindingGroup>
+                            <BindingGroup/>
+                        </Image.BindingGroup>
+                    </Image>
                 </WrapPanel>
 
                 <Button x:Name="btnPantallaPrincipal"
@@ -310,17 +314,13 @@
                     </StackPanel>
                 </Button>
 
-                <Button x:Name="btnActualizar" Grid.Column="1"
+                <Button x:Name="btnActualizar"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Height="38" Padding="16,0" Margin="0,0,10,0"
-                        Click="btnActualizar_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Actualizar" VerticalAlignment="Center" FontSize="14"/>
-                    </StackPanel>
+                        Click="btnActualizar_Click" Grid.ColumnSpan="2" HorizontalAlignment="Right" Width="32">
+                    <StackPanel Orientation="Horizontal"/>
                 </Button>
 
                 <Button x:Name="btnMostrarComprobante" Grid.Column="2"
@@ -368,6 +368,7 @@
                               BorderThickness="0" RowBackground="Transparent"
                               AlternatingRowBackground="#162030"
                               ColumnHeaderHeight="40" RowHeight="55"
+                              MouseDoubleClick="dgGastos_MouseDoubleClick"
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Stretch">
 

@@ -98,7 +98,7 @@ namespace InterfazInventario
                         Producto_Marca           = @Marca,
                         Producto_Modelo          = @Modelo,
                         Producto_Precio          = @Precio,
-                        Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
+                        Producto_Cantidad_Actual =  @Cantidad
                     WHERE Producto_ID = @ID";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
@@ -145,7 +145,7 @@ namespace InterfazInventario
             txtMarca.Text = producto.Producto_Marca;
             txtModelo.Text = producto.Producto_Modelo == "—" ? "" : producto.Producto_Modelo;
             txtPrecio.Text = producto.Producto_Precio.ToString("N2");
-            txtCantidad.Text = "0";
+            txtCantidad.Text = producto.Producto_Cantidad_Actual.ToString();
 
             foreach (ComboBoxItem item in cmbCategoria.Items)
             {

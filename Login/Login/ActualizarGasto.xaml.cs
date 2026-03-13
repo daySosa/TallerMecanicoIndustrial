@@ -79,6 +79,15 @@ namespace Contabilidad
                 return;
             }
 
+            if (!DateTime.TryParseExact(txtFecha.Text.Trim(), "dd/MM/yyyy HH:mm",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out DateTime fechaFinal))
+            {
+                MessageBox.Show("Formato de fecha inválido. Usa dd/MM/yyyy HH:mm\nEjemplo: 13/03/2026 14:30",
+                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 using (SqlConnection conn = new SqlConnection(conexion))
@@ -88,7 +97,8 @@ namespace Contabilidad
                             Tipo_Gasto          = @TipoGasto,
                             Nombre_Gasto        = @NombreGasto,
                             Observaciones_Gasto = @Observaciones,
-                            Precio_Gasto        = @Precio
+                            Precio_Gasto        = @Precio,
+                            Fecha_Gasto         = @Fecha
                         WHERE Gasto_ID = @GastoID";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
@@ -96,6 +106,7 @@ namespace Contabilidad
                     cmd.Parameters.AddWithValue("@NombreGasto", txtNombre.Text.Trim());
                     cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim());
                     cmd.Parameters.AddWithValue("@Precio", precio);
+                    cmd.Parameters.AddWithValue("@Fecha", fechaFinal);
                     cmd.Parameters.AddWithValue("@GastoID", _gastoId);
 
                     conn.Open();

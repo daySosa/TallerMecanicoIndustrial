@@ -16,6 +16,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="20*"/>
+            
         </Grid.ColumnDefinitions>
 
         <!-- ===== MENÚ IZQUIERDO ===== -->
@@ -293,19 +294,6 @@
                     </StackPanel>
                 </Button>
 
-                <Button x:Name="btnActualizar" Grid.Column="1"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Foreground="#3D7EFF" BorderBrush="#3D7EFF"
-                        materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Margin="0,0,10,0"
-                        Click="btnActualizar_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Actualizar" VerticalAlignment="Center" FontSize="14"/>
-                    </StackPanel>
-                </Button>
-
                 <Button x:Name="btnMostrarComprobantes" Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
@@ -350,6 +338,7 @@
                               BorderThickness="0" RowBackground="Transparent"
                               AlternatingRowBackground="#162030"
                               ColumnHeaderHeight="40" RowHeight="55"
+                              MouseDoubleClick="dgPagos_MouseDoubleClick"
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Stretch">
 

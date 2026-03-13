@@ -74,26 +74,30 @@ namespace Contabilidad
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (dgPagos.SelectedItem == null)
-            {
-                MessageBox.Show("Selecciona un pago del registro para actualizarlo.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            DataRowView fila = (DataRowView)dgPagos.SelectedItem;
-
-            int pagoId = Convert.ToInt32(fila["Pago_ID"]);
-            string dniStr = fila["Cliente_DNI"].ToString();
-            int ordenId = Convert.ToInt32(fila["Orden_ID"]);
-            decimal monto = Convert.ToDecimal(fila["Precio_Pago"]);
-            DateTime fecha = Convert.ToDateTime(fila["Fecha_Pago"]);
-
-            ActualizarPago ventana = new ActualizarPago(this, pagoId, dniStr, ordenId, monto, fecha);
-            ventana.Owner = this;
-            ventana.ShowDialog();
+           
         }
 
+        private void dgPagos_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (dgPagos.SelectedItem is DataRowView fila)
+            {
+                var elemento = e.OriginalSource as DependencyObject;
+                while (elemento != null && !(elemento is DataGridRow))
+                    elemento = VisualTreeHelper.GetParent(elemento);
+                if (elemento == null) return;
+
+                int pagoId = Convert.ToInt32(fila["Pago_ID"]);
+                string dniStr = fila["Cliente_DNI"].ToString();
+                int ordenId = Convert.ToInt32(fila["Orden_ID"]);
+                decimal monto = Convert.ToDecimal(fila["Precio_Pago"]);
+                DateTime fecha = Convert.ToDateTime(fila["Fecha_Pago"]);
+
+                ActualizarPago ventana = new ActualizarPago(this, pagoId, dniStr, ordenId, monto, fecha);
+                ventana.Owner = this;
+                ventana.ShowDialog();
+                CargarPago();
+            }
+        }
 
         private void btnMostrarComprobantes_Click(object sender, RoutedEventArgs e)
         {

@@ -30,7 +30,7 @@ namespace Contabilidad
                 using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = @"
-                        SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto
+                        SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto, Observaciones_Gasto
                         FROM Contabilidad_Gastos
                         WHERE (@Busqueda IS NULL
                                OR Nombre_Gasto LIKE '%' + @Busqueda + '%'
@@ -38,7 +38,10 @@ namespace Contabilidad
                         ORDER BY Fecha_Gasto DESC";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@Busqueda", (object)busqueda ?? DBNull.Value);
+                    if (string.IsNullOrEmpty(busqueda))
+                        cmd.Parameters.AddWithValue("@Busqueda", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@Busqueda", busqueda.Trim());
 
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
                     DataTable dt = new DataTable();
@@ -69,31 +72,32 @@ namespace Contabilidad
                 CargarEgreso();
         }
 
+
+
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (dgGastos.SelectedItem == null)
+
+        }
+
+        private void dgGastos_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (dgGastos.SelectedItem is DataRowView fila)
             {
-                MessageBox.Show("Selecciona un gasto para actualizar.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            var fila = (DataRowView)dgGastos.SelectedItem;
-
-            var ventana = new ActualizarGasto(
-                gastoId: Convert.ToInt32(fila["Gasto_ID"]),
-                tipo: fila["Tipo_Gasto"].ToString(),
-                nombre: fila["Nombre_Gasto"].ToString(),
-                precio: Convert.ToDecimal(fila["Precio_Gasto"]),
-                fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
-                observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto") && fila["Observaciones_Gasto"] != DBNull.Value
-                               ? fila["Observaciones_Gasto"].ToString()
-                               : ""
-            );
-
-            ventana.Owner = this;
-            if (ventana.ShowDialog() == true)
+                var ventana = new ActualizarGasto(
+                    gastoId: Convert.ToInt32(fila["Gasto_ID"]),
+                    tipo: fila["Tipo_Gasto"].ToString(),
+                    nombre: fila["Nombre_Gasto"].ToString(),
+                    precio: Convert.ToDecimal(fila["Precio_Gasto"]),
+                    fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
+                    observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto") && fila["Observaciones_Gasto"] != DBNull.Value
+                                   ? fila["Observaciones_Gasto"].ToString()
+                                   : ""
+                );
+                ventana.Owner = this;
+                ventana.ShowDialog();
+                dgGastos.SelectedItem = null;
                 CargarEgreso();
+            }
         }
 
         private void btnMostrarComprobante_Click(object sender, RoutedEventArgs e)

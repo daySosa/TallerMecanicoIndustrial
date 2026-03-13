@@ -27,7 +27,6 @@ namespace Contabilidad
         {
             // Detalles básicos
             lblID.Text = "#" + id.ToString();
-            lblIDExtra.Text = "#" + id.ToString();
             lblNombre.Text = nombre;
             lblPrecio.Text = "S/ " + precio.ToString("F2");
             lblFecha.Text = fecha.ToString("dd/MM/yyyy HH:mm");
@@ -48,9 +47,9 @@ namespace Contabilidad
             }
 
             // Observaciones
-            lblObservaciones.Text = string.IsNullOrWhiteSpace(observaciones)
-                ? "Sin observaciones registradas."
-                : observaciones;
+            //lblObservaciones.Text = string.IsNullOrWhiteSpace(observaciones)
+                //? "Sin observaciones registradas."
+                //: observaciones;
         }
 
         private void btnCerrar_Click(object sender, RoutedEventArgs e)

@@ -139,7 +139,6 @@
                                     <TextBox x:Name="txtFecha"
                                              Height="42"
                                              Foreground="#6B7280"
-                                             IsReadOnly="True"
                                              Background="#1a1d2e"
                                              BorderBrush="#3a3f5c"
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
