@@ -4,27 +4,92 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Órdenes_de_Trabajo"
         mc:Ignorable="d"
-        Title="AgregarRepuesto" Height="437" Width="800"
+        Title="Agregar Repuesto" Height="440" Width="800"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="#1e2130"
-        >
+        Background="#1e2130">
 
-    <Border Padding="24" Margin="0,0,0,29">
+    <Border Padding="24">
         <StackPanel>
 
             <!-- TÍTULO -->
-            <TextBlock Text="Agregar Repuesto" Foreground="White" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+            <TextBlock Text="Agregar Repuesto" Foreground="White" FontSize="16"
+                       FontWeight="Bold" Margin="0,0,0,20"/>
 
             <!-- COMBOBOX DE PRODUCTOS -->
-            <TextBlock Text="PRODUCTO" Foreground="#a0a8c8" FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-            <ComboBox x:Name="cmbProducto"  Background="#252836" Foreground="White" BorderBrush="#3a3f5c"
-                      BorderThickness="1" Height="40" Margin="0,0,0,14" DisplayMemberPath="Producto_Nombre" SelectionChanged="cmbProducto_SelectionChanged"
-                      materialDesign:HintAssist.Hint="Selecciona un producto" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+            <TextBlock Text="PRODUCTO" Foreground="#a0a8c8" FontSize="11"
+                       FontWeight="Medium" Margin="0,0,0,6"/>
+
+            <ComboBox x:Name="cmbProducto"
+                      Height="40" Margin="0,0,0,14"
+                      DisplayMemberPath="Producto_Nombre"
+                      SelectionChanged="cmbProducto_SelectionChanged">
+                <ComboBox.Resources>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="Background" Value="#252836"/>
+                        <Setter Property="Padding" Value="10,8"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2e3250"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#4f6ef7"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Resources>
+                <ComboBox.Template>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border Background="#252836" BorderBrush="#3a3f5c"
+                                    BorderThickness="1" CornerRadius="6"/>
+                            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="12,0,36,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="placeholder" Text="Selecciona un producto"
+                                       Foreground="#6c7293" Margin="12,0,36,0"
+                                       VerticalAlignment="Center" FontSize="13"
+                                       IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem,
+                                                         RelativeSource={RelativeSource TemplatedParent}}"
+                                                         Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"
+                                  Margin="0,0,12,0" IsHitTestVisible="False"/>
+                            <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   Placement="Bottom" AllowsTransparency="True"
+                                   Focusable="False" PopupAnimation="Slide">
+                                <Border Background="#252836" BorderBrush="#3a3f5c"
+                                        BorderThickness="1" CornerRadius="6"
+                                        MinWidth="{TemplateBinding ActualWidth}">
+                                    <ScrollViewer MaxHeight="200">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                            <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                          Opacity="0" Focusable="False" Background="Transparent"
+                                          BorderThickness="0"
+                                          IsChecked="{Binding IsDropDownOpen,
+                                                      RelativeSource={RelativeSource TemplatedParent},
+                                                      Mode=TwoWay}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </ComboBox.Template>
+            </ComboBox>
 
             <!-- FILA: CATEGORÍA, PRECIO, STOCK -->
             <Grid Margin="0,0,0,14">
@@ -36,62 +101,36 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Categoría -->
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="CATEGORÍA" Foreground="#a0a8c8" FontSize="11" FontWeight="Medium"  Margin="0,0,0,6"/>
-                    <Border Background="#1a1d2e" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="6" Padding="10,8">
-                        <TextBox x:Name="txtCategoria"
-                                 Foreground="#6c7293"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 IsReadOnly="True"
-                                 Text="-"
-                                 FontSize="13"/>
+                    <TextBlock Text="CATEGORÍA" Foreground="#a0a8c8" FontSize="11"
+                               FontWeight="Medium" Margin="0,0,0,6"/>
+                    <Border Background="#1a1d2e" BorderBrush="#3a3f5c" BorderThickness="1"
+                            CornerRadius="6" Padding="10,8">
+                        <TextBox x:Name="txtCategoria" Foreground="#6c7293"
+                                 Background="Transparent" BorderThickness="0"
+                                 IsReadOnly="True" Text="-" FontSize="13"/>
                     </Border>
                 </StackPanel>
 
-                <!-- Precio Unitario -->
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="PRECIO UNIT."
-                               Foreground="#a0a8c8"
-                               FontSize="11"
-                               FontWeight="Medium"
-                               Margin="0,0,0,6"/>
-                    <Border Background="#1a1d2e"
-                            BorderBrush="#3a3f5c"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10,8">
-                        <TextBox x:Name="txtPrecioUnitario"
-                                 Foreground="#6c7293"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 IsReadOnly="True"
-                                 Text="S/ 0.00"
-                                 FontSize="13"/>
+                    <TextBlock Text="PRECIO UNIT." Foreground="#a0a8c8" FontSize="11"
+                               FontWeight="Medium" Margin="0,0,0,6"/>
+                    <Border Background="#1a1d2e" BorderBrush="#3a3f5c" BorderThickness="1"
+                            CornerRadius="6" Padding="10,8">
+                        <TextBox x:Name="txtPrecioUnitario" Foreground="#6c7293"
+                                 Background="Transparent" BorderThickness="0"
+                                 IsReadOnly="True" Text="S/ 0.00" FontSize="13"/>
                     </Border>
                 </StackPanel>
 
-                <!-- Stock -->
                 <StackPanel Grid.Column="4">
-                    <TextBlock Text="STOCK"
-                               Foreground="#a0a8c8"
-                               FontSize="11"
-                               FontWeight="Medium"
-                               Margin="0,0,0,6"/>
-                    <Border x:Name="borderStock"
-                            Background="#1a1d2e"
-                            BorderBrush="#3a3f5c"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10,8">
-                        <TextBox x:Name="txtStock"
-                                 Foreground="#6c7293"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 IsReadOnly="True"
-                                 Text="0"
-                                 FontSize="13"/>
+                    <TextBlock Text="STOCK" Foreground="#a0a8c8" FontSize="11"
+                               FontWeight="Medium" Margin="0,0,0,6"/>
+                    <Border x:Name="borderStock" Background="#1a1d2e" BorderBrush="#3a3f5c"
+                            BorderThickness="1" CornerRadius="6" Padding="10,8">
+                        <TextBox x:Name="txtStock" Foreground="#6c7293"
+                                 Background="Transparent" BorderThickness="0"
+                                 IsReadOnly="True" Text="0" FontSize="13"/>
                     </Border>
                 </StackPanel>
             </Grid>
@@ -104,48 +143,27 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Cantidad -->
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="CANTIDAD"
-                               Foreground="#a0a8c8"
-                               FontSize="11"
-                               FontWeight="Medium"
-                               Margin="0,0,0,6"/>
-                    <Border Background="#252836"
-                            BorderBrush="#3a3f5c"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10,8">
-                        <TextBox x:Name="txtCantidad"
-                                 Foreground="White"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 Text="1"
-                                 FontSize="13"
+                    <TextBlock Text="CANTIDAD" Foreground="#a0a8c8" FontSize="11"
+                               FontWeight="Medium" Margin="0,0,0,6"/>
+                    <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
+                            CornerRadius="6" Padding="10,8">
+                        <TextBox x:Name="txtCantidad" Foreground="White"
+                                 Background="Transparent" BorderThickness="0"
+                                 CaretBrush="White" Text="1" FontSize="13"
                                  TextChanged="txtCantidad_TextChanged"/>
                     </Border>
                 </StackPanel>
 
-                <!-- Subtotal -->
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="SUBTOTAL"
-                               Foreground="#a0a8c8"
-                               FontSize="11"
-                               FontWeight="Medium"
-                               Margin="0,0,0,6"/>
-                    <Border Background="#2e3250"
-                            BorderBrush="#4f6ef7"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10,8">
-                        <TextBox x:Name="txtSubtotal"
-                                 Foreground="#4f6ef7"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 IsReadOnly="True"
-                                 FontWeight="Bold"
-                                 Text="S/ 0.00"
-                                 FontSize="13"/>
+                    <TextBlock Text="SUBTOTAL" Foreground="#a0a8c8" FontSize="11"
+                               FontWeight="Medium" Margin="0,0,0,6"/>
+                    <Border Background="#2e3250" BorderBrush="#4f6ef7" BorderThickness="1"
+                            CornerRadius="6" Padding="10,8">
+                        <TextBox x:Name="txtSubtotal" Foreground="#4f6ef7"
+                                 Background="Transparent" BorderThickness="0"
+                                 IsReadOnly="True" FontWeight="Bold"
+                                 Text="S/ 0.00" FontSize="13"/>
                     </Border>
                 </StackPanel>
             </Grid>
@@ -158,18 +176,15 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0"
-                        Content="Cancelar"
-                        Height="40"
+                <Button Grid.Column="0" x:Name="btnCancelar"
+                        Content="Cancelar" Height="40"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                        BorderBrush="#6c7293"
-                        Foreground="#6c7293"
+                        BorderBrush="#6c7293" Foreground="#6c7293"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Click="btnCancelar_Click"/>
 
-                <Button Grid.Column="2"
-                        Content="Agregar Repuesto"
-                        Height="40"
+                <Button Grid.Column="2" x:Name="btnAgregar"
+                        Content="Agregar Repuesto" Height="40"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Click="btnAgregar_Click">
                     <Button.Style>

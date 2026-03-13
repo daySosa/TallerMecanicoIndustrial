@@ -25,7 +25,8 @@
                     <Image RenderOptions.BitmapScalingMode="HighQuality" Source="c:\users\dsosa\source\repos\annygiron\taller_mecanico\taller_mecanico\vehículos\osm_logo.png"/>
                 </WrapPanel>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnPantallaPrincipal"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 -40 0 15">
                     <WrapPanel Width="250">
@@ -34,7 +35,8 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnInventario"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
                     <WrapPanel Width="250">
@@ -43,7 +45,8 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnVehiculos"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
                     <WrapPanel Width="250">
@@ -52,7 +55,8 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnClientes"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
                     <WrapPanel Width="250">
@@ -61,7 +65,8 @@
                     </WrapPanel>
                 </Button>
 
-                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
+                <Expander x:Name="expContabilidad"
+                          Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Margin="0 0 0 15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
@@ -71,13 +76,15 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button x:Name="btnEgresos"
+                                Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15 0 20 0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button x:Name="btnIngresos"
+                                Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
                                 <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15 0 20 0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
@@ -86,7 +93,8 @@
                     </StackPanel>
                 </Expander>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnOrdenes"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
                     <WrapPanel Width="250">
@@ -95,7 +103,8 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnCerrarSesion"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom" Margin="0 70 0 15">
                     <WrapPanel Width="175">
@@ -129,11 +138,13 @@
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                                 <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280" Width="18" Height="18"
                                                          VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox Background="Transparent" Foreground="#6B7280" BorderThickness="0"
-                                         VerticalAlignment="Center" FontSize="13" Width="200" CaretBrush="White">
+                                <TextBox x:Name="txtBuscar"
+                                         Background="Transparent" Foreground="White" BorderThickness="0"
+                                         VerticalAlignment="Center" FontSize="13" Width="200" CaretBrush="White"
+                                         TextChanged="txtBuscar_TextChanged">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                            <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
+                                            <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar por nombre o placa..."/>
                                             <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
                                         </Style>
                                     </TextBox.Style>
@@ -141,8 +152,29 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Popup de resultados de búsqueda -->
+                        <Popup x:Name="popupBusqueda" PlacementTarget="{Binding ElementName=txtBuscar}"
+                               Placement="Bottom" AllowsTransparency="True" StaysOpen="False">
+                            <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
+                                    CornerRadius="6" MinWidth="300" MaxHeight="200">
+                                <ListBox x:Name="lstResultados" Background="Transparent"
+                                         Foreground="White" BorderThickness="0"
+                                         SelectionChanged="lstResultados_SelectionChanged">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="6,4">
+                                                <TextBlock Text="{Binding NombreCompleto}" FontWeight="SemiBold" Foreground="White"/>
+                                                <TextBlock Text="{Binding InfoVehiculo}" Foreground="#6c7293" FontSize="11"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </Popup>
+
                         <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                            <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
+                            <Button x:Name="btnNotificaciones"
+                                    Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
                                 <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                             </Button>
                             <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
@@ -176,16 +208,22 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- ══════════════ COLUMNA IZQUIERDA ══════════════ -->
                 <StackPanel Grid.Column="0">
 
+                    <!-- CARD CLIENTE -->
                     <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
                                          Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
                         <StackPanel>
                             <TextBlock Text="CLIENTE" Foreground="#6c7293" FontSize="10" FontWeight="Bold" Margin="0,0,0,14"/>
+
                             <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                            <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            <TextBox x:Name="txtClienteNombre"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                     CaretBrush="White" Margin="0,0,0,10" Height="38" VerticalContentAlignment="Center"/>
+                                     CaretBrush="White" Margin="0,0,0,10" Height="38"
+                                     VerticalContentAlignment="Center" IsReadOnly="False"/>
+
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition/>
@@ -194,24 +232,29 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Teléfono" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    <TextBox x:Name="txtClienteTelefono"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Tel. Opcional" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    <TextBox x:Name="txtClienteTelefonoOpcional"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                                 </StackPanel>
                             </Grid>
+
                             <TextBlock Text="Email" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                            <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            <TextBox x:Name="txtClienteEmail"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                     CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                     CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                         </StackPanel>
                     </materialDesign:Card>
 
+                    <!-- CARD VEHÍCULO -->
                     <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
                                          Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
                         <StackPanel>
@@ -224,14 +267,16 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Placa" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    <TextBox x:Name="txtVehiculoPlaca"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
-                                              SelectionChanged="ComboBox_SelectionChanged">
+                                    <ComboBox x:Name="cmbVehiculoMarca"
+                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
+                                              SelectionChanged="cmbVehiculoMarca_SelectionChanged">
                                         <ComboBox.Resources>
                                             <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
                                                 <Setter Property="Foreground" Value="White"/>
@@ -265,6 +310,12 @@
                                         <ComboBoxItem Content="Honda"/>
                                         <ComboBoxItem Content="Ford"/>
                                         <ComboBoxItem Content="Chevrolet"/>
+                                        <ComboBoxItem Content="Nissan"/>
+                                        <ComboBoxItem Content="Hyundai"/>
+                                        <ComboBoxItem Content="Kia"/>
+                                        <ComboBoxItem Content="Volkswagen"/>
+                                        <ComboBoxItem Content="Mazda"/>
+                                        <ComboBoxItem Content="Otro"/>
                                     </ComboBox>
                                 </StackPanel>
                             </Grid>
@@ -276,76 +327,73 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Modelo" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
-                                              SelectionChanged="ComboBox_SelectionChanged">
-                                        <ComboBox.Resources>
-                                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
-                                                <Setter Property="Foreground" Value="White"/>
-                                                <Setter Property="Background" Value="#252836"/>
-                                            </Style>
-                                        </ComboBox.Resources>
-                                        <ComboBox.Template>
-                                            <ControlTemplate TargetType="ComboBox">
-                                                <Grid>
-                                                    <Border Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="4"/>
-                                                    <TextBlock Text="{TemplateBinding SelectionBoxItem}" Foreground="White"
-                                                               Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13"/>
-                                                    <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White" HorizontalAlignment="Right"
-                                                          VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
-                                                    <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                                                           AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                                        <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
-                                                                CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}">
-                                                            <ScrollViewer MaxHeight="200">
-                                                                <ItemsPresenter/>
-                                                            </ScrollViewer>
-                                                        </Border>
-                                                    </Popup>
-                                                    <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                                                  Opacity="0" Focusable="False" Background="Transparent" BorderThickness="0"
-                                                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
-                                                </Grid>
-                                            </ControlTemplate>
-                                        </ComboBox.Template>
-                                        <ComboBoxItem Content="Corolla"/>
-                                        <ComboBoxItem Content="Civic"/>
-                                        <ComboBoxItem Content="F-150"/>
-                                    </ComboBox>
+                                    <TextBox x:Name="txtVehiculoModelo"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Motor" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    <TextBox x:Name="txtVehiculoMotor"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                                 </StackPanel>
                             </Grid>
                             <TextBlock Text="Año" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                            <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            <TextBox x:Name="txtVehiculoAnio"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                     CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                     CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
                         </StackPanel>
                     </materialDesign:Card>
 
+                    <!-- CARD FOTO -->
                     <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
                                          materialDesign:ElevationAssist.Elevation="Dp3">
                         <StackPanel>
                             <TextBlock Text="FOTO" Foreground="#6c7293" FontSize="10" FontWeight="Bold" Margin="0,0,0,12"/>
-                            <Border Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1.5"
-                                    CornerRadius="8" Height="90" Cursor="Hand">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="CameraPlus" Width="26" Height="26"
-                                                             Foreground="#6c7293" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="+ Adjuntar Foto" Foreground="#6c7293" FontSize="12"
-                                               Margin="0,5,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
+                            <Border x:Name="borderFoto" Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1.5"
+                                    CornerRadius="8" Height="130" Cursor="Hand" MouseLeftButtonUp="borderFoto_MouseLeftButtonUp">
+                                <Grid>
+                                    <!-- Placeholder cuando no hay imagen -->
+                                    <StackPanel x:Name="stackFotoPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="CameraPlus" Width="32" Height="32"
+                                                                 Foreground="#6c7293" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="+ Adjuntar Foto" Foreground="#6c7293" FontSize="12"
+                                                   Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="JPG, PNG, BMP" Foreground="#4a4f6a" FontSize="10"
+                                                   Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <!-- Imagen cargada -->
+                                    <Image x:Name="imgFotoVehiculo" Stretch="UniformToFill"
+                                           Visibility="Collapsed" Cursor="Hand"
+                                           MouseLeftButtonUp="borderFoto_MouseLeftButtonUp">
+                                        <Image.Clip>
+                                            <RectangleGeometry RadiusX="8" RadiusY="8"
+                                                               Rect="0,0,254,130"/>
+                                        </Image.Clip>
+                                    </Image>
+                                    <!-- Botón quitar foto -->
+                                    <Button x:Name="btnQuitarFoto" Visibility="Collapsed"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            Margin="0,4,4,0" Width="22" Height="22" Padding="0"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            Foreground="White" Background="#88000000"
+                                            Click="btnQuitarFoto_Click">
+                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14"/>
+                                    </Button>
+                                </Grid>
                             </Border>
                         </StackPanel>
                     </materialDesign:Card>
 
                 </StackPanel>
 
+                <!-- ══════════════ COLUMNA DERECHA ══════════════ -->
                 <StackPanel Grid.Column="2">
 
+                    <!-- CARD DETALLE DE LA ORDEN -->
                     <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
                                          Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
                         <StackPanel>
@@ -364,7 +412,8 @@
 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Estado" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox Background="#2e3250" Foreground="White" BorderBrush="#4f6ef7" Height="38"
+                                    <ComboBox x:Name="cmbOrdenEstado"
+                                              Background="#2e3250" Foreground="White" BorderBrush="#4f6ef7" Height="38"
                                               SelectionChanged="ComboBox_SelectionChanged">
                                         <ComboBox.Resources>
                                             <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
@@ -414,7 +463,8 @@
 
                                 <StackPanel Grid.Column="6">
                                     <TextBlock Text="Orden Nº" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    <TextBox x:Name="txtOrdenNumero"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
                                              CaretBrush="White" Height="38" IsReadOnly="True" VerticalContentAlignment="Center"/>
                                 </StackPanel>
@@ -428,7 +478,8 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Prioridad" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
+                                    <ComboBox x:Name="cmbOrdenPrioridad"
+                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
                                               SelectionChanged="ComboBox_SelectionChanged">
                                         <ComboBox.Resources>
                                             <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
@@ -466,28 +517,31 @@
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    <TextBox x:Name="txtOrdenObservaciones"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
                                              CaretBrush="White" Height="75" TextWrapping="Wrap"
                                              AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
-                                             VerticalContentAlignment="Top" Padding="8"/>
+                                             VerticalContentAlignment="Top" Padding="8" IsReadOnly="False"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
                     </materialDesign:Card>
 
+                    <!-- CARD DETALLE DEL TRABAJO -->
                     <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
                                          Margin="0,0,0,14" MinHeight="350" materialDesign:ElevationAssist.Elevation="Dp3">
                         <StackPanel>
                             <TextBlock Text="Detalle del Trabajo" Foreground="White" FontSize="14"
                                        FontWeight="Medium" Margin="0,0,0,14"/>
 
-                            <Button Content="+ Agregar Repuestos"
+                            <Button x:Name="btnAgregarRepuestos"
+                                    Content="+ Agregar Repuestos"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                     Height="36" HorizontalAlignment="Left" Padding="16,0"
                                     Margin="0,0,0,12" materialDesign:ButtonAssist.CornerRadius="6"
-                                    Click="Button_Click"/>
+                                    Click="btnAgregarRepuestos_Click"/>
 
                             <DataGrid x:Name="dgRepuestos" AutoGenerateColumns="False"
                                       Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
@@ -526,7 +580,7 @@
                                         BorderThickness="1" CornerRadius="6" Padding="10,6">
                                     <TextBox x:Name="txtPrecioRepuesto" Foreground="White" Background="Transparent"
                                              BorderThickness="0" Text="S/ 0.00" HorizontalAlignment="Right"
-                                             TextChanged="txtPrecioRepuesto_TextChanged"/>
+                                             TextChanged="txtPrecio_TextChanged"/>
                                 </Border>
                             </Grid>
 
@@ -541,7 +595,7 @@
                                         BorderThickness="1" CornerRadius="6" Padding="10,6">
                                     <TextBox x:Name="txtPrecioServicio" Foreground="White" Background="Transparent"
                                              BorderThickness="0" Text="S/ 0.00" HorizontalAlignment="Right"
-                                             TextChanged="txtPrecioServicio_TextChanged"/>
+                                             TextChanged="txtPrecio_TextChanged"/>
                                 </Border>
                             </Grid>
 
@@ -564,22 +618,28 @@
                         </StackPanel>
                     </materialDesign:Card>
 
+                    <!-- BOTONES ACCIÓN -->
                     <Border Background="#252836" CornerRadius="12" Padding="18,12">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Cancelar"
+                            <Button x:Name="btnCancelar"
+                                    Content="Cancelar"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     BorderBrush="#6c7293" Foreground="#6c7293"
                                     Height="36" Padding="20,0" Margin="0,0,10,0"
                                     materialDesign:ButtonAssist.CornerRadius="6"
-                                    Click="Button_Click_1"/>
-                            <Button Content="Actualizar"
+                                    Click="btnCancelar_Click"/>
+                            <Button x:Name="btnActualizar"
+                                    Content="Actualizar"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                     Height="36" Padding="20,0" Margin="0,0,10,0"
-                                    materialDesign:ButtonAssist.CornerRadius="6"/>
-                            <Button Content="Añadir" Height="36" Padding="20,0"
                                     materialDesign:ButtonAssist.CornerRadius="6"
-                                    materialDesign:ElevationAssist.Elevation="Dp0">
+                                    Click="btnActualizar_Click"/>
+                            <Button x:Name="btnAniadir"
+                                    Content="Añadir" Height="36" Padding="20,0"
+                                    materialDesign:ButtonAssist.CornerRadius="6"
+                                    materialDesign:ElevationAssist.Elevation="Dp0"
+                                    Click="btnAniadir_Click">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                         <Setter Property="Background" Value="#4f6ef7"/>

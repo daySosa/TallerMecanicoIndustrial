@@ -8,8 +8,9 @@
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Órdenes_de_Trabajo"
         mc:Ignorable="d"
-        Title ="MenúPrincipalÓrdenes" Height="850" Width="1200" 
-        TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"  Background="#1F2128"  WindowStartupLocation="CenterScreen" BorderBrush="#242731" >
+        Title="MenúPrincipalÓrdenes" Height="850" Width="1200"
+        TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow" Background="#1F2128"
+        WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -17,22 +18,19 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
-            <StackPanel Margin="15,0,15 0">
+            <StackPanel Margin="15,0,15,0">
 
-                <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <!--<Image RenderOptions.BitmapScalingMode="HighQuality" Source="" Height="184"/>-->
-                </WrapPanel>
+                <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185"/>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 -40 0 15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
-                                                 Foreground="White" Height="25" Width="38" HorizontalAlignment="Center"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="16">Pantalla Principal</TextBlock>
+                                                 Foreground="White" Height="25" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -41,8 +39,8 @@
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
-                                                 Foreground="White" Height="26" Width="38" HorizontalAlignment="Center"/>
-                        <TextBlock Foreground="White" FontSize="15" Width="142" Height="20">Inventario</TextBlock>
+                                                 Foreground="White" Height="26" Width="38"/>
+                        <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -51,8 +49,8 @@
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
-                                                 Foreground="White" Width="39" HorizontalAlignment="Center" Height="25"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="19">Vehículos</TextBlock>
+                                                 Foreground="White" Width="39" Height="25"/>
+                        <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -62,12 +60,12 @@
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="People" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
-                        <TextBlock Foreground="White" FontSize="15" Width="77" Height="18">Clientes</TextBlock>
+                        <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
 
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
-                          BorderThickness="0" Width="Auto" Height="Auto" Margin="0 0 0 15">
+                          BorderThickness="0" Margin="0 0 0 15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
                             <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
@@ -101,7 +99,7 @@
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="18">Órdenes</TextBlock>
+                        <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
 
@@ -111,15 +109,14 @@
                         VerticalAlignment="Bottom" Margin="0 70 0 15">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center"
-                                                 Foreground="White" Width="39" HorizontalAlignment="Center" Height="21"/>
-                        <TextBlock Foreground="White" FontSize="15" Height="21">Cerrar Sesión</TextBlock>
+                                                 Foreground="White" Width="39" Height="21"/>
+                        <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
 
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- ===== CONTENIDO PRINCIPAL ===== -->
         <Grid Grid.Column="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="539*"/>
@@ -131,7 +128,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- ===== TOP BAR ===== -->
+            <!-- TOP BAR -->
             <Border Grid.Row="0" Background="#1A1D2E" Height="80" Grid.ColumnSpan="2">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -153,12 +150,14 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
                                                      Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Background="Transparent" Foreground="#6B7280"
+                            <TextBox x:Name="txtBuscar"
+                                     Background="Transparent" Foreground="White"
                                      BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White">
+                                     FontSize="13" Width="260" CaretBrush="White"
+                                     TextChanged="txtBuscar_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar..."/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar por nombre o placa..."/>
                                         <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
                                     </Style>
                                 </TextBox.Style>
@@ -167,11 +166,14 @@
                     </Border>
 
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                Foreground="#6B7280" Width="38" Height="38">
+                        <Button x:Name="btnNotificaciones"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Foreground="#6B7280" Width="38" Height="38"
+                                Click="btnNotificaciones_Click">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
-                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
+                        <materialDesign:Badged x:Name="badgeNotif"
+                                               BadgeColorZoneMode="PrimaryMid" Badge="0"
                                                HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     </Grid>
 
@@ -179,7 +181,7 @@
 
                     <StackPanel Grid.Column="4" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="16,0,20,0">
-                        <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
+                        <Border Width="38" Height="38" CornerRadius="18"
                                 Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
@@ -189,7 +191,7 @@
                 </Grid>
             </Border>
 
-            <!-- ===== TOOLBAR: Nueva Orden + Filtrar ===== -->
+            <!-- TOOLBAR -->
             <Grid Grid.Row="1" Margin="20,15,20,10" Grid.ColumnSpan="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -210,11 +212,12 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="2"
+                <Button Grid.Column="2" x:Name="btnFiltrar"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="14,0">
+                        Height="38" Padding="14,0"
+                        Click="btnFiltrar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -223,9 +226,8 @@
                 </Button>
             </Grid>
 
-            <!-- ===== CARD CON DATAGRID ===== -->
-            <materialDesign:Card Grid.Row="2"
-                                 Background="#1E2A3A"
+            <!-- DATAGRID -->
+            <materialDesign:Card Grid.Row="2" Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
                                  UniformCornerRadius="10"
                                  Margin="20,0,20,20" Grid.ColumnSpan="2">
@@ -237,8 +239,13 @@
 
                     <Border Grid.Row="0" Padding="20,16"
                             BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
-                        <TextBlock Text="Órdenes Recientes"
-                                   Foreground="White" FontSize="15" FontWeight="Medium"/>
+                        <Grid>
+                            <TextBlock Text="Órdenes Recientes" Foreground="White"
+                                       FontSize="15" FontWeight="Medium"/>
+                            <TextBlock x:Name="txtContador" Foreground="#6B7280"
+                                       FontSize="13" HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
                     </Border>
 
                     <DataGrid Grid.Row="1" x:Name="dgOrdenes"
@@ -252,9 +259,7 @@
                               Background="Transparent" Foreground="White"
                               BorderThickness="0" RowBackground="Transparent"
                               AlternatingRowBackground="#162030"
-                              ColumnHeaderHeight="40" RowHeight="55"
-                              HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch">
+                              ColumnHeaderHeight="40" RowHeight="55">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -299,7 +304,6 @@
                         </DataGrid.CellStyle>
 
                         <DataGrid.Columns>
-
                             <DataGridTextColumn Header="No" Binding="{Binding NumeroOrden}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="{x:Type TextBlock}">
@@ -324,7 +328,7 @@
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding NombreCliente}"
                                                            Foreground="White" FontSize="13" FontWeight="Medium"/>
-                                                <TextBlock Text="{Binding CodigoOrden}"
+                                                <TextBlock Text="{Binding Placa}"
                                                            Foreground="#8B9BB4" FontSize="11"/>
                                             </StackPanel>
                                         </StackPanel>
@@ -336,10 +340,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center" Margin="12,0">
-                                            <TextBlock Text="{Binding FechaOrden, StringFormat=MMMM dd\, yyyy}"
+                                            <TextBlock Text="{Binding FechaOrden, StringFormat=dd/MM/yyyy}"
                                                        Foreground="White" FontSize="12"/>
-                                            <TextBlock Text="{Binding HoraOrden}"
-                                                       Foreground="#8B9BB4" FontSize="11"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -399,12 +401,10 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </materialDesign:Card>
-
         </Grid>
     </Grid>
 </Window>
