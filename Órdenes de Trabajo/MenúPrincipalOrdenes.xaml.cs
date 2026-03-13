@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Data;
 
 namespace Órdenes_de_Trabajo
 {
@@ -21,142 +22,214 @@ namespace Órdenes_de_Trabajo
             public decimal Precio { get; set; }
         }
 
-        private List<OrdenItem> _todasLasOrdenes = new();
-        private ObservableCollection<OrdenItem> _ordenesFiltradas = new();
-        private string _filtroEstadoActual = "Todos";
+        private clsConexion _conexion = new clsConexion();
+        private ObservableCollection<OrdenItem> _listaOrdenes = new ObservableCollection<OrdenItem>();
+        private ICollectionView _vistaOrdenes;
+
+        private string _filtroEstado = "Todos";
+        private string _filtroPrioridad = "Todos";
 
         public MenúPrincipalOrdenes()
         {
             InitializeComponent();
-            dgOrdenes.ItemsSource = _ordenesFiltradas;
-            CargarDatosEjemplo();
+            CargarDatosDesdeDB();
         }
 
-        private void CargarDatosEjemplo()
+        private void CargarDatosDesdeDB()
         {
-            _todasLasOrdenes = new List<OrdenItem>
             {
-                new OrdenItem { NumeroOrden=1, NombreCliente="Carlos Mendoza", Placa="ABC-123", FechaOrden=DateTime.Today,            Estado="En Espera", Prioridad="Normal",  Precio=1500 },
-                new OrdenItem { NumeroOrden=2, NombreCliente="María López",    Placa="XYZ-456", FechaOrden=DateTime.Today.AddDays(-1), Estado="Reparando", Prioridad="Alta",    Precio=3200 },
-                new OrdenItem { NumeroOrden=3, NombreCliente="Juan Pérez",     Placa="DEF-789", FechaOrden=DateTime.Today.AddDays(-2), Estado="Finalizado",Prioridad="Normal",  Precio=800  },
-                new OrdenItem { NumeroOrden=4, NombreCliente="Ana Sosa",       Placa="GHI-321", FechaOrden=DateTime.Today.AddDays(-3), Estado="En Espera", Prioridad="Urgente", Precio=5000 },
-                new OrdenItem { NumeroOrden=5, NombreCliente="Luis Torres",    Placa="JKL-654", FechaOrden=DateTime.Today.AddDays(-4), Estado="Reparando", Prioridad="Alta",    Precio=2100 },
-            };
+                _listaOrdenes.Clear();
 
-            AplicarFiltros();
-            ActualizarNotificaciones();
+                try
+                {
+                    _conexion.Abrir();
+
+                    string query = @"
+                    SELECT
+                        o.Orden_ID AS NumeroOrden,
+                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCliente,
+                        v.Vehiculo_Placa AS Placa,
+                        o.Fecha AS FechaOrden,
+                        o.Estado,
+                        'Normal' AS Prioridad,
+                        ISNULL(o.OrdenPrecio_Total, 0) AS Precio
+                    FROM Orden_Trabajo o
+                    INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
+                    INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
+                    ORDER BY o.Orden_ID DESC";
+
+                    using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            _listaOrdenes.Add(new OrdenItem
+                            {
+                                NumeroOrden = Convert.ToInt32(reader["NumeroOrden"]),
+                                NombreCliente = reader["NombreCliente"].ToString(),
+                                Placa = reader["Placa"].ToString(),
+                                FechaOrden = Convert.ToDateTime(reader["FechaOrden"]),
+                                Estado = reader["Estado"].ToString(),
+                                Prioridad = reader["Prioridad"].ToString(),
+                                Precio = Convert.ToDecimal(reader["Precio"])
+                            });
+                        }
+                    }
+
+                    _vistaOrdenes = CollectionViewSource.GetDefaultView(_listaOrdenes);
+                    _vistaOrdenes.Filter = AplicarFiltros;
+                    dgOrdenes.ItemsSource = _vistaOrdenes;
+
+                    int pendientes = _listaOrdenes.Count(o => o.Estado == "En Espera");
+                    badgeNotif.Badge = pendientes;
+
+                    if (txtContador != null)
+                        txtContador.Text = $"{_listaOrdenes.Count} orden(es)";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al cargar órdenes:\n" + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally { _conexion.Cerrar(); }
+            }
+        }
+
+        private bool AplicarFiltros(object item)
+        {
+            if (item is not OrdenItem o) return false;
+
+            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+
+            bool pasaBusqueda = string.IsNullOrEmpty(texto) ||
+                                o.NombreCliente.ToLower().Contains(texto) ||
+                                o.Placa.ToLower().Contains(texto) ||
+                                o.NumeroOrden.ToString().Contains(texto);
+
+            bool pasaEstado = _filtroEstado == "Todos" || o.Estado == _filtroEstado;
+            bool pasaPrioridad = _filtroPrioridad == "Todos" || o.Prioridad == _filtroPrioridad;
+
+            return pasaBusqueda && pasaEstado && pasaPrioridad;
         }
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
-            => AplicarFiltros();
-
-        private void btnFiltrar_Click(object sender, RoutedEventArgs e)
         {
-            var opciones = new[] { "Todos", "En Espera", "Reparando", "Finalizado" };
-
-            var ventana = new Window
-            {
-                Title = "Filtrar por Estado",
-                Width = 260,
-                Height = 200,
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#252836")),
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = this,
-                ResizeMode = ResizeMode.NoResize
-            };
-
-            var stack = new StackPanel { Margin = new Thickness(20) };
-
-            var label = new TextBlock
-            {
-                Text = "Filtrar por estado:",
-                Foreground = Brushes.White,
-                FontSize = 13,
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-
-            var cmb = new ComboBox { Height = 36, Margin = new Thickness(0, 0, 0, 16) };
-            foreach (var op in opciones) cmb.Items.Add(op);
-            cmb.SelectedItem = _filtroEstadoActual;
-
-            var btn = new Button
-            {
-                Content = "Aplicar",
-                Height = 36,
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3D7EFF")),
-                BorderThickness = new Thickness(0)
-            };
-
-            btn.Click += (s, ev) =>
-            {
-                _filtroEstadoActual = cmb.SelectedItem?.ToString() ?? "Todos";
-                AplicarFiltros();
-                ventana.Close();
-            };
-
-            stack.Children.Add(label);
-            stack.Children.Add(cmb);
-            stack.Children.Add(btn);
-            ventana.Content = stack;
-            ventana.ShowDialog();
-        }
-
-        private void AplicarFiltros()
-        {
-            string buscar = txtBuscar?.Text?.Trim().ToLower() ?? string.Empty;
-
-            var resultado = _todasLasOrdenes.AsEnumerable();
-
-            if (!string.IsNullOrEmpty(buscar))
-                resultado = resultado.Where(o =>
-                    o.NombreCliente.ToLower().Contains(buscar) ||
-                    o.Placa.ToLower().Contains(buscar));
-
-            if (_filtroEstadoActual != "Todos")
-                resultado = resultado.Where(o => o.Estado == _filtroEstadoActual);
-
-            _ordenesFiltradas.Clear();
-            foreach (var item in resultado)
-                _ordenesFiltradas.Add(item);
-
-            if (txtContador != null)
-                txtContador.Text = $"{_ordenesFiltradas.Count} orden(es)";
-        }
-
-        private void ActualizarNotificaciones()
-        {
-            int count = _todasLasOrdenes.Count(o =>
-                o.Prioridad == "Urgente" || o.Estado == "En Espera");
-            badgeNotif.Badge = count > 0 ? count.ToString() : "0";
+            _vistaOrdenes?.Refresh();
         }
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
-            var pendientes = _todasLasOrdenes
-                .Where(o => o.Prioridad == "Urgente" || o.Estado == "En Espera")
+            if (!popupNotificaciones.IsOpen)
+                CargarNotificacionesEnPopup();
+            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+        }
+
+        private void CargarNotificacionesEnPopup()
+        {
+            panelNotificaciones.Children.Clear();
+
+            var pendientes = _listaOrdenes
+                .Where(o => o.Estado == "En Espera" || o.Prioridad == "Urgente")
                 .ToList();
 
             if (pendientes.Count == 0)
             {
-                MessageBox.Show("No hay notificaciones pendientes.", "Notificaciones",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
+                var vacio = new StackPanel
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 20, 0, 20)
+                };
+
+                vacio.Children.Add(new MaterialDesignThemes.Wpf.PackIcon
+                {
+                    Kind = MaterialDesignThemes.Wpf.PackIconKind.PartyPopper,
+                    Width = 48,
+                    Height = 48,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6B7280"))
+                });
+
+                vacio.Children.Add(new TextBlock
+                {
+                    Text = "Sin notificaciones pendientes",
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6B7280")),
+                    FontSize = 12,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 8, 0, 0)
+                });
+
+                panelNotificaciones.Children.Add(vacio);
+                badgeContadorPopup.Visibility = Visibility.Collapsed;
                 return;
             }
 
-            string msg = "⚠️ Órdenes que requieren atención:\n\n";
-            foreach (var o in pendientes)
-                msg += $"• #{o.NumeroOrden} — {o.NombreCliente} ({o.Placa}) — {o.Estado} [{o.Prioridad}]\n";
+            txtContadorPopup.Text = pendientes.Count.ToString();
+            badgeContadorPopup.Visibility = Visibility.Visible;
 
-            MessageBox.Show(msg, $"Notificaciones ({pendientes.Count})",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+            foreach (var o in pendientes)
+            {
+                var tarjeta = new Border
+                {
+                    Background = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#162030")),
+                    CornerRadius = new CornerRadius(8),
+                    Margin = new Thickness(10, 4, 10, 4),
+                    Padding = new Thickness(12, 10, 12, 10)
+                };
+
+                var stack = new StackPanel { Orientation = Orientation.Horizontal };
+
+                var icono = new MaterialDesignThemes.Wpf.PackIcon
+                {
+                    Kind = o.Prioridad == "Urgente"
+                        ? MaterialDesignThemes.Wpf.PackIconKind.AlertCircle
+                        : MaterialDesignThemes.Wpf.PackIconKind.ClipboardAlert,
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(
+                            o.Prioridad == "Urgente" ? "#f44336" : "#F0A500")),
+                    Width = 20,
+                    Height = 20,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 10, 0)
+                };
+
+                var info = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                info.Children.Add(new TextBlock
+                {
+                    Text = o.Prioridad == "Urgente"
+                        ? $"Orden #{o.NumeroOrden} — Urgente"
+                        : $"Orden #{o.NumeroOrden} en espera",
+                    Foreground = System.Windows.Media.Brushes.White,
+                    FontSize = 12,
+                    FontWeight = FontWeights.Medium
+                });
+                info.Children.Add(new TextBlock
+                {
+                    Text = $"{o.NombreCliente} — {o.Placa}",
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6B7280")),
+                    FontSize = 11
+                });
+
+                stack.Children.Add(icono);
+                stack.Children.Add(info);
+                tarjeta.Child = stack;
+                panelNotificaciones.Children.Add(tarjeta);
+            }
+        }
+
+        private void btnFiltrar_Click(object sender, RoutedEventArgs e)
+        {
+            // pendiente
         }
 
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow ventana = new MainWindow();
-            ventana.Show();
-            this.Close();
+            var ventana = new MainWindow();
+            ventana.ShowDialog();
+            CargarDatosDesdeDB();
         }
     }
 }

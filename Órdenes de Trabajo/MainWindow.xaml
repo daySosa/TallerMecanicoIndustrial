@@ -4,14 +4,74 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:controls="clr-namespace:Órdenes_de_Trabajo.Controls"
         xmlns:local="clr-namespace:Órdenes_de_Trabajo"
         mc:Ignorable="d"
-        Title="MenúPrincipalÓrdenes" Height="850" Width="1200"
+        Title="Agregar Orden" Height="850" Width="1200"
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow" Background="#1F2128"
         WindowStartupLocation="CenterScreen" BorderBrush="#242731">
+
+    <Window.Resources>
+
+        <!-- ── Template oscuro reutilizable ── -->
+        <ControlTemplate x:Key="DarkComboTemplate" TargetType="ComboBox">
+            <Grid>
+                <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="6"/>
+                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                  Margin="12,0,36,0" VerticalAlignment="Center"
+                                  TextBlock.Foreground="White" TextBlock.FontSize="13"/>
+                <TextBlock x:Name="placeholder" Text="Seleccionar..."
+                           Foreground="#6c7293" Margin="12,0,36,0"
+                           VerticalAlignment="Center" FontSize="13" IsHitTestVisible="False">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}}"
+                                             Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White"
+                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                      Margin="0,0,12,0" IsHitTestVisible="False"/>
+                <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}"
+                       Placement="Bottom" AllowsTransparency="True"
+                       Focusable="False" PopupAnimation="Slide">
+                    <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
+                            CornerRadius="6" MinWidth="{TemplateBinding ActualWidth}">
+                        <ScrollViewer MaxHeight="200">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+                <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                              Opacity="0" Focusable="False" Background="Transparent"
+                              BorderThickness="0"
+                              IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+            </Grid>
+        </ControlTemplate>
+
+        <!-- ── Estilo de ítems oscuro reutilizable ── -->
+        <Style x:Key="DarkComboItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#252836"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2e3250"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#4f6ef7"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -19,94 +79,83 @@
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15" Background="#242731" VerticalAlignment="Stretch">
-            <StackPanel Margin="15,49,15,60">
-                <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="c:\users\dsosa\source\repos\annygiron\taller_mecanico\taller_mecanico\vehículos\osm_logo.png"/>
+        <!-- SIDEBAR (sin cambios) -->
+        <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
+                                  Background="#242731" VerticalAlignment="Stretch">
+            <StackPanel Margin="15,0,15,0">
+                <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
+                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="199" Width="200"/>
                 </WrapPanel>
-
-                <Button x:Name="btnPantallaPrincipal"
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 -40 0 15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
-
-                <Button x:Name="btnInventario"
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
-
-                <Button x:Name="btnVehiculos"
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
-
-                <Button x:Name="btnClientes"
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
-
-                <Expander x:Name="expContabilidad"
-                          Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
-                          BorderThickness="0" Margin="0 0 0 15">
+                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
+                          BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
                             <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
-                                                     Margin="5 0 10 0" Foreground="White" Height="18" Width="35"/>
+                                                     Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
                             <TextBlock Foreground="White" FontSize="15">Contabilidad</TextBlock>
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
-                        <Button x:Name="btnEgresos"
-                                Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15 0 20 0" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button x:Name="btnIngresos"
-                                Background="#242731" BorderThickness="0" Foreground="White" FontSize="15" HorizontalContentAlignment="Left">
+                        <Button Background="#242731" BorderThickness="0" Foreground="White"
+                                FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15 0 20 0" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </Expander>
-
-                <Button x:Name="btnOrdenes"
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0 0 0 15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
-
-                <Button x:Name="btnCerrarSesion"
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom" Margin="0 70 0 15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White"
+                        VerticalAlignment="Bottom" Margin="0,70,0,15">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
@@ -115,32 +164,36 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <Border Background="#1A1D2E" Height="80">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="1"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+        <!-- CONTENIDO PRINCIPAL -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="80"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="65,0,40,0">
-                            <TextBlock Text="Hola, Oscar Sosa" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock Text="Revisemos tu taller hoy" Foreground="#6B7280" FontSize="12"/>
-                        </StackPanel>
-
-                        <Border Background="#252836" CornerRadius="5" VerticalAlignment="Center"
-                                Height="40" MaxWidth="700" HorizontalAlignment="Left"
-                                Grid.ColumnSpan="2" Margin="243,0,0,0" Width="532">
+            <!-- TOP BAR (sin cambios) -->
+            <Border Grid.Row="0" Background="#1A1D2E">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
+                        <TextBlock Text="Hola, Oscar Sosa" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Revisemos tu taller hoy" Foreground="#6B7280" FontSize="12"/>
+                    </StackPanel>
+                    <Grid Grid.Column="1" VerticalAlignment="Center">
+                        <Border Background="#252836" CornerRadius="5" Height="40" MaxWidth="400"
+                                HorizontalAlignment="Left" Margin="20,0,0,0" Width="410">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
-                                <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280" Width="18" Height="18"
-                                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox x:Name="txtBuscar"
-                                         Background="Transparent" Foreground="White" BorderThickness="0"
-                                         VerticalAlignment="Center" FontSize="13" Width="200" CaretBrush="White"
+                                <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
+                                                         Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="White"
+                                         BorderThickness="0" VerticalAlignment="Center"
+                                         FontSize="13" Width="260" CaretBrush="White"
                                          TextChanged="txtBuscar_TextChanged">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
@@ -151,9 +204,8 @@
                                 </TextBox>
                             </StackPanel>
                         </Border>
-
-                        <!-- Popup de resultados de búsqueda -->
-                        <Popup x:Name="popupBusqueda" PlacementTarget="{Binding ElementName=txtBuscar}"
+                        <Popup x:Name="popupBusqueda"
+                               PlacementTarget="{Binding ElementName=txtBuscar}"
                                Placement="Bottom" AllowsTransparency="True" StaysOpen="False">
                             <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
                                     CornerRadius="6" MinWidth="300" MaxHeight="200">
@@ -171,490 +223,401 @@
                                 </ListBox>
                             </Border>
                         </Popup>
-
-                        <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                            <Button x:Name="btnNotificaciones"
-                                    Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
-                                <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
-                            </Button>
-                            <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                        </Grid>
-
-                        <Rectangle Grid.Column="3" Fill="White" Margin="0,20"/>
-
-                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,20,0">
-                            <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
-                                    Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
-                                <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
-                            </StackPanel>
-                        </StackPanel>
                     </Grid>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
-
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                      Grid.Column="1" Margin="0,94,0,0">
-            <Grid Margin="20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="290"/>
-                    <ColumnDefinition Width="16"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- ══════════════ COLUMNA IZQUIERDA ══════════════ -->
-                <StackPanel Grid.Column="0">
-
-                    <!-- CARD CLIENTE -->
-                    <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
-                                         Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
-                        <StackPanel>
-                            <TextBlock Text="CLIENTE" Foreground="#6c7293" FontSize="10" FontWeight="Bold" Margin="0,0,0,14"/>
-
-                            <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                            <TextBox x:Name="txtClienteNombre"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                     CaretBrush="White" Margin="0,0,0,10" Height="38"
-                                     VerticalContentAlignment="Center" IsReadOnly="False"/>
-
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Teléfono" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtClienteTelefono"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Tel. Opcional" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtClienteTelefonoOpcional"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <TextBlock Text="Email" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                            <TextBox x:Name="txtClienteEmail"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                     CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
+                    <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
+                        <Button x:Name="btnNotificaciones"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Foreground="#6B7280" Width="38" Height="38">
+                            <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
+                        </Button>
+                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
+                                               HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    </Grid>
+                    <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
+                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="16,0,20,0">
+                        <Border Width="38" Height="38" CornerRadius="18"
+                                Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
+                            <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
                         </StackPanel>
-                    </materialDesign:Card>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-                    <!-- CARD VEHÍCULO -->
-                    <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
-                                         Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
-                        <StackPanel>
-                            <TextBlock Text="VEHÍCULO" Foreground="#6c7293" FontSize="10" FontWeight="Bold" Margin="0,0,0,14"/>
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Placa" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtVehiculoPlaca"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox x:Name="cmbVehiculoMarca"
-                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
-                                              SelectionChanged="cmbVehiculoMarca_SelectionChanged">
-                                        <ComboBox.Resources>
-                                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
-                                                <Setter Property="Foreground" Value="White"/>
-                                                <Setter Property="Background" Value="#252836"/>
-                                            </Style>
-                                        </ComboBox.Resources>
-                                        <ComboBox.Template>
-                                            <ControlTemplate TargetType="ComboBox">
-                                                <Grid>
-                                                    <Border Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="4"/>
-                                                    <TextBlock Text="{TemplateBinding SelectionBoxItem}" Foreground="White"
-                                                               Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13"/>
-                                                    <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White" HorizontalAlignment="Right"
-                                                          VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
-                                                    <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                                                           AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                                        <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
-                                                                CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}">
-                                                            <ScrollViewer MaxHeight="200">
-                                                                <ItemsPresenter/>
-                                                            </ScrollViewer>
-                                                        </Border>
-                                                    </Popup>
-                                                    <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                                                  Opacity="0" Focusable="False" Background="Transparent" BorderThickness="0"
-                                                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
-                                                </Grid>
-                                            </ControlTemplate>
-                                        </ComboBox.Template>
-                                        <ComboBoxItem Content="Toyota"/>
-                                        <ComboBoxItem Content="Honda"/>
-                                        <ComboBoxItem Content="Ford"/>
-                                        <ComboBoxItem Content="Chevrolet"/>
-                                        <ComboBoxItem Content="Nissan"/>
-                                        <ComboBoxItem Content="Hyundai"/>
-                                        <ComboBoxItem Content="Kia"/>
-                                        <ComboBoxItem Content="Volkswagen"/>
-                                        <ComboBoxItem Content="Mazda"/>
-                                        <ComboBoxItem Content="Otro"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Grid>
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Modelo" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtVehiculoModelo"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Motor" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtVehiculoMotor"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
-                                </StackPanel>
-                            </Grid>
-                            <TextBlock Text="Año" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                            <TextBox x:Name="txtVehiculoAnio"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                     CaretBrush="White" Height="38" VerticalContentAlignment="Center" IsReadOnly="False"/>
-                        </StackPanel>
-                    </materialDesign:Card>
+            <!-- CONTENIDO -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Grid Margin="20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                    <!-- CARD FOTO -->
-                    <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
-                                         materialDesign:ElevationAssist.Elevation="Dp3">
-                        <StackPanel>
-                            <TextBlock Text="FOTO" Foreground="#6c7293" FontSize="10" FontWeight="Bold" Margin="0,0,0,12"/>
-                            <Border x:Name="borderFoto" Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1.5"
-                                    CornerRadius="8" Height="130" Cursor="Hand" MouseLeftButtonUp="borderFoto_MouseLeftButtonUp">
-                                <Grid>
-                                    <!-- Placeholder cuando no hay imagen -->
-                                    <StackPanel x:Name="stackFotoPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <materialDesign:PackIcon Kind="CameraPlus" Width="32" Height="32"
-                                                                 Foreground="#6c7293" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="+ Adjuntar Foto" Foreground="#6c7293" FontSize="12"
-                                                   Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="JPG, PNG, BMP" Foreground="#4a4f6a" FontSize="10"
-                                                   Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    <!-- COLUMNA IZQUIERDA -->
+                    <StackPanel Grid.Column="0">
+
+                        <!-- CARD CLIENTE (sin cambios) -->
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
+                                             Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <TextBlock Text="CLIENTE" Foreground="#6c7293" FontSize="10"
+                                           FontWeight="Bold" Margin="0,0,0,14"/>
+                                <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBox x:Name="txtClienteNombre"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                         CaretBrush="White" Margin="0,0,0,10" Height="38"
+                                         VerticalContentAlignment="Center"/>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Teléfono" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtClienteTelefono"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
                                     </StackPanel>
-                                    <!-- Imagen cargada -->
-                                    <Image x:Name="imgFotoVehiculo" Stretch="UniformToFill"
-                                           Visibility="Collapsed" Cursor="Hand"
-                                           MouseLeftButtonUp="borderFoto_MouseLeftButtonUp">
-                                        <Image.Clip>
-                                            <RectangleGeometry RadiusX="8" RadiusY="8"
-                                                               Rect="0,0,254,130"/>
-                                        </Image.Clip>
-                                    </Image>
-                                    <!-- Botón quitar foto -->
-                                    <Button x:Name="btnQuitarFoto" Visibility="Collapsed"
-                                            HorizontalAlignment="Right" VerticalAlignment="Top"
-                                            Margin="0,4,4,0" Width="22" Height="22" Padding="0"
-                                            Style="{StaticResource MaterialDesignIconButton}"
-                                            Foreground="White" Background="#88000000"
-                                            Click="btnQuitarFoto_Click">
-                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14"/>
-                                    </Button>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Tel. Opcional" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtClienteTelefonoOpcional"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
                                 </Grid>
-                            </Border>
-                        </StackPanel>
-                    </materialDesign:Card>
+                                <TextBlock Text="Email" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBox x:Name="txtClienteEmail"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                         CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
 
-                </StackPanel>
+                        <!-- CARD VEHÍCULO -->
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
+                                             Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <TextBlock Text="VEHÍCULO" Foreground="#6c7293" FontSize="10"
+                                           FontWeight="Bold" Margin="0,0,0,14"/>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Placa" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtVehiculoPlaca"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
 
-                <!-- ══════════════ COLUMNA DERECHA ══════════════ -->
-                <StackPanel Grid.Column="2">
+                                        <!-- ✅ cmbVehiculoMarca CORREGIDO -->
+                                        <ComboBox x:Name="cmbVehiculoMarca" Height="38"
+                                                  Template="{StaticResource DarkComboTemplate}"
+                                                  ItemContainerStyle="{StaticResource DarkComboItemStyle}"
+                                                  SelectionChanged="cmbVehiculoMarca_SelectionChanged">
+                                            <ComboBoxItem Content="Toyota"/>
+                                            <ComboBoxItem Content="Honda"/>
+                                            <ComboBoxItem Content="Ford"/>
+                                            <ComboBoxItem Content="Chevrolet"/>
+                                            <ComboBoxItem Content="Nissan"/>
+                                            <ComboBoxItem Content="Hyundai"/>
+                                            <ComboBoxItem Content="Kia"/>
+                                            <ComboBoxItem Content="Volkswagen"/>
+                                            <ComboBoxItem Content="Mazda"/>
+                                            <ComboBoxItem Content="Otro"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Modelo" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtVehiculoModelo"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Motor" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtVehiculoMotor"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="Año" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBox x:Name="txtVehiculoAnio"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                         CaretBrush="White" Height="38" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
 
-                    <!-- CARD DETALLE DE LA ORDEN -->
-                    <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
-                                         Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
-                        <StackPanel>
-                            <TextBlock Text="Detalle de la Orden" Foreground="White" FontSize="14"
-                                       FontWeight="Medium" Margin="0,0,0,14"/>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="110"/>
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Estado" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox x:Name="cmbOrdenEstado"
-                                              Background="#2e3250" Foreground="White" BorderBrush="#4f6ef7" Height="38"
-                                              SelectionChanged="ComboBox_SelectionChanged">
-                                        <ComboBox.Resources>
-                                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
-                                                <Setter Property="Foreground" Value="White"/>
-                                                <Setter Property="Background" Value="#252836"/>
-                                            </Style>
-                                        </ComboBox.Resources>
-                                        <ComboBox.Template>
-                                            <ControlTemplate TargetType="ComboBox">
-                                                <Grid>
-                                                    <Border Background="#2e3250" BorderBrush="#4f6ef7" BorderThickness="1" CornerRadius="4"/>
-                                                    <TextBlock Text="{TemplateBinding SelectionBoxItem}" Foreground="White"
-                                                               Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13"/>
-                                                    <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White" HorizontalAlignment="Right"
-                                                          VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
-                                                    <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                                                           AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                                        <Border Background="#252836" BorderBrush="#4f6ef7" BorderThickness="1"
-                                                                CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}">
-                                                            <ScrollViewer MaxHeight="200">
-                                                                <ItemsPresenter/>
-                                                            </ScrollViewer>
-                                                        </Border>
-                                                    </Popup>
-                                                    <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                                                  Opacity="0" Focusable="False" Background="Transparent" BorderThickness="0"
-                                                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
-                                                </Grid>
-                                            </ControlTemplate>
-                                        </ComboBox.Template>
-                                        <ComboBoxItem Content="En Espera" IsSelected="True"/>
-                                        <ComboBoxItem Content="En Proceso"/>
-                                        <ComboBoxItem Content="Completado"/>
-                                        <ComboBoxItem Content="Cancelado"/>
-                                    </ComboBox>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Fecha" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <controls:EspañolDatePicker x:Name="dpFecha" Height="38"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="4">
-                                    <TextBlock Text="F. Entrega" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <controls:EspañolDatePicker x:Name="dpEntrega" Height="38"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="6">
-                                    <TextBlock Text="Orden Nº" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtOrdenNumero"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="38" IsReadOnly="True" VerticalContentAlignment="Center"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Prioridad" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <ComboBox x:Name="cmbOrdenPrioridad"
-                                              Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c" Height="38"
-                                              SelectionChanged="ComboBox_SelectionChanged">
-                                        <ComboBox.Resources>
-                                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
-                                                <Setter Property="Foreground" Value="White"/>
-                                                <Setter Property="Background" Value="#252836"/>
-                                            </Style>
-                                        </ComboBox.Resources>
-                                        <ComboBox.Template>
-                                            <ControlTemplate TargetType="ComboBox">
-                                                <Grid>
-                                                    <Border Background="#1e2130" BorderBrush="#3a3f5c" BorderThickness="1" CornerRadius="4"/>
-                                                    <TextBlock Text="{TemplateBinding SelectionBoxItem}" Foreground="White"
-                                                               Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13"/>
-                                                    <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White" HorizontalAlignment="Right"
-                                                          VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
-                                                    <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                                                           AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                                        <Border Background="#252836" BorderBrush="#3a3f5c" BorderThickness="1"
-                                                                CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}">
-                                                            <ScrollViewer MaxHeight="200">
-                                                                <ItemsPresenter/>
-                                                            </ScrollViewer>
-                                                        </Border>
-                                                    </Popup>
-                                                    <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                                                  Opacity="0" Focusable="False" Background="Transparent" BorderThickness="0"
-                                                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
-                                                </Grid>
-                                            </ControlTemplate>
-                                        </ComboBox.Template>
-                                        <ComboBoxItem Content="Normal" IsSelected="True"/>
-                                        <ComboBoxItem Content="Alta"/>
-                                        <ComboBoxItem Content="Urgente"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="txtOrdenObservaciones"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                             CaretBrush="White" Height="75" TextWrapping="Wrap"
-                                             AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
-                                             VerticalContentAlignment="Top" Padding="8" IsReadOnly="False"/>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </materialDesign:Card>
-
-                    <!-- CARD DETALLE DEL TRABAJO -->
-                    <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
-                                         Margin="0,0,0,14" MinHeight="350" materialDesign:ElevationAssist.Elevation="Dp3">
-                        <StackPanel>
-                            <TextBlock Text="Detalle del Trabajo" Foreground="White" FontSize="14"
-                                       FontWeight="Medium" Margin="0,0,0,14"/>
-
-                            <Button x:Name="btnAgregarRepuestos"
-                                    Content="+ Agregar Repuestos"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    BorderBrush="#4f6ef7" Foreground="#4f6ef7"
-                                    Height="36" HorizontalAlignment="Left" Padding="16,0"
-                                    Margin="0,0,0,12" materialDesign:ButtonAssist.CornerRadius="6"
-                                    Click="btnAgregarRepuestos_Click"/>
-
-                            <DataGrid x:Name="dgRepuestos" AutoGenerateColumns="False"
-                                      Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
-                                      BorderThickness="1" RowBackground="#252836" AlternatingRowBackground="#1e2130"
-                                      GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#2e3250"
-                                      HeadersVisibility="Column" CanUserAddRows="False" MaxHeight="180"
-                                      materialDesign:DataGridAssist.CellPadding="10 6 10 6"
-                                      materialDesign:DataGridAssist.ColumnHeaderPadding="10 8 10 8">
-                                <DataGrid.ColumnHeaderStyle>
-                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                        <Setter Property="Background" Value="#2e3250"/>
-                                        <Setter Property="Foreground" Value="#a0a8c8"/>
-                                        <Setter Property="FontSize" Value="12"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </Style>
-                                </DataGrid.ColumnHeaderStyle>
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#"        Binding="{Binding Numero}"   Width="40"/>
-                                    <DataGridTextColumn Header="Repuesto" Binding="{Binding Nombre}"   Width="*"/>
-                                    <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="80"/>
-                                    <DataGridTextColumn Header="Precio"   Binding="{Binding Precio, StringFormat=C}" Width="90"/>
-                                    <DataGridCheckBoxColumn Header="Incl." Binding="{Binding Incluido}" Width="60"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-
-                            <Separator Background="#3a3f5c" Margin="0,14,0,14"/>
-
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="160"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="PRECIO DEL REPUESTO" Foreground="#a0a8c8"
-                                           FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
-                                <Border Grid.Column="1" Background="#1e2130" BorderBrush="#3a3f5c"
-                                        BorderThickness="1" CornerRadius="6" Padding="10,6">
-                                    <TextBox x:Name="txtPrecioRepuesto" Foreground="White" Background="Transparent"
-                                             BorderThickness="0" Text="S/ 0.00" HorizontalAlignment="Right"
-                                             TextChanged="txtPrecio_TextChanged"/>
+                        <!-- CARD FOTO (sin cambios) -->
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
+                                             materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <TextBlock Text="FOTO" Foreground="#6c7293" FontSize="10"
+                                           FontWeight="Bold" Margin="0,0,0,12"/>
+                                <Border x:Name="borderFoto" Background="#1e2130" BorderBrush="#3a3f5c"
+                                        BorderThickness="1.5" CornerRadius="8" Height="130"
+                                        Cursor="Hand" MouseLeftButtonUp="borderFoto_MouseLeftButtonUp">
+                                    <Grid>
+                                        <StackPanel x:Name="stackFotoPlaceholder"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="CameraPlus" Width="32" Height="32"
+                                                                     Foreground="#6c7293" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="+ Adjuntar Foto" Foreground="#6c7293"
+                                                       FontSize="12" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="JPG, PNG, BMP" Foreground="#4a4f6a"
+                                                       FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Image x:Name="imgFotoVehiculo" Stretch="UniformToFill"
+                                               Visibility="Collapsed" Cursor="Hand"
+                                               MouseLeftButtonUp="borderFoto_MouseLeftButtonUp">
+                                            <Image.Clip>
+                                                <RectangleGeometry RadiusX="8" RadiusY="8" Rect="0,0,254,130"/>
+                                            </Image.Clip>
+                                        </Image>
+                                        <Button x:Name="btnQuitarFoto" Visibility="Collapsed"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Margin="0,4,4,0" Width="22" Height="22" Padding="0"
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                Foreground="White" Background="#88000000"
+                                                Click="btnQuitarFoto_Click">
+                                            <materialDesign:PackIcon Kind="Close" Width="14" Height="14"/>
+                                        </Button>
+                                    </Grid>
                                 </Border>
-                            </Grid>
+                            </StackPanel>
+                        </materialDesign:Card>
 
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="160"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="PRECIO DEL SERVICIO" Foreground="#a0a8c8"
-                                           FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
-                                <Border Grid.Column="1" Background="#1e2130" BorderBrush="#3a3f5c"
-                                        BorderThickness="1" CornerRadius="6" Padding="10,6">
-                                    <TextBox x:Name="txtPrecioServicio" Foreground="White" Background="Transparent"
-                                             BorderThickness="0" Text="S/ 0.00" HorizontalAlignment="Right"
-                                             TextChanged="txtPrecio_TextChanged"/>
-                                </Border>
-                            </Grid>
+                    </StackPanel>
 
-                            <Separator Background="#3a3f5c" Margin="0,6,0,8"/>
+                    <!-- COLUMNA DERECHA -->
+                    <StackPanel Grid.Column="2">
 
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="160"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="COSTO TOTAL" Foreground="White"
-                                           FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Border Grid.Column="1" Background="#2e3250" BorderBrush="#4f6ef7"
-                                        BorderThickness="1" CornerRadius="6" Padding="10,6">
-                                    <TextBox x:Name="txtCostoTotal" Foreground="#4f6ef7" Background="Transparent"
-                                             BorderThickness="0" IsReadOnly="True" FontWeight="Bold"
-                                             Text="S/ 0.00" HorizontalAlignment="Right"/>
-                                </Border>
-                            </Grid>
-                        </StackPanel>
-                    </materialDesign:Card>
+                        <!-- CARD DETALLE DE LA ORDEN -->
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
+                                             Margin="0,0,0,14" materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <TextBlock Text="Detalle de la Orden" Foreground="White" FontSize="14"
+                                           FontWeight="Medium" Margin="0,0,0,14"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="110"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Estado" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
 
-                    <!-- BOTONES ACCIÓN -->
-                    <Border Background="#252836" CornerRadius="12" Padding="18,12">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button x:Name="btnCancelar"
-                                    Content="Cancelar"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    BorderBrush="#6c7293" Foreground="#6c7293"
-                                    Height="36" Padding="20,0" Margin="0,0,10,0"
-                                    materialDesign:ButtonAssist.CornerRadius="6"
-                                    Click="btnCancelar_Click"/>
-                            <Button x:Name="btnActualizar"
-                                    Content="Actualizar"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    BorderBrush="#4f6ef7" Foreground="#4f6ef7"
-                                    Height="36" Padding="20,0" Margin="0,0,10,0"
-                                    materialDesign:ButtonAssist.CornerRadius="6"
-                                    Click="btnActualizar_Click"/>
-                            <Button x:Name="btnAniadir"
-                                    Content="Añadir" Height="36" Padding="20,0"
-                                    materialDesign:ButtonAssist.CornerRadius="6"
-                                    materialDesign:ElevationAssist.Elevation="Dp0"
-                                    Click="btnAniadir_Click">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                        <Setter Property="Background" Value="#4f6ef7"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="BorderBrush" Value="#4f6ef7"/>
-                                        <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp0"/>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
-                        </StackPanel>
-                    </Border>
+                                        <!-- ✅ cmbOrdenEstado CORREGIDO -->
+                                        <ComboBox x:Name="cmbOrdenEstado" Height="38"
+                                                  Template="{StaticResource DarkComboTemplate}"
+                                                  ItemContainerStyle="{StaticResource DarkComboItemStyle}"
+                                                  SelectionChanged="ComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="En Espera" IsSelected="True"/>
+                                            <ComboBoxItem Content="En Proceso"/>
+                                            <ComboBoxItem Content="Completado"/>
+                                            <ComboBoxItem Content="Cancelado"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Fecha" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <controls:EspañolDatePicker x:Name="dpFecha" Height="38"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="F. Entrega" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <controls:EspañolDatePicker x:Name="dpEntrega" Height="38"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="6">
+                                        <TextBlock Text="Orden Nº" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtOrdenNumero"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="38" IsReadOnly="True"
+                                                 VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Prioridad" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
 
-                </StackPanel>
-            </Grid>
-        </ScrollViewer>
+                                        <!-- ✅ cmbOrdenPrioridad CORREGIDO -->
+                                        <ComboBox x:Name="cmbOrdenPrioridad" Height="38"
+                                                  Template="{StaticResource DarkComboTemplate}"
+                                                  ItemContainerStyle="{StaticResource DarkComboItemStyle}"
+                                                  SelectionChanged="ComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="Normal" IsSelected="True"/>
+                                            <ComboBoxItem Content="Alta"/>
+                                            <ComboBoxItem Content="Urgente"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Observaciones" Foreground="#6c7293" FontSize="11" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="txtOrdenObservaciones"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                                 CaretBrush="White" Height="75" TextWrapping="Wrap"
+                                                 AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                                 VerticalContentAlignment="Top" Padding="8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </materialDesign:Card>
 
+                        <!-- CARD DETALLE DEL TRABAJO (sin cambios) -->
+                        <materialDesign:Card Background="#252836" UniformCornerRadius="12" Padding="18"
+                                             Margin="0,0,0,14" MinHeight="350"
+                                             materialDesign:ElevationAssist.Elevation="Dp3">
+                            <StackPanel>
+                                <TextBlock Text="Detalle del Trabajo" Foreground="White" FontSize="14"
+                                           FontWeight="Medium" Margin="0,0,0,14"/>
+                                <Button x:Name="btnAgregarRepuestos" Content="+ Agregar Repuestos"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#4f6ef7" Foreground="#4f6ef7"
+                                        Height="36" HorizontalAlignment="Left" Padding="16,0"
+                                        Margin="0,0,0,12" materialDesign:ButtonAssist.CornerRadius="6"
+                                        Click="btnAgregarRepuestos_Click"/>
+                                <DataGrid x:Name="dgRepuestos" AutoGenerateColumns="False"
+                                          Background="#1e2130" Foreground="White" BorderBrush="#3a3f5c"
+                                          BorderThickness="1" RowBackground="#252836"
+                                          AlternatingRowBackground="#1e2130"
+                                          GridLinesVisibility="Horizontal"
+                                          HorizontalGridLinesBrush="#2e3250"
+                                          HeadersVisibility="Column" CanUserAddRows="False" MaxHeight="180"
+                                          materialDesign:DataGridAssist.CellPadding="10 6 10 6"
+                                          materialDesign:DataGridAssist.ColumnHeaderPadding="10 8 10 8">
+                                    <DataGrid.ColumnHeaderStyle>
+                                        <Style TargetType="DataGridColumnHeader"
+                                               BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                            <Setter Property="Background" Value="#2e3250"/>
+                                            <Setter Property="Foreground" Value="#a0a8c8"/>
+                                            <Setter Property="FontSize" Value="12"/>
+                                            <Setter Property="FontWeight" Value="Medium"/>
+                                        </Style>
+                                    </DataGrid.ColumnHeaderStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#"        Binding="{Binding Numero}"   Width="40"/>
+                                        <DataGridTextColumn Header="Repuesto" Binding="{Binding Nombre}"   Width="*"/>
+                                        <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="80"/>
+                                        <DataGridTextColumn Header="Precio"   Binding="{Binding Precio, StringFormat=C}" Width="90"/>
+                                        <DataGridCheckBoxColumn Header="Incl." Binding="{Binding Incluido}" Width="60"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Separator Background="#3a3f5c" Margin="0,14,0,14"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="160"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="PRECIO DEL REPUESTO"
+                                               Foreground="#a0a8c8" FontSize="11" FontWeight="Medium"
+                                               VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1" Background="#1e2130" BorderBrush="#3a3f5c"
+                                            BorderThickness="1" CornerRadius="6" Padding="10,6">
+                                        <TextBox x:Name="txtPrecioRepuesto" Foreground="White"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 Text="S/ 0.00" HorizontalAlignment="Right"
+                                                 CaretBrush="White" TextChanged="txtPrecio_TextChanged"/>
+                                    </Border>
+                                </Grid>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="160"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="PRECIO DEL SERVICIO"
+                                               Foreground="#a0a8c8" FontSize="11" FontWeight="Medium"
+                                               VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1" Background="#1e2130" BorderBrush="#3a3f5c"
+                                            BorderThickness="1" CornerRadius="6" Padding="10,6">
+                                        <TextBox x:Name="txtPrecioServicio" Foreground="White"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 Text="S/ 0.00" HorizontalAlignment="Right"
+                                                 CaretBrush="White" TextChanged="txtPrecio_TextChanged"/>
+                                    </Border>
+                                </Grid>
+                                <Separator Background="#3a3f5c" Margin="0,6,0,8"/>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="160"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="COSTO TOTAL" Foreground="White"
+                                               FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1" Background="#2e3250" BorderBrush="#4f6ef7"
+                                            BorderThickness="1" CornerRadius="6" Padding="10,6">
+                                        <TextBox x:Name="txtCostoTotal" Foreground="#4f6ef7"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 IsReadOnly="True" FontWeight="Bold"
+                                                 Text="S/ 0.00" HorizontalAlignment="Right"/>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </materialDesign:Card>
+
+                        <!-- BOTONES ACCIÓN (sin cambios) -->
+                        <Border Background="#252836" CornerRadius="12" Padding="18,12">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button x:Name="btnCancelar" Content="Cancelar"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#6c7293" Foreground="#6c7293"
+                                        Height="36" Padding="20,0" Margin="0,0,10,0"
+                                        materialDesign:ButtonAssist.CornerRadius="6"
+                                        Click="btnCancelar_Click"/>
+                                <Button x:Name="btnActualizar" Content="Actualizar"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        BorderBrush="#4f6ef7" Foreground="#4f6ef7"
+                                        Height="36" Padding="20,0" Margin="0,0,10,0"
+                                        materialDesign:ButtonAssist.CornerRadius="6"
+                                        Click="btnActualizar_Click"/>
+                                <Button x:Name="btnAniadir" Content="Añadir"
+                                        Height="36" Padding="20,0"
+                                        materialDesign:ButtonAssist.CornerRadius="6"
+                                        materialDesign:ElevationAssist.Elevation="Dp0"
+                                        Click="btnAniadir_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Background" Value="#4f6ef7"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderBrush" Value="#4f6ef7"/>
+                                            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp0"/>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Window>

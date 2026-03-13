@@ -134,7 +134,6 @@ namespace Órdenes_de_Trabajo
             if (res == MessageBoxResult.Yes)
             {
                 MenúPrincipalOrdenes ventana = new MenúPrincipalOrdenes();
-                ventana.Show();
                 this.Close();
             }
         }

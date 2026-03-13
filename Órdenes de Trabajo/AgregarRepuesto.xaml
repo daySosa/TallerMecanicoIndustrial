@@ -24,8 +24,15 @@
 
             <ComboBox x:Name="cmbProducto"
                       Height="40" Margin="0,0,0,14"
-                      DisplayMemberPath="Producto_Nombre"
                       SelectionChanged="cmbProducto_SelectionChanged">
+
+                <!-- ✅ Template para ítems del dropdown -->
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Producto_Nombre}" Foreground="White" FontSize="13"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+
                 <ComboBox.Resources>
                     <Style TargetType="ComboBoxItem">
                         <Setter Property="Foreground" Value="White"/>
@@ -34,21 +41,29 @@
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#2e3250"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="#4f6ef7"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
                 </ComboBox.Resources>
+
                 <ComboBox.Template>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
                             <Border Background="#252836" BorderBrush="#3a3f5c"
                                     BorderThickness="1" CornerRadius="6"/>
-                            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              Margin="12,0,36,0" VerticalAlignment="Center"/>
+
+                            <!-- ✅ TextBlock directo con binding a la columna del DataRowView -->
+                            <TextBlock Text="{Binding SelectedItem.Row[Producto_Nombre],
+                                              RelativeSource={RelativeSource TemplatedParent}}"
+                                       Foreground="White" FontSize="13"
+                                       Margin="12,0,36,0" VerticalAlignment="Center"/>
+
+                            <!-- Placeholder -->
                             <TextBlock x:Name="placeholder" Text="Selecciona un producto"
                                        Foreground="#6c7293" Margin="12,0,36,0"
                                        VerticalAlignment="Center" FontSize="13"
@@ -66,9 +81,13 @@
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
+
+                            <!-- Flecha -->
                             <Path Data="M 0 0 L 6 6 L 12 0 Z" Fill="White"
                                   HorizontalAlignment="Right" VerticalAlignment="Center"
                                   Margin="0,0,12,0" IsHitTestVisible="False"/>
+
+                            <!-- Dropdown -->
                             <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}"
                                    Placement="Bottom" AllowsTransparency="True"
                                    Focusable="False" PopupAnimation="Slide">
@@ -76,10 +95,11 @@
                                         BorderThickness="1" CornerRadius="6"
                                         MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="200">
-                                        <ItemsPresenter/>
+                                        <ItemsPresenter TextBlock.Foreground="White"/>
                                     </ScrollViewer>
                                 </Border>
                             </Popup>
+
                             <ToggleButton HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                           Opacity="0" Focusable="False" Background="Transparent"
                                           BorderThickness="0"
