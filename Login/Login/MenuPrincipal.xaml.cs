@@ -14,7 +14,6 @@ using Vehículos;
 
 namespace Dasboard_Prueba
 {
-
     public class OrdenReciente
     {
         public int Orden_ID { get; set; }
@@ -24,7 +23,6 @@ namespace Dasboard_Prueba
         public string Estado { get; set; }
         public decimal OrdenPrecio_Total { get; set; }
     }
-
 
     public class NotificacionItem
     {
@@ -36,30 +34,148 @@ namespace Dasboard_Prueba
 
     public partial class MenuPrincipal : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        private readonly clsConexion _conexion = new clsConexion();
         private DateTime _mesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         private List<NotificacionItem> _notificaciones = new List<NotificacionItem>();
+        private int _mesesRango = 6;
 
         public ChartValues<double> BalanceValues { get; set; }
         public ChartValues<double> OrderValues { get; set; }
         public ChartValues<double> GastosValues { get; set; }
         public ChartValues<double> IngresosSemanalValues { get; set; }
+        public string[] BalanceLabels { get; set; }
+        public string[] OrderLabels { get; set; }
+        public string[] GastosLabels { get; set; }
         public string[] IngresosSemanalLabels { get; set; }
-
 
         public MenuPrincipal()
         {
-            BalanceValues = new ChartValues<double> { 30, 45, 28, 60, 40, 55, 50 };
-            OrderValues = new ChartValues<double> { 5, 8, 3, 10, 7, 9, 6 };
-            GastosValues = new ChartValues<double> { 20, 35, 15, 45, 30, 40, 25 };
-            IngresosSemanalValues = new ChartValues<double> { 45, 60, 35, 50, 40, 55 };
-            IngresosSemanalLabels = new[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun" };
+            BalanceValues = new ChartValues<double>();
+            OrderValues = new ChartValues<double>();
+            GastosValues = new ChartValues<double>();
+            IngresosSemanalValues = new ChartValues<double>();
+            BalanceLabels = Array.Empty<string>();
+            OrderLabels = Array.Empty<string>();
+            GastosLabels = Array.Empty<string>();
+            IngresosSemanalLabels = Array.Empty<string>();
 
             DataContext = this;
             InitializeComponent();
+
+            cmbRango.SelectedIndex = 1;
+
             CargarDatos();
+            CargarGraficas();
             CargarNotificaciones();
             GenerarCalendario();
+        }
+
+        private void cmbRango_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbRango.SelectedItem is ComboBoxItem item)
+            {
+                _mesesRango = item.Tag?.ToString() switch
+                {
+                    "3" => 3,
+                    "6" => 6,
+                    "12" => 12,
+                    _ => 0
+                };
+
+                CargarGraficas();
+            }
+        }
+
+        private void CargarGraficas()
+        {
+            try
+            {
+                _conexion.Abrir();
+
+                DateTime fechaDesde = _mesesRango > 0
+                    ? DateTime.Today.AddMonths(-_mesesRango + 1).AddDays(1 - DateTime.Today.Day)
+                    : new DateTime(2000, 1, 1);
+
+                var balanceVals = new List<double>();
+                var balanceLabels = new List<string>();
+                using (SqlCommand cmd = new SqlCommand(@"
+                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
+                           SUM(OrdenPrecio_Total) AS Total
+                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
+                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
+                    ORDER  BY Anio, Mes", _conexion.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
+                    using SqlDataReader rd = cmd.ExecuteReader();
+                    while (rd.Read())
+                    {
+                        balanceVals.Add(Convert.ToDouble(rd["Total"]));
+                        balanceLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
+                    }
+                }
+
+                var orderVals = new List<double>();
+                var orderLabels = new List<string>();
+                using (SqlCommand cmd = new SqlCommand(@"
+                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
+                           COUNT(*) AS Cantidad
+                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
+                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
+                    ORDER  BY Anio, Mes", _conexion.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
+                    using SqlDataReader rd = cmd.ExecuteReader();
+                    while (rd.Read())
+                    {
+                        orderVals.Add(Convert.ToDouble(rd["Cantidad"]));
+                        orderLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
+                    }
+                }
+
+                var gastosVals = new List<double>();
+                var gastosLabels = new List<string>();
+                using (SqlCommand cmd = new SqlCommand(@"
+                    SELECT YEAR(Fecha_Gasto) AS Anio, MONTH(Fecha_Gasto) AS Mes,
+                           SUM(Precio_Gasto) AS Total
+                    FROM   Contabilidad_Gastos WHERE Fecha_Gasto >= @Desde
+                    GROUP  BY YEAR(Fecha_Gasto), MONTH(Fecha_Gasto)
+                    ORDER  BY Anio, Mes", _conexion.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
+                    using SqlDataReader rd = cmd.ExecuteReader();
+                    while (rd.Read())
+                    {
+                        gastosVals.Add(Convert.ToDouble(rd["Total"]));
+                        gastosLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
+                    }
+                }
+
+                BalanceValues.Clear();
+                foreach (var v in balanceVals) BalanceValues.Add(v);
+                if (BalanceValues.Count == 0) BalanceValues.Add(0);
+                BalanceLabels = balanceLabels.Count > 0 ? balanceLabels.ToArray() : new[] { "-" };
+
+                OrderValues.Clear();
+                foreach (var v in orderVals) OrderValues.Add(v);
+                if (OrderValues.Count == 0) OrderValues.Add(0);
+                OrderLabels = orderLabels.Count > 0 ? orderLabels.ToArray() : new[] { "-" };
+
+                GastosValues.Clear();
+                foreach (var v in gastosVals) GastosValues.Add(v);
+                if (GastosValues.Count == 0) GastosValues.Add(0);
+                GastosLabels = gastosLabels.Count > 0 ? gastosLabels.ToArray() : new[] { "-" };
+
+                IngresosSemanalValues.Clear();
+                foreach (var v in balanceVals) IngresosSemanalValues.Add(v);
+                if (IngresosSemanalValues.Count == 0) IngresosSemanalValues.Add(0);
+                IngresosSemanalLabels = balanceLabels.Count > 0 ? balanceLabels.ToArray() : new[] { "-" };
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally { _conexion.Cerrar(); }
         }
 
         private void CargarDatos()
@@ -68,20 +184,15 @@ namespace Dasboard_Prueba
             {
                 _conexion.Abrir();
 
-                string sqlOrdenes = @"
+                var ordenes = new List<OrdenReciente>();
+                using (SqlCommand cmd = new SqlCommand(@"
                     SELECT TOP 10
                         o.Orden_ID,
                         c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                        o.Vehiculo_Placa,
-                        o.Fecha,
-                        o.Estado,
-                        o.OrdenPrecio_Total
+                        o.Vehiculo_Placa, o.Fecha, o.Estado, o.OrdenPrecio_Total
                     FROM Orden_Trabajo o
                     INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY o.Fecha DESC";
-
-                var ordenes = new List<OrdenReciente>();
-                using (SqlCommand cmd = new SqlCommand(sqlOrdenes, _conexion.SqlC))
+                    ORDER BY o.Fecha DESC", _conexion.SqlC))
                 using (SqlDataReader rd = cmd.ExecuteReader())
                 {
                     while (rd.Read())
@@ -102,20 +213,13 @@ namespace Dasboard_Prueba
                 tbTotalOrdenes.Text = $"{ordenes.Count} órdenes";
                 txtTotalOrdenes.Text = ordenes.Count.ToString();
 
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT ISNULL(SUM(OrdenPrecio_Total), 0) FROM Orden_Trabajo", _conexion.SqlC))
+                    txtBalanceTotal.Text = $"L {Convert.ToDecimal(cmd.ExecuteScalar()):N2}";
 
-                string sqlBalance = "SELECT ISNULL(SUM(OrdenPrecio_Total), 0) FROM Orden_Trabajo";
-                using (SqlCommand cmd = new SqlCommand(sqlBalance, _conexion.SqlC))
-                {
-                    decimal balance = Convert.ToDecimal(cmd.ExecuteScalar());
-                    txtBalanceTotal.Text = $"Q {balance:N2}";
-                }
-
-                string sqlGastos = "SELECT ISNULL(SUM(Precio_Gasto), 0) FROM Contabilidad_Gastos";
-                using (SqlCommand cmd = new SqlCommand(sqlGastos, _conexion.SqlC))
-                {
-                    decimal gastos = Convert.ToDecimal(cmd.ExecuteScalar());
-                    txtGastosTotales.Text = $"Q {gastos:N2}";
-                }
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT ISNULL(SUM(Precio_Gasto), 0) FROM Contabilidad_Gastos", _conexion.SqlC))
+                    txtGastosTotales.Text = $"L {Convert.ToDecimal(cmd.ExecuteScalar()):N2}";
             }
             catch (Exception ex)
             {
@@ -125,19 +229,15 @@ namespace Dasboard_Prueba
             finally { _conexion.Cerrar(); }
         }
 
-
         private void CargarNotificaciones()
         {
             _notificaciones.Clear();
             try
             {
                 _conexion.Abrir();
-                string sql = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje, Leida
-                    FROM   Notificaciones
-                    ORDER  BY Notificacion_ID DESC";
-
-                using (SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC))
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT Notificacion_ID, Tipo_Notificacion, Mensaje, Leida FROM Notificaciones ORDER BY Notificacion_ID DESC",
+                    _conexion.SqlC))
                 using (SqlDataReader rd = cmd.ExecuteReader())
                 {
                     while (rd.Read())
@@ -154,7 +254,6 @@ namespace Dasboard_Prueba
             }
             catch { }
             finally { _conexion.Cerrar(); }
-
             ActualizarPanelNotificaciones();
         }
 
@@ -173,7 +272,7 @@ namespace Dasboard_Prueba
             {
                 panelNotificaciones.Children.Add(new TextBlock
                 {
-                    Text = "No hay notificaciones",
+                    Text = "Sin notificaciones pendientes",
                     Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
                     FontSize = 13,
                     HorizontalAlignment = HorizontalAlignment.Center,
@@ -184,11 +283,9 @@ namespace Dasboard_Prueba
 
             foreach (var notif in _notificaciones)
             {
-
                 string colorHex = notif.Tipo_Notificacion == "STOCK_BAJO" ? "#F0A500"
-                                : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "#4CAF50"
-                                : "#4A9EFF";
-
+                                 : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "#4CAF50"
+                                 : "#4A9EFF";
                 string iconoKind = notif.Tipo_Notificacion == "STOCK_BAJO" ? "AlertCircle"
                                  : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "CheckCircle"
                                  : "Bell";
@@ -231,7 +328,6 @@ namespace Dasboard_Prueba
                 };
                 Grid.SetColumn(iconBorder, 0);
 
-
                 StackPanel texto = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
                 texto.Children.Add(new TextBlock
                 {
@@ -245,13 +341,11 @@ namespace Dasboard_Prueba
                 {
                     Text = notif.Mensaje,
                     Foreground = new SolidColorBrush(notif.Leida
-                        ? (Color)ColorConverter.ConvertFromString("#8B9BB4")
-                        : Colors.White),
+                        ? (Color)ColorConverter.ConvertFromString("#8B9BB4") : Colors.White),
                     FontSize = 12,
                     TextWrapping = TextWrapping.Wrap
                 });
                 Grid.SetColumn(texto, 1);
-
 
                 Border punto = new Border
                 {
@@ -281,9 +375,9 @@ namespace Dasboard_Prueba
             try
             {
                 _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand(
-                    "EXEC sp_MarcarNotificacionLeida @NotificacionID", _conexion.SqlC))
+                using (SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@NotificacionID", id);
                     cmd.ExecuteNonQuery();
                 }
@@ -301,9 +395,12 @@ namespace Dasboard_Prueba
             try
             {
                 _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand(
-                    "EXEC sp_MarcarNotificacionLeida", _conexion.SqlC))
+                using (SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC))
+                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NotificacionID", DBNull.Value);
                     cmd.ExecuteNonQuery();
+                }
             }
             catch { }
             finally { _conexion.Cerrar(); }
@@ -317,7 +414,6 @@ namespace Dasboard_Prueba
             CargarNotificaciones();
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
-
 
         private void btnAnterior_Click(object sender, RoutedEventArgs e)
         {
@@ -358,13 +454,16 @@ namespace Dasboard_Prueba
             for (int i = 0; i < 42; i++)
             {
                 int dia; bool esDelMes = true;
-                if (i < primerDia) { dia = diasMesAnt - primerDia + 1 + i; esDelMes = false; }
-                else if (i >= primerDia + diasEnMes) { dia = i - primerDia - diasEnMes + 1; esDelMes = false; }
+                if (i < primerDia)
+                { dia = diasMesAnt - primerDia + 1 + i; esDelMes = false; }
+                else if (i >= primerDia + diasEnMes)
+                { dia = i - primerDia - diasEnMes + 1; esDelMes = false; }
                 else { dia = i - primerDia + 1; }
 
-                bool esHoy = esDelMes && dia == DateTime.Today.Day
-                             && _mesActual.Month == DateTime.Today.Month
-                             && _mesActual.Year == DateTime.Today.Year;
+                bool esHoy = esDelMes
+                          && dia == DateTime.Today.Day
+                          && _mesActual.Month == DateTime.Today.Month
+                          && _mesActual.Year == DateTime.Today.Year;
 
                 Border celda = new Border
                 {
@@ -385,49 +484,28 @@ namespace Dasboard_Prueba
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     Foreground = esHoy ? Brushes.White
-                                        : esDelMes ? Brushes.White
-                                        : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4A5568"))
+                               : esDelMes ? Brushes.White
+                               : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4A5568"))
                 };
                 gridDias.Children.Add(celda);
             }
         }
 
-        private void btnOrdenes_Click(object sender, RoutedEventArgs e)
-        {
-            new MenúPrincipalOrdenes().Show();
-            this.Close();
-        }
+        private void btnOrdenes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalOrdenes().Show(); this.Close(); }
+        private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new MenúPrincipalVehículos().Show(); this.Close(); }
+        private void btnInventario_Click(object sender, RoutedEventArgs e) { new MenúPrincipalInventario().Show(); this.Close(); }
+        private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
+        private void btnEgresos_Click(object sender, RoutedEventArgs e) { new ContaWindow().Show(); this.Close(); }
+        private void btnIngresos_Click(object sender, RoutedEventArgs e) { new MenuDePagos().Show(); this.Close(); }
 
-        private void btnVehiculos_Click(object sender, RoutedEventArgs e)
-        {
-            new MenúPrincipalVehículos().Show();
-            this.Close();
-        }
-
-        private void btnInventario_Click(object sender, RoutedEventArgs e)
-        {
-            new MenúPrincipalInventario().Show();
-            this.Close();
-        }
-        private void btnClientes_Click(object sender, RoutedEventArgs e)
-        {
-            new MenúPrincipalClientes().Show();
-            this.Close();
-        }
-        private void btnEgresos_Click(object sender, RoutedEventArgs e)
-        {
-            new ContaWindow().Show();
-            this.Close();
-        }
-        private void btnIngresos_Click(object sender, RoutedEventArgs e)
-        {
-            new MenuDePagos().Show();
-            this.Close();
-        }
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
-            new MainWindow().Show();
-            this.Close();
+            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                new MainWindow().Show();
+                this.Close();
+            }
         }
 
         private MaterialDesignThemes.Wpf.PackIconKind ParseIconKind(string nombre)
