@@ -136,12 +136,12 @@ namespace InterfazInventario
             txtMarca.Text = producto.Producto_Marca;
             txtModelo.Text = producto.Producto_Modelo == "—" ? "" : producto.Producto_Modelo;
             txtPrecio.Text = producto.Producto_Precio.ToString("N2");
-<<<<<<< HEAD
+
             txtCantidad.Text = producto.Producto_Cantidad_Actual.ToString();
-=======
+
             txtCantidad.Text = "0";
             txtStockActual.Text = producto.Producto_Cantidad_Actual.ToString();
->>>>>>> a59ddb8349177305f00aa12d70773ef52394fb10
+
 
             foreach (ComboBoxItem item in cmbCategoria.Items)
             {

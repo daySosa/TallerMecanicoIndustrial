@@ -94,6 +94,7 @@
                                                Margin="0,0,0,6"/>
                                     <ComboBox x:Name="cmbTipoGasto"
                                               Height="42"
+                                              Padding="10,8,10,8"
                                               Foreground="White"
                                               Background="#252836"
                                               BorderBrush="#3a3f5c"
@@ -110,6 +111,7 @@
                                                Margin="0,0,0,6"/>
                                     <TextBox x:Name="txtNombre"
                                              Height="42"
+                                             Padding="10,8,10,8"
                                              Foreground="White"
                                              CaretBrush="White"
                                              Background="#252836"
@@ -124,6 +126,7 @@
                                                Margin="0,0,0,6"/>
                                     <TextBox x:Name="txtPrecio"
                                              Height="42"
+                                             Padding="10,8,10,8"
                                              Foreground="White"
                                              CaretBrush="White"
                                              Background="#252836"
@@ -138,6 +141,7 @@
                                                Margin="0,0,0,6"/>
                                     <TextBox x:Name="txtFecha"
                                              Height="42"
+                                             Padding="10,8,10,8"
                                              Foreground="#6B7280"
                                              Background="#1a1d2e"
                                              BorderBrush="#3a3f5c"
