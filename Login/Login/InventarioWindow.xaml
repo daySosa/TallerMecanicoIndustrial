@@ -2,14 +2,11 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        Title="Inventario" Height="750" Width="1200"
+        Title="Inventario - Producto" Height="580" Width="900"
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
-        Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
+        Background="#1a1d2e" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
     <Window.Resources>
-
         <Style x:Key="DarkTextBox" TargetType="TextBox">
             <Setter Property="Background"               Value="#1e2130"/>
             <Setter Property="Foreground"               Value="White"/>
@@ -20,27 +17,23 @@
             <Setter Property="Padding"                  Value="10,0"/>
             <Setter Property="FontSize"                 Value="13"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="SelectionBrush"           Value="#4f6ef7"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6">
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
                             <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="{TemplateBinding Padding}"
-                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                      Focusable="False"/>
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Focusable="False"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush"     Value="#4f6ef7"/>
                                 <Setter TargetName="border" Property="BorderThickness" Value="2"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#6070cc"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -48,20 +41,19 @@
             </Setter>
         </Style>
 
-        <Style x:Key="DarkTextBoxNoBorderLeft" TargetType="TextBox"
-               BasedOn="{StaticResource DarkTextBox}">
+        <Style x:Key="DarkTextBoxNoBorderLeft" TargetType="TextBox" BasedOn="{StaticResource DarkTextBox}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="0,1,1,1"
-                            CornerRadius="0,6,6,0">
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="0,1,1,1"
+                                CornerRadius="0,6,6,0">
                             <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="{TemplateBinding Padding}"
-                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                      Focusable="False"/>
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Focusable="False"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
@@ -73,241 +65,222 @@
             </Setter>
         </Style>
 
-        <Style x:Key="DarkTextBoxCentered" TargetType="TextBox"
-               BasedOn="{StaticResource DarkTextBox}">
+        <Style x:Key="DarkTextBoxCentered" TargetType="TextBox" BasedOn="{StaticResource DarkTextBox}">
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="FontSize"      Value="15"/>
             <Setter Property="FontWeight"    Value="SemiBold"/>
         </Style>
 
+        <Style x:Key="CounterButton" TargetType="Button"
+               BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background"  Value="#2e3250"/>
+            <Setter Property="Foreground"  Value="White"/>
+            <Setter Property="BorderBrush" Value="#3a3f5c"/>
+            <Setter Property="Width"       Value="40"/>
+            <Setter Property="Height"      Value="40"/>
+            <Setter Property="Padding"     Value="0"/>
+            <Setter Property="MinWidth"    Value="40"/>
+        </Style>
     </Window.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled"
-                  Background="#1a1d2e">
-        <Grid Margin="30,24,30,24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="24"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="24"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Grid.RowSpan="2">
-                <materialDesign:Card Background="#252836" UniformCornerRadius="12"
-                                     Padding="22" Margin="0,0,0,16"
-                                     materialDesign:ElevationAssist.Elevation="Dp3">
-                    <StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Background="#2e3250" CornerRadius="8"
-                                    Width="36" Height="36" Margin="0,0,12,0">
-                                <materialDesign:PackIcon Kind="PackageVariant" Foreground="#4f6ef7"
-                                                         Width="20" Height="20"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Datos del Producto" Foreground="White"
-                                           FontSize="14" FontWeight="Medium"/>
-                                <TextBlock Text="Información de identificación"
-                                           Foreground="#6c7293" FontSize="11"/>
-                            </StackPanel>
+        <materialDesign:Card Grid.Column="0" Grid.Row="0"
+                             Background="#252836" UniformCornerRadius="12"
+                             Padding="22" materialDesign:ElevationAssist.Elevation="Dp3" Margin="0,0,0,9">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <Border Background="#2e3250" CornerRadius="8"
+                                Width="36" Height="36" Margin="0,0,12,0">
+                            <materialDesign:PackIcon Kind="PackageVariant" Foreground="#4f6ef7"
+                                                     Width="20" Height="20"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Datos del Producto" Foreground="White"
+                                       FontSize="14" FontWeight="Medium"/>
+                            <TextBlock Text="Información de identificación"
+                                       Foreground="#6c7293" FontSize="11"/>
                         </StackPanel>
-
-                        <TextBlock Text="Nombre *" Foreground="#6c7293"
-                                   FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-                        <TextBox x:Name="txtNombre"
-                                 Style="{StaticResource DarkTextBox}"
-                                 Margin="0,0,0,16"/>
-
-                        <TextBlock Text="Categoría *" Foreground="#6c7293"
-                                   FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-                        <ComboBox x:Name="cmbCategoria"
-                                  Height="40" Margin="0,0,0,16"
-                                  Background="#1e2130" Foreground="White"
-                                  BorderBrush="#3a3f5c" FontSize="13">
-                            <ComboBox.Resources>
-                                <Style TargetType="ComboBoxItem">
-                                    <Setter Property="Foreground" Value="White"/>
-                                    <Setter Property="Background" Value="#252836"/>
-                                </Style>
-                            </ComboBox.Resources>
-                            <ComboBoxItem Content="Repuestos"/>
-                            <ComboBoxItem Content="Aceites y Lubricantes"/>
-                            <ComboBoxItem Content="Frenos"/>
-                            <ComboBoxItem Content="Filtros"/>
-                            <ComboBoxItem Content="Eléctrico"/>
-                            <ComboBoxItem Content="Suspensión"/>
-                            <ComboBoxItem Content="Motor"/>
-                            <ComboBoxItem Content="Carrocería"/>
-                            <ComboBoxItem Content="Otros"/>
-                        </ComboBox>
-
-                        <TextBlock Text="Marca *" Foreground="#6c7293"
-                                   FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-                        <TextBox x:Name="txtMarca"
-                                 Style="{StaticResource DarkTextBox}"
-                                 Margin="0,0,0,16"/>
-
-                        <TextBlock Text="Modelo (opcional)" Foreground="#6c7293"
-                                   FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-                        <TextBox x:Name="txtModelo"
-                                 Style="{StaticResource DarkTextBox}"
-                                 Margin="0,0,0,16"/>
-
                     </StackPanel>
-                </materialDesign:Card>
-            </StackPanel>
 
-            <StackPanel Grid.Column="2" Grid.RowSpan="2">
-                <materialDesign:Card Background="#252836" UniformCornerRadius="12"
-                                     Padding="22" Margin="0,0,0,16"
-                                     materialDesign:ElevationAssist.Elevation="Dp3">
-                    <StackPanel>
+                    <TextBlock Text="Nombre" Foreground="#6c7293"
+                               FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtNombre" Style="{StaticResource DarkTextBox}" Margin="0,0,0,16"/>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Background="#2e3250" CornerRadius="8"
-                                    Width="36" Height="36" Margin="0,0,12,0">
-                                <materialDesign:PackIcon Kind="TagOutline" Foreground="#4f6ef7"
-                                                         Width="20" Height="20"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Detalles y Precio" Foreground="White"
-                                           FontSize="14" FontWeight="Medium"/>
-                                <TextBlock Text="Precio y cantidad del producto"
-                                           Foreground="#6c7293" FontSize="11"/>
-                            </StackPanel>
-                        </StackPanel>
+                    <TextBlock Text="Categoría" Foreground="#6c7293"
+                               FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="cmbCategoria" Height="40" Margin="0,0,0,16"
+                              Background="#1e2130" Foreground="White"
+                              BorderBrush="#3a3f5c" FontSize="13">
+                        <ComboBox.Resources>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Background" Value="#252836"/>
+                            </Style>
+                        </ComboBox.Resources>
+                        <ComboBoxItem Content="Repuestos"/>
+                        <ComboBoxItem Content="Aceites y Lubricantes"/>
+                        <ComboBoxItem Content="Frenos"/>
+                        <ComboBoxItem Content="Filtros"/>
+                        <ComboBoxItem Content="Eléctrico"/>
+                        <ComboBoxItem Content="Suspensión"/>
+                        <ComboBoxItem Content="Motor"/>
+                        <ComboBoxItem Content="Carrocería"/>
+                        <ComboBoxItem Content="Otros"/>
+                    </ComboBox>
 
-                        <TextBlock Text="Precio *" Foreground="#6c7293"
-                                   FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="#2e3250"
-                                    BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
-                                    CornerRadius="6,0,0,6" Padding="12,0" Height="40">
-                                <TextBlock Text="L" Foreground="#4f6ef7" FontSize="16"
-                                           FontWeight="Bold" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBox x:Name="txtPrecio"
-                                     Grid.Column="1"
-                                     Style="{StaticResource DarkTextBoxNoBorderLeft}"/>
-                        </Grid>
+                    <TextBlock Text="Marca" Foreground="#6c7293"
+                               FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtMarca" Style="{StaticResource DarkTextBox}" Margin="0,0,0,16"/>
 
-                        <TextBlock Text="Cantidad ingresada" Foreground="#6c7293"
-                                   FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="44"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="44"/>
-                            </Grid.ColumnDefinitions>
+                    <TextBlock Text="Modelo (opcional)" Foreground="#6c7293"
+                               FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+                    <TextBox x:Name="txtModelo" Style="{StaticResource DarkTextBox}" Margin="0,0,0,4"/>
+                </StackPanel>
+            </ScrollViewer>
+        </materialDesign:Card>
 
-                            <Button Grid.Column="0"
-                                    x:Name="btnRestar"
-                                    Width="40" Height="40"
-                                    Click="BtnRestar_Click"
-                                    materialDesign:ButtonAssist.CornerRadius="6"
-                                    materialDesign:ElevationAssist.Elevation="Dp0">
-                                <Button.Style>
-                                    <Style TargetType="Button"
-                                           BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                        <Setter Property="Background"  Value="#2e3250"/>
-                                        <Setter Property="Foreground"  Value="White"/>
-                                        <Setter Property="BorderBrush" Value="#3a3f5c"/>
-                                    </Style>
-                                </Button.Style>
-                                <materialDesign:PackIcon Kind="Minus" Width="16" Height="16"/>
-                            </Button>
-
-                            <TextBox x:Name="txtCantidad"
-                                     Grid.Column="1"
-                                     Margin="8,0"
-                                     Text="0"
-                                     Style="{StaticResource DarkTextBoxCentered}"/>
-
-                            <Button Grid.Column="2"
-                                    x:Name="btnSumar"
-                                    Width="40" Height="40"
-                                    Click="BtnSumar_Click"
-                                    materialDesign:ButtonAssist.CornerRadius="6"
-                                    materialDesign:ElevationAssist.Elevation="Dp0">
-                                <Button.Style>
-                                    <Style TargetType="Button"
-                                           BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                        <Setter Property="Background"  Value="#2e3250"/>
-                                        <Setter Property="Foreground"  Value="White"/>
-                                        <Setter Property="BorderBrush" Value="#3a3f5c"/>
-                                    </Style>
-                                </Button.Style>
-                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"/>
-                            </Button>
-                        </Grid>
-
+        <materialDesign:Card Grid.Column="2" Grid.Row="0"
+                             Background="#252836" UniformCornerRadius="12"
+                             Padding="22" materialDesign:ElevationAssist.Elevation="Dp3" Margin="0,0,0,69">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                    <Border Background="#2e3250" CornerRadius="8"
+                            Width="36" Height="36" Margin="0,0,12,0">
+                        <materialDesign:PackIcon Kind="TagOutline" Foreground="#4f6ef7"
+                                                 Width="20" Height="20"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Detalles y Precio" Foreground="White"
+                                   FontSize="14" FontWeight="Medium"/>
+                        <TextBlock Text="Precio y cantidad del producto"
+                                   Foreground="#6c7293" FontSize="11"/>
                     </StackPanel>
-                </materialDesign:Card>
-            </StackPanel>
+                </StackPanel>
 
-            <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                 Background="#252836" UniformCornerRadius="12"
-                                 Padding="20,16" Margin="0,262,0,-245"
-                                 materialDesign:ElevationAssist.Elevation="Dp3">
-                <Grid>
+                <TextBlock Text="Precio" Foreground="#6c7293"
+                           FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+                <Grid Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center"
-                               Foreground="#6c7293" FontSize="12">
-                        <Run Text="⚠ "/>
-                        <Run Text="Verifica los datos antes de guardar"/>
-                    </TextBlock>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button x:Name="btnCancelar" Content="Cancelar"
-                                Height="38" Padding="24,0" Margin="0,0,10,0"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                BorderBrush="#6c7293" Foreground="#6c7293"
-                                materialDesign:ButtonAssist.CornerRadius="8"
-                                Click="BtnCancelar_Click"/>
-                        <Button x:Name="btnActualizar" Content="Actualizar"
-                                Height="38" Padding="24,0" Margin="0,0,10,0"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                BorderBrush="#4f6ef7" Foreground="#4f6ef7"
-                                materialDesign:ButtonAssist.CornerRadius="8"
-                                Click="BtnActualizar_Click"/>
-                        <Button x:Name="btnAgregar"
-                                Height="38" Padding="24,0"
-                                materialDesign:ButtonAssist.CornerRadius="8"
-                                materialDesign:ElevationAssist.Elevation="Dp0"
-                                Click="BtnAgregar_Click">
-                            <Button.Style>
-                                <Style TargetType="Button"
-                                       BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                    <Setter Property="Background"  Value="#4f6ef7"/>
-                                    <Setter Property="Foreground"  Value="White"/>
-                                    <Setter Property="BorderBrush" Value="#4f6ef7"/>
-                                </Style>
-                            </Button.Style>
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
-                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Agregar Producto" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                    <Border Grid.Column="0" Background="#2e3250"
+                            BorderBrush="#3a3f5c" BorderThickness="1,1,0,1"
+                            CornerRadius="6,0,0,6" Padding="12,0" Height="40">
+                        <TextBlock Text="L" Foreground="#4f6ef7" FontSize="16"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBox x:Name="txtPrecio" Grid.Column="1"
+                             Style="{StaticResource DarkTextBoxNoBorderLeft}"/>
                 </Grid>
-            </materialDesign:Card>
 
-        </Grid>
-    </ScrollViewer>
+                <TextBlock Text="Stock actual" Foreground="#6c7293"
+                           FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
+                <TextBox x:Name="txtStockActual" Style="{StaticResource DarkTextBox}"
+                         IsReadOnly="True" Margin="0,0,0,20"
+                         Background="#161825" Foreground="#8B9BB4"/>
 
+                <TextBlock Text="Cantidad a agregar al stock" Foreground="#6c7293"
+                           FontSize="11" FontWeight="Medium" Margin="0,0,0,8"/>
+
+                <Grid HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="44"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="44"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" x:Name="btnRestar"
+                            Style="{StaticResource CounterButton}"
+                            Click="BtnRestar_Click"
+                            materialDesign:ButtonAssist.CornerRadius="6"
+                            materialDesign:ElevationAssist.Elevation="Dp0">
+                        <materialDesign:PackIcon Kind="Minus" Width="16" Height="16"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"/>
+                    </Button>
+
+                    <TextBox x:Name="txtCantidad" Grid.Column="1"
+                             Margin="8,0" Text="0"
+                             Style="{StaticResource DarkTextBoxCentered}"/>
+
+                    <Button Grid.Column="2" x:Name="btnSumar"
+                            Style="{StaticResource CounterButton}"
+                            Click="BtnSumar_Click"
+                            materialDesign:ButtonAssist.CornerRadius="6"
+                            materialDesign:ElevationAssist.Elevation="Dp0">
+                        <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                             Background="#252836" UniformCornerRadius="12"
+                             Padding="20,14" Margin="0,16,0,0"
+                             materialDesign:ElevationAssist.Elevation="Dp3">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                           Foreground="#6c7293" FontSize="12">
+                    <Run Text="⚠  Verifica los datos antes de guardar"/>
+                </TextBlock>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="btnCancelar" Content="Cancelar"
+                            Height="38" Padding="24,0" Margin="0,0,10,0"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            BorderBrush="#6c7293" Foreground="#6c7293"
+                            materialDesign:ButtonAssist.CornerRadius="8"
+                            Click="BtnCancelar_Click"/>
+                    <Button x:Name="btnActualizar" Content="Actualizar"
+                            Height="38" Padding="24,0" Margin="0,0,10,0"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            BorderBrush="#4f6ef7" Foreground="#4f6ef7"
+                            materialDesign:ButtonAssist.CornerRadius="8"
+                            Visibility="Visible"
+                            Click="BtnActualizar_Click"/>
+                    <Button x:Name="btnAgregar"
+                            Height="38" Padding="24,0"
+                            materialDesign:ButtonAssist.CornerRadius="8"
+                            materialDesign:ElevationAssist.Elevation="Dp0"
+                            Click="BtnAgregar_Click">
+                        <Button.Style>
+                            <Style TargetType="Button"
+                                   BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                <Setter Property="Background"  Value="#4f6ef7"/>
+                                <Setter Property="Foreground"  Value="White"/>
+                                <Setter Property="BorderBrush" Value="#4f6ef7"/>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Agregar Producto" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
 </Window>
