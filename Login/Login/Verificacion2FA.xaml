@@ -3,9 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         x:Class="Login.Verificacion2FA"
-        Title="Verificacion2FA" Height="680" Width="950"
+        Title="Verificación de Código"
+        Height="680" Width="950"
         WindowStartupLocation="CenterScreen"
-        Background="Transparent">
+        Background="Transparent"
+        MouseDown="Window_Drag">
 
     <Border CornerRadius="16" ClipToBounds="True">
         <Grid>
@@ -18,7 +20,8 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     CornerRadius="18"
-                    Padding="36,30">
+                    Padding="36,30"
+                    BorderThickness="1">
                 <Border.Background>
                     <SolidColorBrush Color="#7A8BA0" Opacity="0.55"/>
                 </Border.Background>
@@ -29,7 +32,6 @@
                 <Border.BorderBrush>
                     <SolidColorBrush Color="#ffffff" Opacity="0.15"/>
                 </Border.BorderBrush>
-                <Border.BorderThickness>1</Border.BorderThickness>
 
                 <StackPanel>
 
@@ -56,7 +58,14 @@
                                 <ColumnDefinition Width="42"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Grid.Column="0"
+                                                     Kind="ShieldKeyOutline"
+                                                     Foreground="#5D5FEF"
+                                                     Width="17" Height="17"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
                             <TextBox x:Name="txtCodigo"
+                                     AutomationProperties.Name="Código de verificación"
                                      Grid.Column="1"
                                      BorderThickness="0"
                                      Foreground="#333"
@@ -78,13 +87,13 @@
                         </Grid>
                     </Border>
 
-                    <TextBlock x:Name="txtErrorCorreo" Text=""
+                    <TextBlock x:Name="txtErrorCodigo" Text=""
                                Foreground="#f44336" FontSize="11"
                                Margin="4,0,0,8" Visibility="Collapsed"/>
 
-                    <TextBlock Text="El código expira en 5 min."
+                    <TextBlock Text="El código expira en 5 minutos."
                                Foreground="White" FontSize="10" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,4,0,5"/>
+                               HorizontalAlignment="Center" Margin="0,4,0,14"/>
 
                     <Button Height="42"
                             Margin="0,0,0,16"
@@ -95,8 +104,8 @@
                             materialDesign:ElevationAssist.Elevation="Dp0">
                         <Button.Style>
                             <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="{x:Type Button}">
-                                <Setter Property="Background" Value="#2563EB"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Background"  Value="#2563EB"/>
+                                <Setter Property="Foreground"  Value="White"/>
                                 <Setter Property="BorderBrush" Value="#2563EB"/>
                             </Style>
                         </Button.Style>
@@ -116,14 +125,13 @@
                             Margin="0,0,0,16">
                         <Button.Style>
                             <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="{x:Type Button}">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="#5D5FEF"/>
+                                <Setter Property="Background"  Value="Transparent"/>
+                                <Setter Property="Foreground"  Value="#5D5FEF"/>
                                 <Setter Property="BorderBrush" Value="Transparent"/>
                             </Style>
                         </Button.Style>
                         <TextBlock Text="Reenviar código" FontSize="10" FontWeight="SemiBold" Foreground="#5D5FEF"/>
                     </Button>
-
 
                     <Button Height="36"
                             FontSize="12" FontWeight="SemiBold"
@@ -134,8 +142,8 @@
                             Margin="0,0,0,0">
                         <Button.Style>
                             <Style BasedOn="{StaticResource MaterialDesignRaisedButton}" TargetType="{x:Type Button}">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Background"  Value="Transparent"/>
+                                <Setter Property="Foreground"  Value="White"/>
                                 <Setter Property="BorderBrush" Value="White"/>
                             </Style>
                         </Button.Style>

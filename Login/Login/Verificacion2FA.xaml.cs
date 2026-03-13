@@ -7,13 +7,19 @@ namespace Login
 {
     public partial class Verificacion2FA : Window
     {
-        private string userEmail;
-        private clsAutenticacion autenticacion = new clsAutenticacion();
+        private readonly string _correoUsuario;
+        private readonly clsAutenticacion _autenticacion = new clsAutenticacion();
 
         public Verificacion2FA(string correo)
         {
             InitializeComponent();
-            userEmail = correo;
+            _correoUsuario = correo;
+        }
+
+        private void Window_Drag(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+                this.DragMove();
         }
 
         private void BtnVerificar_Click(object sender, RoutedEventArgs e)
@@ -22,12 +28,12 @@ namespace Login
 
             if (string.IsNullOrWhiteSpace(codigoIngresado))
             {
-                txtErrorCorreo.Text = "⚠ Ingresa el código.";
-                txtErrorCorreo.Visibility = Visibility.Visible;
+                txtErrorCodigo.Text = "⚠ Ingresa el código de verificación.";
+                txtErrorCodigo.Visibility = Visibility.Visible;
                 return;
             }
 
-            bool codigoValido = autenticacion.ValidarCodigo(userEmail, codigoIngresado);
+            bool codigoValido = _autenticacion.ValidarCodigo(_correoUsuario, codigoIngresado);
 
             if (codigoValido)
             {
@@ -37,9 +43,8 @@ namespace Login
             }
             else
             {
-                txtErrorCorreo.Text = "⚠ Código incorrecto o expirado. Intenta nuevamente.";
-                txtErrorCorreo.Visibility = Visibility.Visible;
-
+                txtErrorCodigo.Text = "⚠ Código incorrecto o expirado. Intenta nuevamente.";
+                txtErrorCodigo.Visibility = Visibility.Visible;
                 borderCodigo.BorderBrush =
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
                 borderCodigo.BorderThickness = new Thickness(2);
@@ -48,8 +53,8 @@ namespace Login
 
         private void BtnReenviar_Click(object sender, RoutedEventArgs e)
         {
-            string codigo = autenticacion.GenerarCodigo(userEmail);
-            bool enviado = autenticacion.EnviarCorreo(userEmail, codigo);
+            string codigo = _autenticacion.GenerarCodigo(_correoUsuario);
+            bool enviado = _autenticacion.EnviarCorreo(_correoUsuario, codigo);
 
             if (enviado)
             {
@@ -78,10 +83,9 @@ namespace Login
 
         private void txtCodigo_TextChanged(object sender, TextChangedEventArgs e)
         {
-
-            if (txtErrorCorreo.Visibility == Visibility.Visible)
+            if (txtErrorCodigo.Visibility == Visibility.Visible)
             {
-                txtErrorCorreo.Visibility = Visibility.Collapsed;
+                txtErrorCodigo.Visibility = Visibility.Collapsed;
                 borderCodigo.BorderBrush = new SolidColorBrush(Colors.Transparent);
                 borderCodigo.BorderThickness = new Thickness(1.5);
             }
@@ -89,7 +93,7 @@ namespace Login
 
         private void BtnRegresar_Click(object sender, RoutedEventArgs e)
         {
-            OpcionSesion ventana = new OpcionSesion(userEmail);
+            OpcionSesion ventana = new OpcionSesion(_correoUsuario);
             ventana.Show();
             this.Close();
         }

@@ -16,26 +16,29 @@ namespace Login
 {
     public partial class ReconocimientoFacial : Window
     {
-        private FilterInfoCollection? camarasDisponibles;
-        private VideoCaptureDevice? camaraActiva;
-        private CascadeClassifier? detectorRostros;
-        private bool rostroDetectado = false;
-        private bool accesoOtorgado = false;
-        private bool esModoRegistro = false; // ✅ NUEVO: controla si estamos registrando o haciendo login
-        private List<(int Id, string Nombre, Drawing.Bitmap Foto)> personasRegistradas = new();
-        private Drawing.Bitmap? fotoCapturada = null;
-        private LBPHFaceRecognizer? reconocedor;
-        private bool reconocedorEntrenado = false;
-        private const double UMBRAL_RECONOCIMIENTO = 100.0;
+        private FilterInfoCollection? _camarasDisponibles;
+        private VideoCaptureDevice? _camaraActiva;
+        private CascadeClassifier? _detectorRostros;
+        private bool _rostroDetectado = false;
+        private bool _accesoOtorgado = false;
+        private bool _esModoRegistro = false;
+        private readonly List<(int Id, string Nombre, Drawing.Bitmap Foto)> _personasRegistradas = new();
+        private Drawing.Bitmap? _fotoCapturada = null;
+        private LBPHFaceRecognizer? _reconocedor;
+        private bool _reconocedorEntrenado = false;
+        private readonly string _correoUsuario;
+        private const double UmbralReconocimiento = 100.0;
 
-        public ReconocimientoFacial()
+        public ReconocimientoFacial(string correo = "")
         {
             InitializeComponent();
+            _correoUsuario = correo;
+
             string rutaXml = "haarcascade_frontalface_default.xml";
             if (File.Exists(rutaXml))
-                detectorRostros = new CascadeClassifier(rutaXml);
+                _detectorRostros = new CascadeClassifier(rutaXml);
             else
-                txtEstado.Text = "No se encontró XML de rostros";
+                txtEstado.Text = "No se encontró el archivo XML de detección de rostros.";
 
             CargarPersonasDesdeBD();
         }
@@ -44,8 +47,8 @@ namespace Login
         {
             try
             {
-                foreach (var p in personasRegistradas) p.Foto?.Dispose();
-                personasRegistradas.Clear();
+                foreach (var p in _personasRegistradas) p.Foto?.Dispose();
+                _personasRegistradas.Clear();
 
                 clsConexion conexion = new clsConexion();
                 conexion.Abrir();
@@ -60,18 +63,18 @@ namespace Login
                     byte[] fotoBytes = (byte[])reader[2];
                     using MemoryStream ms = new MemoryStream(fotoBytes);
                     Drawing.Bitmap foto = new Drawing.Bitmap(new Drawing.Bitmap(ms));
-                    personasRegistradas.Add((id, nombre, foto));
+                    _personasRegistradas.Add((id, nombre, foto));
                 }
 
                 conexion.Cerrar();
-                if (personasRegistradas.Count > 0)
+                if (_personasRegistradas.Count > 0)
                     EntrenarReconocedor();
 
-                txtEstado.Text = $"{personasRegistradas.Count} persona(s) cargadas";
+                txtEstado.Text = $"{_personasRegistradas.Count} persona(s) cargadas.";
             }
             catch (Exception ex)
             {
-                txtEstado.Text = "Error cargando BD: " + ex.Message;
+                txtEstado.Text = "Error al cargar datos: " + ex.Message;
             }
         }
 
@@ -93,31 +96,31 @@ namespace Login
                 cmd.ExecuteNonQuery();
                 conexion.Cerrar();
 
-                MessageBox.Show($"Persona '{nombre}' registrada correctamente.");
+                MessageBox.Show($"Persona '{nombre}' registrada correctamente.",
+                    "Registro exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al guardar: " + ex.Message);
+                MessageBox.Show("Error al guardar: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        // ✅ NUEVO: Activa modo registro — desactiva el reconocimiento automático
         private void btnModoRegistro_Click(object sender, RoutedEventArgs e)
         {
-            esModoRegistro = true;
-            txtEstado.Text = "MODO REGISTRO — El reconocimiento está desactivado";
+            _esModoRegistro = true;
+            txtEstado.Text = "Modo Registro — El reconocimiento está desactivado.";
             txtNombreReconocido.Text = "";
             btnModoRegistro.IsEnabled = false;
             btnModoLogin.IsEnabled = true;
         }
 
-        // ✅ NUEVO: Activa modo login — reactiva el reconocimiento automático
         private void btnModoLogin_Click(object sender, RoutedEventArgs e)
         {
-            esModoRegistro = false;
-            accesoOtorgado = false;
-            fotoCapturada = null;
-            txtEstado.Text = "MODO LOGIN — Coloca tu cara frente a la cámara";
+            _esModoRegistro = false;
+            _accesoOtorgado = false;
+            _fotoCapturada = null;
+            txtEstado.Text = "Modo Login — Coloca tu cara frente a la cámara.";
             txtNombreReconocido.Text = "";
             btnModoLogin.IsEnabled = false;
             btnModoRegistro.IsEnabled = true;
@@ -125,14 +128,19 @@ namespace Login
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
-            camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            if (camarasDisponibles.Count == 0) return;
+            _camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            if (_camarasDisponibles.Count == 0)
+            {
+                MessageBox.Show("No se encontró ninguna cámara disponible.",
+                    "Sin cámara", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-            accesoOtorgado = false;
-            esModoRegistro = false; // Por defecto inicia en modo login
-            camaraActiva = new VideoCaptureDevice(camarasDisponibles[0].MonikerString);
-            camaraActiva.NewFrame += CamaraActiva_NewFrame;
-            camaraActiva.Start();
+            _accesoOtorgado = false;
+            _esModoRegistro = false;
+            _camaraActiva = new VideoCaptureDevice(_camarasDisponibles[0].MonikerString);
+            _camaraActiva.NewFrame += CamaraActiva_NewFrame;
+            _camaraActiva.Start();
 
             txtSinCamara.Visibility = Visibility.Collapsed;
             btnIniciarCamara.IsEnabled = false;
@@ -144,40 +152,38 @@ namespace Login
 
         private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
-            if (accesoOtorgado) return;
+            if (_accesoOtorgado) return;
 
             using (Drawing.Bitmap bitmap = (Drawing.Bitmap)eventArgs.Frame.Clone())
             {
-                if (detectorRostros != null)
+                if (_detectorRostros != null)
                 {
                     using var imgEmgu = bitmap.ToImage<Bgr, byte>();
                     using var imgGris = imgEmgu.Convert<Gray, byte>();
-                    var rostros = detectorRostros.DetectMultiScale(imgGris, 1.1, 10, new Drawing.Size(80, 80));
+                    var rostros = _detectorRostros.DetectMultiScale(imgGris, 1.1, 10, new Drawing.Size(80, 80));
 
-                    rostroDetectado = rostros.Length > 0;
+                    _rostroDetectado = rostros.Length > 0;
 
                     foreach (var rostro in rostros)
                     {
-                        // Color del rectángulo según el modo
-                        var colorRect = esModoRegistro ? Drawing.Color.Orange : Drawing.Color.LimeGreen;
+                        var colorRect = _esModoRegistro ? Drawing.Color.Orange : Drawing.Color.LimeGreen;
                         using (Drawing.Graphics g = Drawing.Graphics.FromImage(bitmap))
                             g.DrawRectangle(new Drawing.Pen(colorRect, 3), rostro);
 
-                        // ✅ Solo reconoce si estamos en modo LOGIN
-                        if (!esModoRegistro && reconocedorEntrenado && reconocedor != null)
+                        if (!_esModoRegistro && _reconocedorEntrenado && _reconocedor != null)
                         {
                             using var rostroRecortado = imgGris.Copy(rostro)
                                 .Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear);
 
-                            var resultado = reconocedor.Predict(rostroRecortado.Mat);
+                            var resultado = _reconocedor.Predict(rostroRecortado.Mat);
 
                             bool esDesconocido = resultado.Label < 0
-                                              || resultado.Label >= personasRegistradas.Count
-                                              || resultado.Distance >= UMBRAL_RECONOCIMIENTO;
+                                              || resultado.Label >= _personasRegistradas.Count
+                                              || resultado.Distance >= UmbralReconocimiento;
 
                             if (!esDesconocido)
                             {
-                                string nombre = personasRegistradas[resultado.Label].Nombre;
+                                string nombre = _personasRegistradas[resultado.Label].Nombre;
                                 Dispatcher.Invoke(() =>
                                     txtNombreReconocido.Text = $"Identificado: {nombre} (dist: {resultado.Distance:F1})");
                                 FinalizarAcceso(nombre);
@@ -197,16 +203,16 @@ namespace Login
                 Dispatcher.Invoke(() =>
                 {
                     imgCamara.Source = BitmapToImageSource(bitmap);
-                    if (!esModoRegistro)
-                        txtEstado.Text = rostroDetectado ? "Rostro detectado" : "Buscando...";
+                    if (!_esModoRegistro)
+                        txtEstado.Text = _rostroDetectado ? "Rostro detectado." : "Buscando rostro...";
                 });
             }
         }
 
         private async void FinalizarAcceso(string nombre)
         {
-            if (accesoOtorgado) return;
-            accesoOtorgado = true;
+            if (_accesoOtorgado) return;
+            _accesoOtorgado = true;
 
             Dispatcher.Invoke(() =>
             {
@@ -261,63 +267,74 @@ namespace Login
 
         private void EntrenarReconocedor()
         {
-            if (personasRegistradas.Count == 0) return;
+            if (_personasRegistradas.Count == 0) return;
 
-            reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, UMBRAL_RECONOCIMIENTO);
+            _reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, UmbralReconocimiento);
 
             using var matVector = new VectorOfMat();
             using var etiquetas = new VectorOfInt();
 
-            for (int i = 0; i < personasRegistradas.Count; i++)
+            for (int i = 0; i < _personasRegistradas.Count; i++)
             {
-                using var imgColor = personasRegistradas[i].Foto.ToImage<Bgr, byte>();
+                using var imgColor = _personasRegistradas[i].Foto.ToImage<Bgr, byte>();
                 using var imgGris = imgColor.Convert<Gray, byte>()
                     .Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear);
                 matVector.Push(imgGris.Mat);
                 etiquetas.Push(new int[] { i });
             }
 
-            // Imagen de ruido como "desconocido" de referencia
-            using var imgNoise = new Image<Gray, byte>(100, 100);
+            using var imgRuido = new Image<Gray, byte>(100, 100);
             var rng = new Random(42);
             for (int y = 0; y < 100; y++)
                 for (int x = 0; x < 100; x++)
-                    imgNoise.Data[y, x, 0] = (byte)rng.Next(256);
+                    imgRuido.Data[y, x, 0] = (byte)rng.Next(256);
 
-            matVector.Push(imgNoise.Mat);
-            etiquetas.Push(new int[] { personasRegistradas.Count });
+            matVector.Push(imgRuido.Mat);
+            etiquetas.Push(new int[] { _personasRegistradas.Count });
 
-            reconocedor.Train(matVector, etiquetas);
-            reconocedorEntrenado = true;
+            _reconocedor.Train(matVector, etiquetas);
+            _reconocedorEntrenado = true;
         }
 
         private void btnCapturarFoto_Click(object sender, RoutedEventArgs e)
         {
-            if (!esModoRegistro)
+            if (!_esModoRegistro)
             {
-                MessageBox.Show("Activa el Modo Registro primero antes de capturar.");
+                MessageBox.Show("Activa el Modo Registro antes de capturar una foto.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (!rostroDetectado) { MessageBox.Show("No hay rostro detectado."); return; }
+            if (!_rostroDetectado)
+            {
+                MessageBox.Show("No hay ningún rostro detectado.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             Drawing.Bitmap? frame = ObtenerFrameActual();
-            if (frame == null) { MessageBox.Show("No se pudo obtener el frame."); return; }
+            if (frame == null)
+            {
+                MessageBox.Show("No se pudo obtener el fotograma actual.",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             using var imgEmgu = frame.ToImage<Bgr, byte>();
             using var imgGris = imgEmgu.Convert<Gray, byte>();
-            var rostros = detectorRostros!.DetectMultiScale(imgGris, 1.1, 10, new Drawing.Size(80, 80));
+            var rostros = _detectorRostros!.DetectMultiScale(imgGris, 1.1, 10, new Drawing.Size(80, 80));
 
             if (rostros.Length > 0)
             {
-                fotoCapturada?.Dispose();
-                fotoCapturada = imgGris.Copy(rostros[0])
-                                       .Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear)
-                                       .ToBitmap();
-                txtEstado.Text = "Rostro capturado ✓ — Ingresa el nombre y registra";
+                _fotoCapturada?.Dispose();
+                _fotoCapturada = imgGris.Copy(rostros[0])
+                                        .Resize(100, 100, Emgu.CV.CvEnum.Inter.Linear)
+                                        .ToBitmap();
+                txtEstado.Text = "Rostro capturado correctamente. Ingresa el nombre y registra.";
             }
             else
             {
-                MessageBox.Show("No se detectó un rostro claro. Intenta de nuevo.");
+                MessageBox.Show("No se detectó un rostro claro. Intenta de nuevo.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
             frame.Dispose();
@@ -327,31 +344,41 @@ namespace Login
         {
             string nombre = txtNombrePersona.Text.Trim();
 
-            if (string.IsNullOrEmpty(nombre)) { MessageBox.Show("Ingresa un nombre."); return; }
-            if (fotoCapturada == null) { MessageBox.Show("Primero captura una foto."); return; }
+            if (string.IsNullOrEmpty(nombre))
+            {
+                MessageBox.Show("Ingresa el nombre de la persona.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (_fotoCapturada == null)
+            {
+                MessageBox.Show("Primero captura una foto.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-            GuardarPersonaEnBD(nombre, fotoCapturada);
+            GuardarPersonaEnBD(nombre, _fotoCapturada);
             CargarPersonasDesdeBD();
 
             txtNombrePersona.Text = "";
-            fotoCapturada?.Dispose();
-            fotoCapturada = null;
+            _fotoCapturada?.Dispose();
+            _fotoCapturada = null;
         }
 
         private void DetenerCamara()
         {
-            if (camaraActiva != null && camaraActiva.IsRunning)
+            if (_camaraActiva != null && _camaraActiva.IsRunning)
             {
-                camaraActiva.SignalToStop();
-                camaraActiva.NewFrame -= CamaraActiva_NewFrame;
-                camaraActiva = null;
+                _camaraActiva.SignalToStop();
+                _camaraActiva.NewFrame -= CamaraActiva_NewFrame;
+                _camaraActiva = null;
             }
         }
 
         private void btnRegresar_Click(object sender, RoutedEventArgs e)
         {
             DetenerCamara();
-            OpcionSesion ventana = new OpcionSesion("");
+            OpcionSesion ventana = new OpcionSesion(_correoUsuario);
             ventana.Show();
             this.Close();
         }
