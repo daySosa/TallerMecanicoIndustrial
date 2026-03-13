@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,6 +14,11 @@ namespace Vehículos
         private clsConexion _conexion = new clsConexion();
         private ObservableCollection<Vehiculo> _listaVehiculos = new ObservableCollection<Vehiculo>();
         private ICollectionView _vistaVehiculos;
+
+        private string _filtroMarca = "";
+        private string _filtroAnio = "";
+        private string _filtroTipo = "Todos";
+        private string _filtroEstado = "Todos";
 
         public MenúPrincipalVehículos()
         {
@@ -59,7 +65,7 @@ namespace Vehículos
                             Cliente_DNI = Convert.ToInt32(reader["Cliente_DNI"]),
                             Cliente_NombreCompleto = reader["Cliente_NombreCompleto"].ToString(),
                             EstaActivo = reader["Vehiculo_Activo"] != DBNull.Value
-                                                     && Convert.ToBoolean(reader["Vehiculo_Activo"])
+                                         && Convert.ToBoolean(reader["Vehiculo_Activo"])
                         });
                     }
                 }
@@ -67,6 +73,8 @@ namespace Vehículos
                 _vistaVehiculos = CollectionViewSource.GetDefaultView(_listaVehiculos);
                 _vistaVehiculos.Filter = AplicarFiltros;
                 dgVehiculos.ItemsSource = _vistaVehiculos;
+
+                badgeNotif.Badge = _listaVehiculos.Count(v => !v.EstaActivo);
             }
             catch (Exception ex)
             {
@@ -81,18 +89,42 @@ namespace Vehículos
             if (item is not Vehiculo v) return false;
 
             string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
-            if (string.IsNullOrEmpty(texto)) return true;
 
-            return (v.Vehiculo_Placa ?? "").ToLower().Contains(texto) ||
-                   (v.Vehiculo_Marca ?? "").ToLower().Contains(texto) ||
-                   (v.Vehiculo_Modelo ?? "").ToLower().Contains(texto) ||
-                   (v.Vehiculo_Tipo ?? "").ToLower().Contains(texto) ||
-                   (v.Cliente_NombreCompleto ?? "").ToLower().Contains(texto);
+            bool pasaBusqueda = string.IsNullOrEmpty(texto) ||
+                                (v.Vehiculo_Placa ?? "").ToLower().Contains(texto) ||
+                                (v.Vehiculo_Marca ?? "").ToLower().Contains(texto) ||
+                                (v.Vehiculo_Modelo ?? "").ToLower().Contains(texto) ||
+                                (v.Vehiculo_Tipo ?? "").ToLower().Contains(texto) ||
+                                (v.Cliente_NombreCompleto ?? "").ToLower().Contains(texto);
+
+            bool pasaMarca = string.IsNullOrEmpty(_filtroMarca) ||
+                             (v.Vehiculo_Marca ?? "").ToLower().Contains(_filtroMarca.ToLower());
+
+            bool pasaAnio = string.IsNullOrEmpty(_filtroAnio) ||
+                            v.Vehiculo_Año.ToString() == _filtroAnio;
+
+            bool pasaTipo = _filtroTipo == "Todos" || v.Vehiculo_Tipo == _filtroTipo;
+
+            bool pasaEstado = _filtroEstado == "Todos" ||
+                              (_filtroEstado == "Activo" && v.EstaActivo) ||
+                              (_filtroEstado == "Inactivo" && !v.EstaActivo);
+
+            return pasaBusqueda && pasaMarca && pasaAnio && pasaTipo && pasaEstado;
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaVehiculos?.Refresh();
+        }
+
+        private void BtnNotificaciones_Click(object sender, RoutedEventArgs e)
+        {
+            // pendiente
+        }
+
+        private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
+        {
+            // pendiente
         }
 
         private void dgVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e)

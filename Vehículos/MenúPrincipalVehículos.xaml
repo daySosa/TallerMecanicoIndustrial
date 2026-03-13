@@ -9,22 +9,18 @@
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="0"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
-
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
                     <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/OSM_LOGO.png" Height="199" Width="200"/>
                 </WrapPanel>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
@@ -33,7 +29,6 @@
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -42,7 +37,6 @@
                         <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -51,7 +45,6 @@
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -60,7 +53,6 @@
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
                           BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
@@ -87,7 +79,6 @@
                         </Button>
                     </StackPanel>
                 </Expander>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
@@ -96,7 +87,6 @@
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
-
                 <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,200,0,15">
@@ -105,7 +95,6 @@
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
-
             </StackPanel>
         </materialDesign:ColorZone>
 
@@ -125,12 +114,10 @@
                         <ColumnDefinition Width="1"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
                         <TextBlock Text="Hola, Oscar Sosa" Foreground="White" FontSize="18" FontWeight="Bold"/>
                         <TextBlock Text="Revisemos tu taller hoy" Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
-
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
                             VerticalAlignment="Center" Height="40" MaxWidth="400"
                             HorizontalAlignment="Left" Margin="45,0,0,0" Width="410">
@@ -151,17 +138,18 @@
                             </TextBox>
                         </StackPanel>
                     </Border>
-
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#6B7280" Width="38" Height="38">
+                        <Button x:Name="btnNotificaciones"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Foreground="#6B7280" Width="38" Height="38"
+                                Click="BtnNotificaciones_Click">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
-                        <materialDesign:Badged BadgeColorZoneMode="PrimaryMid" Badge="0"
+                        <materialDesign:Badged x:Name="badgeNotif"
+                                               BadgeColorZoneMode="PrimaryMid" Badge="0"
                                                HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     </Grid>
-
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
-
                     <StackPanel Grid.Column="4" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="16,0,20,0">
                         <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
@@ -180,7 +168,6 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-
                 <Button Grid.Column="0"
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#4f6ef7" Foreground="White"
@@ -191,15 +178,16 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Nuevo Vehículo" VerticalAlignment="Center" FontSize="14"/>
+                        <TextBlock Text="Agregar Vehículo" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-
                 <Button Grid.Column="2"
+                        x:Name="btnFiltrar"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="14,0">
+                        Height="38" Padding="14,0"
+                        Click="BtnFiltrar_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -208,79 +196,143 @@
                 </Button>
             </Grid>
 
-            <materialDesign:Card Grid.Row="2"
-                                 Background="#252836"
-                                 UniformCornerRadius="12"
-                                 Padding="18"
-                                 Margin="20,0,20,20"
-                                 materialDesign:ElevationAssist.Elevation="Dp3">
-                <StackPanel>
-                    <TextBlock Text="Lista de Vehículos"
-                               Foreground="White" FontSize="14"
-                               FontWeight="Medium" Margin="0,0,0,14"/>
-
-                    <DataGrid x:Name="dgVehiculos"
+            <materialDesign:Card Grid.Row="2" Background="#162030"
+                                 materialDesign:ElevationAssist.Elevation="Dp4"
+                                 UniformCornerRadius="10"
+                                 Margin="20,0,20,20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Padding="20,16"
+                            BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Lista de Vehículos" Foreground="White"
+                                   FontSize="15" FontWeight="Medium"/>
+                    </Border>
+                    <DataGrid Grid.Row="1" x:Name="dgVehiculos"
                               AutoGenerateColumns="False"
-                              Background="#1e2130"
-                              Foreground="White"
-                              BorderBrush="#3a3f5c"
-                              BorderThickness="1"
-                              RowBackground="#252836"
-                              AlternatingRowBackground="#1e2130"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#2e3250"
-                              HeadersVisibility="Column"
-                              CanUserAddRows="False"
-                              IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              CanUserResizeRows="False" IsReadOnly="True"
                               SelectionMode="Single"
                               SelectionChanged="dgVehiculos_SelectionChanged"
-                              materialDesign:DataGridAssist.CellPadding="10,8,10,8"
-                              materialDesign:DataGridAssist.ColumnHeaderPadding="10,10,10,10">
-
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#2A3A4D"
+                              VerticalGridLinesBrush="Transparent"
+                              Background="Transparent" Foreground="White"
+                              BorderThickness="0" RowBackground="Transparent"
+                              AlternatingRowBackground="#1E2A3A"
+                              ColumnHeaderHeight="40" RowHeight="48">
                         <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="{x:Type DataGridColumnHeader}"
-                                   BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                <Setter Property="Background" Value="#2e3250"/>
-                                <Setter Property="Foreground" Value="#a0a8c8"/>
+                            <Style TargetType="{x:Type DataGridColumnHeader}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#8B9BB4"/>
                                 <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="Padding" Value="12,0"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="#2A3A4D"/>
+                                <Setter Property="SeparatorVisibility" Value="Collapsed"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
-
+                        <DataGrid.RowStyle>
+                            <Style TargetType="{x:Type DataGridRow}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#1A2A3D"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#2A3A4D"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="12,0"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Placa"
-                                                Binding="{Binding Vehiculo_Placa}"
-                                                Width="*"/>
-                            <DataGridTextColumn Header="Marca"
-                                                Binding="{Binding Vehiculo_Marca}"
-                                                Width="*"/>
-                            <DataGridTextColumn Header="Modelo"
-                                                Binding="{Binding Vehiculo_Modelo}"
-                                                Width="*"/>
-                            <DataGridTextColumn Header="Año"
-                                                Binding="{Binding Vehiculo_Año}"
-                                                Width="70"/>
-                            <DataGridTextColumn Header="Tipo"
-                                                Binding="{Binding Vehiculo_Tipo}"
-                                                Width="*"/>
-                            <DataGridTextColumn Header="Cliente"
-                                                Binding="{Binding Cliente_NombreCompleto}"
-                                                Width="2*"/>
+                            <DataGridTextColumn Header="Placa" Binding="{Binding Vehiculo_Placa}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Marca" Binding="{Binding Vehiculo_Marca}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Modelo" Binding="{Binding Vehiculo_Modelo}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Año" Binding="{Binding Vehiculo_Año}" Width="70">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#8B9BB4"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Tipo" Binding="{Binding Vehiculo_Tipo}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Cliente" Binding="{Binding Cliente_NombreCompleto}" Width="2*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTemplateColumn Header="Estado" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="10" Padding="6,2" HorizontalAlignment="Center">
+                                        <Border CornerRadius="12" Padding="10,4"
+                                                HorizontalAlignment="Left" Margin="12,0" VerticalAlignment="Center">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#1a3a1a"/>
+                                                    <Setter Property="Background" Value="#0A2A0A"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding EstaActivo}" Value="False">
-                                                            <Setter Property="Background" Value="#3a1a1a"/>
+                                                            <Setter Property="Background" Value="#2A0A0A"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock HorizontalAlignment="Center" FontSize="11">
+                                            <TextBlock FontSize="11">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="Activo"/>
@@ -300,9 +352,8 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-                </StackPanel>
+                </Grid>
             </materialDesign:Card>
-
         </Grid>
     </Grid>
 </Window>
