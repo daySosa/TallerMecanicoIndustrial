@@ -119,7 +119,98 @@ namespace Vehículos
 
         private void BtnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
-            // pendiente
+            if (!popupNotificaciones.IsOpen)
+                CargarNotificacionesEnPopup();
+            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+        }
+
+        private void CargarNotificacionesEnPopup()
+        {
+            panelNotificaciones.Children.Clear();
+
+            var inactivos = _listaVehiculos.Where(v => !v.EstaActivo).ToList();
+
+            if (inactivos.Count == 0)
+            {
+                var vacio = new StackPanel
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 20, 0, 20)
+                };
+
+                vacio.Children.Add(new MaterialDesignThemes.Wpf.PackIcon
+                {
+                    Kind = MaterialDesignThemes.Wpf.PackIconKind.PartyPopper,
+                    Width = 48,
+                    Height = 48,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6B7280"))
+                });
+
+                vacio.Children.Add(new TextBlock
+                {
+                    Text = "Sin notificaciones pendientes",
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6B7280")),
+                    FontSize = 12,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 8, 0, 0)
+                });
+
+                panelNotificaciones.Children.Add(vacio);
+                badgeContadorPopup.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            txtContadorPopup.Text = inactivos.Count.ToString();
+            badgeContadorPopup.Visibility = Visibility.Visible;
+
+            foreach (var v in inactivos)
+            {
+                var tarjeta = new Border
+                {
+                    Background = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#162030")),
+                    CornerRadius = new CornerRadius(8),
+                    Margin = new Thickness(10, 4, 10, 4),
+                    Padding = new Thickness(12, 10, 12, 10)
+                };
+
+                var stack = new StackPanel { Orientation = Orientation.Horizontal };
+
+                var icono = new MaterialDesignThemes.Wpf.PackIcon
+                {
+                    Kind = MaterialDesignThemes.Wpf.PackIconKind.CarOff,
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#f44336")),
+                    Width = 20,
+                    Height = 20,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 10, 0)
+                };
+
+                var info = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                info.Children.Add(new TextBlock
+                {
+                    Text = $"Vehículo inactivo: {v.Vehiculo_Placa}",
+                    Foreground = System.Windows.Media.Brushes.White,
+                    FontSize = 12,
+                    FontWeight = FontWeights.Medium
+                });
+                info.Children.Add(new TextBlock
+                {
+                    Text = $"{v.Vehiculo_Marca} {v.Vehiculo_Modelo} — {v.Cliente_NombreCompleto}",
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6B7280")),
+                    FontSize = 11
+                });
+
+                stack.Children.Add(icono);
+                stack.Children.Add(info);
+                tarjeta.Child = stack;
+                panelNotificaciones.Children.Add(tarjeta);
+            }
         }
 
         private void BtnFiltrar_Click(object sender, RoutedEventArgs e)

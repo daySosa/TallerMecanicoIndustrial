@@ -148,6 +148,42 @@
                         <materialDesign:Badged x:Name="badgeNotif"
                                                BadgeColorZoneMode="PrimaryMid" Badge="0"
                                                HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                        <Popup x:Name="popupNotificaciones"
+                               PlacementTarget="{Binding ElementName=btnNotificaciones}"
+                               Placement="Bottom" StaysOpen="False"
+                               AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="#1E2A3A" CornerRadius="10"
+                                    BorderBrush="#2A3A4D" BorderThickness="1"
+                                    Width="320" MaxHeight="400">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" Opacity="0.4" BlurRadius="16" ShadowDepth="4"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Padding="16,12"
+                                            BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
+                                        <Grid>
+                                            <TextBlock Text="Notificaciones" Foreground="White"
+                                                       FontSize="14" FontWeight="Medium"/>
+                                            <Border x:Name="badgeContadorPopup"
+                                                    Background="#4f6ef7" CornerRadius="10"
+                                                    Padding="8,2" HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock x:Name="txtContadorPopup"
+                                                           Foreground="White" FontSize="11"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                    <ScrollViewer Grid.Row="1" MaxHeight="340"
+                                                  VerticalScrollBarVisibility="Auto">
+                                        <StackPanel x:Name="panelNotificaciones" Margin="0,4"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Popup>
                     </Grid>
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
                     <StackPanel Grid.Column="4" Orientation="Horizontal"
