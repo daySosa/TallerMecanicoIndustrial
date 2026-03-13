@@ -38,7 +38,7 @@
                     <TextBlock Text="Bienvenido!"
                                Foreground="White" FontSize="22" FontWeight="Bold"
                                HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                    <TextBlock Text="Ingrese sus Credenciales para acceder a su cuenta"
+                    <TextBlock Text="Ingrese sus credenciales para acceder a su cuenta"
                                Foreground="#dce3f0" FontSize="11"
                                TextWrapping="Wrap" TextAlignment="Center"
                                HorizontalAlignment="Center" Margin="0,0,0,22"/>
@@ -61,6 +61,7 @@
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
                             <TextBox x:Name="txtCorreo"
+                                     AutomationProperties.Name="Correo electrónico"
                                      Grid.Column="1"
                                      Background="Transparent"
                                      BorderThickness="0"
@@ -74,7 +75,7 @@
                                 <TextBox.Style>
                                     <Style TargetType="TextBox"
                                            BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Example@email.com"/>
+                                        <Setter Property="materialDesign:HintAssist.Hint" Value="ejemplo@correo.com"/>
                                         <Setter Property="materialDesign:HintAssist.Foreground" Value="#aaa"/>
                                     </Style>
                                 </TextBox.Style>
@@ -104,6 +105,7 @@
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
                             <PasswordBox x:Name="txtContrasena"
+                                         AutomationProperties.Name="Contraseña"
                                          Grid.Column="1"
                                          Background="Transparent"
                                          BorderThickness="0"
@@ -115,6 +117,7 @@
                                          LostFocus="TxtContrasena_LostFocus"
                                          Visibility="Visible"/>
                             <TextBox x:Name="txtContrasenaVisible"
+                                     AutomationProperties.Name="Contraseña visible"
                                      Grid.Column="1"
                                      Background="Transparent"
                                      BorderThickness="0"

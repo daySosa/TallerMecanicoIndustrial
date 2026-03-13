@@ -431,7 +431,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            
+
                             <DataGridTemplateColumn Header="Estado" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

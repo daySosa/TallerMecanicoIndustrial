@@ -1,33 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+﻿using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Login
 {
-    /// <summary>
-    /// Lógica de interacción para OpcionSesion.xaml
-    /// </summary>
     public partial class OpcionSesion : Window
     {
-        private string correoUsuario;
+        private readonly string _correoUsuario;
 
         public OpcionSesion(string correo)
         {
             InitializeComponent();
-            correoUsuario = correo;
+            _correoUsuario = correo;
+        }
+
+        private void Window_Drag(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                this.DragMove();
         }
 
         private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
         {
-            Verificacion2FA ventana = new Verificacion2FA(correoUsuario);
+            Verificacion2FA ventana = new Verificacion2FA(_correoUsuario);
             ventana.Show();
             this.Close();
         }
