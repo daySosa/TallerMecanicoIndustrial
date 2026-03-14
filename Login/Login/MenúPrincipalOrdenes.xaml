@@ -305,15 +305,18 @@
                     <DataGrid Grid.Row="1" x:Name="dgOrdenes"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False"
-                              CanUserResizeRows="False" IsReadOnly="True"
-                              SelectionMode="Single"
+                              CanUserResizeRows="False" CanUserReorderColumns="False"
+                              CanUserResizeColumns="False"
+                              IsReadOnly="True" SelectionMode="Single"
                               GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="#2A3A4D"
                               Background="Transparent" Foreground="White"
                               BorderThickness="0" RowBackground="Transparent"
                               AlternatingRowBackground="#162030"
                               ColumnHeaderHeight="40" RowHeight="55"
-                              SelectionChanged="dgOrdenes_SelectionChanged">
+                              SelectionChanged="dgOrdenes_SelectionChanged"
+                              materialDesign:DataGridAssist.CellPadding="0"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -325,6 +328,7 @@
                                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                 <Setter Property="BorderBrush" Value="#2A3A4D"/>
                                 <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
 
@@ -346,8 +350,9 @@
                             <Style TargetType="{x:Type DataGridCell}">
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="12,0"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -359,32 +364,32 @@
 
                         <DataGrid.Columns>
 
-                            <DataGridTextColumn Header="No." Binding="{Binding Orden_ID}" Width="60">
+                            <DataGridTextColumn Header="No." Binding="{Binding Orden_ID}" Width="55">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                         <Setter Property="FontSize" Value="12"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-
-                            <DataGridTemplateColumn Header="Cliente" Width="*">
+                            <DataGridTemplateColumn Header="Cliente" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                                            <Border Width="34" Height="34" CornerRadius="17"
-                                                    Background="#2A3A4D" Margin="0,0,10,0">
+                                            <Border Width="30" Height="30" CornerRadius="15"
+                                                    Background="#2A3A4D" Margin="0,0,8,0">
                                                 <materialDesign:PackIcon Kind="Account" Foreground="#8B9BB4"
-                                                                         Width="18" Height="18"
+                                                                         Width="16" Height="16"
                                                                          HorizontalAlignment="Center"
                                                                          VerticalAlignment="Center"/>
                                             </Border>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Cliente_NombreCompleto}"
-                                                           Foreground="White" FontSize="13" FontWeight="Medium"/>
+                                                           Foreground="White" FontSize="12" FontWeight="Medium"
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="120"/>
                                                 <TextBlock Text="{Binding Vehiculo_Placa}"
                                                            Foreground="#8B9BB4" FontSize="11"/>
                                             </StackPanel>
@@ -398,7 +403,8 @@
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center" Margin="12,0">
                                             <TextBlock Text="{Binding Producto_Nombre}"
-                                                       Foreground="White" FontSize="12"/>
+                                                       Foreground="White" FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Text="{Binding Producto_Categoria}"
                                                        Foreground="#8B9BB4" FontSize="11"/>
                                         </StackPanel>
@@ -406,7 +412,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="Fecha Orden" Width="150">
+                            <DataGridTemplateColumn Header="Fecha Orden" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center" Margin="12,0">
@@ -421,18 +427,18 @@
 
                             <DataGridTextColumn Header="F. Entrega"
                                                Binding="{Binding Fecha_Entrega, StringFormat='dd/MM/yyyy'}"
-                                               Width="110">
+                                               Width="100">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#C0CCDA"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                         <Setter Property="FontSize" Value="12"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="Estado" Width="130">
+                            <DataGridTemplateColumn Header="Estado" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="12" Padding="10,4"
@@ -483,26 +489,26 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="Servicio"
-                                               Binding="{Binding Servicio_Precio, StringFormat='Q {0:N2}'}"
-                                               Width="100">
+                                               Binding="{Binding Servicio_Precio, StringFormat='L {0:N2}'}"
+                                               Width="90">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#C0CCDA"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                         <Setter Property="FontSize" Value="12"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Total"
-                                               Binding="{Binding OrdenPrecio_Total, StringFormat='Q {0:N2}'}"
-                                               Width="100">
+                                               Binding="{Binding OrdenPrecio_Total, StringFormat='L {0:N2}'}"
+                                               Width="90">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#4CAF50"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                         <Setter Property="FontSize" Value="13"/>
                                         <Setter Property="FontWeight" Value="Medium"/>
                                     </Style>
@@ -567,13 +573,25 @@
                     <ComboBox x:Name="cmbFiltroEstado" Height="38" Margin="0,0,0,20"
                               Background="#1A1D2E" Foreground="White"
                               BorderBrush="#3D4458" BorderThickness="1"
-                              FontSize="13" Padding="8,0">
-                        <ComboBox.Resources>
+                              FontSize="13" Padding="8,0,0,0"
+                              VerticalContentAlignment="Center">
+                        <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="Foreground" Value="White"/>
                                 <Setter Property="Background" Value="#252836"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="10,8"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#3a3f5c"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#2e3250"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
-                        </ComboBox.Resources>
+                        </ComboBox.ItemContainerStyle>
                         <ComboBoxItem Content="Todos" IsSelected="True"/>
                         <ComboBoxItem Content="Sin Empezar"/>
                         <ComboBoxItem Content="En Espera"/>

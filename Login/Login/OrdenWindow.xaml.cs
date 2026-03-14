@@ -1,5 +1,6 @@
 ﻿using Login.Clases;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Windows;
@@ -10,14 +11,26 @@ using System.Windows.Media.Imaging;
 
 namespace Órdenes_de_Trabajo
 {
-    public class RepuestoOrden
+    public class RepuestoOrden : INotifyPropertyChanged
     {
         public int Numero { get; set; }
         public string Nombre { get; set; }
         public int Cantidad { get; set; }
         public decimal Precio { get; set; }
-        public bool Incluido { get; set; } = true;
         public int ProductoID { get; set; }
+
+        private bool _incluido = true;
+        public bool Incluido
+        {
+            get => _incluido;
+            set
+            {
+                _incluido = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Incluido)));
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 
     public partial class OrdenWindow : Window
@@ -36,14 +49,38 @@ namespace Órdenes_de_Trabajo
         {
             InitializeComponent();
             dgRepuestos.ItemsSource = _repuestos;
-            dpFecha.SelectedDate = DateTime.Today;
+
+            dpFecha.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
+            dpEntrega.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
 
             txtPrecioServicio.TextChanged += (s, e) => RecalcularPrecios();
+
+            txtPrecioServicio.LostFocus += (s, e) =>
+            {
+                string texto = txtPrecioServicio.Text
+                    .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+                if (decimal.TryParse(texto,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out decimal valor))
+                {
+                    txtPrecioServicio.Text = $"L {valor:N2}";
+                }
+                else
+                {
+                    txtPrecioServicio.Text = "L 0.00";
+                }
+            };
+
+            txtPrecioServicio.GotFocus += (s, e) =>
+            {
+                string texto = txtPrecioServicio.Text
+                    .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+                txtPrecioServicio.Text = texto == "0.00" ? "0" : texto;
+                txtPrecioServicio.SelectAll();
+            };
         }
 
-        // ════════════════════════════════════════════════════
-        // CARGAR ORDEN PARA EDITAR
-        // ════════════════════════════════════════════════════
         public async Task CargarOrdenParaEditar(int ordenID)
         {
             _ordenIDEditar = ordenID;
@@ -90,9 +127,10 @@ namespace Órdenes_de_Trabajo
                             dpEntrega.SelectedDate = rd["Fecha_Entrega"] as DateTime?;
 
                             txtObservaciones.Text = rd["Observaciones"].ToString();
-                            txtPrecioServicio.Text = Convert.ToDecimal(rd["Servicio_Precio"]).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
 
-                            // Cargar foto si existe
+                            decimal servicioPrecio = Convert.ToDecimal(rd["Servicio_Precio"]);
+                            txtPrecioServicio.Text = $"L {servicioPrecio:N2}";
+
                             string foto = rd["Adjuntos_Fotos"]?.ToString() ?? string.Empty;
                             if (!string.IsNullOrEmpty(foto) && System.IO.File.Exists(foto))
                             {
@@ -131,7 +169,7 @@ namespace Órdenes_de_Trabajo
                         int numero = 1;
                         while (rd2.Read())
                         {
-                            _repuestos.Add(new RepuestoOrden
+                            var repuesto = new RepuestoOrden
                             {
                                 Numero = numero++,
                                 ProductoID = Convert.ToInt32(rd2["Producto_ID"]),
@@ -139,10 +177,26 @@ namespace Órdenes_de_Trabajo
                                 Cantidad = Convert.ToInt32(rd2["Repuesto_Cantidad"]),
                                 Precio = Convert.ToDecimal(rd2["Repuesto_Precio"]),
                                 Incluido = true
-                            });
+                            };
+                            repuesto.PropertyChanged += (s, e) => RecalcularPrecios();
+                            _repuestos.Add(repuesto);
                         }
                     }
                 }
+
+                // Prioridad Normal por defecto al editar
+                foreach (ComboBoxItem item in cmbPrioridad.Items)
+                {
+                    if (item.Content.ToString() == "Normal")
+                    {
+                        cmbPrioridad.SelectedItem = item;
+                        break;
+                    }
+                }
+
+                // Deshabilitar Añadir al editar
+                btnAñadir.IsEnabled = false;
+                btnAñadir.Opacity = 0.4;
 
                 RecalcularPrecios();
             }
@@ -150,9 +204,6 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ════════════════════════════════════════════════════
-        // TABS DNI / PLACA
-        // ════════════════════════════════════════════════════
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
@@ -175,9 +226,6 @@ namespace Órdenes_de_Trabajo
             LimpiarResultados();
         }
 
-        // ════════════════════════════════════════════════════
-        // BUSCAR
-        // ════════════════════════════════════════════════════
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
             string valor = txtBuscar.Text.Trim();
@@ -196,7 +244,6 @@ namespace Órdenes_de_Trabajo
             try
             {
                 _conexion.Abrir();
-
                 string sqlCliente = @"
                     SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
                            Cliente_TelefonoPrincipal, Cliente_Email
@@ -291,41 +338,29 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ════════════════════════════════════════════════════
-        // BOTÓN AÑADIR — INSERT
-        // ════════════════════════════════════════════════════
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
             {
-                MessageBox.Show("Busca y selecciona un cliente y su vehículo antes de guardar.",
-                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning); return;
-            }
-            if (dpFecha.SelectedDate == null)
-            {
-                MessageBox.Show("Selecciona la fecha de la orden.",
-                    "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning); return;
-            }
-
-            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Replace(" ", "").Trim();
-            if (!decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal precioServicio) || precioServicio < 0)
-            {
-                MessageBox.Show("Ingresa un precio de servicio válido.",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
-            }
-            if (_repuestos.Count == 0)
-            {
-                MessageBox.Show("Agrega al menos un repuesto antes de guardar la orden.",
-                    "Sin repuestos", MessageBoxButton.OK, MessageBoxImage.Warning); return;
+                MostrarError("Busca un cliente o vehículo antes de guardar.");
+                return;
             }
 
             decimal totalRepuestos = 0;
             foreach (var r in _repuestos)
                 if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
 
+            string precioTexto = txtPrecioServicio.Text
+                .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+
+            decimal.TryParse(precioTexto,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal precioServicio);
+
             decimal total = totalRepuestos + precioServicio;
             string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
-            int productoID = _repuestos[0].ProductoID;
+            int productoID = _repuestos.Count > 0 ? _repuestos[0].ProductoID : 0;
 
             try
             {
@@ -349,7 +384,7 @@ namespace Órdenes_de_Trabajo
                     cmd.Parameters.AddWithValue("@Placa", _vehiculoPlaca);
                     cmd.Parameters.AddWithValue("@ProductoID", productoID);
                     cmd.Parameters.AddWithValue("@Estado", estado);
-                    cmd.Parameters.AddWithValue("@Fecha", dpFecha.SelectedDate.Value);
+                    cmd.Parameters.AddWithValue("@Fecha", dpFecha.SelectedDate ?? DateTime.Today);
                     cmd.Parameters.AddWithValue("@FechaEntrega", dpEntrega.SelectedDate.HasValue
                                                                     ? (object)dpEntrega.SelectedDate.Value
                                                                     : DBNull.Value);
@@ -372,14 +407,14 @@ namespace Órdenes_de_Trabajo
                         cmdRep.Parameters.AddWithValue("@OrdenID", ordenID);
                         cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
                         cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                        cmdRep.Parameters.AddWithValue("@OrdenPrecio_Total", rep.Precio * rep.Cantidad);
                         cmdRep.ExecuteNonQuery();
                     }
                 }
 
-                MessageBox.Show($"✅ Orden #{ordenID} guardada correctamente.",
+                MessageBox.Show("✅ Orden guardada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 LimpiarFormulario();
+                this.Close();
             }
             catch (SqlException ex)
             {
@@ -394,23 +429,28 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ════════════════════════════════════════════════════
-        // BOTÓN ACTUALIZAR — UPDATE
-        // ════════════════════════════════════════════════════
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (_ordenIDEditar == 0)
+            if (dpFecha.SelectedDate.HasValue)
             {
-                MessageBox.Show("No hay una orden cargada para actualizar.",
-                    "Info", MessageBoxButton.OK, MessageBoxImage.Information); return;
+                var fechaOrden = dpFecha.SelectedDate.Value;
+                var hoy = DateTime.Today;
+                if (fechaOrden.Year < hoy.Year ||
+                   (fechaOrden.Year == hoy.Year && fechaOrden.Month < hoy.Month))
+                {
+                    MessageBox.Show("No se pueden actualizar órdenes de meses anteriores.",
+                        "Operación no permitida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
-            string precioTexto = txtPrecioServicio.Text.Replace("Q", "").Replace(",", "").Trim();
-            if (!decimal.TryParse(precioTexto, out decimal precioServicio) || precioServicio < 0)
-            {
-                MessageBox.Show("Ingresa un precio de servicio válido.",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
-            }
+            string precioTexto = txtPrecioServicio.Text
+                .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+
+            decimal.TryParse(precioTexto,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal precioServicio);
 
             decimal totalRepuestos = 0;
             foreach (var r in _repuestos)
@@ -423,7 +463,6 @@ namespace Órdenes_de_Trabajo
             {
                 _conexion.Abrir();
 
-                // 1 — Actualizar orden
                 string sqlUpdate = @"
                     UPDATE Orden_Trabajo SET
                         Estado            = @Estado,
@@ -453,7 +492,6 @@ namespace Órdenes_de_Trabajo
                     cmd.ExecuteNonQuery();
                 }
 
-                // 2 — Borrar repuestos anteriores
                 using (SqlCommand cmd = new SqlCommand(
                     "DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", _conexion.SqlC))
                 {
@@ -461,7 +499,6 @@ namespace Órdenes_de_Trabajo
                     cmd.ExecuteNonQuery();
                 }
 
-                // 3 — Reinsertar repuestos
                 foreach (var rep in _repuestos)
                 {
                     if (!rep.Incluido) continue;
@@ -471,12 +508,11 @@ namespace Órdenes_de_Trabajo
                         cmdRep.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
                         cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
                         cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                        cmdRep.Parameters.AddWithValue("@OrdenPrecio_Total", rep.Precio * rep.Cantidad); // ← AGREGAR
                         cmdRep.ExecuteNonQuery();
                     }
                 }
 
-                MessageBox.Show($"✅ Orden #{_ordenIDEditar} actualizada correctamente.",
+                MessageBox.Show("✅ Orden actualizada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
@@ -488,9 +524,6 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ════════════════════════════════════════════════════
-        // FOTO
-        // ════════════════════════════════════════════════════
         private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -508,9 +541,6 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        // ════════════════════════════════════════════════════
-        // REPUESTOS
-        // ════════════════════════════════════════════════════
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarRepuesto();
@@ -520,6 +550,7 @@ namespace Órdenes_de_Trabajo
             if (ventana.RepuestoResultado != null)
             {
                 ventana.RepuestoResultado.Numero = _repuestos.Count + 1;
+                ventana.RepuestoResultado.PropertyChanged += (s, e) => RecalcularPrecios();
                 _repuestos.Add(ventana.RepuestoResultado);
                 RecalcularPrecios();
             }
@@ -527,34 +558,25 @@ namespace Órdenes_de_Trabajo
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
-        private void btnCalcular_Click(object sender, RoutedEventArgs e) => RecalcularPrecios();
-
         private void RecalcularPrecios()
         {
             decimal totalRepuestos = 0;
             foreach (var r in _repuestos)
                 if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
 
-            txtPrecioRepuesto.Text = $"Q {totalRepuestos:N2}";
-
+            txtPrecioRepuesto.Text = $"L {totalRepuestos:N2}";
 
             string precioTexto = txtPrecioServicio.Text
-                .Replace("L", "")
-                .Replace(",", "")
-                .Replace(" ", "")
-                .Trim();
+                .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
 
             decimal.TryParse(precioTexto,
                 System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture,
                 out decimal servicio);
 
-            txtCostoTotal.Text = $"Q {(totalRepuestos + servicio):N2}";
+            txtCostoTotal.Text = $"L {(totalRepuestos + servicio):N2}";
         }
 
-        // ════════════════════════════════════════════════════
-        // HELPERS
-        // ════════════════════════════════════════════════════
         private void MostrarError(string mensaje)
         {
             borderError.Visibility = Visibility.Visible;
@@ -577,16 +599,21 @@ namespace Órdenes_de_Trabajo
             _repuestos.Clear();
             _ordenIDEditar = 0;
             _rutaFoto = string.Empty;
-            txtPrecioRepuesto.Text = "0";
-            txtPrecioServicio.Text = "0";
+            txtPrecioRepuesto.Text = "L 0.00";
+            txtPrecioServicio.Text = "L 0.00";
             txtCostoTotal.Text = "L 0.00";
-            dpFecha.SelectedDate = DateTime.Today;
+            dpFecha.SelectedDate = null;
             dpEntrega.SelectedDate = null;
             txtObservaciones?.Clear();
-            cmbEstado.SelectedIndex = 0;
+            cmbEstado.SelectedIndex = -1;
+            cmbPrioridad.SelectedIndex = -1;
             imgFoto.Source = null;
             imgFoto.Visibility = Visibility.Collapsed;
             txtFotoPlaceholder.Visibility = Visibility.Visible;
+            btnAñadir.IsEnabled = true;
+            btnAñadir.Opacity = 1;
+            btnActualizar.IsEnabled = true;
+            btnActualizar.Opacity = 1;
         }
     }
 }

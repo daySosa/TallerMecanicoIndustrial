@@ -15,9 +15,6 @@ using System.Windows.Shapes;
 
 namespace Órdenes_de_Trabajo
 {
-    // ═══════════════════════════════════════════════════════════════
-    // MODELO — producto del inventario para el ComboBox
-    // ═══════════════════════════════════════════════════════════════
     public class ProductoInventario
     {
         public int Producto_ID { get; set; }
@@ -47,11 +44,6 @@ namespace Órdenes_de_Trabajo
             CargarProductos();
         }
 
-        // ═══════════════════════════════════════════
-        // 1. CARGAR PRODUCTOS DESDE BD
-        //    Usa sp_ObtenerProductosInventario que
-        //    solo devuelve productos con stock > 0.
-        // ═══════════════════════════════════════════
         private void CargarProductos()
         {
             try
@@ -92,21 +84,15 @@ namespace Órdenes_de_Trabajo
             finally { _conexion.Cerrar(); }
         }
 
-        // ═══════════════════════════════════════════
-        // 2. SELECCIÓN EN COMBOBOX
-        //    Rellena categoría, precio y stock
-        //    automáticamente al elegir un producto.
-        // ═══════════════════════════════════════════
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _productoSeleccionado = cmbProducto.SelectedItem as ProductoInventario;
             if (_productoSeleccionado == null) return;
 
             txtCategoria.Text = _productoSeleccionado.Producto_Categoria;
-            txtPrecioUnitario.Text = $"S/ {_productoSeleccionado.Producto_Precio:N2}";
+            txtPrecioUnitario.Text = $"L {_productoSeleccionado.Producto_Precio:N2}";
             txtStock.Text = _productoSeleccionado.Producto_Cantidad_Actual.ToString();
 
-            // Alerta visual si el stock es bajo
             borderStock.BorderBrush = _productoSeleccionado.Producto_Cantidad_Actual <= 5
                 ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"))
                 : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3a3f5c"));
@@ -114,36 +100,24 @@ namespace Órdenes_de_Trabajo
             CalcularSubtotal();
         }
 
-        // ═══════════════════════════════════════════
-        // 3. CAMBIO DE CANTIDAD → recalcula subtotal
-        // ═══════════════════════════════════════════
         private void txtCantidad_TextChanged(object sender, TextChangedEventArgs e)
         {
             CalcularSubtotal();
         }
 
-        // ═══════════════════════════════════════════
-        // 4. CALCULAR SUBTOTAL (interno)
-        // ═══════════════════════════════════════════
         private void CalcularSubtotal()
         {
             if (_productoSeleccionado == null) return;
 
             if (!int.TryParse(txtCantidad.Text.Trim(), out int cantidad) || cantidad <= 0)
             {
-                txtSubtotal.Text = "S/ 0.00";
+                txtSubtotal.Text = "L 0.00";
                 return;
             }
 
-            txtSubtotal.Text = $"S/ {_productoSeleccionado.Producto_Precio * cantidad:N2}";
+            txtSubtotal.Text = $"L {_productoSeleccionado.Producto_Precio * cantidad:N2}";
         }
 
-        // ═══════════════════════════════════════════
-        // 5. BOTÓN AGREGAR REPUESTO
-        //    Valida y guarda el resultado en la
-        //    propiedad RepuestoResultado para que
-        //    OrdenWindow lo lea tras el ShowDialog().
-        // ═══════════════════════════════════════════
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
             if (_productoSeleccionado == null)
@@ -168,7 +142,6 @@ namespace Órdenes_de_Trabajo
                 return;
             }
 
-            // Guarda el resultado — OrdenWindow lo leerá después del ShowDialog()
             RepuestoResultado = new RepuestoOrden
             {
                 ProductoID = _productoSeleccionado.Producto_ID,
@@ -181,9 +154,6 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
-        // ═══════════════════════════════════════════
-        // 6. BOTÓN CANCELAR
-        // ═══════════════════════════════════════════
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             RepuestoResultado = null;
