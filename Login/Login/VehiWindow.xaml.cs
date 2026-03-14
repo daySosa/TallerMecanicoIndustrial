@@ -44,9 +44,12 @@ namespace Vehículos
 
         private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (borderClienteInfo != null)
+            if (borderClienteInfo != null && txtClienteDNI.IsFocused)
+            {
                 borderClienteInfo.Visibility = Visibility.Collapsed;
-            _clienteDNI = string.Empty;
+                _clienteDNI = string.Empty;
+            }
+
         }
 
         private bool ValidarDNIHondureño(string dni)
@@ -170,15 +173,19 @@ namespace Vehículos
             finally { _conexion.Cerrar(); }
         }
 
-
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (!ValidarCampos(out int año)) return;
-
             if (string.IsNullOrEmpty(_placaSeleccionada))
             {
                 MessageBox.Show("No hay ningún vehículo cargado para actualizar.",
                     "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(txtAnio.Text, out int año) || año < 1900 || año > DateTime.Now.Year + 1)
+            {
+                MessageBox.Show($"El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -187,23 +194,29 @@ namespace Vehículos
                 _conexion.Abrir();
                 string query = @"
                     UPDATE Vehiculo SET
+                        Vehiculo_Placa         = @PlacaNueva,
                         Vehiculo_Marca         = @Marca,
                         Vehiculo_Modelo        = @Modelo,
                         Vehiculo_Año           = @Año,
                         Vehiculo_Tipo          = @Tipo,
-                        Vehiculo_Observaciones = @Observaciones
-                    WHERE Vehiculo_Placa = @Placa";
+                        Vehiculo_Observaciones = @Observaciones,
+                        Vehiculo_Activo        = @Activo,
+                        Cliente_DNI            = @ClienteDNI
+                    WHERE Vehiculo_Placa = @PlacaOriginal";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
                 {
+                    cmd.Parameters.AddWithValue("@PlacaNueva", txtPlaca.Text.Trim().ToUpper());
                     cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
                     cmd.Parameters.AddWithValue("@Modelo", txtModelo.Text.Trim());
                     cmd.Parameters.AddWithValue("@Año", año);
                     cmd.Parameters.AddWithValue("@Tipo", (cmbTipo.SelectedItem as ComboBoxItem)?.Content.ToString());
                     cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
                         ? (object)DBNull.Value : txtObservaciones.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Placa", _placaSeleccionada);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
+                    cmd.Parameters.AddWithValue("@ClienteDNI", _clienteDNI);
+                    cmd.Parameters.AddWithValue("@PlacaOriginal", _placaSeleccionada);
+                    cmd.ExecuteNonQuery(); // ← FALTABA ESTA LÍNEA
                 }
 
                 MessageBox.Show("✅ Vehículo actualizado correctamente.",
@@ -243,17 +256,15 @@ namespace Vehículos
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
-            _clienteDNI = vehiculo.Cliente_DNI;
-
 
             txtPlaca.Text = vehiculo.Vehiculo_Placa;
-            txtPlaca.IsReadOnly = true;
             txtMarca.Text = vehiculo.Vehiculo_Marca;
             txtModelo.Text = vehiculo.Vehiculo_Modelo;
             txtAnio.Text = vehiculo.Vehiculo_Año.ToString();
             txtObservaciones.Text = vehiculo.Vehiculo_Observaciones;
             txtClienteDNI.Text = vehiculo.Cliente_DNI;
-            txtClienteDNI.IsReadOnly = true;
+
+            _clienteDNI = vehiculo.Cliente_DNI;
 
             MostrarClienteOk(vehiculo.Cliente_NombreCompleto);
 
@@ -267,6 +278,9 @@ namespace Vehículos
             }
 
             toggleActivo.IsChecked = vehiculo.EstaActivo;
+
+            btnGuardar.IsEnabled = false;
+            btnGuardar.Opacity = 0.4;
         }
 
 
@@ -313,7 +327,6 @@ namespace Vehículos
         private void LimpiarFormulario()
         {
             txtPlaca.Clear();
-            txtPlaca.IsReadOnly = false;
             txtMarca.Clear();
             txtModelo.Clear();
             txtAnio.Clear();
@@ -321,7 +334,6 @@ namespace Vehículos
             cmbTipo.SelectedIndex = -1;
             toggleActivo.IsChecked = true;
             txtClienteDNI.Clear();
-            txtClienteDNI.IsReadOnly = false;
             borderClienteInfo.Visibility = Visibility.Collapsed;
             _placaSeleccionada = string.Empty;
             _clienteDNI = string.Empty;
