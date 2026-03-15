@@ -18,6 +18,7 @@ namespace InterfazClientes
         private string _filtroNombre = "";
         private string _filtroTelefono = "";
         private string _filtroEstado = "Todos";
+        private bool _editando = false;
 
         public MenúPrincipalClientes()
         {
@@ -52,7 +53,6 @@ namespace InterfazClientes
             var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
@@ -79,6 +79,15 @@ namespace InterfazClientes
                 login.Show();
                 this.Close();
             }
+        }
+
+        private string FormatearTelefono(string telefono)
+        {
+            if (string.IsNullOrWhiteSpace(telefono)) return telefono;
+            string soloNumeros = System.Text.RegularExpressions.Regex.Replace(telefono, @"\D", "");
+            if (soloNumeros.Length == 8)
+                return soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
+            return telefono;
         }
 
         public void CargarClientes()
@@ -108,7 +117,7 @@ namespace InterfazClientes
                         Cliente_DPI = rd["Cliente_DNI"].ToString(),
                         Cliente_Nombre = rd["Cliente_Nombres"].ToString(),
                         Cliente_Apellido = rd["Cliente_Apellidos"].ToString(),
-                        Cliente_Telefono = rd["Cliente_TelefonoPrincipal"].ToString(),
+                        Cliente_Telefono = FormatearTelefono(rd["Cliente_TelefonoPrincipal"].ToString()),
                         Cliente_Correo = rd["Cliente_Email"].ToString(),
                         Cliente_Direccion = rd["Cliente_Direccion"].ToString(),
                         Cliente_Activo = rd["Cliente_Activo"] != DBNull.Value
@@ -132,7 +141,6 @@ namespace InterfazClientes
 
             _listaFiltrada = _listaClientes.FindAll(c =>
             {
-
                 if (!string.IsNullOrEmpty(busqueda))
                 {
                     bool coincide =
@@ -203,55 +211,22 @@ namespace InterfazClientes
 
             if (resultado == true && formulario.ClienteResultado != null)
             {
-                GuardarEnDB(formulario.ClienteResultado);
                 CargarClientes();
             }
         }
 
-        private void GuardarEnDB(Cliente c)
-        {
-            try
-            {
-                _db.Abrir();
-                string sql = @"
-                    INSERT INTO Cliente
-                        (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                         Cliente_TelefonoPrincipal, Cliente_Email,
-                         Cliente_Direccion, Cliente_Activo)
-                    VALUES
-                        (@DNI, @Nombres, @Apellidos,
-                         @Telefono, @Email,
-                         @Direccion, @Activo)";
-
-                SqlCommand cmd = new SqlCommand(sql, _db.SqlC);
-                cmd.Parameters.AddWithValue("@DNI", c.Cliente_DPI);
-                cmd.Parameters.AddWithValue("@Nombres", c.Cliente_Nombre);
-                cmd.Parameters.AddWithValue("@Apellidos", c.Cliente_Apellido);
-                cmd.Parameters.AddWithValue("@Telefono", c.Cliente_Telefono);
-                cmd.Parameters.AddWithValue("@Email", c.Cliente_Correo);
-                cmd.Parameters.AddWithValue("@Direccion", c.Cliente_Direccion);
-                cmd.Parameters.AddWithValue("@Activo", c.Cliente_Activo ? 1 : 0);
-                cmd.ExecuteNonQuery();
-
-                MessageBox.Show($"✅ Cliente {c.Cliente_Nombre} {c.Cliente_Apellido} guardado.",
-                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al guardar: " + ex.Message);
-            }
-            finally { _db.Cerrar(); }
-        }
-
         private void dgClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_editando) return;
             if (dgClientes.SelectedItem is Cliente seleccionado)
             {
+                _editando = true;
                 var formulario = new ClientesWindow();
                 formulario.CargarClienteParaEditar(seleccionado);
                 formulario.ShowDialog();
 
                 dgClientes.SelectedItem = null;
+                _editando = false;
                 CargarClientes();
             }
         }
@@ -359,9 +334,22 @@ namespace InterfazClientes
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            badgeTipo.Child = new TextBlock { Text = labelTipo, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorIcono)), FontSize = 10, FontWeight = FontWeights.SemiBold };
+            badgeTipo.Child = new TextBlock
+            {
+                Text = labelTipo,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorIcono)),
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold
+            };
             contenido.Children.Add(badgeTipo);
-            contenido.Children.Add(new TextBlock { Text = mensaje, Foreground = new SolidColorBrush(Colors.White), FontSize = 11, TextWrapping = TextWrapping.Wrap, LineHeight = 17 });
+            contenido.Children.Add(new TextBlock
+            {
+                Text = mensaje,
+                Foreground = new SolidColorBrush(Colors.White),
+                FontSize = 11,
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 17
+            });
 
             Grid.SetColumn(contenido, 0);
             grid.Children.Add(contenido);
