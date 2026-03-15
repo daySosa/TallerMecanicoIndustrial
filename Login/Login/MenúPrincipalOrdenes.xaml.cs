@@ -169,7 +169,6 @@ namespace Órdenes_de_Trabajo
         {
             if (item is not OrdenTrabajo o) return false;
 
-            // ✅ Ocultar finalizadas por defecto (a menos que el filtro las pida)
             if (_filtroEstado != "Finalizado" && o.Estado == "Finalizado") return false;
 
             string busqueda = txtBuscar.Text?.Trim().ToLower() ?? "";
@@ -235,12 +234,11 @@ namespace Órdenes_de_Trabajo
             tbTotalOrdenes.Text = $"{total} orden{(total != 1 ? "es" : "")}";
         }
 
-        // ✅ SelectionChanged — solo editar, recargar al cerrar
         private async void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgOrdenes.SelectedItem is not OrdenTrabajo seleccionada) return;
 
-            dgOrdenes.SelectedItem = null; // limpiar selección PRIMERO para evitar doble disparo
+            dgOrdenes.SelectedItem = null;
 
             var ventana = new OrdenWindow();
             ventana.Closed += (s, args) =>
@@ -253,11 +251,10 @@ namespace Órdenes_de_Trabajo
             await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
         }
 
-        // ✅ Nueva Orden — ShowDialog ya es bloqueante, recargar al terminar
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new OrdenWindow();
-            ventana.ShowDialog(); // bloquea hasta cerrar
+            ventana.ShowDialog();
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }
