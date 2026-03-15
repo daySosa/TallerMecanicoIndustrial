@@ -8,7 +8,7 @@
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Contabilidad"
         mc:Ignorable="d"
-        Title="ActualizarGasto" Height="480" Width="600"
+        Title="ActualizarGasto" Height="500" Width="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1e2130"
@@ -23,7 +23,6 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- TÍTULO -->
             <TextBlock Grid.Row="0"
                        Text="Editar Gasto"
                        Foreground="White"
@@ -31,7 +30,6 @@
                        FontWeight="Bold"
                        Margin="0,0,0,16"/>
 
-            <!-- TABS -->
             <Border Grid.Row="1"
                     Background="#1e2130"
                     CornerRadius="8"
@@ -73,7 +71,6 @@
                         </Style>
                     </TabControl.Resources>
 
-                    <!-- ===== TAB 1: DETALLES BÁSICOS ===== -->
                     <TabItem Header="Detalles Básicos">
                         <Border Background="#1e2130" Padding="0,16,0,0">
                             <Grid>
@@ -86,8 +83,7 @@
                                     <ColumnDefinition Width="16"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-
-                                <!-- Tipo de Gasto -->
+                                
                                 <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,14">
                                     <TextBlock Text="Tipo de Gasto"
                                                Foreground="#6B7280" FontSize="11"
@@ -104,7 +100,6 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <!-- Nombre del Gasto -->
                                 <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,14">
                                     <TextBlock Text="Nombre del Gasto"
                                                Foreground="#6B7280" FontSize="11"
@@ -119,7 +114,6 @@
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                 </StackPanel>
 
-                                <!-- Precio -->
                                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
                                     <TextBlock Text="Precio"
                                                Foreground="#6B7280" FontSize="11"
@@ -134,7 +128,6 @@
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                 </StackPanel>
 
-                                <!-- Fecha solo lectura -->
                                 <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,14">
                                     <TextBlock Text="Fecha de Registro"
                                                Foreground="#6B7280" FontSize="11"
@@ -152,7 +145,6 @@
                         </Border>
                     </TabItem>
 
-                    <!-- ===== TAB 2: OBSERVACIONES ===== -->
                     <TabItem Header="Observaciones">
                         <Border Background="#1e2130" Padding="0,16,0,0">
                             <StackPanel>
@@ -178,7 +170,6 @@
                 </TabControl>
             </Border>
 
-            <!-- BOTONES -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

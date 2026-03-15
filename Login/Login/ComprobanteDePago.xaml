@@ -21,8 +21,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-
-            <!-- TÍTULO -->
+            
             <StackPanel Grid.Row="0" Orientation="Horizontal"
                         VerticalAlignment="Center" Margin="0,0,0,20">
                 <materialDesign:PackIcon Kind="CheckCircle" Foreground="#4CAF50"
@@ -33,10 +32,8 @@
                            VerticalAlignment="Center"/>
             </StackPanel>
 
-            <!-- CONTENIDO -->
             <StackPanel Grid.Row="1">
 
-                <!-- CARD SUPERIOR: MONTO DESTACADO -->
                 <Border Background="#0a2a1a" BorderBrush="#4CAF50"
                         BorderThickness="1" CornerRadius="10"
                         Padding="20,16" Margin="0,0,0,20">
@@ -64,7 +61,6 @@
                     </Grid>
                 </Border>
 
-                <!-- DETALLES EN GRID -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" MinWidth="140"/>
@@ -78,7 +74,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- DNI -->
+
                     <TextBlock Grid.Row="0" Grid.Column="0"
                                Text="DNI Cliente:" Foreground="#6B7280"
                                FontSize="12" Margin="0,0,0,14"/>
@@ -86,7 +82,6 @@
                                Foreground="White" FontSize="13" FontWeight="SemiBold"
                                Margin="0,0,0,14"/>
 
-                    <!-- Orden ID -->
                     <TextBlock Grid.Row="0" Grid.Column="2"
                                Text="Orden ID:" Foreground="#6B7280"
                                FontSize="12" Margin="0,0,0,14"/>
@@ -94,7 +89,6 @@
                                Foreground="White" FontSize="13" FontWeight="SemiBold"
                                Margin="0,0,0,14"/>
 
-                    <!-- Nombre -->
                     <TextBlock Grid.Row="1" Grid.Column="0"
                                Text="Cliente:" Foreground="#6B7280"
                                FontSize="12" Margin="0,0,0,14"/>
@@ -102,7 +96,6 @@
                                Foreground="White" FontSize="13" FontWeight="SemiBold"
                                Margin="0,0,0,14"/>
 
-                    <!-- Fecha -->
                     <TextBlock Grid.Row="1" Grid.Column="2"
                                Text="Fecha:" Foreground="#6B7280"
                                FontSize="12" Margin="0,0,0,14"/>
@@ -114,7 +107,6 @@
 
             </StackPanel>
 
-            <!-- BOTÓN CERRAR -->
             <Button x:Name="btnCerrar" Grid.Row="2"
                     Content="Cerrar"
                     Height="40" Width="140"

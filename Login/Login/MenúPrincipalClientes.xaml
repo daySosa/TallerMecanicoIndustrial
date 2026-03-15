@@ -3,9 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:InterfazClientes"
-        Title="MenúPrincipalClientes" Height="850" Width="1200"
+        Title="Clientes" Height="850" Width="1200"
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
@@ -17,10 +16,11 @@
 
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
-            <StackPanel Margin="15,0,15,0">
+            <StackPanel Margin="15,4,15,0">
 
                 <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
-                    <Image RenderOptions.BitmapScalingMode="HighQuality" Source="/Imagenes/OSM_LOGO.png" Height="184"/>
+                    <Image RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="/Imagenes/OSM_LOGO.png" Height="184"/>
                 </WrapPanel>
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
@@ -66,9 +66,8 @@
                           BorderThickness="0" Margin="0,0,0,15">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
-                            <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
-                                                     Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
-                            <TextBlock Foreground="White" FontSize="15">Contabilidad</TextBlock>
+                            <materialDesign:PackIcon Kind="BookOpenPageVariant" Foreground="White" Height="18" Width="26"/>
+                            <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" Margin="5,0,0,0">Contabilidad</TextBlock>
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
@@ -101,8 +100,8 @@
 
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto" Height="35"
-                        materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom" Margin="0,70,0,15"
-                        Click="btnCerrarSesion_Click">
+                        materialDesign:RippleAssist.Feedback="White" VerticalAlignment="Bottom"
+                        Margin="0,70,0,15" Click="btnCerrarSesion_Click">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
@@ -136,13 +135,13 @@
 
                     <Border Grid.Column="1" Background="#252836" CornerRadius="5"
                             VerticalAlignment="Center" Height="40" MaxWidth="400"
-                            HorizontalAlignment="Left" Margin="100,0,0,0" Width="400">
+                            HorizontalAlignment="Left" Margin="65,0,0,0" Width="400">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
                                                      Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="#6B7280"
+                            <TextBox x:Name="txtBuscar" Background="Transparent" Foreground="White"
                                      BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="13" Width="200" CaretBrush="White"
+                                     FontSize="13" Width="330" CaretBrush="White"
                                      TextChanged="txtBuscar_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
@@ -161,18 +160,13 @@
                                 Click="btnNotificaciones_Click">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
-
-                        <Border x:Name="badgeNotificaciones"
-                                Background="#FF4444" CornerRadius="8"
-                                Width="16" Height="16"
-                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                        <Border x:Name="badgeNotificaciones" Background="#FF4444" CornerRadius="8"
+                                Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top"
                                 Visibility="Collapsed">
-                            <TextBlock x:Name="txtContadorNotificaciones"
-                                       Text="0" Foreground="White"
+                            <TextBlock x:Name="txtContadorNotificaciones" Text="0" Foreground="White"
                                        FontSize="9" FontWeight="Bold"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-
                         <Popup x:Name="popupNotificaciones"
                                PlacementTarget="{Binding ElementName=btnNotificaciones}"
                                Placement="Bottom" StaysOpen="False"
@@ -207,9 +201,8 @@
                                                 Background="#FF4444" CornerRadius="10"
                                                 Padding="8,2" VerticalAlignment="Center"
                                                 Visibility="Collapsed">
-                                            <TextBlock x:Name="txtContadorPopup"
-                                                       Text="0" Foreground="White"
-                                                       FontSize="11" FontWeight="Bold"/>
+                                            <TextBlock x:Name="txtContadorPopup" Text="0"
+                                                       Foreground="White" FontSize="11" FontWeight="Bold"/>
                                         </Border>
                                     </Grid>
                                     <Rectangle Grid.Row="2" Height="1" Fill="#2A3A4D"/>
@@ -220,8 +213,7 @@
                                             Style="{StaticResource MaterialDesignOutlinedButton}"
                                             Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                                             materialDesign:ButtonAssist.CornerRadius="8"
-                                            Height="36" FontSize="12"
-                                            Visibility="Collapsed"
+                                            Height="36" FontSize="12" Visibility="Collapsed"
                                             Click="btnMarcarTodas_Click">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="CheckAll" Width="16" Height="16"
@@ -294,8 +286,10 @@
                     <Border Grid.Row="0" Padding="20,16" BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Clientes Registrados" Foreground="White" FontSize="15" FontWeight="Medium"/>
-                            <Border Background="#1A3050" CornerRadius="4" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
-                                <TextBlock x:Name="tbTotalClientes" Text="0 clientes" Foreground="#4A9EFF" FontSize="11"/>
+                            <Border Background="#1A3050" CornerRadius="4" Padding="8,3"
+                                    Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="tbTotalClientes" Text="0 clientes"
+                                           Foreground="#4A9EFF" FontSize="11"/>
                             </Border>
                         </StackPanel>
                     </Border>
@@ -387,7 +381,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="DPI / Identificación" Binding="{Binding Cliente_DPI}" Width="150">
+                            <DataGridTextColumn Header="DNI / Identificación" Binding="{Binding Cliente_DPI}" Width="150">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
@@ -460,11 +454,11 @@
                                             <TextBlock FontSize="11" FontWeight="Medium">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="Activo"/>
+                                                        <Setter Property="Text"       Value="Activo"/>
                                                         <Setter Property="Foreground" Value="#4CAF50"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Cliente_Activo}" Value="False">
-                                                                <Setter Property="Text" Value="Inactivo"/>
+                                                                <Setter Property="Text"       Value="Inactivo"/>
                                                                 <Setter Property="Foreground" Value="#E74C3C"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>

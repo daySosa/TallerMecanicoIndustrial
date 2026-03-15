@@ -1,22 +1,8 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.Data.SqlClient;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using Microsoft.Data.SqlClient;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Lógica de interacción para AgregarGasto.xaml
-    /// </summary>
     public partial class AgregarGasto : Window
 
 

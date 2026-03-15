@@ -1,16 +1,9 @@
 ﻿using Login.Clases;
-using System.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 
 namespace Órdenes_de_Trabajo
@@ -24,18 +17,12 @@ namespace Órdenes_de_Trabajo
         public decimal Producto_Precio { get; set; }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // CODE-BEHIND — AgregarRepuesto
-    // ═══════════════════════════════════════════════════════════════
     public partial class AgregarRepuesto : Window
     {
         private clsConexion _conexion = new clsConexion();
 
-        // ✔ OrdenWindow lee esta propiedad después del ShowDialog().
-        //   Si el usuario canceló, queda en null.
         public RepuestoOrden RepuestoResultado { get; private set; } = null;
 
-        // Producto actualmente seleccionado en el ComboBox
         private ProductoInventario _productoSeleccionado = null;
 
         public AgregarRepuesto()

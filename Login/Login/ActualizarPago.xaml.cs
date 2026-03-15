@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
-using System.Text;
+﻿using Microsoft.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Contabilidad
 {
@@ -27,17 +18,13 @@ namespace Contabilidad
             _menuRef = menuRef;
             _pagoId = pagoId;
 
-            // Pre-llenar campos
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
             txtPrecio.Text = monto.ToString("N2");
             txtFecha.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
                               new System.Globalization.CultureInfo("es-ES"));
-
-            // Buscar nombre del cliente
             BuscarNombre(dni);
 
-            // Actualizar monto al cambiar orden
             txtOrdenID.TextChanged += txtOrdenID_TextChanged;
             txtDNI.TextChanged += txtDNI_TextChanged;
         }
