@@ -1,0 +1,22 @@
+﻿<Window x:Class="Login.ReportesWindow"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Login"
+        mc:Ignorable="d"
+        Title="ReportesWindow" Height="250" Width="400"
+        WindowStartupLocation="CenterScreen">
+    
+    <StackPanel Margin="30" VerticalAlignment="Center">
+
+        <TextBlock x:Name="txtModulo" FontSize="18" FontWeight="Bold"
+                   Foreground="#1565C0" HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
+
+        <Button Content="📄 Generar PDF" FontSize="14"
+                Background="#1565C0" Foreground="White"
+                Padding="10,8" Click="BtnGenerarPDF_Click"/>
+
+    </StackPanel>
+</Window>

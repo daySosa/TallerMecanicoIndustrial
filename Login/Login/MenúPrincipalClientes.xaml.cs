@@ -1,4 +1,5 @@
 ﻿using Dasboard_Prueba;
+using Login;
 using Login.Clases;
 using System.Data;
 using System.Data.SqlClient;
@@ -400,6 +401,12 @@ namespace InterfazClientes
                 MessageBox.Show("Error: " + ex.Message);
             }
             finally { _db.Cerrar(); }
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Clientes");
+            ventana.ShowDialog();
         }
     }
 }

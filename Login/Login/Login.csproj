@@ -27,6 +27,8 @@
 		<PackageReference Include="MaterialDesignColors" Version="5.3.0" />
 		<PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+		<PackageReference Include="Select.HtmlToPdf" Version="25.2.0" />
+		<PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 	</ItemGroup>
 
