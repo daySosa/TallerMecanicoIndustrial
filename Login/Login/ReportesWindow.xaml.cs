@@ -36,7 +36,11 @@ namespace Login
                 case "Clientes":
                     GenerarReporteClientes();
                     break;
-                    // aquí irán los demás módulos después
+
+                case "Inventario":
+                    GenerarReporteInventario();
+                    break;
+
             }
         }
 
@@ -72,6 +76,42 @@ namespace Login
             html += "</table>";
 
             ExportarPDF(html, "Reporte_Clientes");
+        }
+
+        private void GenerarReporteInventario()
+        {
+            string html = "<h2 style='color:#1565C0'>Reporte de Inventario</h2>";
+            html += "<table border='1' cellpadding='6' width='100%' style='border-collapse:collapse'>";
+            html += "<tr style='background:#1565C0;color:white'><th>Nombre</th><th>Categoría</th><th>Marca</th><th>Modelo</th><th>Precio</th><th>Cantidad</th><th>Stock Mínimo</th></tr>";
+
+            var db = new clsConexion();
+            db.Abrir();
+
+            string sql = "SELECT Producto_Nombre, Producto_Categoria, Producto_Marca, Producto_Modelo, Producto_Precio, Producto_Cantidad_Actual, Producto_Stock_Minimo FROM Producto ORDER BY Producto_Nombre";
+
+            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+            using (SqlDataReader r = cmd.ExecuteReader())
+            {
+                bool alterno = false;
+                while (r.Read())
+                {
+                    string bg = alterno ? "#f5f5f5" : "#ffffff";
+                    html += $"<tr style='background:{bg}'>";
+                    html += $"<td>{r["Producto_Nombre"]}</td>";
+                    html += $"<td>{r["Producto_Categoria"]}</td>";
+                    html += $"<td>{r["Producto_Marca"]}</td>";
+                    html += $"<td>{r["Producto_Modelo"]}</td>";
+                    html += $"<td>Q {r["Producto_Precio"]:N2}</td>";
+                    html += $"<td>{r["Producto_Cantidad_Actual"]}</td>";
+                    html += $"<td>{r["Producto_Stock_Minimo"]}</td>";
+                    html += "</tr>";
+                    alterno = !alterno;
+                }
+            }
+            db.Cerrar();
+            html += "</table>";
+
+            ExportarPDF(html, "Reporte_Inventario");
         }
 
         private void ExportarPDF(string html, string nombreArchivo)

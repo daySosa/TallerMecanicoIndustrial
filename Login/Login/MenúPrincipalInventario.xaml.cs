@@ -1,6 +1,7 @@
 ﻿using Contabilidad;
 using Dasboard_Prueba;
 using InterfazClientes;
+using Login;
 using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -399,6 +400,12 @@ namespace InterfazInventario
                 new Login.MainWindow().Show();
                 this.Close();
             }
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Inventario");
+            ventana.ShowDialog();
         }
     }
 }
