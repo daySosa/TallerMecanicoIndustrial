@@ -14,12 +14,9 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-
     public partial class AgregarPago : Window
     {
-
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
-
 
         private MenuDePagos _menuRef;
 
@@ -151,7 +148,7 @@ namespace Contabilidad
                     {
                         SqlCommand cmd = new SqlCommand("sp_RegistrarPago", conn);
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@ClienteDNI", Convert.ToInt32(dni));
+                        cmd.Parameters.AddWithValue("@ClienteDNI", dni);         // ✅ cambiado
                         cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                         cmd.Parameters.AddWithValue("@Monto", monto);
                         cmd.ExecuteNonQuery();
@@ -168,7 +165,7 @@ namespace Contabilidad
                             WHERE Pago_ID = @PagoID";
 
                         SqlCommand cmd = new SqlCommand(updateQuery, conn);
-                        cmd.Parameters.AddWithValue("@DNI", Convert.ToInt32(dni));
+                        cmd.Parameters.AddWithValue("@DNI", dni);                // ✅ cambiado
                         cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                         cmd.Parameters.AddWithValue("@Monto", monto);
                         cmd.Parameters.AddWithValue("@PagoID", _pagoId);
