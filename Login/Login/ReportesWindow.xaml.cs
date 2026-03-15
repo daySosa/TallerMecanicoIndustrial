@@ -45,6 +45,10 @@ namespace Login
                     GenerarReporteVehiculos();
                     break;
 
+                case "Ordenes":
+                    GenerarReporteOrdenes();
+                    break;
+
             }
         }
 
@@ -152,6 +156,48 @@ namespace Login
             html += "</table>";
 
             ExportarPDF(html, "Reporte_Vehiculos");
+        }
+
+        private void GenerarReporteOrdenes()
+        {
+            string html = "<h2 style='color:#1565C0'>Reporte de Órdenes de Trabajo</h2>";
+            html += "<table border='1' cellpadding='6' width='100%' style='border-collapse:collapse'>";
+            html += "<tr style='background:#1565C0;color:white'><th>ID</th><th>Cliente DNI</th><th>Placa</th><th>Estado</th><th>Fecha</th><th>Fecha Entrega</th><th>Precio Servicio</th><th>Total</th><th>Observaciones</th></tr>";
+
+            var db = new clsConexion();
+            db.Abrir();
+
+            string sql = @"SELECT Orden_ID, Cliente_DNI, Vehiculo_Placa, Estado, 
+                          Fecha, Fecha_Entrega, Servicio_Precio, 
+                          OrdenPrecio_Total, Observaciones 
+                   FROM Orden_Trabajo 
+                   ORDER BY Fecha DESC";
+
+            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+            using (SqlDataReader r = cmd.ExecuteReader())
+            {
+                bool alterno = false;
+                while (r.Read())
+                {
+                    string bg = alterno ? "#f5f5f5" : "#ffffff";
+                    html += $"<tr style='background:{bg}'>";
+                    html += $"<td>{r["Orden_ID"]}</td>";
+                    html += $"<td>{r["Cliente_DNI"]}</td>";
+                    html += $"<td>{r["Vehiculo_Placa"]}</td>";
+                    html += $"<td>{r["Estado"]}</td>";
+                    html += $"<td>{Convert.ToDateTime(r["Fecha"]):dd/MM/yyyy}</td>";
+                    html += $"<td>{(r["Fecha_Entrega"] == DBNull.Value ? "-" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString("dd/MM/yyyy"))}</td>";
+                    html += $"<td>Q {r["Servicio_Precio"]:N2}</td>";
+                    html += $"<td>Q {r["OrdenPrecio_Total"]:N2}</td>";
+                    html += $"<td>{(r["Observaciones"] == DBNull.Value ? "" : r["Observaciones"])}</td>";
+                    html += "</tr>";
+                    alterno = !alterno;
+                }
+            }
+            db.Cerrar();
+            html += "</table>";
+
+            ExportarPDF(html, "Reporte_Ordenes");
         }
 
         private void ExportarPDF(string html, string nombreArchivo)

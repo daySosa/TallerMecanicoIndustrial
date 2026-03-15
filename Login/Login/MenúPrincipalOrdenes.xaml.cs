@@ -1,4 +1,5 @@
 ﻿using Dasboard_Prueba;
+using Login;
 using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -416,6 +417,12 @@ namespace Órdenes_de_Trabajo
                 MessageBox.Show("Error: " + ex.Message);
             }
             finally { _conexion.Cerrar(); }
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Ordenes");
+            ventana.ShowDialog();
         }
     }
 }
