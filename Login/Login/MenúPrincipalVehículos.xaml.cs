@@ -1,5 +1,6 @@
 ﻿using Dasboard_Prueba;
 using InterfazClientes;
+using Login;
 using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -382,6 +383,12 @@ namespace Vehículos
                 MessageBox.Show("Error: " + ex.Message);
             }
             finally { _conexion.Cerrar(); }
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Vehiculos");
+            ventana.ShowDialog();
         }
     }
 }

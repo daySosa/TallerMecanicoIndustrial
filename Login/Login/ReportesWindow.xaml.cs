@@ -41,6 +41,10 @@ namespace Login
                     GenerarReporteInventario();
                     break;
 
+                case "Vehiculos":
+                    GenerarReporteVehiculos();
+                    break;
+
             }
         }
 
@@ -112,6 +116,42 @@ namespace Login
             html += "</table>";
 
             ExportarPDF(html, "Reporte_Inventario");
+        }
+
+        private void GenerarReporteVehiculos()
+        {
+            string html = "<h2 style='color:#1565C0'>Reporte de Vehículos</h2>";
+            html += "<table border='1' cellpadding='6' width='100%' style='border-collapse:collapse'>";
+            html += "<tr style='background:#1565C0;color:white'><th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Tipo</th><th>Cliente DNI</th><th>Observaciones</th></tr>";
+
+            var db = new clsConexion();
+            db.Abrir();
+
+            string sql = "SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año, Vehiculo_Tipo, Cliente_DNI, Vehiculo_Observaciones FROM Vehiculo ORDER BY Vehiculo_Marca";
+
+            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+            using (SqlDataReader r = cmd.ExecuteReader())
+            {
+                bool alterno = false;
+                while (r.Read())
+                {
+                    string bg = alterno ? "#f5f5f5" : "#ffffff";
+                    html += $"<tr style='background:{bg}'>";
+                    html += $"<td>{r["Vehiculo_Placa"]}</td>";
+                    html += $"<td>{r["Vehiculo_Marca"]}</td>";
+                    html += $"<td>{r["Vehiculo_Modelo"]}</td>";
+                    html += $"<td>{r["Vehiculo_Año"]}</td>";
+                    html += $"<td>{r["Vehiculo_Tipo"]}</td>";
+                    html += $"<td>{r["Cliente_DNI"]}</td>";
+                    html += $"<td>{(r["Vehiculo_Observaciones"] == DBNull.Value ? "" : r["Vehiculo_Observaciones"])}</td>";
+                    html += "</tr>";
+                    alterno = !alterno;
+                }
+            }
+            db.Cerrar();
+            html += "</table>";
+
+            ExportarPDF(html, "Reporte_Vehiculos");
         }
 
         private void ExportarPDF(string html, string nombreArchivo)
