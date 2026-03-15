@@ -69,22 +69,7 @@ namespace Dasboard_Prueba
             CargarNotificaciones();
             GenerarCalendario();
         }
-        private void btnOrdenes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalOrdenes().Show(); this.Close(); }
-        private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new MenúPrincipalVehículos().Show(); this.Close(); }
-        private void btnInventario_Click(object sender, RoutedEventArgs e) { new MenúPrincipalInventario().Show(); this.Close(); }
-        private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
-        private void btnEgresos_Click(object sender, RoutedEventArgs e) { new ContaWindow().Show(); this.Close(); }
-        private void btnIngresos_Click(object sender, RoutedEventArgs e) { new MenuDePagos().Show(); this.Close(); }
 
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                new MainWindow().Show();
-                this.Close();
-            }
-        }
         private void cmbRango_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (cmbRango.SelectedItem is ComboBoxItem item)
@@ -96,6 +81,7 @@ namespace Dasboard_Prueba
                     "12" => 12,
                     _ => 0
                 };
+
                 CargarGraficas();
             }
         }
@@ -186,8 +172,8 @@ namespace Dasboard_Prueba
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar gráficas:\n" + ex.Message, "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { _conexion.Cerrar(); }
         }
@@ -237,85 +223,10 @@ namespace Dasboard_Prueba
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar datos:\n" + ex.Message, "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error al cargar datos:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { _conexion.Cerrar(); }
-        }
-
-        private void btnAnterior_Click(object sender, RoutedEventArgs e)
-        {
-            _mesActual = _mesActual.AddMonths(-1);
-            GenerarCalendario();
-        }
-
-        private void btnSiguiente_Click(object sender, RoutedEventArgs e)
-        {
-            _mesActual = _mesActual.AddMonths(1);
-            GenerarCalendario();
-        }
-
-        private void GenerarCalendario()
-        {
-            var cultura = new CultureInfo("es-HN");
-            string titulo = _mesActual.ToString("MMMM, yyyy", cultura);
-            txtMesAnio.Text = char.ToUpper(titulo[0]) + titulo.Substring(1);
-            gridDias.Children.Clear();
-
-            foreach (string dia in new[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" })
-                gridDias.Children.Add(new TextBlock
-                {
-                    Text = dia,
-                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B9BB4")),
-                    FontSize = 11,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 0, 6)
-                });
-
-            int primerDia = (int)_mesActual.DayOfWeek;
-            primerDia = primerDia == 0 ? 6 : primerDia - 1;
-            int diasEnMes = DateTime.DaysInMonth(_mesActual.Year, _mesActual.Month);
-            int diasMesAnt = DateTime.DaysInMonth(_mesActual.AddMonths(-1).Year, _mesActual.AddMonths(-1).Month);
-
-            for (int i = 0; i < 42; i++)
-            {
-                int dia; bool esDelMes = true;
-                if (i < primerDia)
-                { dia = diasMesAnt - primerDia + 1 + i; esDelMes = false; }
-                else if (i >= primerDia + diasEnMes)
-                { dia = i - primerDia - diasEnMes + 1; esDelMes = false; }
-                else { dia = i - primerDia + 1; }
-
-                bool esHoy = esDelMes
-                          && dia == DateTime.Today.Day
-                          && _mesActual.Month == DateTime.Today.Month
-                          && _mesActual.Year == DateTime.Today.Year;
-
-                Border celda = new Border
-                {
-                    Width = 30,
-                    Height = 30,
-                    CornerRadius = new CornerRadius(15),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Background = esHoy
-                        ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF4757"))
-                        : Brushes.Transparent,
-                    Margin = new Thickness(2)
-                };
-                celda.Child = new TextBlock
-                {
-                    Text = dia.ToString(),
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = esHoy ? Brushes.White
-                                        : esDelMes ? Brushes.White
-                                        : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4A5568"))
-                };
-                gridDias.Children.Add(celda);
-            }
         }
 
         private void CargarNotificaciones()
@@ -359,18 +270,22 @@ namespace Dasboard_Prueba
 
             if (_notificaciones.Count == 0)
             {
-                var vacio = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 20) };
-                vacio.Children.Add(new Label { Content = "🎉", FontSize = 32, HorizontalAlignment = HorizontalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.White), Padding = new Thickness(0) });
-                vacio.Children.Add(new TextBlock { Text = "Sin notificaciones pendientes", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 0) });
-                panelNotificaciones.Children.Add(vacio);
+                panelNotificaciones.Children.Add(new TextBlock
+                {
+                    Text = "Sin notificaciones pendientes",
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
+                    FontSize = 13,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 20, 0, 20)
+                });
                 return;
             }
 
             foreach (var notif in _notificaciones)
             {
                 string colorHex = notif.Tipo_Notificacion == "STOCK_BAJO" ? "#F0A500"
-                                : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "#4CAF50"
-                                : "#4A9EFF";
+                                 : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "#4CAF50"
+                                 : "#4A9EFF";
                 string iconoKind = notif.Tipo_Notificacion == "STOCK_BAJO" ? "AlertCircle"
                                  : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "CheckCircle"
                                  : "Bell";
@@ -498,6 +413,99 @@ namespace Dasboard_Prueba
         {
             CargarNotificaciones();
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+        }
+
+        private void btnAnterior_Click(object sender, RoutedEventArgs e)
+        {
+            _mesActual = _mesActual.AddMonths(-1);
+            GenerarCalendario();
+        }
+
+        private void btnSiguiente_Click(object sender, RoutedEventArgs e)
+        {
+            _mesActual = _mesActual.AddMonths(1);
+            GenerarCalendario();
+        }
+
+        private void GenerarCalendario()
+        {
+            var cultura = new CultureInfo("es-HN");
+            string titulo = _mesActual.ToString("MMMM, yyyy", cultura);
+            txtMesAnio.Text = char.ToUpper(titulo[0]) + titulo.Substring(1);
+            gridDias.Children.Clear();
+
+            foreach (string dia in new[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" })
+                gridDias.Children.Add(new TextBlock
+                {
+                    Text = dia,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B9BB4")),
+                    FontSize = 11,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 6)
+                });
+
+            int primerDia = (int)_mesActual.DayOfWeek;
+            primerDia = primerDia == 0 ? 6 : primerDia - 1;
+            int diasEnMes = DateTime.DaysInMonth(_mesActual.Year, _mesActual.Month);
+            int diasMesAnt = DateTime.DaysInMonth(
+                _mesActual.AddMonths(-1).Year, _mesActual.AddMonths(-1).Month);
+
+            for (int i = 0; i < 42; i++)
+            {
+                int dia; bool esDelMes = true;
+                if (i < primerDia)
+                { dia = diasMesAnt - primerDia + 1 + i; esDelMes = false; }
+                else if (i >= primerDia + diasEnMes)
+                { dia = i - primerDia - diasEnMes + 1; esDelMes = false; }
+                else { dia = i - primerDia + 1; }
+
+                bool esHoy = esDelMes
+                          && dia == DateTime.Today.Day
+                          && _mesActual.Month == DateTime.Today.Month
+                          && _mesActual.Year == DateTime.Today.Year;
+
+                Border celda = new Border
+                {
+                    Width = 30,
+                    Height = 30,
+                    CornerRadius = new CornerRadius(15),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Background = esHoy
+                        ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF4757"))
+                        : Brushes.Transparent,
+                    Margin = new Thickness(2)
+                };
+                celda.Child = new TextBlock
+                {
+                    Text = dia.ToString(),
+                    FontSize = 12,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = esHoy ? Brushes.White
+                               : esDelMes ? Brushes.White
+                               : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4A5568"))
+                };
+                gridDias.Children.Add(celda);
+            }
+        }
+
+        private void btnOrdenes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalOrdenes().Show(); this.Close(); }
+        private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new MenúPrincipalVehículos().Show(); this.Close(); }
+        private void btnInventario_Click(object sender, RoutedEventArgs e) { new MenúPrincipalInventario().Show(); this.Close(); }
+        private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
+        private void btnEgresos_Click(object sender, RoutedEventArgs e) { new ContaWindow().Show(); this.Close(); }
+        private void btnIngresos_Click(object sender, RoutedEventArgs e) { new MenuDePagos().Show(); this.Close(); }
+
+        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                new MainWindow().Show();
+                this.Close();
+            }
         }
 
         private MaterialDesignThemes.Wpf.PackIconKind ParseIconKind(string nombre)

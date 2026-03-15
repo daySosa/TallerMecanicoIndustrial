@@ -297,15 +297,18 @@
                     <DataGrid Grid.Row="1" x:Name="dgClientes"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False"
-                              CanUserResizeRows="False" IsReadOnly="True"
-                              SelectionMode="Single"
+                              CanUserResizeRows="False" CanUserReorderColumns="False"
+                              CanUserResizeColumns="False"
+                              IsReadOnly="True" SelectionMode="Single"
                               GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="#2A3A4D"
                               Background="Transparent" Foreground="White"
                               BorderThickness="0" RowBackground="Transparent"
                               AlternatingRowBackground="#162030"
                               ColumnHeaderHeight="40" RowHeight="52"
-                              SelectionChanged="dgClientes_SelectionChanged">
+                              SelectionChanged="dgClientes_SelectionChanged"
+                              materialDesign:DataGridAssist.CellPadding="0"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -317,6 +320,7 @@
                                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                 <Setter Property="BorderBrush" Value="#2A3A4D"/>
                                 <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
 
@@ -338,8 +342,9 @@
                             <Style TargetType="{x:Type DataGridCell}">
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="12,0"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -375,7 +380,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#C0CCDA"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                         <Setter Property="FontSize" Value="12"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
@@ -386,7 +391,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                         <Setter Property="FontSize" Value="12"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>

@@ -20,7 +20,6 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-
             <StackPanel Grid.Column="0" Grid.RowSpan="2">
                 <materialDesign:Card Background="#252836" UniformCornerRadius="12"
                                      Padding="22" Margin="0,0,0,16"
@@ -42,7 +41,6 @@
                             </StackPanel>
                         </StackPanel>
 
-
                         <TextBlock Text="DNI Hondureño (13 dígitos sin guiones)"
                                    Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                         <TextBox x:Name="txtDPI"
@@ -50,11 +48,10 @@
                                  Background="#1e2130" Foreground="White"
                                  BorderBrush="#3a3f5c" CaretBrush="White"
                                  Height="40" VerticalContentAlignment="Center"
-                                 Padding="10,0" Margin="0,0,0,4"
+                                 Padding="10,0" Margin="0,0,0,16"
                                  MaxLength="13"
                                  materialDesign:HintAssist.Hint="Ej: 0801199012345"
                                  PreviewTextInput="txtDPI_PreviewTextInput"/>
-                       
 
                         <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11"
                                    FontWeight="Medium" Margin="0,0,0,4"/>
@@ -66,7 +63,6 @@
                                  Padding="10,0" Margin="0,0,0,16"
                                  materialDesign:HintAssist.Hint="Nombres del cliente"/>
 
-
                         <TextBlock Text="Apellido" Foreground="#6c7293" FontSize="11"
                                    FontWeight="Medium" Margin="0,0,0,4"/>
                         <TextBox x:Name="txtApellido"
@@ -76,7 +72,6 @@
                                  Height="40" VerticalContentAlignment="Center"
                                  Padding="10,0" Margin="0,0,0,16"
                                  materialDesign:HintAssist.Hint="Apellidos del cliente"/>
-
 
                         <TextBlock Text="Teléfono" Foreground="#6c7293" FontSize="11"
                                    FontWeight="Medium" Margin="0,0,0,4"/>
@@ -97,13 +92,15 @@
                                      BorderBrush="#3a3f5c" CaretBrush="White"
                                      Height="40" VerticalContentAlignment="Center"
                                      Padding="10,0"
-                                     materialDesign:HintAssist.Hint="Ej: 9999-9999"/>
+                                     MaxLength="9"
+                                     materialDesign:HintAssist.Hint="Ej: 9999-9999"
+                                     PreviewTextInput="txtTelefono_PreviewTextInput"
+                                     TextChanged="txtTelefono_TextChanged"/>
                         </Grid>
 
                     </StackPanel>
                 </materialDesign:Card>
             </StackPanel>
-
 
             <StackPanel Grid.Column="2" Grid.RowSpan="2">
                 <materialDesign:Card Background="#252836" UniformCornerRadius="12"
@@ -125,7 +122,6 @@
                                            Foreground="#6c7293" FontSize="11"/>
                             </StackPanel>
                         </StackPanel>
-
 
                         <TextBlock Text="Correo Electrónico" Foreground="#6c7293" FontSize="11"
                                    FontWeight="Medium" Margin="0,0,0,4"/>
@@ -172,7 +168,6 @@
                         </Grid>
 
                         <Separator Background="#2e3250" Margin="0,6,0,18"/>
-
 
                         <Border Background="#1e2130" CornerRadius="10" Padding="16,14">
                             <Grid>
@@ -237,7 +232,6 @@
                 </materialDesign:Card>
             </StackPanel>
 
-
             <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                  Background="#252836" UniformCornerRadius="12"
                                  Padding="20,16"
@@ -259,13 +253,13 @@
                                 BorderBrush="#6c7293" Foreground="#6c7293"
                                 materialDesign:ButtonAssist.CornerRadius="8"
                                 Click="BtnCancelar_Click"/>
-                        <Button Content="Actualizar"
+                        <Button x:Name="btnActualizar" Content="Actualizar"
                                 Height="38" Padding="24,0" Margin="0,0,10,0"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 BorderBrush="#4f6ef7" Foreground="#4f6ef7"
                                 materialDesign:ButtonAssist.CornerRadius="8"
                                 Click="BtnActualizar_Click"/>
-                        <Button Height="38" Padding="24,0"
+                        <Button x:Name="btnAgregar" Height="38" Padding="24,0"
                                 materialDesign:ButtonAssist.CornerRadius="8"
                                 materialDesign:ElevationAssist.Elevation="Dp0"
                                 Click="BtnAgregar_Click">

@@ -1,9 +1,21 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Lógica de interacción para ActualizarGasto.xaml
+    /// </summary>
     public partial class ActualizarGasto : Window
     {
 
@@ -21,6 +33,7 @@ namespace Contabilidad
 
         private void CargarDatos(string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
+            // Seleccionar el tipo en el ComboBox
             foreach (ComboBoxItem item in cmbTipoGasto.Items)
             {
                 if (item.Content.ToString() == tipo)

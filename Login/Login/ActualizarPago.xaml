@@ -22,6 +22,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- TÍTULO -->
             <TextBlock Grid.Row="0"
                        Text="Actualizar Pago"
                        Foreground="White"
@@ -29,6 +30,7 @@
                        FontWeight="Bold"
                        Margin="0,0,0,16"/>
 
+            <!-- TABS -->
             <TabControl Grid.Row="1"
                         Background="#1e2130"
                         BorderThickness="0"
@@ -85,6 +87,7 @@
                     </Style>
                 </TabControl.Resources>
 
+                <!-- ===== TAB 1: DETALLES ===== -->
                 <TabItem Header="Detalles del Pago">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -98,6 +101,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
+                        <!-- DNI del Cliente -->
                         <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,14">
                             <TextBlock Text="DNI DEL CLIENTE"
                                        Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
@@ -107,7 +111,8 @@
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      materialDesign:HintAssist.Hint="Ej: 12345678"/>
                         </StackPanel>
-                        
+
+                        <!-- Nombre (se llena solo) -->
                         <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,14">
                             <TextBlock Text="NOMBRE DEL CLIENTE"
                                        Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
@@ -119,6 +124,7 @@
                                      materialDesign:HintAssist.Hint="Se llena automáticamente..."/>
                         </StackPanel>
 
+                        <!-- Orden ID -->
                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
                             <TextBlock Text="ID DE LA ORDEN"
                                        Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
@@ -129,6 +135,7 @@
                                      materialDesign:HintAssist.Hint="Ej: 1"/>
                         </StackPanel>
 
+                        <!-- Precio -->
                         <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,14">
                             <TextBlock Text="MONTO DEL PAGO"
                                        Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
@@ -139,6 +146,7 @@
                                      materialDesign:HintAssist.Hint="0.00"/>
                         </StackPanel>
 
+                        <!-- Fecha solo lectura -->
                         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,14">
                             <TextBlock Text="FECHA DE REGISTRO"
                                        Foreground="#6B7280" FontSize="11" Margin="0,0,0,6"/>
@@ -149,6 +157,7 @@
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                         </StackPanel>
 
+                        <!-- Mensaje de validación DNI -->
                         <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,14"
                                     VerticalAlignment="Center">
                             <TextBlock x:Name="txtMensajeDNI"
@@ -163,6 +172,7 @@
 
             </TabControl>
 
+            <!-- BOTONES -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

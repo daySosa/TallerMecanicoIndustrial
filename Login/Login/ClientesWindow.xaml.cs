@@ -26,11 +26,41 @@ namespace InterfazClientes
         public ClientesWindow()
         {
             InitializeComponent();
+            btnActualizar.IsEnabled = false;
+            btnActualizar.Opacity = 0.4;
         }
 
         private void txtDPI_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+        }
+
+        private void txtTelefono_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+        }
+
+        private void txtTelefono_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (txtTelefono == null) return;
+
+            string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
+
+            if (soloNumeros.Length > 8)
+                soloNumeros = soloNumeros.Substring(0, 8);
+
+            string formateado = soloNumeros.Length >= 4
+                ? soloNumeros.Substring(0, 4) + (soloNumeros.Length > 4 ? "-" + soloNumeros.Substring(4) : "")
+                : soloNumeros;
+
+            if (txtTelefono.Text != formateado)
+            {
+                txtTelefono.TextChanged -= txtTelefono_TextChanged;
+                int caret = txtTelefono.CaretIndex;
+                txtTelefono.Text = formateado;
+                txtTelefono.CaretIndex = Math.Min(caret, formateado.Length);
+                txtTelefono.TextChanged += txtTelefono_TextChanged;
+            }
         }
 
         private bool ValidarDNIHondureño(string dni)
@@ -49,6 +79,11 @@ namespace InterfazClientes
             txtCorreo.Text = c.Cliente_Correo;
             txtDireccion.Text = c.Cliente_Direccion;
             toggleActivo.IsChecked = c.Cliente_Activo;
+
+            btnAgregar.IsEnabled = false;
+            btnAgregar.Opacity = 0.4;
+            btnActualizar.IsEnabled = true;
+            btnActualizar.Opacity = 1;
         }
 
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
@@ -73,34 +108,59 @@ namespace InterfazClientes
 
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
-            if (!ValidarCampos()) return;
+            btnAgregar.IsEnabled = false;
+
+            if (string.IsNullOrWhiteSpace(txtDPI.Text) || !ValidarDNIHondureño(txtDPI.Text.Trim()))
+            {
+                MessageBox.Show("Ingrese un DNI válido de 13 dígitos.", "DNI inválido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                btnAgregar.IsEnabled = true;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("Ingrese el nombre del cliente.", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                btnAgregar.IsEnabled = true;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtApellido.Text))
+            {
+                MessageBox.Show("Ingrese el apellido del cliente.", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                btnAgregar.IsEnabled = true;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtTelefono.Text) || txtTelefono.Text.Length < 9)
+            {
+                MessageBox.Show("Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                btnAgregar.IsEnabled = true;
+                return;
+            }
 
             try
             {
                 var db = new clsConexion();
                 db.Abrir();
 
-
-                string sqlCheck = "SELECT COUNT(1) FROM Cliente WHERE Cliente_DNI = @DNI";
-                using (SqlCommand chk = new SqlCommand(sqlCheck, db.SqlC))
-                {
-                    chk.Parameters.AddWithValue("@DNI", txtDPI.Text.Trim());
-                    int existe = (int)chk.ExecuteScalar();
-                    if (existe > 0)
-                    {
-                        MessageBox.Show("Ya existe un cliente con ese DNI.",
-                            "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        db.Cerrar();
-                        return;
-                    }
-                }
-
                 string sql = @"
-            INSERT INTO Cliente
-                (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                 Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Direccion)
-            VALUES
-                (@DNI, @Nombres, @Apellidos, @Telefono, @Email, @Direccion)";
+                    IF NOT EXISTS (SELECT 1 FROM Cliente WHERE Cliente_DNI = @DNI)
+                    BEGIN
+                        INSERT INTO Cliente
+                            (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                             Cliente_TelefonoPrincipal, Cliente_Email,
+                             Cliente_Direccion, Cliente_Activo)
+                        VALUES
+                            (@DNI, @Nombres, @Apellidos, @Telefono, @Email,
+                             @Direccion, 1)
+                        SELECT 1
+                    END
+                    ELSE
+                        SELECT 0";
 
                 using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
                 {
@@ -112,7 +172,17 @@ namespace InterfazClientes
                         ? (object)DBNull.Value : txtCorreo.Text.Trim());
                     cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(txtDireccion.Text)
                         ? (object)DBNull.Value : txtDireccion.Text.Trim());
-                    cmd.ExecuteNonQuery();
+
+                    int resultado = Convert.ToInt32(cmd.ExecuteScalar());
+
+                    if (resultado == 0)
+                    {
+                        MessageBox.Show("Ya existe un cliente con ese DNI.",
+                            "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        db.Cerrar();
+                        btnAgregar.IsEnabled = true;
+                        return;
+                    }
                 }
 
                 db.Cerrar();
@@ -125,10 +195,10 @@ namespace InterfazClientes
                     Cliente_Telefono = txtTelefono.Text.Trim(),
                     Cliente_Correo = txtCorreo.Text.Trim(),
                     Cliente_Direccion = txtDireccion.Text.Trim(),
-                    Cliente_Activo = toggleActivo.IsChecked == true
+                    Cliente_Activo = true
                 };
 
-                MessageBox.Show("✅ Cliente agregado correctamente.",
+                MessageBox.Show("✅ Cliente guardado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 this.DialogResult = true;
@@ -136,20 +206,39 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
+                btnAgregar.IsEnabled = true;
                 MessageBox.Show("Error al agregar cliente:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (!ValidarCampos()) return;
-
             if (string.IsNullOrEmpty(_dniEditando))
             {
                 MessageBox.Show("No hay ningún cliente cargado para actualizar.",
                     "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("Ingrese el nombre del cliente.", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtApellido.Text))
+            {
+                MessageBox.Show("Ingrese el apellido del cliente.", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtTelefono.Text) || txtTelefono.Text.Length < 9)
+            {
+                MessageBox.Show("Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -164,7 +253,8 @@ namespace InterfazClientes
                         Cliente_Apellidos         = @Apellidos,
                         Cliente_TelefonoPrincipal = @Telefono,
                         Cliente_Email             = @Email,
-                        Cliente_Direccion         = @Direccion
+                        Cliente_Direccion         = @Direccion,
+                        Cliente_Activo            = @Activo
                     WHERE Cliente_DNI = @DNI";
 
                 using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
@@ -176,6 +266,7 @@ namespace InterfazClientes
                         ? (object)DBNull.Value : txtCorreo.Text.Trim());
                     cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(txtDireccion.Text)
                         ? (object)DBNull.Value : txtDireccion.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
                     cmd.Parameters.AddWithValue("@DNI", _dniEditando);
                     cmd.ExecuteNonQuery();
                 }
@@ -193,28 +284,6 @@ namespace InterfazClientes
                 MessageBox.Show("Error al actualizar:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private bool ValidarCampos()
-        {
-            if (!ValidarDNIHondureño(txtDPI.Text.Trim()))
-            {
-                MessageBox.Show("El DNI debe tener exactamente 13 dígitos numéricos.\nEjemplo: 0801199012345",
-                    "DNI inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                txtDPI.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtNombre.Text) ||
-                string.IsNullOrWhiteSpace(txtApellido.Text) ||
-                string.IsNullOrWhiteSpace(txtTelefono.Text))
-            {
-                MessageBox.Show("Completa los campos obligatorios: Nombre, Apellido y Teléfono.",
-                    "Campos requeridos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
         }
     }
 }

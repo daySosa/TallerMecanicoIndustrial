@@ -1,16 +1,17 @@
-﻿using Dasboard_Prueba;
-using Login.Clases;
+﻿using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace Contabilidad
 {
+
+
     public partial class ContaWindow : Window
     {
-        private readonly clsConexion _conexion = new clsConexion();
+
+        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         public ContaWindow()
         {
@@ -19,87 +20,42 @@ namespace Contabilidad
             CargarNotificaciones();
         }
 
-        private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)
-        {
-            new MenuPrincipal().Show();
-            this.Close();
-        }
 
-        private void btnInventario_Click(object sender, RoutedEventArgs e)
-        {
-            new InterfazInventario.MenúPrincipalInventario().Show();
-            this.Close();
-        }
 
-        private void btnVehiculos_Click(object sender, RoutedEventArgs e)
-        {
-            new Vehículos.MenúPrincipalVehículos().Show();
-            this.Close();
-        }
-
-        private void btnClientes_Click(object sender, RoutedEventArgs e)
-        {
-            new InterfazClientes.MenúPrincipalClientes().Show();
-            this.Close();
-        }
-
-        private void btnOrdenes_Click(object sender, RoutedEventArgs e)
-        {
-            new Órdenes_de_Trabajo.MenúPrincipalOrdenes().Show();
-            this.Close();
-        }
-
-        private void btnEgresos_Click(object sender, RoutedEventArgs e)
-        {
-            CargarEgreso();
-        }
-
-        private void btnIngresos_Click(object sender, RoutedEventArgs e)
-        {
-            new MenuDePagos().Show();
-            this.Close();
-        }
-
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                new Login.MainWindow().Show();
-                this.Close();
-            }
-        }
 
         public void CargarEgreso(string busqueda = null)
         {
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto,
-                           Fecha_Gasto, Observaciones_Gasto
-                    FROM   Contabilidad_Gastos
-                    WHERE  (@Busqueda IS NULL
-                            OR Nombre_Gasto LIKE '%' + @Busqueda + '%'
-                            OR Tipo_Gasto   LIKE '%' + @Busqueda + '%')
-                    ORDER  BY Fecha_Gasto DESC";
-
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
-                    cmd.Parameters.AddWithValue("@Busqueda",
-                        string.IsNullOrEmpty(busqueda) ? (object)DBNull.Value : busqueda.Trim());
+                    string query = @"
+                        SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto, Observaciones_Gasto
+                        FROM Contabilidad_Gastos
+                        WHERE (@Busqueda IS NULL
+                               OR Nombre_Gasto LIKE '%' + @Busqueda + '%'
+                               OR Tipo_Gasto   LIKE '%' + @Busqueda + '%')
+                        ORDER BY Fecha_Gasto DESC";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    if (string.IsNullOrEmpty(busqueda))
+                        cmd.Parameters.AddWithValue("@Busqueda", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@Busqueda", busqueda.Trim());
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
                     DataTable dt = new DataTable();
-                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
-                        da.Fill(dt);
+                    conn.Open();
+                    da.Fill(dt);
+
                     dgGastos.ItemsSource = dt.DefaultView;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar gastos:\n" + ex.Message, "Error",
+                MessageBox.Show("Error al cargar gastos: " + ex.Message, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
@@ -116,7 +72,12 @@ namespace Contabilidad
                 CargarEgreso();
         }
 
-        private void btnActualizar_Click(object sender, RoutedEventArgs e) => CargarEgreso();
+
+
+        private void btnActualizar_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
 
         private void dgGastos_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
@@ -128,9 +89,10 @@ namespace Contabilidad
                     nombre: fila["Nombre_Gasto"].ToString(),
                     precio: Convert.ToDecimal(fila["Precio_Gasto"]),
                     fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
-                    observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto")
-                                   && fila["Observaciones_Gasto"] != DBNull.Value
-                                   ? fila["Observaciones_Gasto"].ToString() : "");
+                    observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto") && fila["Observaciones_Gasto"] != DBNull.Value
+                                   ? fila["Observaciones_Gasto"].ToString()
+                                   : ""
+                );
                 ventana.Owner = this;
                 ventana.ShowDialog();
                 dgGastos.SelectedItem = null;
@@ -146,18 +108,69 @@ namespace Contabilidad
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
             var fila = (DataRowView)dgGastos.SelectedItem;
+
             var ventana = new MostrarComprobante(
                 id: Convert.ToInt32(fila["Gasto_ID"]),
                 tipo: fila["Tipo_Gasto"].ToString(),
                 nombre: fila["Nombre_Gasto"].ToString(),
                 precio: Convert.ToDecimal(fila["Precio_Gasto"]),
                 fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
-                observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto")
-                               && fila["Observaciones_Gasto"] != DBNull.Value
-                               ? fila["Observaciones_Gasto"].ToString() : "");
+                observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto") && fila["Observaciones_Gasto"] != DBNull.Value
+                               ? fila["Observaciones_Gasto"].ToString()
+                               : ""
+            );
+
             ventana.Owner = this;
             ventana.ShowDialog();
+        }
+        private void btnEgresos_Click(object sender, RoutedEventArgs e)
+        {
+            CargarEgreso();
+        }
+
+        private void btnIngresos_Click(object sender, RoutedEventArgs e)
+        {
+            MenuDePagos ventana = new MenuDePagos();
+            ventana.Show();
+            this.Close();
+        }
+
+        private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí navegas a la pantalla principal
+        }
+
+        private void btnInventario_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí navegas al inventario
+        }
+
+        private void btnVehiculos_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí navegas a vehículos
+        }
+
+        private void btnClientes_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí navegas a clientes
+        }
+
+        private void btnOrdenes_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí navegas a órdenes
+        }
+
+        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
+        {
+            var resultado = MessageBox.Show("¿Estás seguro que deseas cerrar sesión?", "Cerrar Sesión",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (resultado == MessageBoxResult.Yes)
+            {
+                this.Close();
+            }
         }
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
@@ -171,59 +184,94 @@ namespace Contabilidad
         {
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand(
-                    "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0", _conexion.SqlC))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
+                    string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    conn.Open();
                     int cantidad = (int)cmd.ExecuteScalar();
-                    badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                    txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
+
+                    badgeNotificaciones.Visibility = cantidad > 0
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+                    txtContadorNotificaciones.Text = cantidad.ToString();
                 }
             }
-            catch { }
-            finally { _conexion.Cerrar(); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
+            }
         }
 
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
+
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM   Vista_Notificaciones_Pendientes
-                    ORDER  BY Notificacion_ID DESC";
+                using (SqlConnection conn = new SqlConnection(conexion))
+                {
+                    string query = @"
+                        SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
+                        FROM Vista_Notificaciones_Pendientes
+                        ORDER BY Notificacion_ID DESC";
 
-                DataTable dt = new DataTable();
-                using (SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, _conexion.SqlC)))
+                    SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, conn));
+                    DataTable dt = new DataTable();
+                    conn.Open();
                     da.Fill(dt);
 
-                if (dt.Rows.Count == 0)
-                {
-                    var vacio = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 20) };
-                    vacio.Children.Add(new Label { Content = "🎉", FontSize = 32, HorizontalAlignment = HorizontalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.White), Padding = new Thickness(0) });
-                    vacio.Children.Add(new TextBlock { Text = "Sin notificaciones pendientes", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 0) });
-                    panelNotificaciones.Children.Add(vacio);
-                    badgeContadorPopup.Visibility = Visibility.Collapsed;
-                    btnMarcarTodas.Visibility = Visibility.Collapsed;
-                    return;
-                }
+                    if (dt.Rows.Count == 0)
+                    {
+                        StackPanel vacio = new StackPanel
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 20, 0, 20)
+                        };
 
-                txtContadorPopup.Text = dt.Rows.Count > 99 ? "99+" : dt.Rows.Count.ToString();
-                badgeContadorPopup.Visibility = Visibility.Visible;
-                btnMarcarTodas.Visibility = Visibility.Visible;
+                        // ── Label en vez de TextBlock para el emoji ──
+                        vacio.Children.Add(new Label
+                        {
+                            Content = "🎉",
+                            FontSize = 32,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            HorizontalContentAlignment = HorizontalAlignment.Center,
+                            Foreground = new SolidColorBrush(Colors.White),
+                            Padding = new Thickness(0)
+                        });
 
-                foreach (DataRow row in dt.Rows)
-                {
-                    int id = Convert.ToInt32(row["Notificacion_ID"]);
-                    string tipo = row["Tipo_Notificacion"].ToString() ?? "";
-                    string msg = row["Mensaje"].ToString() ?? "";
-                    panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
+                        vacio.Children.Add(new TextBlock
+                        {
+                            Text = "Sin notificaciones pendientes",
+                            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
+                            FontSize = 12,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 8, 0, 0)
+                        });
+
+                        panelNotificaciones.Children.Add(vacio);
+                        badgeContadorPopup.Visibility = Visibility.Collapsed;
+                        btnMarcarTodas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+
+                    txtContadorPopup.Text = dt.Rows.Count.ToString();
+                    badgeContadorPopup.Visibility = Visibility.Visible;
+                    btnMarcarTodas.Visibility = Visibility.Visible;
+
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        int id = Convert.ToInt32(row["Notificacion_ID"]);
+                        string tipo = row["Tipo_Notificacion"].ToString();
+                        string msg = row["Mensaje"].ToString();
+                        panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
+                    }
                 }
             }
-            catch (Exception ex) { MessageBox.Show("Error al cargar notificaciones:\n" + ex.Message); }
-            finally { _conexion.Cerrar(); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
         }
 
         private Border CrearTarjeta(int id, string tipo, string mensaje)
@@ -249,6 +297,7 @@ namespace Contabilidad
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             StackPanel contenido = new StackPanel();
+
             Border badgeTipo = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde + "33")),
@@ -257,9 +306,23 @@ namespace Contabilidad
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            badgeTipo.Child = new TextBlock { Text = labelTipo, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorIcono)), FontSize = 10, FontWeight = FontWeights.SemiBold };
+            badgeTipo.Child = new TextBlock
+            {
+                Text = labelTipo,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorIcono)),
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold
+            };
             contenido.Children.Add(badgeTipo);
-            contenido.Children.Add(new TextBlock { Text = mensaje, Foreground = new SolidColorBrush(Colors.White), FontSize = 11, TextWrapping = TextWrapping.Wrap, LineHeight = 17 });
+            contenido.Children.Add(new TextBlock
+            {
+                Text = mensaje,
+                Foreground = new SolidColorBrush(Colors.White),
+                FontSize = 11,
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 17
+            });
+
             Grid.SetColumn(contenido, 0);
             grid.Children.Add(contenido);
 
@@ -275,7 +338,13 @@ namespace Contabilidad
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
-            btnLeida.Click += (s, ev) => { MarcarLeida((int)((Button)s).Tag); CargarNotificacionesEnPopup(); CargarNotificaciones(); };
+            btnLeida.Click += (s, e) =>
+            {
+                MarcarLeida((int)((Button)s).Tag);
+                CargarNotificacionesEnPopup();
+                CargarNotificaciones();
+            };
+
             Grid.SetColumn(btnLeida, 1);
             grid.Children.Add(btnLeida);
             card.Child = grid;
@@ -293,16 +362,22 @@ namespace Contabilidad
         {
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC))
+                using (SqlConnection conn = new SqlConnection(conexion))
                 {
+                    SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID", id.HasValue ? (object)id.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@NotificacionID",
+                        id.HasValue ? (object)id.Value : DBNull.Value);
+                    conn.Open();
                     cmd.ExecuteNonQuery();
                 }
             }
-            catch (Exception ex) { MessageBox.Show("Error al marcar notificación:\n" + ex.Message); }
-            finally { _conexion.Cerrar(); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
         }
     }
 }
+
+

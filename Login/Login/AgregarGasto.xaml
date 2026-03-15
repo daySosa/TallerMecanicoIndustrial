@@ -16,6 +16,7 @@
     <Border Padding="24">
         <StackPanel>
 
+            <!-- TÍTULO -->
             <TextBlock x:Name="txtTitulo"
                        Text="Nuevo Gasto"
                        Foreground="White"
@@ -23,6 +24,7 @@
                        FontWeight="Bold"
                        Margin="0,0,0,24"/>
 
+            <!-- TIPO DE GASTO -->
             <TextBlock Text="TIPO DE GASTO"
                        Foreground="#a0a8c8"
                        FontSize="11"
@@ -38,6 +40,7 @@
                 <ComboBoxItem Content="Gasto Adicional"/>
             </ComboBox>
 
+            <!-- NOMBRE DEL GASTO -->
             <TextBlock Text="NOMBRE DEL GASTO"
                        Foreground="#a0a8c8"
                        FontSize="11"
@@ -53,6 +56,7 @@
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                      materialDesign:HintAssist.Hint="Ej: Compra de aceite, Pago de luz..."/>
 
+            <!-- PRECIO -->
             <TextBlock Text="PRECIO"
                        Foreground="#a0a8c8"
                        FontSize="11"
@@ -68,6 +72,7 @@
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                      materialDesign:HintAssist.Hint="0.00"/>
 
+            <!-- OBSERVACIONES -->
             <TextBlock Text="OBSERVACIONES"
                        Foreground="#a0a8c8"
                        FontSize="11"
@@ -87,6 +92,7 @@
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                      materialDesign:HintAssist.Hint="Escribe los detalles del gasto..."/>
 
+            <!-- BOTONES -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
