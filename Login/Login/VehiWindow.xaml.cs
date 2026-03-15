@@ -35,6 +35,10 @@ namespace Vehículos
         public VehiWindow()
         {
             InitializeComponent();
+
+            // Al abrir para agregar, deshabilitar Actualizar
+            btnActualizar.IsEnabled = false;
+            btnActualizar.Opacity = 0.4;
         }
 
         private void txtClienteDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
@@ -49,7 +53,6 @@ namespace Vehículos
                 borderClienteInfo.Visibility = Visibility.Collapsed;
                 _clienteDNI = string.Empty;
             }
-
         }
 
         private bool ValidarDNIHondureño(string dni)
@@ -133,7 +136,6 @@ namespace Vehículos
             txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
-
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos(out int año)) return;
@@ -216,7 +218,7 @@ namespace Vehículos
                     cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
                     cmd.Parameters.AddWithValue("@ClienteDNI", _clienteDNI);
                     cmd.Parameters.AddWithValue("@PlacaOriginal", _placaSeleccionada);
-                    cmd.ExecuteNonQuery(); // ← FALTABA ESTA LÍNEA
+                    cmd.ExecuteNonQuery();
                 }
 
                 MessageBox.Show("✅ Vehículo actualizado correctamente.",
@@ -233,7 +235,6 @@ namespace Vehículos
         }
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
-
 
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
@@ -263,7 +264,6 @@ namespace Vehículos
             txtAnio.Text = vehiculo.Vehiculo_Año.ToString();
             txtObservaciones.Text = vehiculo.Vehiculo_Observaciones;
             txtClienteDNI.Text = vehiculo.Cliente_DNI;
-
             _clienteDNI = vehiculo.Cliente_DNI;
 
             MostrarClienteOk(vehiculo.Cliente_NombreCompleto);
@@ -281,8 +281,9 @@ namespace Vehículos
 
             btnGuardar.IsEnabled = false;
             btnGuardar.Opacity = 0.4;
+            btnActualizar.IsEnabled = true;
+            btnActualizar.Opacity = 1;
         }
-
 
         private bool ValidarCampos(out int año)
         {

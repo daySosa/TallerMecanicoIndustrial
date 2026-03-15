@@ -53,6 +53,9 @@ namespace Órdenes_de_Trabajo
             dpFecha.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
             dpEntrega.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
 
+            btnActualizar.IsEnabled = false;
+            btnActualizar.Opacity = 0.4;
+
             txtPrecioServicio.TextChanged += (s, e) => RecalcularPrecios();
 
             txtPrecioServicio.LostFocus += (s, e) =>
@@ -184,7 +187,6 @@ namespace Órdenes_de_Trabajo
                     }
                 }
 
-                // Prioridad Normal por defecto al editar
                 foreach (ComboBoxItem item in cmbPrioridad.Items)
                 {
                     if (item.Content.ToString() == "Normal")
@@ -194,9 +196,10 @@ namespace Órdenes_de_Trabajo
                     }
                 }
 
-                // Deshabilitar Añadir al editar
                 btnAñadir.IsEnabled = false;
                 btnAñadir.Opacity = 0.4;
+                btnActualizar.IsEnabled = true;
+                btnActualizar.Opacity = 1;
 
                 RecalcularPrecios();
             }
@@ -342,7 +345,8 @@ namespace Órdenes_de_Trabajo
         {
             if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
             {
-                MostrarError("Busca un cliente o vehículo antes de guardar.");
+                MessageBox.Show("Busca un cliente o vehículo antes de guardar.",
+                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -612,8 +616,8 @@ namespace Órdenes_de_Trabajo
             txtFotoPlaceholder.Visibility = Visibility.Visible;
             btnAñadir.IsEnabled = true;
             btnAñadir.Opacity = 1;
-            btnActualizar.IsEnabled = true;
-            btnActualizar.Opacity = 1;
+            btnActualizar.IsEnabled = false;
+            btnActualizar.Opacity = 0.4;
         }
     }
 }

@@ -295,7 +295,7 @@
                     BorderBrush="#6c7293" Foreground="#6c7293"
                     materialDesign:ButtonAssist.CornerRadius="6"
                     Click="BtnCancelar_Click"/>
-                        <Button Content="Actualizar"
+                        <Button x:Name="btnActualizar" Content="Actualizar"
                     Height="32" Padding="16,0" Margin="0,0,8,0"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="#4f6ef7" Foreground="#4f6ef7"
