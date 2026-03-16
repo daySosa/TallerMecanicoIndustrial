@@ -57,7 +57,6 @@ namespace Login
             }
 
             bool codigoValido = _autenticacion.ValidarCodigo(_correoUsuario, codigoIngresado);
-
             if (codigoValido)
             {
                 Dasboard_Prueba.MenuPrincipal menu = new Dasboard_Prueba.MenuPrincipal();
