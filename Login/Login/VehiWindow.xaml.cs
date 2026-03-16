@@ -289,27 +289,78 @@ namespace Vehículos
         {
             año = 0;
 
-            if (string.IsNullOrWhiteSpace(txtPlaca.Text) ||
-                string.IsNullOrWhiteSpace(txtMarca.Text) ||
-                string.IsNullOrWhiteSpace(txtModelo.Text) ||
-                !int.TryParse(txtAnio.Text, out año) ||
-                cmbTipo.SelectedItem == null)
+            if (string.IsNullOrWhiteSpace(txtPlaca.Text))
             {
-                MessageBox.Show("Completa todos los campos obligatorios.",
-                    "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("⚠ La placa del vehículo es obligatoria.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPlaca.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtMarca.Text))
+            {
+                MessageBox.Show("⚠ La marca del vehículo es obligatoria.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtMarca.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtModelo.Text))
+            {
+                MessageBox.Show("⚠ El modelo del vehículo es obligatorio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtModelo.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtAnio.Text))
+            {
+                MessageBox.Show("⚠ El año del vehículo es obligatorio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus();
+                return false;
+            }
+
+            if (cmbTipo.SelectedItem == null)
+            {
+                MessageBox.Show("⚠ Selecciona el tipo de vehículo.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                cmbTipo.Focus();
+                return false;
+            }
+
+            if (!int.TryParse(txtAnio.Text, out año))
+            {
+                MessageBox.Show("⚠ El año debe ser un número entero. Ejemplo: 2020",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus();
                 return false;
             }
 
             if (año < 1900 || año > DateTime.Now.Year + 1)
             {
-                MessageBox.Show($"El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
+                MessageBox.Show($"⚠ El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
                     "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!txtMarca.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ La marca no debe contener caracteres especiales.",
+                    "Marca inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!txtModelo.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El modelo no debe contener caracteres especiales.",
+                    "Modelo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             if (string.IsNullOrEmpty(_clienteDNI))
             {
-                MessageBox.Show("Debes verificar el DNI del cliente antes de guardar.",
+                MessageBox.Show("⚠ Debes verificar el DNI del cliente antes de guardar.",
                     "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
