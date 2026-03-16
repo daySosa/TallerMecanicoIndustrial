@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Login;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
@@ -272,6 +273,12 @@ namespace Contabilidad
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Ingresos");
+            ventana.ShowDialog();
         }
     }
 }

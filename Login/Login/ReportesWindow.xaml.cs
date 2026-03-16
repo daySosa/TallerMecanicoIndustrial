@@ -53,6 +53,10 @@ namespace Login
                     GenerarReporteEgresos();
                     break;
 
+                case "Ingresos":
+                    GenerarReporteIngresos();
+                    break;
+
             }
         }
 
@@ -246,6 +250,57 @@ namespace Login
             html += "</table>";
 
             ExportarPDF(html, "Reporte_Egresos");
+        }
+
+        private void GenerarReporteIngresos()
+        {
+            string html = "<h2 style='color:#1B5E20'>Reporte de Ingresos</h2>";
+            html += $"<p>Generado el: {DateTime.Now:dd/MM/yyyy HH:mm}</p>";
+            html += "<table border='1' cellpadding='6' width='100%' style='border-collapse:collapse'>";
+            html += "<tr style='background:#1B5E20;color:white'><th>Pago ID</th><th>Cliente</th><th>DNI</th><th>Orden ID</th><th>Monto</th></tr>";
+
+            var db = new clsConexion();
+            db.Abrir();
+
+            string sql = @"
+        SELECT p.Pago_ID, 
+               c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+               p.Cliente_DNI,
+               p.Orden_ID,
+               p.Precio_Pago
+        FROM Contabilidad_Pago p
+        INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
+        ORDER BY p.Pago_ID DESC";
+
+            decimal total = 0;
+
+            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+            using (SqlDataReader r = cmd.ExecuteReader())
+            {
+                bool alterno = false;
+                while (r.Read())
+                {
+                    string bg = alterno ? "#f5f5f5" : "#ffffff";
+                    decimal monto = r["Precio_Pago"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Pago"]);
+                    total += monto;
+
+                    html += $"<tr style='background:{bg}'>";
+                    html += $"<td>{r["Pago_ID"]}</td>";
+                    html += $"<td>{r["NombreCompleto"]}</td>";
+                    html += $"<td>{r["Cliente_DNI"]}</td>";
+                    html += $"<td>{r["Orden_ID"]}</td>";
+                    html += $"<td>Q {monto:N2}</td>";
+                    html += "</tr>";
+                    alterno = !alterno;
+                }
+            }
+            db.Cerrar();
+
+            html += $"<tr style='background:#1B5E20;color:white;font-weight:bold'>";
+            html += $"<td colspan='4'>TOTAL</td><td>Q {total:N2}</td></tr>";
+            html += "</table>";
+
+            ExportarPDF(html, "Reporte_Ingresos");
         }
 
         private void ExportarPDF(string html, string nombreArchivo)
