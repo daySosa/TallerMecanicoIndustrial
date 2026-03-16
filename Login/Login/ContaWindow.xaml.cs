@@ -1,9 +1,11 @@
-﻿using Login;
+﻿using Dasboard_Prueba;
+using Login;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Vehículos;
 
 namespace Contabilidad
 {
@@ -140,27 +142,38 @@ namespace Contabilidad
 
         private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí navegas a la pantalla principal
+            var ventana = new MenuPrincipal();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí navegas al inventario
+            var ventana = new ReportesWindow("Egresos");
+            ventana.ShowDialog();
         }
 
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí navegas a vehículos
+            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            ventana.Show();
+            this.Close();
+
         }
 
         private void btnClientes_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí navegas a clientes
+            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            ventana.Show();
+            this.Close();
+
         }
 
         private void btnOrdenes_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí navegas a órdenes
+            var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)

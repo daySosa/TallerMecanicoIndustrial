@@ -26,9 +26,9 @@
 
                 <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185"/>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnPantallaPrincipal" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15" Click="btnPantallaPrincipal_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="38"/>
@@ -36,9 +36,9 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnInventario" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnInventario_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
                                                  Foreground="White" Height="26" Width="38"/>
@@ -46,9 +46,9 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnVehículos" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnVehículos_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
                                                  Foreground="White" Width="39" Height="25"/>
@@ -56,9 +56,9 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnClientes" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnClientes_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="People" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
@@ -95,9 +95,9 @@
                     </StackPanel>
                 </Expander>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnÓrdenes" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15">
+                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnÓrdenes_Click">
                     <WrapPanel Width="250">
                         <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center"
                                                  Foreground="White" Height="25" Width="39"/>
@@ -105,10 +105,10 @@
                     </WrapPanel>
                 </Button>
 
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
+                <Button x:Name="btnCerrarSesión" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White"
-                        VerticalAlignment="Bottom" Margin="0,70,0,15">
+                        VerticalAlignment="Bottom" Margin="0,70,0,15" Click="btnCerrarSesión_Click">
                     <WrapPanel Width="175">
                         <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center"
                                                  Foreground="White" Width="39" Height="21"/>

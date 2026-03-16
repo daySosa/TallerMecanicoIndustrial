@@ -1,9 +1,11 @@
-﻿using Login;
+﻿using Dasboard_Prueba;
+using Login;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Vehículos;
 
 namespace Contabilidad
 {
@@ -286,6 +288,52 @@ namespace Contabilidad
         {
             var ventana = new ReportesWindow("Ingresos");
             ventana.ShowDialog();
+        }
+
+        private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new MenuPrincipal();
+            ventana.Show();
+            this.Close();
+        }
+
+        private void btnInventario_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Egresos");
+            ventana.ShowDialog();
+        }
+
+        private void btnVehículos_Click(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            ventana.Show();
+            this.Close();
+        }
+
+        private void btnClientes_Click(object sender, RoutedEventArgs e)
+        {
+            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            ventana.Show();
+            this.Close();
+
+        }
+
+        private void btnÓrdenes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
+            ventana.Show();
+            this.Close();
+        }
+
+        private void btnCerrarSesión_Click(object sender, RoutedEventArgs e)
+        {
+            var resultado = MessageBox.Show("¿Estás seguro que deseas cerrar sesión?", "Cerrar Sesión",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (resultado == MessageBoxResult.Yes)
+            {
+                this.Close();
+            }
         }
     }
 }
