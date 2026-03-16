@@ -192,14 +192,6 @@ namespace InterfazInventario
             popupFiltros.IsOpen = false;
             _vistaRepuestos?.Refresh();
             ActualizarContador();
-
-            _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
-            _filtroPrecioMin = decimal.TryParse(txtPrecioMin.Text, out decimal pMin) ? pMin : 0;
-            _filtroPrecioMax = decimal.TryParse(txtPrecioMax.Text, out decimal pMax) ? pMax : decimal.MaxValue;
-            _filtroStockBajo = chkStockBajo.IsChecked == true;
-            popupFiltros.IsOpen = false;
-            _vistaRepuestos?.Refresh();
-            ActualizarContador();
         }
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
