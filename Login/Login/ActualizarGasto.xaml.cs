@@ -60,30 +60,30 @@ namespace Contabilidad
         {
             if (cmbTipoGasto.SelectedItem == null)
             {
-                MessageBox.Show("Selecciona un tipo de gasto.", "Aviso",
+                MessageBox.Show("⚠ Selecciona un tipo de gasto.", "Aviso",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(txtNombre.Text))
             {
-                MessageBox.Show("Escribe el nombre del gasto.", "Aviso",
+                MessageBox.Show("⚠ Escribe el nombre del gasto.", "Aviso",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio <= 0)
             {
-                MessageBox.Show("Ingresa un precio válido.", "Aviso",
+                MessageBox.Show("⚠ Ingresa un precio válido mayor a 0.", "Aviso",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!DateTime.TryParseExact(txtFecha.Text.Trim(), "dd/MM/yyyy HH:mm",
-            System.Globalization.CultureInfo.InvariantCulture,
-            System.Globalization.DateTimeStyles.None, out DateTime fechaFinal))
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime fechaFinal))
             {
-                MessageBox.Show("Formato de fecha inválido. Usa dd/MM/yyyy HH:mm\nEjemplo: 13/03/2026 14:30",
+                MessageBox.Show("⚠ Formato de fecha inválido. Usa dd/MM/yyyy HH:mm\nEjemplo: 13/03/2026 14:30",
                     "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -93,13 +93,13 @@ namespace Contabilidad
                 using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = @"
-                        UPDATE Contabilidad_Gastos SET
-                            Tipo_Gasto          = @TipoGasto,
-                            Nombre_Gasto        = @NombreGasto,
-                            Observaciones_Gasto = @Observaciones,
-                            Precio_Gasto        = @Precio,
-                            Fecha_Gasto         = @Fecha
-                        WHERE Gasto_ID = @GastoID";
+                    UPDATE Contabilidad_Gastos SET
+                        Tipo_Gasto          = @TipoGasto,
+                        Nombre_Gasto        = @NombreGasto,
+                        Observaciones_Gasto = @Observaciones,
+                        Precio_Gasto        = @Precio,
+                        Fecha_Gasto         = @Fecha
+                    WHERE Gasto_ID = @GastoID";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@TipoGasto", ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString());
@@ -121,10 +121,9 @@ namespace Contabilidad
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al actualizar el gasto: " + ex.Message, "Error",
+                MessageBox.Show("⚠ Error al actualizar el gasto: " + ex.Message, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
         }
     }
 }

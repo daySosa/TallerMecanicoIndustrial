@@ -120,19 +120,39 @@ namespace Contabilidad
             string ordenStr = txtOrdenID.Text.Trim();
             string montoStr = txtPrecio.Text.Trim();
 
-            if (string.IsNullOrEmpty(dni) || string.IsNullOrEmpty(txtNombreCliente.Text))
+            if (string.IsNullOrEmpty(dni))
             {
-                MostrarMensaje("Ingresa un DNI válido.");
+                MostrarMensaje("⚠ El DNI es obligatorio.");
+                return;
+            }
+            if (!dni.All(char.IsDigit))
+            {
+                MostrarMensaje("⚠ El DNI solo debe contener números.");
+                return;
+            }
+            if (string.IsNullOrEmpty(txtNombreCliente.Text))
+            {
+                MostrarMensaje("⚠ Ingresa un DNI válido.");
+                return;
+            }
+            if (string.IsNullOrEmpty(ordenStr))
+            {
+                MostrarMensaje("⚠ El ID de la orden es obligatorio.");
                 return;
             }
             if (!int.TryParse(ordenStr, out int ordenId))
             {
-                MostrarMensaje("El ID de la orden debe ser un número.");
+                MostrarMensaje("⚠ El ID de la orden debe ser un número entero.");
+                return;
+            }
+            if (string.IsNullOrEmpty(montoStr))
+            {
+                MostrarMensaje("⚠ El monto es obligatorio.");
                 return;
             }
             if (!decimal.TryParse(montoStr, out decimal monto) || monto <= 0)
             {
-                MostrarMensaje("El monto no es válido.");
+                MostrarMensaje("⚠ El monto debe ser un número mayor a 0.");
                 return;
             }
 
@@ -142,11 +162,11 @@ namespace Contabilidad
                 {
                     conn.Open();
                     string query = @"
-                        UPDATE Contabilidad_Pago
-                        SET Cliente_DNI = @DNI,
-                            Orden_ID    = @OrdenID,
-                            Precio_Pago = @Monto
-                        WHERE Pago_ID = @PagoID";
+                    UPDATE Contabilidad_Pago
+                    SET Cliente_DNI = @DNI,
+                        Orden_ID    = @OrdenID,
+                        Precio_Pago = @Monto
+                    WHERE Pago_ID = @PagoID";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@DNI", Convert.ToInt32(dni));
@@ -164,7 +184,7 @@ namespace Contabilidad
             }
             catch (Exception ex)
             {
-                MostrarMensaje("Error al actualizar: " + ex.Message);
+                MostrarMensaje("⚠ Error al actualizar: " + ex.Message);
             }
         }
 
