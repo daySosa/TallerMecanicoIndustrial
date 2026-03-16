@@ -30,6 +30,29 @@ namespace Login
             {
                 txtErrorCodigo.Text = "⚠ Ingresa el código de verificación.";
                 txtErrorCodigo.Visibility = Visibility.Visible;
+                borderCodigo.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                borderCodigo.BorderThickness = new Thickness(2);
+                return;
+            }
+
+            if (!codigoIngresado.All(char.IsDigit))
+            {
+                txtErrorCodigo.Text = "⚠ El código solo debe contener números.";
+                txtErrorCodigo.Visibility = Visibility.Visible;
+                borderCodigo.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                borderCodigo.BorderThickness = new Thickness(2);
+                return;
+            }
+
+            if (codigoIngresado.Length != 6)
+            {
+                txtErrorCodigo.Text = "⚠ El código debe tener exactamente 6 dígitos.";
+                txtErrorCodigo.Visibility = Visibility.Visible;
+                borderCodigo.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                borderCodigo.BorderThickness = new Thickness(2);
                 return;
             }
 
