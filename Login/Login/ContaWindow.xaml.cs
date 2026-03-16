@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Login;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
@@ -376,6 +377,12 @@ namespace Contabilidad
             {
                 MessageBox.Show("Error: " + ex.Message);
             }
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ReportesWindow("Egresos");
+            ventana.ShowDialog();
         }
     }
 }
