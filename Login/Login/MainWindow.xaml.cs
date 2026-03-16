@@ -131,6 +131,14 @@ namespace Login
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
                 hayError = true;
             }
+            else if (!txtCorreo.Text.Contains("@") || !txtCorreo.Text.Contains("."))
+            {
+                txtErrorCorreo.Text = "⚠ Ingresa un correo electrónico válido.";
+                txtErrorCorreo.Visibility = Visibility.Visible;
+                borderCorreo.BorderBrush =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                hayError = true;
+            }
             else
             {
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
