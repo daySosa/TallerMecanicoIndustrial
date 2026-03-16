@@ -159,6 +159,40 @@ namespace InterfazInventario
 
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
+            if (!string.IsNullOrWhiteSpace(txtPrecioMin.Text) &&
+                    !decimal.TryParse(txtPrecioMin.Text, out _))
+            {
+                MessageBox.Show("⚠ El precio mínimo debe ser un número válido.",
+                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtPrecioMax.Text) &&
+                !decimal.TryParse(txtPrecioMax.Text, out _))
+            {
+                MessageBox.Show("⚠ El precio máximo debe ser un número válido.",
+                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            decimal pMin = decimal.TryParse(txtPrecioMin.Text, out decimal pm) ? pm : 0;
+            decimal pMax = decimal.TryParse(txtPrecioMax.Text, out decimal px) ? px : decimal.MaxValue;
+
+            if (pMin > pMax)
+            {
+                MessageBox.Show("⚠ El precio mínimo no puede ser mayor que el precio máximo.",
+                    "Rango inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
+            _filtroPrecioMin = pMin;
+            _filtroPrecioMax = pMax;
+            _filtroStockBajo = chkStockBajo.IsChecked == true;
+            popupFiltros.IsOpen = false;
+            _vistaRepuestos?.Refresh();
+            ActualizarContador();
+
             _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
             _filtroPrecioMin = decimal.TryParse(txtPrecioMin.Text, out decimal pMin) ? pMin : 0;
             _filtroPrecioMax = decimal.TryParse(txtPrecioMax.Text, out decimal pMax) ? pMax : decimal.MaxValue;

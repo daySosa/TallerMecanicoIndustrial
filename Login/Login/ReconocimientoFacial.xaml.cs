@@ -346,13 +346,21 @@ namespace Login
 
             if (string.IsNullOrEmpty(nombre))
             {
-                MessageBox.Show("Ingresa el nombre de la persona.",
+                MessageBox.Show("⚠ Ingresa el nombre de la persona.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            if (!nombre.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El nombre solo puede contener letras y espacios.",
+                    "Nombre inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (_fotoCapturada == null)
             {
-                MessageBox.Show("Primero captura una foto.",
+                MessageBox.Show("⚠ Primero captura una foto.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
