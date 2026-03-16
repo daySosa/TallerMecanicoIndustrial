@@ -124,17 +124,17 @@ namespace Contabilidad
 
             if (string.IsNullOrEmpty(dni) || string.IsNullOrEmpty(txtNombre.Text))
             {
-                MostrarMensaje("Busca un cliente válido antes de guardar.");
+                MostrarMensaje("⚠ Busca un cliente válido antes de guardar.");
                 return;
             }
             if (!int.TryParse(ordenStr, out int ordenId))
             {
-                MostrarMensaje("El ID de la orden debe ser un número.");
+                MostrarMensaje("⚠ El ID de la orden debe ser un número.");
                 return;
             }
             if (!decimal.TryParse(montoStr, out decimal monto) || monto <= 0)
             {
-                MostrarMensaje("El monto calculado no es válido. Verifica la orden.");
+                MostrarMensaje("⚠ El monto calculado no es válido. Verifica la orden.");
                 return;
             }
 
@@ -148,29 +148,29 @@ namespace Contabilidad
                     {
                         SqlCommand cmd = new SqlCommand("sp_RegistrarPago", conn);
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@ClienteDNI", dni);         // ✅ cambiado
+                        cmd.Parameters.AddWithValue("@ClienteDNI", dni);
                         cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                         cmd.Parameters.AddWithValue("@Monto", monto);
                         cmd.ExecuteNonQuery();
-                        MessageBox.Show("¡Pago registrado correctamente!", "Éxito",
+                        MessageBox.Show("✅ ¡Pago registrado correctamente!", "Éxito",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
                         string updateQuery = @"
-                            UPDATE Contabilidad_Pago
-                            SET Cliente_DNI = @DNI,
-                                Orden_ID    = @OrdenID,
-                                Precio_Pago = @Monto
-                            WHERE Pago_ID = @PagoID";
+                        UPDATE Contabilidad_Pago
+                        SET Cliente_DNI = @DNI,
+                            Orden_ID    = @OrdenID,
+                            Precio_Pago = @Monto
+                        WHERE Pago_ID = @PagoID";
 
                         SqlCommand cmd = new SqlCommand(updateQuery, conn);
-                        cmd.Parameters.AddWithValue("@DNI", dni);                // ✅ cambiado
+                        cmd.Parameters.AddWithValue("@DNI", dni);
                         cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                         cmd.Parameters.AddWithValue("@Monto", monto);
                         cmd.Parameters.AddWithValue("@PagoID", _pagoId);
                         cmd.ExecuteNonQuery();
-                        MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
+                        MessageBox.Show("✅ ¡Pago actualizado correctamente!", "Éxito",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
@@ -180,11 +180,11 @@ namespace Contabilidad
             }
             catch (SqlException sqlEx)
             {
-                MostrarMensaje(sqlEx.Message);
+                MostrarMensaje("⚠ " + sqlEx.Message);
             }
             catch (Exception ex)
             {
-                MostrarMensaje("Error inesperado: " + ex.Message);
+                MostrarMensaje("⚠ Error inesperado: " + ex.Message);
             }
         }
 

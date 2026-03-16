@@ -122,14 +122,14 @@ namespace Órdenes_de_Trabajo
         {
             if (_productoSeleccionado == null)
             {
-                MessageBox.Show("Selecciona un producto del inventario.",
+                MessageBox.Show("⚠ Selecciona un producto del inventario.",
                     "Producto requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!int.TryParse(txtCantidad.Text.Trim(), out int cantidad) || cantidad <= 0)
             {
-                MessageBox.Show("La cantidad debe ser un número entero mayor a 0.",
+                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor a 0.",
                     "Cantidad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -137,7 +137,7 @@ namespace Órdenes_de_Trabajo
             if (cantidad > _productoSeleccionado.Producto_Cantidad_Actual)
             {
                 MessageBox.Show(
-                    $"Stock insuficiente. Solo hay {_productoSeleccionado.Producto_Cantidad_Actual} unidades disponibles.",
+                    $"⚠ Stock insuficiente. Solo hay {_productoSeleccionado.Producto_Cantidad_Actual} unidades disponibles.",
                     "Stock insuficiente", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
