@@ -162,16 +162,41 @@ namespace InterfazInventario
             precio = 0;
             cantidad = 0;
 
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("⚠ El nombre del producto es obligatorio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtNombre.Focus();
+                return false;
+            }
+
+            if (cmbCategoria.SelectedItem == null)
+            {
+                MessageBox.Show("⚠ Debes seleccionar una categoría.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                cmbCategoria.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtMarca.Text))
+            {
+                MessageBox.Show("⚠ La marca del producto es obligatoria.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtMarca.Focus();
+                return false;
+            }
+
             if (!decimal.TryParse(txtPrecio.Text, out precio) || precio < 0)
             {
-                MessageBox.Show("El precio debe ser un número válido.",
+                MessageBox.Show("⚠ El precio debe ser un número válido mayor o igual a 0.\nEjemplo: 150.00",
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPrecio.Focus();
                 return false;
             }
 
             if (!int.TryParse(txtCantidad.Text, out cantidad) || cantidad < 0)
             {
-                MessageBox.Show("La cantidad debe ser un número entero.",
+                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor o igual a 0.",
                     "Cantidad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
