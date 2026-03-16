@@ -112,7 +112,7 @@ namespace InterfazClientes
 
             if (string.IsNullOrWhiteSpace(txtDPI.Text) || !ValidarDNIHondureño(txtDPI.Text.Trim()))
             {
-                MessageBox.Show("Ingrese un DNI válido de 13 dígitos.", "DNI inválido",
+                MessageBox.Show("⚠ Ingrese un DNI válido de 13 dígitos.", "DNI inválido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
@@ -120,7 +120,7 @@ namespace InterfazClientes
 
             if (string.IsNullOrWhiteSpace(txtNombre.Text))
             {
-                MessageBox.Show("Ingrese el nombre del cliente.", "Campo requerido",
+                MessageBox.Show("⚠ Ingrese el nombre del cliente.", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
@@ -128,7 +128,7 @@ namespace InterfazClientes
 
             if (string.IsNullOrWhiteSpace(txtApellido.Text))
             {
-                MessageBox.Show("Ingrese el apellido del cliente.", "Campo requerido",
+                MessageBox.Show("⚠ Ingrese el apellido del cliente.", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
@@ -136,9 +136,31 @@ namespace InterfazClientes
 
             if (string.IsNullOrWhiteSpace(txtTelefono.Text) || txtTelefono.Text.Length < 9)
             {
-                MessageBox.Show("Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
+                MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
+                return;
+            }
+
+            if (!txtNombre.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El nombre solo puede contener letras y espacios.",
+                    "Nombre inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!txtApellido.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El apellido solo puede contener letras y espacios.",
+                    "Apellido inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtCorreo.Text) && 
+                    !System.Text.RegularExpressions.Regex.IsMatch(txtCorreo.Text.Trim(), @"^[^@]+@[^@]+\.[^@]+$"))
+            {
+                MessageBox.Show("⚠ El correo no tiene un formato válido.\nEjemplo: nombre@dominio.com",
+                    "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -207,7 +229,7 @@ namespace InterfazClientes
             catch (Exception ex)
             {
                 btnAgregar.IsEnabled = true;
-                MessageBox.Show("Error al agregar cliente:\n" + ex.Message,
+                MessageBox.Show("⚠ Error al agregar cliente:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -216,29 +238,51 @@ namespace InterfazClientes
         {
             if (string.IsNullOrEmpty(_dniEditando))
             {
-                MessageBox.Show("No hay ningún cliente cargado para actualizar.",
+                MessageBox.Show("⚠ No hay ningún cliente cargado para actualizar.",
                     "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(txtNombre.Text))
             {
-                MessageBox.Show("Ingrese el nombre del cliente.", "Campo requerido",
+                MessageBox.Show("⚠ Ingrese el nombre del cliente.", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(txtApellido.Text))
             {
-                MessageBox.Show("Ingrese el apellido del cliente.", "Campo requerido",
+                MessageBox.Show("⚠ Ingrese el apellido del cliente.", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(txtTelefono.Text) || txtTelefono.Text.Length < 9)
             {
-                MessageBox.Show("Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
+                MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!txtNombre.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El nombre solo puede contener letras y espacios.",
+                    "Nombre inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!txtApellido.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El apellido solo puede contener letras y espacios.",
+                    "Apellido inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtCorreo.Text) &&
+                    !System.Text.RegularExpressions.Regex.IsMatch(txtCorreo.Text.Trim(), @"^[^@]+@[^@]+\.[^@]+$"))
+            {
+                MessageBox.Show("⚠ El correo no tiene un formato válido.\nEjemplo: nombre@dominio.com",
+                    "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
