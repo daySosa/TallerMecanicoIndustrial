@@ -280,14 +280,32 @@ namespace InterfazInventario
 
                 if (dt.Rows.Count == 0)
                 {
-                    panelNotificaciones.Children.Add(new TextBlock
+                    StackPanel vacio = new StackPanel
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 20, 0, 20)
+                    };
+
+                    vacio.Children.Add(new Label
+                    {
+                        Content = "🎉",
+                        FontSize = 32,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        HorizontalContentAlignment = HorizontalAlignment.Center,
+                        Foreground = new SolidColorBrush(Colors.White),
+                        Padding = new Thickness(0)
+                    });
+
+                    vacio.Children.Add(new TextBlock
                     {
                         Text = "Sin notificaciones pendientes",
                         Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
-                        FontSize = 13,
+                        FontSize = 12,
                         HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 20, 0, 20)
+                        Margin = new Thickness(0, 8, 0, 0)
                     });
+
+                    panelNotificaciones.Children.Add(vacio);
                     badgeContadorPopup.Visibility = Visibility.Collapsed;
                     btnMarcarTodas.Visibility = Visibility.Collapsed;
                     return;

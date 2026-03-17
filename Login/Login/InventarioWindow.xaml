@@ -124,7 +124,8 @@
                                FontSize="11" FontWeight="Medium" Margin="0,0,0,6"/>
                     <ComboBox x:Name="cmbCategoria" Height="40" Margin="0,0,0,16"
                               Background="#1e2130" Foreground="White"
-                              BorderBrush="#3a3f5c" FontSize="13">
+                              BorderBrush="#3a3f5c" FontSize="13"
+                              Padding="10,0,10,0">
                         <ComboBox.Resources>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="Foreground" Value="White"/>

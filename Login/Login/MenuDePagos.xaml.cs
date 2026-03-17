@@ -6,12 +6,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Vehículos;
+using InterfazInventario;
+using InterfazClientes;
 
 namespace Contabilidad
 {
     public partial class MenuDePagos : Window
     {
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+        private string _conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         public MenuDePagos()
         {
@@ -22,32 +24,40 @@ namespace Contabilidad
 
         public void CargarPago(string busqueda = null)
         {
-            using (SqlConnection conn = new SqlConnection(conexion))
+            try
             {
-                string query = @"
-                    SELECT 
-                        Pago_ID,
-                        Cliente_DNI,
-                        Cliente_Nombres,
-                        Orden_ID,
-                        Precio_Pago,
-                        Fecha_Pago
-                    FROM Vista_Pagos_Completos
-                    WHERE (@Busqueda IS NULL
-                           OR CAST(Pago_ID AS VARCHAR) LIKE '%' + @Busqueda + '%'
-                           OR Cliente_Nombres        LIKE '%' + @Busqueda + '%'
-                           OR Cliente_Apellidos      LIKE '%' + @Busqueda + '%')
-                    ORDER BY Fecha_Pago DESC";
+                using (SqlConnection conn = new SqlConnection(_conexion))
+                {
+                    string query = @"
+                        SELECT 
+                            Pago_ID,
+                            Cliente_DNI,
+                            Cliente_Nombres,
+                            Orden_ID,
+                            Precio_Pago,
+                            Fecha_Pago
+                        FROM Vista_Pagos_Completos
+                        WHERE (@Busqueda IS NULL
+                               OR CAST(Pago_ID AS VARCHAR) LIKE '%' + @Busqueda + '%'
+                               OR Cliente_Nombres        LIKE '%' + @Busqueda + '%'
+                               OR Cliente_Apellidos      LIKE '%' + @Busqueda + '%')
+                        ORDER BY Fecha_Pago DESC";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Busqueda", (object)busqueda ?? DBNull.Value);
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@Busqueda", (object)busqueda ?? DBNull.Value);
 
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-                DataTable dt = new DataTable();
-                conn.Open();
-                da.Fill(dt);
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable();
+                    conn.Open();
+                    da.Fill(dt);
 
-                dgPagos.ItemsSource = dt.DefaultView;
+                    dgPagos.ItemsSource = dt.DefaultView;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar pagos: " + ex.Message, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -66,6 +76,7 @@ namespace Contabilidad
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
+            CargarPago();
         }
 
         private void dgPagos_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -110,17 +121,25 @@ namespace Contabilidad
 
         public void CargarNotificaciones()
         {
-            using (SqlConnection conn = new SqlConnection(conexion))
+            try
             {
-                string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                conn.Open();
-                int cantidad = (int)cmd.ExecuteScalar();
+                using (SqlConnection conn = new SqlConnection(_conexion))
+                {
+                    string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    conn.Open();
+                    int cantidad = (int)cmd.ExecuteScalar();
 
-                badgeNotificaciones.Visibility = cantidad > 0
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-                txtContadorNotificaciones.Text = cantidad.ToString();
+                    badgeNotificaciones.Visibility = cantidad > 0
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+                    txtContadorNotificaciones.Text = cantidad.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar notificaciones: " + ex.Message, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -128,62 +147,70 @@ namespace Contabilidad
         {
             panelNotificaciones.Children.Clear();
 
-            using (SqlConnection conn = new SqlConnection(conexion))
+            try
             {
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM Vista_Notificaciones_Pendientes
-                    ORDER BY Notificacion_ID DESC";
-
-                SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, conn));
-                DataTable dt = new DataTable();
-                conn.Open();
-                da.Fill(dt);
-
-                if (dt.Rows.Count == 0)
+                using (SqlConnection conn = new SqlConnection(_conexion))
                 {
-                    StackPanel vacio = new StackPanel
-                    {
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 20, 0, 20)
-                    };
+                    string query = @"
+                        SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
+                        FROM Vista_Notificaciones_Pendientes
+                        ORDER BY Notificacion_ID DESC";
 
-                    vacio.Children.Add(new Label
-                    {
-                        Content = "🎉",
-                        FontSize = 32,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        HorizontalContentAlignment = HorizontalAlignment.Center,
-                        Foreground = new SolidColorBrush(Colors.White),
-                        Padding = new Thickness(0)
-                    });
+                    SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, conn));
+                    DataTable dt = new DataTable();
+                    conn.Open();
+                    da.Fill(dt);
 
-                    vacio.Children.Add(new TextBlock
+                    if (dt.Rows.Count == 0)
                     {
-                        Text = "Sin notificaciones pendientes",
-                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
-                        FontSize = 12,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 8, 0, 0)
-                    });
+                        StackPanel vacio = new StackPanel
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 20, 0, 20)
+                        };
 
-                    panelNotificaciones.Children.Add(vacio);
-                    badgeContadorPopup.Visibility = Visibility.Collapsed;
-                    btnMarcarTodas.Visibility = Visibility.Collapsed;
-                    return;
+                        vacio.Children.Add(new Label
+                        {
+                            Content = "🎉",
+                            FontSize = 32,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            HorizontalContentAlignment = HorizontalAlignment.Center,
+                            Foreground = new SolidColorBrush(Colors.White),
+                            Padding = new Thickness(0)
+                        });
+
+                        vacio.Children.Add(new TextBlock
+                        {
+                            Text = "Sin notificaciones pendientes",
+                            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
+                            FontSize = 12,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 8, 0, 0)
+                        });
+
+                        panelNotificaciones.Children.Add(vacio);
+                        badgeContadorPopup.Visibility = Visibility.Collapsed;
+                        btnMarcarTodas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+
+                    txtContadorPopup.Text = dt.Rows.Count.ToString();
+                    badgeContadorPopup.Visibility = Visibility.Visible;
+                    btnMarcarTodas.Visibility = Visibility.Visible;
+
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        int id = Convert.ToInt32(row["Notificacion_ID"]);
+                        string tipo = row["Tipo_Notificacion"].ToString();
+                        string msg = row["Mensaje"].ToString();
+                        panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
+                    }
                 }
-
-                txtContadorPopup.Text = dt.Rows.Count.ToString();
-                badgeContadorPopup.Visibility = Visibility.Visible;
-                btnMarcarTodas.Visibility = Visibility.Visible;
-
-                foreach (DataRow row in dt.Rows)
-                {
-                    int id = Convert.ToInt32(row["Notificacion_ID"]);
-                    string tipo = row["Tipo_Notificacion"].ToString();
-                    string msg = row["Mensaje"].ToString();
-                    panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar notificaciones: " + ex.Message, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -273,14 +300,22 @@ namespace Contabilidad
 
         private void MarcarLeida(int? id)
         {
-            using (SqlConnection conn = new SqlConnection(conexion))
+            try
             {
-                SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NotificacionID",
-                    id.HasValue ? (object)id.Value : DBNull.Value);
-                conn.Open();
-                cmd.ExecuteNonQuery();
+                using (SqlConnection conn = new SqlConnection(_conexion))
+                {
+                    SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@NotificacionID",
+                        id.HasValue ? (object)id.Value : DBNull.Value);
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al marcar notificación: " + ex.Message, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -299,23 +334,30 @@ namespace Contabilidad
 
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new ReportesWindow("Egresos");
-            ventana.ShowDialog();
+            var ventana = new MenúPrincipalInventario();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnVehículos_Click(object sender, RoutedEventArgs e)
         {
-            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            var ventana = new MenúPrincipalVehículos();
             ventana.Show();
             this.Close();
         }
 
         private void btnClientes_Click(object sender, RoutedEventArgs e)
         {
-            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            var ventana = new MenúPrincipalClientes();
             ventana.Show();
             this.Close();
+        }
 
+        private void btnEgresos_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ContaWindow();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnÓrdenes_Click(object sender, RoutedEventArgs e)
@@ -325,13 +367,14 @@ namespace Contabilidad
             this.Close();
         }
 
-        private void btnCerrarSesión_Click(object sender, RoutedEventArgs e)
+        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
-            var resultado = MessageBox.Show("¿Estás seguro que deseas cerrar sesión?", "Cerrar Sesión",
+            var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
-
             if (resultado == MessageBoxResult.Yes)
             {
+                var login = new Login.MainWindow();
+                login.Show();
                 this.Close();
             }
         }

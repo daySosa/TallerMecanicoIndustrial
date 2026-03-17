@@ -9,14 +9,12 @@
         TextElement.Foreground="#242731" WindowStyle="ThreeDBorderWindow"
         Background="#1F2128" WindowStartupLocation="CenterScreen" BorderBrush="#242731">
 
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ===== MENÚ IZQUIERDO ===== -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
@@ -137,7 +135,6 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- ===== CONTENIDO PRINCIPAL ===== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -145,7 +142,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- ===== TOP BAR ===== -->
             <Border Grid.Row="0" Background="#1A1D2E" Height="80">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -184,9 +180,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ===== CAMPANA CON BADGE Y POPUP ===== -->
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-
                         <Button x:Name="btnNotificaciones"
                                 Style="{StaticResource MaterialDesignIconButton}"
                                 Foreground="#6B7280" Width="38" Height="38"
@@ -207,11 +201,8 @@
 
                         <Popup x:Name="popupNotificaciones"
                                PlacementTarget="{Binding ElementName=btnNotificaciones}"
-                               Placement="Bottom"
-                               StaysOpen="False"
-                               AllowsTransparency="True"
-                               PopupAnimation="Fade">
-
+                               Placement="Bottom" StaysOpen="False"
+                               AllowsTransparency="True" PopupAnimation="Fade">
                             <Border Background="#252836" CornerRadius="10"
                                     BorderBrush="#2A3A4D" BorderThickness="1"
                                     Width="360" MaxHeight="480"
@@ -226,7 +217,6 @@
                                         <RowDefinition Height="10"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-
                                     <Grid Grid.Row="0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -248,21 +238,15 @@
                                                        FontSize="11" FontWeight="Bold"/>
                                         </Border>
                                     </Grid>
-
                                     <Rectangle Grid.Row="2" Height="1" Fill="#2A3A4D"/>
-
-                                    <ScrollViewer Grid.Row="4"
-                                                  VerticalScrollBarVisibility="Auto"
-                                                  MaxHeight="320">
+                                    <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" MaxHeight="320">
                                         <StackPanel x:Name="panelNotificaciones"/>
                                     </ScrollViewer>
-
                                     <Button Grid.Row="6" x:Name="btnMarcarTodas"
                                             Style="{StaticResource MaterialDesignOutlinedButton}"
                                             Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                                             materialDesign:ButtonAssist.CornerRadius="8"
-                                            Height="36" FontSize="12"
-                                            Visibility="Collapsed"
+                                            Height="36" FontSize="12" Visibility="Collapsed"
                                             Click="btnMarcarTodas_Click">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="CheckAll" Width="16" Height="16"
@@ -270,11 +254,9 @@
                                             <TextBlock Text="Marcar todas como leídas" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
-
                                 </Grid>
                             </Border>
                         </Popup>
-
                     </Grid>
 
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
@@ -291,7 +273,6 @@
                 </Grid>
             </Border>
 
-            <!-- ===== TOOLBAR ===== -->
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -310,32 +291,22 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Agregar" VerticalAlignment="Center" FontSize="14"/>
+                        <TextBlock Text="Agregar Gasto" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
-                </Button>
-
-                <Button x:Name="btnActualizar"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Foreground="#3D7EFF" BorderBrush="#3D7EFF"
-                        materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Margin="0,0,10,0"
-                        Click="btnActualizar_Click" Grid.ColumnSpan="2" HorizontalAlignment="Right" Width="32">
-                    <StackPanel Orientation="Horizontal"/>
                 </Button>
 
                 <Button Grid.Column="1"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="#2E7D32" Foreground="White"
-                    materialDesign:ButtonAssist.CornerRadius="8"
-                    Height="38" Padding="16,0" Margin="10,0,0,0"
-                    Click="btnReportes_Click">  
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#2E7D32" Foreground="White"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Height="38" Padding="16,0" Margin="10,0,20,0"
+                        Click="btnReportes_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18"
-                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-
 
                 <Button x:Name="btnMostrarComprobante" Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -351,7 +322,6 @@
                 </Button>
             </Grid>
 
-            <!-- ===== CARD CON DATAGRID ===== -->
             <materialDesign:Card Grid.Row="2"
                                  Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
@@ -373,8 +343,9 @@
                     <DataGrid Grid.Row="1" x:Name="dgGastos"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False"
-                              CanUserResizeRows="False" IsReadOnly="True"
-                              SelectionMode="Single"
+                              CanUserResizeRows="False" CanUserReorderColumns="False"
+                              CanUserResizeColumns="False"
+                              IsReadOnly="True" SelectionMode="Single"
                               GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="#2A3A4D"
                               VerticalGridLinesBrush="Transparent"
@@ -384,7 +355,9 @@
                               ColumnHeaderHeight="40" RowHeight="55"
                               MouseDoubleClick="dgGastos_MouseDoubleClick"
                               HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch">
+                              VerticalAlignment="Stretch"
+                              materialDesign:DataGridAssist.CellPadding="0"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -396,6 +369,7 @@
                                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                 <Setter Property="BorderBrush" Value="#2A3A4D"/>
                                 <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
 
@@ -417,8 +391,9 @@
                             <Style TargetType="{x:Type DataGridCell}">
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="12,0"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -434,7 +409,7 @@
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -495,15 +470,15 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="Precio"
-                                                Binding="{Binding Precio_Gasto, StringFormat=L/\{0:N2\}}"
-                                                Width="110">
+                    Binding="{Binding Precio_Gasto, StringFormat='- L {0:N2}'}"
+                    Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Foreground" Value="#FF6B6B"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="HorizontalAlignment" Value="Left"/>
                                         <Setter Property="FontWeight" Value="SemiBold"/>
-                                        <Setter Property="Margin" Value="0,0,12,0"/>
+                                        <Setter Property="Padding" Value="12,0,0,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>

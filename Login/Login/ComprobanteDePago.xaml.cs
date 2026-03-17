@@ -13,12 +13,10 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-
     public partial class ComprobanteDePago : Window
     {
-
-        private string connectionString = @"Data Source=(localdb)\papu;Initial Catalog=Taller_Mecanico_Sistema;Integrated Security=True;";
-
+        // ✅ Cambiado de LocalDB a Azure SQL
+        private string _conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         public ComprobanteDePago(int pagoId)
         {
@@ -30,7 +28,7 @@ namespace Contabilidad
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(_conexion))
                 {
                     string query = @"
                         SELECT 
@@ -53,7 +51,7 @@ namespace Contabilidad
                         lblOrdenID.Text = "#" + reader["Orden_ID"].ToString();
 
                         decimal monto = Convert.ToDecimal(reader["Precio_Pago"]);
-                        lblMonto.Text = "S/ " + monto.ToString("N2");
+                        lblMonto.Text = "L " + monto.ToString("N2");
 
                         DateTime fecha = Convert.ToDateTime(reader["Fecha_Pago"]);
                         lblFecha.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
@@ -61,7 +59,7 @@ namespace Contabilidad
                     }
                     else
                     {
-                        MessageBox.Show("No se encontró el comprobante.", "Error",
+                        MessageBox.Show("No se encontró el comprobante.", "Aviso",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
                         this.Close();
                     }

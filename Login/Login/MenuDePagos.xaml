@@ -16,22 +16,22 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="20*"/>
-            
         </Grid.ColumnDefinitions>
 
-        <!-- ===== MENÚ IZQUIERDO ===== -->
         <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
                                   Background="#242731" VerticalAlignment="Stretch">
             <StackPanel Margin="15,0,15,0">
 
-                <WrapPanel Margin="0 10 5 60" HorizontalAlignment="Center" Height="184" Width="185"/>
+                <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
+                    <Image RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="/Imagenes/OSM_LOGO.png" Height="184"/>
+                </WrapPanel>
 
                 <Button x:Name="btnPantallaPrincipal" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15" Click="btnPantallaPrincipal_Click">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center"
-                                                 Foreground="White" Height="25" Width="38"/>
+                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
                     </WrapPanel>
                 </Button>
@@ -40,8 +40,7 @@
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnInventario_Click">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center"
-                                                 Foreground="White" Height="26" Width="38"/>
+                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
                         <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
                     </WrapPanel>
                 </Button>
@@ -50,8 +49,7 @@
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnVehículos_Click">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center"
-                                                 Foreground="White" Width="39" Height="25"/>
+                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
                         <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
                     </WrapPanel>
                 </Button>
@@ -60,8 +58,7 @@
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnClientes_Click">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center"
-                                                 Foreground="White" Height="25" Width="39"/>
+                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
                     </WrapPanel>
                 </Button>
@@ -77,18 +74,16 @@
                     </Expander.Header>
                     <StackPanel Background="#242731">
                         <Button Background="#242731" BorderThickness="0" Foreground="White"
-                                FontSize="15" HorizontalContentAlignment="Left">
+                                FontSize="15" HorizontalContentAlignment="Left" Click="btnEgresos_Click">
                             <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center"
-                                                         Margin="15,0,20,0" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Egresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         <Button Background="#3D7EFF" BorderThickness="0" Foreground="White"
                                 FontSize="15" HorizontalContentAlignment="Left">
                             <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center"
-                                                         Margin="15,0,20,0" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
                                 <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -99,8 +94,7 @@
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnÓrdenes_Click">
                     <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center"
-                                                 Foreground="White" Height="25" Width="39"/>
+                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
                         <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
                     </WrapPanel>
                 </Button>
@@ -108,10 +102,9 @@
                 <Button x:Name="btnCerrarSesión" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
                         materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
                         Height="35" materialDesign:RippleAssist.Feedback="White"
-                        VerticalAlignment="Bottom" Margin="0,70,0,15" Click="btnCerrarSesión_Click">
+                        VerticalAlignment="Bottom" Margin="0,70,0,15" Click="btnCerrarSesion_Click">
                     <WrapPanel Width="175">
-                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center"
-                                                 Foreground="White" Width="39" Height="21"/>
+                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
                         <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
                     </WrapPanel>
                 </Button>
@@ -119,7 +112,6 @@
             </StackPanel>
         </materialDesign:ColorZone>
 
-        <!-- ===== CONTENIDO PRINCIPAL ===== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -127,7 +119,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- ===== TOP BAR ===== -->
             <Border Grid.Row="0" Background="#1A1D2E" Height="80">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -139,7 +130,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
-                        <TextBlock Text="Ingresos" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Contabilidad - Ingresos" Foreground="White" FontSize="18" FontWeight="Bold"/>
                         <TextBlock Text="Gestiona los pagos recibidos" Foreground="#6B7280" FontSize="12"/>
                     </StackPanel>
 
@@ -164,34 +155,24 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ===== CAMPANA CON BADGE Y POPUP ===== -->
                     <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
-
                         <Button x:Name="btnNotificaciones"
                                 Style="{StaticResource MaterialDesignIconButton}"
                                 Foreground="#6B7280" Width="38" Height="38"
                                 Click="btnNotificaciones_Click">
                             <materialDesign:PackIcon Kind="BellOutline" Width="22" Height="22"/>
                         </Button>
-
-                        <Border x:Name="badgeNotificaciones"
-                                Background="#FF4444" CornerRadius="8"
-                                Width="16" Height="16"
-                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                        <Border x:Name="badgeNotificaciones" Background="#FF4444" CornerRadius="8"
+                                Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top"
                                 Visibility="Collapsed">
-                            <TextBlock x:Name="txtContadorNotificaciones"
-                                       Text="0" Foreground="White"
+                            <TextBlock x:Name="txtContadorNotificaciones" Text="0" Foreground="White"
                                        FontSize="9" FontWeight="Bold"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-
                         <Popup x:Name="popupNotificaciones"
                                PlacementTarget="{Binding ElementName=btnNotificaciones}"
-                               Placement="Bottom"
-                               StaysOpen="False"
-                               AllowsTransparency="True"
-                               PopupAnimation="Fade">
-
+                               Placement="Bottom" StaysOpen="False"
+                               AllowsTransparency="True" PopupAnimation="Fade">
                             <Border Background="#252836" CornerRadius="10"
                                     BorderBrush="#2A3A4D" BorderThickness="1"
                                     Width="360" MaxHeight="480"
@@ -206,7 +187,6 @@
                                         <RowDefinition Height="10"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-
                                     <Grid Grid.Row="0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -223,26 +203,19 @@
                                                 Background="#FF4444" CornerRadius="10"
                                                 Padding="8,2" VerticalAlignment="Center"
                                                 Visibility="Collapsed">
-                                            <TextBlock x:Name="txtContadorPopup"
-                                                       Text="0" Foreground="White"
+                                            <TextBlock x:Name="txtContadorPopup" Text="0" Foreground="White"
                                                        FontSize="11" FontWeight="Bold"/>
                                         </Border>
                                     </Grid>
-
                                     <Rectangle Grid.Row="2" Height="1" Fill="#2A3A4D"/>
-
-                                    <ScrollViewer Grid.Row="4"
-                                                  VerticalScrollBarVisibility="Auto"
-                                                  MaxHeight="320">
+                                    <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" MaxHeight="320">
                                         <StackPanel x:Name="panelNotificaciones"/>
                                     </ScrollViewer>
-
                                     <Button Grid.Row="6" x:Name="btnMarcarTodas"
                                             Style="{StaticResource MaterialDesignOutlinedButton}"
                                             Foreground="#3D7EFF" BorderBrush="#3D7EFF"
                                             materialDesign:ButtonAssist.CornerRadius="8"
-                                            Height="36" FontSize="12"
-                                            Visibility="Collapsed"
+                                            Height="36" FontSize="12" Visibility="Collapsed"
                                             Click="btnMarcarTodas_Click">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="CheckAll" Width="16" Height="16"
@@ -250,11 +223,9 @@
                                             <TextBlock Text="Marcar todas como leídas" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
-
                                 </Grid>
                             </Border>
                         </Popup>
-
                     </Grid>
 
                     <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
@@ -271,7 +242,6 @@
                 </Grid>
             </Border>
 
-            <!-- ===== TOOLBAR ===== -->
             <Grid Grid.Row="1" Margin="20,15,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -290,23 +260,22 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Agregar" VerticalAlignment="Center" FontSize="14"/>
+                        <TextBlock Text="Agregar Pago" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
 
                 <Button Grid.Column="1"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="#2E7D32" Foreground="White"
-                    materialDesign:ButtonAssist.CornerRadius="8"
-                    Height="38" Padding="16,0" Margin="10,0,0,0"
-                    Click="btnReportes_Click">  
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#2E7D32" Foreground="White"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Height="38" Padding="16,0" Margin="10,0,20,0"
+                        Click="btnReportes_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18"
-                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </Button>
-
 
                 <Button x:Name="btnMostrarComprobantes" Grid.Column="2"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -322,7 +291,6 @@
                 </Button>
             </Grid>
 
-            <!-- ===== CARD CON DATAGRID ===== -->
             <materialDesign:Card Grid.Row="2"
                                  Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
@@ -343,8 +311,9 @@
                     <DataGrid Grid.Row="1" x:Name="dgPagos"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False"
-                              CanUserResizeRows="False" IsReadOnly="True"
-                              SelectionMode="Single"
+                              CanUserResizeRows="False" CanUserReorderColumns="False"
+                              CanUserResizeColumns="False"
+                              IsReadOnly="True" SelectionMode="Single"
                               GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="#2A3A4D"
                               VerticalGridLinesBrush="Transparent"
@@ -354,7 +323,9 @@
                               ColumnHeaderHeight="40" RowHeight="55"
                               MouseDoubleClick="dgPagos_MouseDoubleClick"
                               HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch">
+                              VerticalAlignment="Stretch"
+                              materialDesign:DataGridAssist.CellPadding="0"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -366,6 +337,7 @@
                                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                 <Setter Property="BorderBrush" Value="#2A3A4D"/>
                                 <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
 
@@ -387,8 +359,9 @@
                             <Style TargetType="{x:Type DataGridCell}">
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="12,0"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -404,7 +377,7 @@
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -436,21 +409,21 @@
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Padding" Value="12,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Monto"
-                                                Binding="{Binding Precio_Pago, StringFormat=S/\{0:N2\}}"
-                                                Width="110">
+                    Binding="{Binding Precio_Pago, StringFormat='L {0:N2}'}"
+                    Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Foreground" Value="#4CAF50"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="HorizontalAlignment" Value="Left"/>
                                         <Setter Property="FontWeight" Value="SemiBold"/>
-                                        <Setter Property="Margin" Value="0,0,12,0"/>
+                                        <Setter Property="Padding" Value="12,0,0,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>

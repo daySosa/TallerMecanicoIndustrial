@@ -17,7 +17,6 @@ using System.Windows.Shapes;
 
 namespace Login
 {
-
     public partial class ReportesWindow : Window
     {
         private string _modulo;
@@ -36,27 +35,21 @@ namespace Login
                 case "Clientes":
                     GenerarReporteClientes();
                     break;
-
                 case "Inventario":
                     GenerarReporteInventario();
                     break;
-
                 case "Vehiculos":
                     GenerarReporteVehiculos();
                     break;
-
                 case "Ordenes":
                     GenerarReporteOrdenes();
                     break;
-
                 case "Egresos":
                     GenerarReporteEgresos();
                     break;
-
                 case "Ingresos":
                     GenerarReporteIngresos();
                     break;
-
             }
         }
 
@@ -117,7 +110,7 @@ namespace Login
                     html += $"<td>{r["Producto_Categoria"]}</td>";
                     html += $"<td>{r["Producto_Marca"]}</td>";
                     html += $"<td>{r["Producto_Modelo"]}</td>";
-                    html += $"<td>Q {r["Producto_Precio"]:N2}</td>";
+                    html += $"<td>L {r["Producto_Precio"]:N2}</td>";
                     html += $"<td>{r["Producto_Cantidad_Actual"]}</td>";
                     html += $"<td>{r["Producto_Stock_Minimo"]}</td>";
                     html += "</tr>";
@@ -195,8 +188,8 @@ namespace Login
                     html += $"<td>{r["Estado"]}</td>";
                     html += $"<td>{Convert.ToDateTime(r["Fecha"]):dd/MM/yyyy}</td>";
                     html += $"<td>{(r["Fecha_Entrega"] == DBNull.Value ? "-" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString("dd/MM/yyyy"))}</td>";
-                    html += $"<td>Q {r["Servicio_Precio"]:N2}</td>";
-                    html += $"<td>Q {r["OrdenPrecio_Total"]:N2}</td>";
+                    html += $"<td>L {r["Servicio_Precio"]:N2}</td>";
+                    html += $"<td>L {r["OrdenPrecio_Total"]:N2}</td>";
                     html += $"<td>{(r["Observaciones"] == DBNull.Value ? "" : r["Observaciones"])}</td>";
                     html += "</tr>";
                     alterno = !alterno;
@@ -236,7 +229,7 @@ namespace Login
                     html += $"<td>{r["Tipo_Gasto"]}</td>";
                     html += $"<td>{r["Nombre_Gasto"]}</td>";
                     html += $"<td>{(r["Observaciones_Gasto"] == DBNull.Value ? "" : r["Observaciones_Gasto"])}</td>";
-                    html += $"<td>Q {precio:N2}</td>";
+                    html += $"<td>L {precio:N2}</td>";
                     html += $"<td>{Convert.ToDateTime(r["Fecha_Gasto"]):dd/MM/yyyy}</td>";
                     html += "</tr>";
                     alterno = !alterno;
@@ -244,9 +237,8 @@ namespace Login
             }
             db.Cerrar();
 
-            // Fila de total
             html += $"<tr style='background:#B71C1C;color:white;font-weight:bold'>";
-            html += $"<td colspan='3'>TOTAL</td><td>Q {total:N2}</td><td></td></tr>";
+            html += $"<td colspan='3'>TOTAL</td><td>L {total:N2}</td><td></td></tr>";
             html += "</table>";
 
             ExportarPDF(html, "Reporte_Egresos");
@@ -289,7 +281,7 @@ namespace Login
                     html += $"<td>{r["NombreCompleto"]}</td>";
                     html += $"<td>{r["Cliente_DNI"]}</td>";
                     html += $"<td>{r["Orden_ID"]}</td>";
-                    html += $"<td>Q {monto:N2}</td>";
+                    html += $"<td>L {monto:N2}</td>";
                     html += "</tr>";
                     alterno = !alterno;
                 }
@@ -297,7 +289,7 @@ namespace Login
             db.Cerrar();
 
             html += $"<tr style='background:#1B5E20;color:white;font-weight:bold'>";
-            html += $"<td colspan='4'>TOTAL</td><td>Q {total:N2}</td></tr>";
+            html += $"<td colspan='4'>TOTAL</td><td>L {total:N2}</td></tr>";
             html += "</table>";
 
             ExportarPDF(html, "Reporte_Ingresos");

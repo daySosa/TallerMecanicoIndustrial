@@ -94,6 +94,7 @@ namespace Órdenes_de_Trabajo
         {
             var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
+
             if (resultado == MessageBoxResult.Yes)
             {
                 var login = new Login.MainWindow();

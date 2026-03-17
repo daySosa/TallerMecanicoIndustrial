@@ -72,7 +72,7 @@
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Width="250">
                             <materialDesign:PackIcon Kind="BookOpenPageVariant" Foreground="White" Height="18" Width="26"/>
-                            <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" Margin="5,0,0 0"><Run Text="Contabilidad"/></TextBlock>
+                            <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" Margin="5,0,0,0">Contabilidad</TextBlock>
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Background="#242731">
@@ -419,13 +419,16 @@
                             <DataGrid Grid.Row="1" x:Name="dgOrdenes" MaxHeight="430"
                                       AutoGenerateColumns="False" CanUserAddRows="False"
                                       CanUserDeleteRows="False" CanUserResizeRows="False"
+                                      CanUserReorderColumns="False" CanUserResizeColumns="False"
                                       IsReadOnly="True" SelectionMode="Single"
                                       GridLinesVisibility="Horizontal"
                                       HorizontalGridLinesBrush="#2A3A4D"
                                       Background="Transparent" Foreground="White"
                                       BorderThickness="0" RowBackground="Transparent"
                                       AlternatingRowBackground="#162030"
-                                      ColumnHeaderHeight="40" RowHeight="55">
+                                      ColumnHeaderHeight="40" RowHeight="55"
+                                      materialDesign:DataGridAssist.CellPadding="0"
+                                      materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
                                 <DataGrid.ColumnHeaderStyle>
                                     <Style TargetType="DataGridColumnHeader">
@@ -436,6 +439,7 @@
                                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                         <Setter Property="BorderBrush" Value="#2A3A4D"/>
                                         <Setter Property="SeparatorVisibility" Value="Collapsed"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
                                     </Style>
                                 </DataGrid.ColumnHeaderStyle>
 
@@ -454,8 +458,15 @@
                                     <Style TargetType="DataGridCell">
                                         <Setter Property="Background" Value="Transparent"/>
                                         <Setter Property="BorderThickness" Value="0"/>
-                                        <Setter Property="Padding" Value="12,0"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Trigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGrid.CellStyle>
 
@@ -465,7 +476,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#8B9BB4"/>
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
-                                                <Setter Property="Margin" Value="12,0"/>
+                                                <Setter Property="Padding" Value="12,0"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -564,7 +575,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#4CAF50"/>
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
-                                                <Setter Property="Margin" Value="12,0"/>
+                                                <Setter Property="Padding" Value="12,0"/>
                                                 <Setter Property="FontWeight" Value="Medium"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
@@ -577,41 +588,38 @@
                     <StackPanel Grid.Column="1" VerticalAlignment="Top">
 
                         <materialDesign:Card Background="#1E2A3A"
-                         materialDesign:ElevationAssist.Elevation="Dp4"
-                         Padding="16" Margin="0,0,0,12" UniformCornerRadius="10">
+                                             materialDesign:ElevationAssist.Elevation="Dp4"
+                                             Padding="16" Margin="0,0,0,12" UniformCornerRadius="10">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-
                                     <TextBlock Grid.Column="0" Text="Resumen de Ingresos"
-                           Foreground="White" FontSize="13" FontWeight="Medium"
-                           VerticalAlignment="Center"/>
-
+                                               Foreground="White" FontSize="13" FontWeight="Medium"
+                                               VerticalAlignment="Center"/>
                                     <ComboBox Grid.Column="1" x:Name="cmbRango"
-                          Width="130" Height="28"
-                          Background="#1E2A3A" Foreground="White"
-                          BorderBrush="#3D4458" FontSize="11"
-                          VerticalContentAlignment="Center"
-                          SelectionChanged="cmbRango_SelectionChanged">
+                                              Width="130" Height="28"
+                                              Background="#1E2A3A" Foreground="White"
+                                              BorderBrush="#3D4458" FontSize="11"
+                                              VerticalContentAlignment="Center"
+                                              SelectionChanged="cmbRango_SelectionChanged">
                                         <ComboBoxItem Content="Últimos 3 meses"  Tag="3"/>
                                         <ComboBoxItem Content="Últimos 6 meses"  Tag="6"/>
                                         <ComboBoxItem Content="Últimos 12 meses" Tag="12"/>
                                         <ComboBoxItem Content="Todos"            Tag="0"/>
                                     </ComboBox>
                                 </Grid>
-
                                 <lvc:CartesianChart Height="100" Hoverable="False" DataTooltip="{x:Null}">
                                     <lvc:CartesianChart.Series>
                                         <lvc:ColumnSeries Values="{Binding IngresosSemanalValues}"
-                                      Fill="#4A90D9" StrokeThickness="0"
-                                      MaxColumnWidth="20" ColumnPadding="4"/>
+                                                          Fill="#4A90D9" StrokeThickness="0"
+                                                          MaxColumnWidth="20" ColumnPadding="4"/>
                                     </lvc:CartesianChart.Series>
                                     <lvc:CartesianChart.AxisX>
                                         <lvc:Axis Labels="{Binding IngresosSemanalLabels}"
-                                                Foreground="#8B9BB4" FontSize="9">
+                                                  Foreground="#8B9BB4" FontSize="9">
                                             <lvc:Axis.Separator>
                                                 <lvc:Separator StrokeThickness="0"/>
                                             </lvc:Axis.Separator>

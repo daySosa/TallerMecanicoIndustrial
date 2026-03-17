@@ -44,23 +44,22 @@ namespace InterfazClientes
         {
             if (txtTelefono == null) return;
 
+            txtTelefono.TextChanged -= txtTelefono_TextChanged;
+
             string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
 
             if (soloNumeros.Length > 8)
                 soloNumeros = soloNumeros.Substring(0, 8);
 
-            string formateado = soloNumeros.Length >= 4
-                ? soloNumeros.Substring(0, 4) + (soloNumeros.Length > 4 ? "-" + soloNumeros.Substring(4) : "")
+            string formateado = soloNumeros.Length == 8
+                ? soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4)
                 : soloNumeros;
 
-            if (txtTelefono.Text != formateado)
-            {
-                txtTelefono.TextChanged -= txtTelefono_TextChanged;
-                int caret = txtTelefono.CaretIndex;
-                txtTelefono.Text = formateado;
-                txtTelefono.CaretIndex = Math.Min(caret, formateado.Length);
-                txtTelefono.TextChanged += txtTelefono_TextChanged;
-            }
+            int caret = txtTelefono.CaretIndex;
+            txtTelefono.Text = formateado;
+            txtTelefono.CaretIndex = Math.Min(caret, formateado.Length);
+
+            txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
 
         private bool ValidarDNIHondureño(string dni)

@@ -274,7 +274,7 @@
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Background="#2E7D32" Foreground="White"
                     materialDesign:ButtonAssist.CornerRadius="8"
-                    Height="38" Padding="16,0" Margin="10,0,0,0"
+                    Height="38" Padding="16,0" Margin="10,0,10,0"
                     Click="btnReportes_Click">  
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18"

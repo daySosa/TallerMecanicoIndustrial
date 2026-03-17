@@ -12,9 +12,7 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Lógica de interacción para MostrarComprobante.xaml
-    /// </summary>
+  
     public partial class MostrarComprobante : Window
     {
         public MostrarComprobante(int id, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
@@ -25,24 +23,22 @@ namespace Contabilidad
 
         private void CargarDatos(int id, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
-            // Detalles básicos
             lblID.Text = "#" + id.ToString();
             lblNombre.Text = nombre;
-            lblPrecio.Text = "S/ " + precio.ToString("F2");
+            lblPrecio.Text = "- L " + precio.ToString("F2");
             lblFecha.Text = fecha.ToString("dd/MM/yyyy HH:mm");
 
-            // Badge de tipo con color
             lblTipo.Text = tipo;
             if (tipo == "Gasto en Repuesto")
             {
                 borderTipo.Background = new System.Windows.Media.SolidColorBrush(
-                    System.Windows.Media.Color.FromRgb(59, 130, 246)); // Azul
+                    System.Windows.Media.Color.FromRgb(59, 130, 246)); 
                 lblTipo.Foreground = System.Windows.Media.Brushes.White;
             }
             else
             {
                 borderTipo.Background = new System.Windows.Media.SolidColorBrush(
-                    System.Windows.Media.Color.FromRgb(245, 158, 11)); // Amarillo
+                    System.Windows.Media.Color.FromRgb(245, 158, 11)); 
                 lblTipo.Foreground = System.Windows.Media.Brushes.White;
             }
 

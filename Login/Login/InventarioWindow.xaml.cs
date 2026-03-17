@@ -13,6 +13,9 @@ namespace InterfazInventario
         public InventarioWindow()
         {
             InitializeComponent();
+            // Al abrir para agregar: deshabilitar Actualizar
+            btnActualizar.IsEnabled = false;
+            btnActualizar.Opacity = 0.4;
         }
 
         private void BtnSumar_Click(object sender, RoutedEventArgs e)
@@ -33,7 +36,15 @@ namespace InterfazInventario
 
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
-            if (!ObtenerValores(out decimal precio, out int cantidad)) return;
+            btnAgregar.IsEnabled = false;
+            btnActualizar.IsEnabled = false;
+
+            if (!ObtenerValores(out decimal precio, out int cantidad))
+            {
+                btnAgregar.IsEnabled = true;
+                btnActualizar.IsEnabled = false;
+                return;
+            }
 
             try
             {
@@ -69,20 +80,29 @@ namespace InterfazInventario
             {
                 MessageBox.Show("Error al agregar producto:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                btnAgregar.IsEnabled = true;
             }
             finally { _conexion.Cerrar(); }
         }
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
+            btnAgregar.IsEnabled = false;
+            btnActualizar.IsEnabled = false;
+
             if (_productoIdSeleccionado == -1)
             {
                 MessageBox.Show("Selecciona un producto del inventario para actualizar.",
                     "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
+                btnActualizar.IsEnabled = true;
                 return;
             }
 
-            if (!ObtenerValores(out decimal precio, out int cantidadAgregar)) return;
+            if (!ObtenerValores(out decimal precio, out int cantidadAgregar))
+            {
+                btnActualizar.IsEnabled = true;
+                return;
+            }
 
             try
             {
@@ -94,7 +114,7 @@ namespace InterfazInventario
                         Producto_Marca           = @Marca,
                         Producto_Modelo          = @Modelo,
                         Producto_Precio          = @Precio,
-                        Producto_Cantidad_Actual =  @Cantidad
+                        Producto_Cantidad_Actual = @Cantidad
                     WHERE Producto_ID = @ID";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
@@ -123,6 +143,7 @@ namespace InterfazInventario
             {
                 MessageBox.Show("Error al actualizar producto:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                btnActualizar.IsEnabled = true;
             }
             finally { _conexion.Cerrar(); }
         }
@@ -137,11 +158,8 @@ namespace InterfazInventario
             txtModelo.Text = producto.Producto_Modelo == "—" ? "" : producto.Producto_Modelo;
             txtPrecio.Text = producto.Producto_Precio.ToString("N2");
 
-            txtCantidad.Text = producto.Producto_Cantidad_Actual.ToString();
-
             txtCantidad.Text = "0";
             txtStockActual.Text = producto.Producto_Cantidad_Actual.ToString();
-
 
             foreach (ComboBoxItem item in cmbCategoria.Items)
             {
@@ -152,8 +170,12 @@ namespace InterfazInventario
                 }
             }
 
-            btnActualizar.Visibility = Visibility.Visible;
-            btnAgregar.Visibility = Visibility.Visible;
+            // Al cargar para editar: deshabilitar Agregar, habilitar Actualizar
+            btnAgregar.IsEnabled = false;
+            btnAgregar.Opacity = 0.4;
+            btnActualizar.IsEnabled = true;
+            btnActualizar.Opacity = 1;
+
             Title = "Inventario - Editar Producto";
         }
 

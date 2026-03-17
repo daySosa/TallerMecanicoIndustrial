@@ -178,11 +178,12 @@ namespace Contabilidad
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
-            var resultado = MessageBox.Show("¿Estás seguro que deseas cerrar sesión?", "Cerrar Sesión",
+            var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
-
             if (resultado == MessageBoxResult.Yes)
             {
+                var login = new Login.MainWindow();
+                login.Show();
                 this.Close();
             }
         }
