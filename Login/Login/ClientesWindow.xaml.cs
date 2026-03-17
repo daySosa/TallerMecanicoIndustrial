@@ -46,6 +46,7 @@ namespace InterfazClientes
 
             txtTelefono.TextChanged -= txtTelefono_TextChanged;
 
+            int caretAntes = txtTelefono.CaretIndex;
             string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
 
             if (soloNumeros.Length > 8)
@@ -55,9 +56,8 @@ namespace InterfazClientes
                 ? soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4)
                 : soloNumeros;
 
-            int caret = txtTelefono.CaretIndex;
             txtTelefono.Text = formateado;
-            txtTelefono.CaretIndex = Math.Min(caret, formateado.Length);
+            txtTelefono.CaretIndex = formateado.Length; 
 
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }

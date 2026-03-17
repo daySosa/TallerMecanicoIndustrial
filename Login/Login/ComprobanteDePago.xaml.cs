@@ -46,7 +46,10 @@ namespace Contabilidad
                     if (reader.Read())
                     {
                         lblPagoID.Text = "#" + reader["Pago_ID"].ToString();
-                        lblNombre.Text = reader["Cliente_Nombres"].ToString() + " " + reader["Cliente_Apellidos"].ToString();
+                        string nombres = reader["Cliente_Nombres"].ToString();
+                        string apellidos = reader["Cliente_Apellidos"].ToString();
+                        string inicial = apellidos.Length > 0 ? apellidos[0] + "." : "";
+                        lblNombre.Text = nombres + " " + inicial;
                         lblDNI.Text = reader["Cliente_DNI"].ToString();
                         lblOrdenID.Text = "#" + reader["Orden_ID"].ToString();
 
