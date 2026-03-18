@@ -13,7 +13,6 @@ namespace InterfazInventario
         public InventarioWindow()
         {
             InitializeComponent();
-            // Al abrir para agregar: deshabilitar Actualizar
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
         }
@@ -114,7 +113,7 @@ namespace InterfazInventario
                         Producto_Marca           = @Marca,
                         Producto_Modelo          = @Modelo,
                         Producto_Precio          = @Precio,
-                        Producto_Cantidad_Actual = @Cantidad
+                        Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
                     WHERE Producto_ID = @ID";
 
                 using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
@@ -170,7 +169,6 @@ namespace InterfazInventario
                 }
             }
 
-            // Al cargar para editar: deshabilitar Agregar, habilitar Actualizar
             btnAgregar.IsEnabled = false;
             btnAgregar.Opacity = 0.4;
             btnActualizar.IsEnabled = true;
@@ -208,12 +206,18 @@ namespace InterfazInventario
                 return false;
             }
 
-            if (!decimal.TryParse(txtPrecio.Text, out precio) || precio < 0)
+            if (!string.IsNullOrWhiteSpace(txtPrecio.Text))
             {
-                MessageBox.Show("⚠ El precio debe ser un número válido mayor o igual a 0.\nEjemplo: 150.00",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                txtPrecio.Focus();
-                return false;
+                string precioTexto = txtPrecio.Text.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+
+                if (!decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out precio) || precio < 0)
+                {
+                    MessageBox.Show("⚠ El precio debe ser un número válido mayor o igual a 0.\nEjemplo: 150.00",
+                        "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    txtPrecio.Focus();
+                    return false;
+                }
             }
 
             if (!int.TryParse(txtCantidad.Text, out cantidad) || cantidad < 0)
@@ -224,6 +228,11 @@ namespace InterfazInventario
             }
 
             return true;
+        }
+
+        private void txtPrecio_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
         }
     }
 }

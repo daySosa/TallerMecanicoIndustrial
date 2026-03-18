@@ -188,7 +188,7 @@
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </Border>
                     <TextBox x:Name="txtPrecio" Grid.Column="1"
-                             Style="{StaticResource DarkTextBoxNoBorderLeft}"/>
+                             Style="{StaticResource DarkTextBoxNoBorderLeft}" TextChanged="txtPrecio_TextChanged"/>
                 </Grid>
 
                 <TextBlock Text="Stock actual" Foreground="#6c7293"
