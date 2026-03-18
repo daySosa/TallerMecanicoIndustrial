@@ -54,15 +54,16 @@
                            FontSize="11"
                            FontWeight="Medium"
                            Margin="0,0,0,6"/>
+
                 <TextBox x:Name="txtNombreGasto"
-                         Height="47"
-                         Margin="0,0,0,16"
-                         Foreground="White"
-                         CaretBrush="White"
-                         Background="#252836"
-                         BorderBrush="#3a3f5c"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         materialDesign:HintAssist.Hint="Ej: Compra de aceite, Pago de luz..."/>
+                     Height="50"
+                     Margin="0,0,0,16"
+                     Foreground="White"
+                     CaretBrush="White"
+                     Background="#252836"
+                     BorderBrush="#3a3f5c"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     materialDesign:HintAssist.Hint="Ej: Compra de aceite, Pago de luz..."/>
 
                 <TextBlock Text="PRECIO"
                            Foreground="#a0a8c8"
@@ -70,14 +71,16 @@
                            FontWeight="Medium"
                            Margin="0,0,0,6"/>
                 <TextBox x:Name="txtPrecio"
-                         Height="47"
-                         Margin="0,0,0,16"
-                         Foreground="White"
-                         CaretBrush="White"
-                         Background="#252836"
-                         BorderBrush="#3a3f5c"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         materialDesign:HintAssist.Hint="0.00"/>
+                            Height="47"
+                            Margin="0,0,0,16"
+                            Foreground="White"
+                            CaretBrush="White"
+                            Background="#252836"
+                            BorderBrush="#3a3f5c"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            materialDesign:HintAssist.Hint="L 0.00"
+                            LostFocus="txtPrecio_LostFocus"
+                            GotFocus="txtPrecio_GotFocus"/>
 
                 <TextBlock Text="OBSERVACIONES"
                            Foreground="#a0a8c8"

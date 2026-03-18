@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -14,15 +13,10 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Lógica de interacción para AgregarGasto.xaml
-    /// </summary>
     public partial class AgregarGasto : Window
-
-
     {
-
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+
         public AgregarGasto()
         {
             InitializeComponent();
@@ -32,6 +26,23 @@ namespace Contabilidad
         {
             this.DialogResult = false;
             this.Close();
+        }
+
+        private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
+        {
+            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+
+            if (decimal.TryParse(texto, out decimal valor) && valor > 0)
+                txtPrecio.Text = "L " + valor.ToString("N2");
+            else
+                txtPrecio.Text = "";
+        }
+
+        private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
+        {
+            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+            txtPrecio.Text = texto;
+            txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
@@ -50,7 +61,9 @@ namespace Contabilidad
                 return;
             }
 
-            if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio <= 0)
+            string precioStr = txtPrecio.Text.Trim().Replace("L", "").Trim();
+
+            if (!decimal.TryParse(precioStr, out decimal precio) || precio <= 0)
             {
                 MessageBox.Show("⚠ Ingresa un precio válido mayor a 0.", "Aviso",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -70,7 +83,9 @@ namespace Contabilidad
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@TipoGasto", ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString());
                     cmd.Parameters.AddWithValue("@NombreGasto", txtNombreGasto.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
+                        ? (object)DBNull.Value
+                        : txtObservaciones.Text.Trim());
                     cmd.Parameters.AddWithValue("@Precio", precio);
                     conn.Open();
                     cmd.ExecuteNonQuery();

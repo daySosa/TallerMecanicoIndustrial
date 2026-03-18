@@ -133,7 +133,7 @@
                              IsReadOnly="True">
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                <Setter Property="materialDesign:HintAssist.Hint" Value="0.00"/>
+                                <Setter Property="materialDesign:HintAssist.Hint" Value="L 0.00"/>
                                 <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
                             </Style>
                         </TextBox.Style>

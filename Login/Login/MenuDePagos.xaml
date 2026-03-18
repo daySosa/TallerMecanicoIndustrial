@@ -265,19 +265,11 @@
                 </Button>
 
                 <Button Grid.Column="1"
-<<<<<<< HEAD
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#2E7D32" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Height="38" Padding="16,0" Margin="10,0,20,0"
                         Click="btnReportes_Click">
-=======
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="#2E7D32" Foreground="White"
-                    materialDesign:ButtonAssist.CornerRadius="8"
-                    Height="38" Padding="16,0" Margin="5,1,5,-1"
-                    Click="btnReportes_Click">  
->>>>>>> Si
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -290,7 +282,7 @@
                         Foreground="#6B7280" BorderBrush="#3D4458"
                         materialDesign:ButtonAssist.CornerRadius="8"
                         Height="38" Padding="16,0"
-                        Click="btnMostrarComprobantes_Click" Grid.ColumnSpan="2" Margin="13,-1,470,1">
+                        Click="btnMostrarComprobantes_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -441,7 +433,7 @@
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Fecha_Pago, StringFormat='dd/MM/yyyy'}"
                                            Foreground="White" FontSize="12"
-                                           VerticalAlignment="Center" Margin="12,0"/>       
+                                           VerticalAlignment="Center" Margin="12,0"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

@@ -39,7 +39,7 @@ namespace Contabilidad
             Title = "Actualizar Pago";
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
-            txtMonto.Text = monto.ToString("N2");
+            txtMonto.Text = "L " + monto.ToString("N2"); // ← corregido
 
             BuscarCliente(dni);
         }
@@ -90,7 +90,7 @@ namespace Contabilidad
             OcultarMensaje();
             if (!int.TryParse(txtOrdenID.Text.Trim(), out int ordenId))
             {
-                txtMonto.Text = "0.00";
+                txtMonto.Text = "L 0.00";
                 return;
             }
 
@@ -104,13 +104,13 @@ namespace Contabilidad
                     conn.Open();
                     object result = cmd.ExecuteScalar();
                     txtMonto.Text = (result != null && result != DBNull.Value)
-                        ? Convert.ToDecimal(result).ToString("N2")
-                        : "0.00";
+                        ? "L " + Convert.ToDecimal(result).ToString("N2")
+                        : "L 0.00";
                 }
             }
             catch
             {
-                txtMonto.Text = "0.00";
+                txtMonto.Text = "L 0.00";
             }
         }
 
@@ -120,7 +120,7 @@ namespace Contabilidad
 
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
-            string montoStr = txtMonto.Text.Trim();
+            string montoStr = txtMonto.Text.Trim().Replace("L", "").Trim(); // ← corregido
 
             if (string.IsNullOrEmpty(dni) || string.IsNullOrEmpty(txtNombre.Text))
             {

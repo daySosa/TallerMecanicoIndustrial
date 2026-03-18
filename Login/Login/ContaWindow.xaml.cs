@@ -149,8 +149,9 @@ namespace Contabilidad
 
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new ReportesWindow("Egresos");
-            ventana.ShowDialog();
+            var ventana = new InterfazInventario.MenúPrincipalInventario();
+            ventana.Show();
+            this.Close();
         }
 
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
@@ -163,10 +164,9 @@ namespace Contabilidad
 
         private void btnClientes_Click(object sender, RoutedEventArgs e)
         {
-            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
+            var ventana = new InterfazClientes.MenúPrincipalClientes();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnOrdenes_Click(object sender, RoutedEventArgs e)
