@@ -33,7 +33,6 @@ namespace Contabilidad
 
         private void CargarDatos(string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
-            // Seleccionar el tipo en el ComboBox
             foreach (ComboBoxItem item in cmbTipoGasto.Items)
             {
                 if (item.Content.ToString() == tipo)
@@ -44,7 +43,7 @@ namespace Contabilidad
             }
 
             txtNombre.Text = nombre;
-            txtPrecio.Text = precio.ToString("F2");
+            txtPrecio.Text = "L " + precio.ToString("N2");
             txtFecha.Text = fecha.ToString("dd/MM/yyyy HH:mm");
             txtObservaciones.Text = observaciones;
         }
@@ -54,6 +53,22 @@ namespace Contabilidad
         {
             this.DialogResult = false;
             this.Close();
+        }
+
+        private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
+        {
+            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+            if (decimal.TryParse(texto, out decimal valor) && valor > 0)
+                txtPrecio.Text = "L " + valor.ToString("N2");
+            else
+                txtPrecio.Text = "";
+        }
+
+        private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
+        {
+            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+            txtPrecio.Text = texto;
+            txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
@@ -72,7 +87,8 @@ namespace Contabilidad
                 return;
             }
 
-            if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio <= 0)
+            string precioStr = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+            if (!decimal.TryParse(precioStr, out decimal precio) || precio <= 0)
             {
                 MessageBox.Show("⚠ Ingresa un precio válido mayor a 0.", "Aviso",
                     MessageBoxButton.OK, MessageBoxImage.Warning);

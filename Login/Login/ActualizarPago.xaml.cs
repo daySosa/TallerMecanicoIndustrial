@@ -15,7 +15,6 @@ namespace Contabilidad
 {
     public partial class ActualizarPago : Window
     {
-
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         private MenuDePagos _menuRef;
@@ -27,17 +26,14 @@ namespace Contabilidad
             _menuRef = menuRef;
             _pagoId = pagoId;
 
-            // Pre-llenar campos
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
-            txtPrecio.Text = monto.ToString("N2");
+            txtPrecio.Text = "L " + monto.ToString("N2");
             txtFecha.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
                               new System.Globalization.CultureInfo("es-ES"));
 
-            // Buscar nombre del cliente
             BuscarNombre(dni);
 
-            // Actualizar monto al cambiar orden
             txtOrdenID.TextChanged += txtOrdenID_TextChanged;
             txtDNI.TextChanged += txtDNI_TextChanged;
         }
@@ -88,7 +84,7 @@ namespace Contabilidad
         {
             if (!int.TryParse(txtOrdenID.Text.Trim(), out int ordenId))
             {
-                txtPrecio.Text = "0.00";
+                txtPrecio.Text = "L 0.00";
                 return;
             }
 
@@ -102,14 +98,30 @@ namespace Contabilidad
                     conn.Open();
                     object result = cmd.ExecuteScalar();
                     txtPrecio.Text = (result != null && result != DBNull.Value)
-                        ? Convert.ToDecimal(result).ToString("N2")
-                        : "0.00";
+                        ? "L " + Convert.ToDecimal(result).ToString("N2")
+                        : "L 0.00";
                 }
             }
             catch
             {
-                txtPrecio.Text = "0.00";
+                txtPrecio.Text = "L 0.00";
             }
+        }
+
+        private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
+        {
+            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+            if (decimal.TryParse(texto, out decimal valor) && valor > 0)
+                txtPrecio.Text = "L " + valor.ToString("N2");
+            else
+                txtPrecio.Text = "";
+        }
+
+        private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
+        {
+            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
+            txtPrecio.Text = texto;
+            txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
@@ -118,7 +130,7 @@ namespace Contabilidad
 
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
-            string montoStr = txtPrecio.Text.Trim();
+            string montoStr = txtPrecio.Text.Trim().Replace("L", "").Replace(" ", "").Trim();
 
             if (string.IsNullOrEmpty(dni))
             {

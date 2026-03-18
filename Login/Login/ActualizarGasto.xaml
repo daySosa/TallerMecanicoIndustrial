@@ -131,7 +131,9 @@
                                              CaretBrush="White"
                                              Background="#252836"
                                              BorderBrush="#3a3f5c"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             LostFocus="txtPrecio_LostFocus"
+                                             GotFocus="txtPrecio_GotFocus"/>
                                 </StackPanel>
 
                                 <!-- Fecha solo lectura -->
