@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Windows;
 using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Login.Clases
 {
@@ -94,6 +95,7 @@ namespace Login.Clases
             return true;
         }
 
+        
         public static bool ValidarEntero(string texto, out int resultado, string mensaje, Action<string> mostrarMensaje)
         {
             if (!int.TryParse(texto, out resultado))
@@ -104,7 +106,7 @@ namespace Login.Clases
             return true;
         }
 
-        // Sobrecarga de ValidarPrecio con Action<string>
+        // ✅ Sobrecarga de ValidarPrecio con Action<string>
         public static bool ValidarPrecio(string texto, out decimal precio, Action<string> mostrarMensaje)
         {
             string limpio = texto.Replace("L", "").Replace(" ", "").Trim();
@@ -116,8 +118,7 @@ namespace Login.Clases
             return true;
         }
 
-        // ── Validaciones Agregar Repuesto ────────────────────────────────────
-
+        // ✅ Valida que la cantidad sea un número entero positivo
         public static bool ValidarEnteroPositivo(string texto, out int resultado, string titulo)
         {
             if (!int.TryParse(texto.Trim(), out resultado) || resultado <= 0)
@@ -129,6 +130,7 @@ namespace Login.Clases
             return true;
         }
 
+        // ✅ Valida que la cantidad solicitada no exceda el stock disponible
         public static bool ValidarStock(int cantidad, int stockDisponible)
         {
             if (cantidad > stockDisponible)
@@ -185,6 +187,53 @@ namespace Login.Clases
             {
                 MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ✅ Valida DNI
+        public static bool DNI(string valor, Control campo = null)
+        {
+            string dni = valor.Trim();
+
+            // Solo números y exactamente 13 dígitos
+            if (!Regex.IsMatch(dni, @"^\d{13}$"))
+            {
+                MessageBox.Show("El DNI debe contener solo números y tener exactamente 13 dígitos.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                return false;
+            }
+
+            // Primeros 4 dígitos: código municipio Honduras (0101 al 1818)
+            int codigoMunicipio = Convert.ToInt32(dni.Substring(0, 4));
+            if (codigoMunicipio < 101 || codigoMunicipio > 1899)
+            {
+                MessageBox.Show("Los primeros 4 dígitos del DNI deben corresponder a un código de municipio válido (ej: 0101 - 1818).",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                return false;
+            }
+
+            // Dígitos 5-8: año de registro (1900 al año actual)
+            int anioRegistro = Convert.ToInt32(dni.Substring(4, 4));
+            int anioActual = DateTime.Now.Year;
+            if (anioRegistro < 1900 || anioRegistro > anioActual)
+            {
+                MessageBox.Show($"Los dígitos 5 al 8 del DNI deben ser un año válido entre 1900 y {anioActual}.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                return false;
+            }
+
+            // Últimos 6 dígitos: secuencial, no puede ser 000000
+            string secuencial = dni.Substring(8, 5);
+            if (secuencial == "000000")
+            {
+                MessageBox.Show("Los últimos 5 dígitos del DNI no pueden ser todos ceros.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+
                 return false;
             }
             return true;
