@@ -16,7 +16,6 @@ namespace Contabilidad
     public partial class ActualizarPago : Window
     {
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
-
         private MenuDePagos _menuRef;
         private int _pagoId;
 
@@ -110,17 +109,12 @@ namespace Contabilidad
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
-            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-            if (decimal.TryParse(texto, out decimal valor) && valor > 0)
-                txtPrecio.Text = "L " + valor.ToString("N2");
-            else
-                txtPrecio.Text = "";
+            txtPrecio.Text = clsValidaciones.FormatearPrecio(txtPrecio.Text);
         }
 
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-            txtPrecio.Text = texto;
+            txtPrecio.Text = clsValidaciones.LimpiarPrefijoPrecio(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
@@ -130,43 +124,15 @@ namespace Contabilidad
 
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
-            string montoStr = txtPrecio.Text.Trim().Replace("L", "").Replace(" ", "").Trim();
+            string montoStr = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
 
-            if (string.IsNullOrEmpty(dni))
-            {
-                MostrarMensaje("⚠ El DNI es obligatorio.");
-                return;
-            }
-            if (!dni.All(char.IsDigit))
-            {
-                MostrarMensaje("⚠ El DNI solo debe contener números.");
-                return;
-            }
-            if (string.IsNullOrEmpty(txtNombreCliente.Text))
-            {
-                MostrarMensaje("⚠ Ingresa un DNI válido.");
-                return;
-            }
-            if (string.IsNullOrEmpty(ordenStr))
-            {
-                MostrarMensaje("⚠ El ID de la orden es obligatorio.");
-                return;
-            }
-            if (!int.TryParse(ordenStr, out int ordenId))
-            {
-                MostrarMensaje("⚠ El ID de la orden debe ser un número entero.");
-                return;
-            }
-            if (string.IsNullOrEmpty(montoStr))
-            {
-                MostrarMensaje("⚠ El monto es obligatorio.");
-                return;
-            }
-            if (!decimal.TryParse(montoStr, out decimal monto) || monto <= 0)
-            {
-                MostrarMensaje("⚠ El monto debe ser un número mayor a 0.");
-                return;
-            }
+            if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ El DNI es obligatorio.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarSoloDigitos(dni, "⚠ El DNI solo debe contener números.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombreCliente.Text, "⚠ Ingresa un DNI válido.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarTextoRequerido(ordenStr, "⚠ El ID de la orden es obligatorio.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarEntero(ordenStr, out int ordenId, "⚠ El ID de la orden debe ser un número entero.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarTextoRequerido(montoStr, "⚠ El monto es obligatorio.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarPrecio(montoStr, out decimal monto, MostrarMensaje)) return;
 
             try
             {

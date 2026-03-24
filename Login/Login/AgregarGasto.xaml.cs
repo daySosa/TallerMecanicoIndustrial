@@ -30,45 +30,20 @@ namespace Contabilidad
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
-            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-
-            if (decimal.TryParse(texto, out decimal valor) && valor > 0)
-                txtPrecio.Text = "L " + valor.ToString("N2");
-            else
-                txtPrecio.Text = "";
+            txtPrecio.Text = clsValidaciones.FormatearPrecio(txtPrecio.Text);
         }
 
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-            txtPrecio.Text = texto;
+            txtPrecio.Text = clsValidaciones.LimpiarPrefijoPrecio(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbTipoGasto.SelectedItem == null)
-            {
-                MessageBox.Show("⚠ Selecciona un tipo de gasto.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtNombreGasto.Text))
-            {
-                MessageBox.Show("⚠ Escribe el nombre del gasto.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string precioStr = txtPrecio.Text.Trim().Replace("L", "").Trim();
-
-            if (!decimal.TryParse(precioStr, out decimal precio) || precio <= 0)
-            {
-                MessageBox.Show("⚠ Ingresa un precio válido mayor a 0.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombreGasto.Text, "nombre del gasto")) return;
+            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
 
             try
             {

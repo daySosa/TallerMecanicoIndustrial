@@ -13,16 +13,10 @@ using System.Windows.Shapes;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Lógica de interacción para ActualizarGasto.xaml
-    /// </summary>
     public partial class ActualizarGasto : Window
     {
-
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
-
         private int _gastoId;
-
 
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
@@ -48,7 +42,6 @@ namespace Contabilidad
             txtObservaciones.Text = observaciones;
         }
 
-
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
@@ -57,52 +50,21 @@ namespace Contabilidad
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
-            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-            if (decimal.TryParse(texto, out decimal valor) && valor > 0)
-                txtPrecio.Text = "L " + valor.ToString("N2");
-            else
-                txtPrecio.Text = "";
+            txtPrecio.Text = clsValidaciones.FormatearPrecio(txtPrecio.Text);
         }
 
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            string texto = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-            txtPrecio.Text = texto;
+            txtPrecio.Text = clsValidaciones.LimpiarPrefijoPrecio(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbTipoGasto.SelectedItem == null)
-            {
-                MessageBox.Show("⚠ Selecciona un tipo de gasto.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtNombre.Text))
-            {
-                MessageBox.Show("⚠ Escribe el nombre del gasto.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string precioStr = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
-            if (!decimal.TryParse(precioStr, out decimal precio) || precio <= 0)
-            {
-                MessageBox.Show("⚠ Ingresa un precio válido mayor a 0.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!DateTime.TryParseExact(txtFecha.Text.Trim(), "dd/MM/yyyy HH:mm",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out DateTime fechaFinal))
-            {
-                MessageBox.Show("⚠ Formato de fecha inválido. Usa dd/MM/yyyy HH:mm\nEjemplo: 13/03/2026 14:30",
-                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del gasto")) return;
+            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
+            if (!clsValidaciones.ValidarFecha(txtFecha.Text, out DateTime fechaFinal)) return;
 
             try
             {

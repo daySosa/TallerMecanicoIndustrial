@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
@@ -11,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Microsoft.Data.SqlClient;
 
 namespace Contabilidad
 {
@@ -19,7 +19,6 @@ namespace Contabilidad
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         private MenuDePagos _menuRef;
-
         private bool _esEdicion = false;
         private int _pagoId = 0;
 
@@ -39,7 +38,7 @@ namespace Contabilidad
             Title = "Actualizar Pago";
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
-            txtMonto.Text = "L " + monto.ToString("N2"); // ← corregido
+            txtMonto.Text = "L " + monto.ToString("N2");
 
             BuscarCliente(dni);
         }
@@ -52,11 +51,7 @@ namespace Contabilidad
         private void BuscarCliente(string dni)
         {
             OcultarMensaje();
-            if (string.IsNullOrEmpty(dni))
-            {
-                MostrarMensaje("Ingresa un DNI primero.");
-                return;
-            }
+            if (!clsValidaciones.ValidarTextoRequerido(dni, "Ingresa un DNI primero.", MostrarMensaje)) return;
 
             try
             {
@@ -120,23 +115,12 @@ namespace Contabilidad
 
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
-            string montoStr = txtMonto.Text.Trim().Replace("L", "").Trim(); // ← corregido
+            string montoStr = txtMonto.Text.Replace("L", "").Replace(" ", "").Trim();
 
-            if (string.IsNullOrEmpty(dni) || string.IsNullOrEmpty(txtNombre.Text))
-            {
-                MostrarMensaje("⚠ Busca un cliente válido antes de guardar.");
-                return;
-            }
-            if (!int.TryParse(ordenStr, out int ordenId))
-            {
-                MostrarMensaje("⚠ El ID de la orden debe ser un número.");
-                return;
-            }
-            if (!decimal.TryParse(montoStr, out decimal monto) || monto <= 0)
-            {
-                MostrarMensaje("⚠ El monto calculado no es válido. Verifica la orden.");
-                return;
-            }
+            if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarEntero(ordenStr, out int ordenId, "⚠ El ID de la orden debe ser un número.", MostrarMensaje)) return;
+            if (!clsValidaciones.ValidarPrecio(montoStr, out decimal monto, MostrarMensaje)) return;
 
             try
             {

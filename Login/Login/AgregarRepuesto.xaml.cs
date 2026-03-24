@@ -24,18 +24,10 @@ namespace Órdenes_de_Trabajo
         public decimal Producto_Precio { get; set; }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // CODE-BEHIND — AgregarRepuesto
-    // ═══════════════════════════════════════════════════════════════
     public partial class AgregarRepuesto : Window
     {
         private clsConexion _conexion = new clsConexion();
-
-        // ✔ OrdenWindow lee esta propiedad después del ShowDialog().
-        //   Si el usuario canceló, queda en null.
         public RepuestoOrden RepuestoResultado { get; private set; } = null;
-
-        // Producto actualmente seleccionado en el ComboBox
         private ProductoInventario _productoSeleccionado = null;
 
         public AgregarRepuesto()
@@ -49,7 +41,6 @@ namespace Órdenes_de_Trabajo
             try
             {
                 _conexion.Abrir();
-
                 var lista = new List<ProductoInventario>();
 
                 using (SqlCommand cmd = new SqlCommand("sp_ObtenerProductosInventario", _conexion.SqlC))
@@ -120,27 +111,9 @@ namespace Órdenes_de_Trabajo
 
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
-            if (_productoSeleccionado == null)
-            {
-                MessageBox.Show("⚠ Selecciona un producto del inventario.",
-                    "Producto requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!int.TryParse(txtCantidad.Text.Trim(), out int cantidad) || cantidad <= 0)
-            {
-                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor a 0.",
-                    "Cantidad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (cantidad > _productoSeleccionado.Producto_Cantidad_Actual)
-            {
-                MessageBox.Show(
-                    $"⚠ Stock insuficiente. Solo hay {_productoSeleccionado.Producto_Cantidad_Actual} unidades disponibles.",
-                    "Stock insuficiente", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidaciones.ValidarComboSeleccionado(_productoSeleccionado, "producto del inventario")) return;
+            if (!clsValidaciones.ValidarEnteroPositivo(txtCantidad.Text, out int cantidad, "Cantidad inválida")) return;
+            if (!clsValidaciones.ValidarStock(cantidad, _productoSeleccionado.Producto_Cantidad_Actual)) return;
 
             RepuestoResultado = new RepuestoOrden
             {
