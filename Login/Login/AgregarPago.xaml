@@ -55,7 +55,9 @@
                     <TextBox x:Name="txtDNI"
                              Background="Transparent" Foreground="White"
                              BorderThickness="0" VerticalAlignment="Center"
-                             Margin="14,0" FontSize="14" CaretBrush="White">
+                             MaxLength="13"
+                             Margin="14,0" FontSize="14" CaretBrush="White" TextChanged="txtDNI_TextChanged">
+                            
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>

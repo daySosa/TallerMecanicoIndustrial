@@ -46,6 +46,8 @@ namespace Contabilidad
 
         private void btnBuscar_Click(object sender, RoutedEventArgs e)
         {
+            OcultarMensaje();
+            if (!clsValidaciones.ValidarDNIHondureño(txtDNI.Text.Trim())) return;
             BuscarCliente(txtDNI.Text.Trim());
         }
 
@@ -118,10 +120,12 @@ namespace Contabilidad
             string ordenStr = txtOrdenID.Text.Trim();
             string montoStr = txtMonto.Text.Replace("L", "").Replace(" ", "").Trim();
 
+            if (!clsValidaciones.ValidarDNIHondureño(dni)) return;
             if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarEntero(ordenStr, out int ordenId, "⚠ El ID de la orden debe ser un número.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarPrecio(montoStr, out decimal monto, MostrarMensaje)) return;
+            
 
             try
             {
@@ -187,6 +191,11 @@ namespace Contabilidad
         private void OcultarMensaje()
         {
             txtMensaje.Visibility = Visibility.Collapsed;
+        }
+
+        private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
         }
     }
 }

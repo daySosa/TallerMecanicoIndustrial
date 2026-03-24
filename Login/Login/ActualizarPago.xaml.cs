@@ -19,12 +19,14 @@ namespace Contabilidad
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private MenuDePagos _menuRef;
         private int _pagoId;
+        private DateTime _fechaRegistro; // ← NUEVO
 
         public ActualizarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto, DateTime fecha)
         {
             InitializeComponent();
             _menuRef = menuRef;
             _pagoId = pagoId;
+            _fechaRegistro = fecha; // ← NUEVO
 
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
@@ -36,6 +38,26 @@ namespace Contabilidad
 
             txtOrdenID.TextChanged += txtOrdenID_TextChanged;
             txtDNI.TextChanged += txtDNI_TextChanged;
+
+            VerificarBloqueoEdicion(); // ← NUEVO (siempre al final del constructor)
+        }
+
+        // ── NUEVO: Bloquea edición si ya pasó 1 día ─────────────────────────
+        private void VerificarBloqueoEdicion()
+        {
+            if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
+            {
+                txtDNI.IsEnabled = false;
+                txtOrdenID.IsEnabled = false;
+                txtPrecio.IsEnabled = false;
+                btnGuardar.IsEnabled = false;
+
+                MessageBox.Show(
+                    "⚠ Este pago ya no puede editarse porque tiene más de 1 día de haber sido registrado.",
+                    "Edición bloqueada",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
@@ -148,7 +170,7 @@ namespace Contabilidad
                     WHERE Pago_ID = @PagoID";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@DNI", Convert.ToInt32(dni));
+                    cmd.Parameters.AddWithValue("@DNI", dni);
                     cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                     cmd.Parameters.AddWithValue("@Monto", monto);
                     cmd.Parameters.AddWithValue("@PagoID", _pagoId);
