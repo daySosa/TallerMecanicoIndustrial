@@ -46,7 +46,6 @@ namespace InterfazClientes
 
             txtTelefono.TextChanged -= txtTelefono_TextChanged;
 
-            int caretAntes = txtTelefono.CaretIndex;
             string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
 
             if (soloNumeros.Length > 8)
@@ -57,14 +56,9 @@ namespace InterfazClientes
                 : soloNumeros;
 
             txtTelefono.Text = formateado;
-            txtTelefono.CaretIndex = formateado.Length; 
+            txtTelefono.CaretIndex = formateado.Length;
 
             txtTelefono.TextChanged += txtTelefono_TextChanged;
-        }
-
-        private bool ValidarDNIHondureño(string dni)
-        {
-            return Regex.IsMatch(dni, @"^\d{13}$");
         }
 
         public void CargarClienteParaEditar(Cliente c)
@@ -109,59 +103,33 @@ namespace InterfazClientes
         {
             btnAgregar.IsEnabled = false;
 
-            if (string.IsNullOrWhiteSpace(txtDPI.Text) || !ValidarDNIHondureño(txtDPI.Text.Trim()))
+            if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim()))
             {
-                MessageBox.Show("⚠ Ingrese un DNI válido de 13 dígitos.", "DNI inválido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente"))
             {
-                MessageBox.Show("⚠ Ingrese el nombre del cliente.", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtApellido.Text))
+            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente"))
             {
-                MessageBox.Show("⚠ Ingrese el apellido del cliente.", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtTelefono.Text) || txtTelefono.Text.Length < 9)
+            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9))
             {
-                MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 btnAgregar.IsEnabled = true;
                 return;
             }
 
-            if (!txtNombre.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
-            {
-                MessageBox.Show("⚠ El nombre solo puede contener letras y espacios.",
-                    "Nombre inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!txtApellido.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
-            {
-                MessageBox.Show("⚠ El apellido solo puede contener letras y espacios.",
-                    "Apellido inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(txtCorreo.Text) && 
-                    !System.Text.RegularExpressions.Regex.IsMatch(txtCorreo.Text.Trim(), @"^[^@]+@[^@]+\.[^@]+$"))
-            {
-                MessageBox.Show("⚠ El correo no tiene un formato válido.\nEjemplo: nombre@dominio.com",
-                    "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
+            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
+            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
 
             try
             {
@@ -242,48 +210,12 @@ namespace InterfazClientes
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtNombre.Text))
-            {
-                MessageBox.Show("⚠ Ingrese el nombre del cliente.", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtApellido.Text))
-            {
-                MessageBox.Show("⚠ Ingrese el apellido del cliente.", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtTelefono.Text) || txtTelefono.Text.Length < 9)
-            {
-                MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!txtNombre.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
-            {
-                MessageBox.Show("⚠ El nombre solo puede contener letras y espacios.",
-                    "Nombre inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!txtApellido.Text.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
-            {
-                MessageBox.Show("⚠ El apellido solo puede contener letras y espacios.",
-                    "Apellido inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(txtCorreo.Text) &&
-                    !System.Text.RegularExpressions.Regex.IsMatch(txtCorreo.Text.Trim(), @"^[^@]+@[^@]+\.[^@]+$"))
-            {
-                MessageBox.Show("⚠ El correo no tiene un formato válido.\nEjemplo: nombre@dominio.com",
-                    "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
+            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9)) return;
+            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
+            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
+            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
 
             try
             {
