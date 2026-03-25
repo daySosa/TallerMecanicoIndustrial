@@ -12,8 +12,8 @@ namespace InterfazClientes
 {
     public partial class MenúPrincipalClientes : Window
     {
-        private List<Cliente> _listaClientes = new List<Cliente>();
-        private List<Cliente> _listaFiltrada = new List<Cliente>();
+        private List<clsCliente> _listaClientes = new List<clsCliente>();
+        private List<clsCliente> _listaFiltrada = new List<clsCliente>();
         private clsConexion _db = new clsConexion();
 
         private string _filtroNombre = "";
@@ -113,7 +113,7 @@ namespace InterfazClientes
 
                 while (rd.Read())
                 {
-                    _listaClientes.Add(new Cliente
+                    _listaClientes.Add(new clsCliente
                     {
                         Cliente_DPI = rd["Cliente_DNI"].ToString(),
                         Cliente_Nombre = rd["Cliente_Nombres"].ToString(),
@@ -219,7 +219,7 @@ namespace InterfazClientes
         private void dgClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_editando) return;
-            if (dgClientes.SelectedItem is Cliente seleccionado)
+            if (dgClientes.SelectedItem is clsCliente seleccionado)
             {
                 _editando = true;
                 var formulario = new ClientesWindow();

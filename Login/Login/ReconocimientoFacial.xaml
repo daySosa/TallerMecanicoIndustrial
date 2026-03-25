@@ -3,164 +3,289 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Reconocimiento Facial"
-        Height="800" Width="700"
-        Background="#1E1E2E"
-        WindowStartupLocation="CenterScreen">
+        Height="853" Width="680"
+        MinHeight="820" MinWidth="680"
+        Background="#0F0F1A"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize">
 
-    <Grid Margin="0,0,0,3">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Height="717">
+    <Window.Resources>
+        <Style x:Key="BtnBase" TargetType="Button">
+            <Setter Property="Foreground"      Value="White"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Height"          Value="38"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-            <TextBlock Text="Reconocimiento Facial"
-                       FontSize="24" FontWeight="Bold"
-                       Foreground="White" Margin="0,0,0,20"
-                       HorizontalAlignment="Center"/>
+        <Style x:Key="BtnOutline" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="Transparent"
+                                BorderBrush="White"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#22FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
-            <Border Background="#2A2A3E"
-                    BorderBrush="#6C63FF" BorderThickness="2"
-                    CornerRadius="10" Padding="5">
-                <Grid Width="500" Height="320">
-                    <Image x:Name="imgCamara" Stretch="Uniform"/>
-                    <TextBlock x:Name="txtSinCamara"
-                               Text="Cámara no iniciada"
-                               FontSize="16" Foreground="#888"
-                               HorizontalAlignment="Center"
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Width="600"
+                        Margin="0,30,0,30">
+
+                <!-- Encabezado -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+                    <materialDesign:PackIcon Kind="FaceRecognition"
+                                             Width="32" Height="32"
+                                             Foreground="#6C63FF"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="Reconocimiento Facial"
+                               FontSize="22" FontWeight="Bold"
+                               Foreground="White"
                                VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
-
-            <Border Background="#2A2A3E" CornerRadius="8"
-                    Margin="0,10,0,0" Padding="10" Width="500">
-                <TextBlock x:Name="txtEstado"
-                           Text="Estado: En espera..."
-                           Foreground="#AAA" FontSize="13"
-                           HorizontalAlignment="Center"/>
-            </Border>
-
-            <TextBlock x:Name="txtNombreReconocido"
-                       Text=""
-                       Foreground="#27AE60" FontSize="18" FontWeight="Bold"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,0"/>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                <Button x:Name="btnModoRegistro"
-                        Width="160" Height="36" Margin="8,0"
-                        Background="#E67E22" Foreground="White"
-                        FontSize="12" FontWeight="Bold"
-                        BorderThickness="0" Cursor="Hand"
-                        IsEnabled="False"
-                        Click="btnModoRegistro_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ClipboardEditOutline"
-                                                 Width="16" Height="16"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Modo Registro" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="btnModoLogin"
-                        Width="160" Height="36" Margin="8,0"
-                        Background="#2980B9" Foreground="White"
-                        FontSize="12" FontWeight="Bold"
-                        BorderThickness="0" Cursor="Hand"
-                        IsEnabled="False"
-                        Click="btnModoLogin_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="LockOutline"
-                                                 Width="16" Height="16"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Modo Login" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                <Button x:Name="btnIniciarCamara"
-                        Width="150" Height="40" Margin="8"
-                        Background="#6C63FF" Foreground="White"
-                        FontSize="13" FontWeight="Bold"
-                        BorderThickness="0" Cursor="Hand"
-                        Click="btnIniciarCamara_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Camera"
-                                                 Width="16" Height="16"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Iniciar Cámara" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="btnDetenerCamara"
-                        Width="120" Height="40" Margin="8"
-                        Background="#E74C3C" Foreground="White"
-                        FontSize="13" FontWeight="Bold"
-                        BorderThickness="0" Cursor="Hand"
-                        IsEnabled="False"
-                        Click="btnDetenerCamara_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Stop"
-                                                 Width="16" Height="16"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Detener" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="btnRegresar"
-                        Width="120" Height="40" Margin="8"
-                        Background="Transparent" Foreground="White"
-                        FontSize="13" FontWeight="Bold"
-                        BorderBrush="White" BorderThickness="1"
-                        Cursor="Hand"
-                        Click="btnRegresar_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ArrowLeft"
-                                                 Width="16" Height="16"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Regresar" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-            <Border Background="#2A2A3E" CornerRadius="8"
-                    Padding="15" Width="500">
-                <StackPanel>
-                    <TextBlock Text="Registrar nueva persona"
-                               Foreground="White" FontSize="14" FontWeight="Bold"
-                               Margin="0,0,0,10"/>
-                    <TextBox x:Name="txtNombrePersona"
-                             AutomationProperties.Name="Nombre de la persona"
-                             Background="#1E1E2E" Foreground="White"
-                             FontSize="13" BorderBrush="#6C63FF"
-                             BorderThickness="1" Padding="8,6"
-                             CaretBrush="White"
-                             materialDesign:HintAssist.Hint="Nombre de la persona"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button x:Name="btnCapturarFoto"
-                                Width="150" Height="36" Margin="0,0,8,0"
-                                Background="#27AE60" Foreground="White"
-                                FontSize="12" FontWeight="Bold"
-                                BorderThickness="0" Cursor="Hand"
-                                IsEnabled="False"
-                                Click="btnCapturarFoto_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Camera"
-                                                         Width="14" Height="14"
-                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Capturar foto" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <Button x:Name="btnRegistrar"
-                                Width="120" Height="36"
-                                Background="#6C63FF" Foreground="White"
-                                FontSize="12" FontWeight="Bold"
-                                BorderThickness="0" Cursor="Hand"
-                                Click="btnRegistrar_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ContentSave"
-                                                         Width="14" Height="14"
-                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Registrar" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
                 </StackPanel>
-            </Border>
 
-        </StackPanel>
+                <!-- Visor de cámara -->
+                <Border Background="#1A1A2E"
+                        BorderBrush="#6C63FF"
+                        BorderThickness="2"
+                        CornerRadius="12"
+                        Padding="4">
+                    <Grid Width="560" Height="315">
+                        <Image x:Name="imgCamara" Stretch="UniformToFill"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <StackPanel x:Name="pnlSinCamara"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CameraOff"
+                                                     Width="48" Height="48"
+                                                     Foreground="#444"
+                                                     HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="txtSinCamara"
+                                       Text="Cámara no iniciada"
+                                       FontSize="14" Foreground="#555"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Barra de estado -->
+                <Border Background="#1A1A2E" CornerRadius="8"
+                        Margin="0,10,0,0" Padding="12,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="elipseEstado"
+                                 Width="10" Height="10" Fill="#555"
+                                 VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="txtEstado" Grid.Column="1"
+                                   Text="Estado: En espera..."
+                                   Foreground="#AAA" FontSize="12"
+                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
+
+                <!-- Nombre reconocido -->
+                <TextBlock x:Name="txtNombreReconocido"
+                           Text="" Foreground="#2ECC71"
+                           FontSize="16" FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                <!-- Botones de modo -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center" Margin="0,16,0,0">
+                    <Button x:Name="btnModoRegistro"
+                            Style="{StaticResource BtnBase}"
+                            Width="170" Margin="6,0"
+                            Background="#E67E22" IsEnabled="False" Padding="12,0"
+                            Click="btnModoRegistro_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ClipboardEditOutline"
+                                                     Width="15" Height="15"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Modo Registro" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnModoLogin"
+                            Style="{StaticResource BtnBase}"
+                            Width="170" Margin="6,0"
+                            Background="#2980B9" IsEnabled="False" Padding="12,0"
+                            Click="btnModoLogin_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="LockOutline"
+                                                     Width="15" Height="15"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Modo Login" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Botones de cámara -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <Button x:Name="btnIniciarCamara"
+                            Style="{StaticResource BtnBase}"
+                            Width="155" Margin="6,0"
+                            Background="#6C63FF" Padding="12,0"
+                            Click="btnIniciarCamara_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Camera"
+                                                     Width="15" Height="15"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Iniciar Cámara" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnDetenerCamara"
+                            Style="{StaticResource BtnBase}"
+                            Width="120" Margin="6,0"
+                            Background="#E74C3C" IsEnabled="False" Padding="12,0"
+                            Click="btnDetenerCamara_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Stop"
+                                                     Width="15" Height="15"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Detener" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnRegresar"
+                            Style="{StaticResource BtnOutline}"
+                            Width="120" Margin="6,0" Padding="12,0"
+                            Click="btnRegresar_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ArrowLeft"
+                                                     Width="15" Height="15"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Regresar" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Separador -->
+                <Rectangle Height="1" Fill="#22FFFFFF" Margin="0,20,0,0"/>
+
+                <!-- Panel de registro -->
+                <Border Background="#1A1A2E" CornerRadius="10"
+                        Margin="0,16,0,0" Padding="20" Height="180">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <materialDesign:PackIcon Kind="AccountPlus"
+                                                     Width="18" Height="18"
+                                                     Foreground="#6C63FF"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Registrar nueva persona"
+                                       Foreground="White" FontSize="14"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBox x:Name="txtNombrePersona"
+                                 materialDesign:HintAssist.Hint="Nombre completo de la persona"
+                                 AutomationProperties.Name="Nombre de la persona"
+                                 Background="#0F0F1A" Foreground="White"
+                                 FontSize="13" BorderBrush="#6C63FF"
+                                 BorderThickness="0,0,0,2"
+                                 Padding="4,8" CaretBrush="White" MaxLength="80"/>
+
+                        <TextBlock x:Name="txtContadorChars"
+                                   Text="0 / 80" Foreground="#555"
+                                   FontSize="10" HorizontalAlignment="Right"
+                                   Margin="0,2,0,10"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button x:Name="btnCapturarFoto"
+                                    Style="{StaticResource BtnBase}"
+                                    Width="155" Margin="0,0,10,0"
+                                    Background="#2ECC71" IsEnabled="False" Padding="12,0"
+                                    Click="btnCapturarFoto_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CameraPlus"
+                                                             Width="14" Height="14"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Capturar foto" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="btnRegistrar"
+                                    Style="{StaticResource BtnBase}"
+                                    Width="130" Background="#6C63FF" Padding="12,0"
+                                    Click="btnRegistrar_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave"
+                                                             Width="14" Height="14"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Registrar" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Confirmación de foto capturada -->
+                        <Border x:Name="bdFotoCapturada"
+                                Background="#162816" BorderBrush="#2ECC71"
+                                BorderThickness="1" CornerRadius="6"
+                                Padding="10,6" Margin="0,12,0,0"
+                                Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckCircle"
+                                                         Width="16" Height="16"
+                                                         Foreground="#2ECC71"
+                                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Foto capturada — listo para registrar."
+                                           Foreground="#2ECC71" FontSize="12"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>
