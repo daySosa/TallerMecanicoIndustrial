@@ -14,9 +14,9 @@ namespace Órdenes_de_Trabajo
 {
     public partial class AgregarRepuesto : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        clsConsultasBD db = new clsConsultasBD();
         public RepuestoOrden RepuestoResultado { get; private set; } = null;
-        private ProductoInventario _productoSeleccionado = null;
+        private clsProductoInventario _productoSeleccionado = null; 
 
         public AgregarRepuesto()
         {
@@ -28,30 +28,7 @@ namespace Órdenes_de_Trabajo
         {
             try
             {
-                _conexion.Abrir();
-                var lista = new List<ProductoInventario>();
-
-                using (SqlCommand cmd = new SqlCommand("sp_ObtenerProductosInventario", _conexion.SqlC))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Busqueda", DBNull.Value);
-
-                    using (SqlDataReader rd = cmd.ExecuteReader())
-                    {
-                        while (rd.Read())
-                        {
-                            lista.Add(new ProductoInventario
-                            {
-                                Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
-                                Producto_Nombre = rd["Producto_Nombre"].ToString(),
-                                Producto_Categoria = rd["Producto_Categoria"].ToString(),
-                                Producto_Cantidad_Actual = rd.GetInt32(rd.GetOrdinal("Producto_Cantidad_Actual")),
-                                Producto_Precio = rd.GetDecimal(rd.GetOrdinal("Producto_Precio"))
-                            });
-                        }
-                    }
-                }
-
+                var lista = db.ObtenerProductosInventario();
                 cmbProducto.ItemsSource = lista;
                 cmbProducto.DisplayMemberPath = "Producto_Nombre";
             }
@@ -64,7 +41,8 @@ namespace Órdenes_de_Trabajo
 
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _productoSeleccionado = cmbProducto.SelectedItem as ProductoInventario;
+            _productoSeleccionado = cmbProducto.SelectedItem as clsProductoInventario; 
+
             if (_productoSeleccionado == null) return;
 
             txtCategoria.Text = _productoSeleccionado.Producto_Categoria;

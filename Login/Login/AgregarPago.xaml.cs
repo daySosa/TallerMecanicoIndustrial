@@ -15,7 +15,7 @@ namespace Contabilidad
 {
     public partial class AgregarPago : Window
     {
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+        clsConsultasBD db = new clsConsultasBD();
 
         private MenuDePagos _menuRef;
         private bool _esEdicion = false;
@@ -54,24 +54,19 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
+                var (nombres, apellidos) = db.BuscarNombreCliente(dni);
+
+                if (nombres != null)
                 {
-                    string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@DNI", dni);
-                    conn.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.Read())
-                    {
-                        txtNombre.Text = reader["Cliente_Nombres"].ToString() + " " + reader["Cliente_Apellidos"].ToString();
-                        txtNombre.Foreground = System.Windows.Media.Brushes.White;
-                    }
-                    else
-                    {
-                        txtNombre.Text = "";
-                        MostrarMensaje("No se encontró ningún cliente con ese DNI.");
-                    }
+                    txtNombre.Text = nombres + " " + apellidos;
+                    txtNombre.Foreground = Brushes.White;
                 }
+                else
+                {
+                    txtNombre.Text = "";
+                    MostrarMensaje("No se encontró ningún cliente con ese DNI.");
+                }
+            }
             catch (Exception ex)
             {
                 MostrarMensaje("Error al buscar cliente: " + ex.Message);
@@ -89,17 +84,11 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                    conn.Open();
-                    object result = cmd.ExecuteScalar();
-                    txtMonto.Text = (result != null && result != DBNull.Value)
-                        ? "L " + Convert.ToDecimal(result).ToString("N2")
-                        : "L 0.00";
-                }
+                decimal? total = db.ObtenerTotalOrden(ordenId);
+                txtMonto.Text = total.HasValue
+                    ? "L " + total.Value.ToString("N2")
+                    : "L 0.00";
+            }
             catch
             {
                 txtMonto.Text = "L 0.00";
@@ -121,42 +110,25 @@ namespace Contabilidad
 
             try
             {
-                    if (!_esEdicion)
-                    {
-                        SqlCommand cmd = new SqlCommand("sp_RegistrarPago", conn);
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@ClienteDNI", dni);
-                        cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                        cmd.Parameters.AddWithValue("@Monto", monto);
-                        cmd.ExecuteNonQuery();
-                        MessageBox.Show("✅ ¡Pago registrado correctamente!", "Éxito",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        string updateQuery = @"
-                        UPDATE Contabilidad_Pago
-                        SET Cliente_DNI = @DNI,
-                            Orden_ID    = @OrdenID,
-                            Precio_Pago = @Monto
-                        WHERE Pago_ID = @PagoID";
-
-                        SqlCommand cmd = new SqlCommand(updateQuery, conn);
-                        cmd.Parameters.AddWithValue("@DNI", dni);
-                        cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                        cmd.Parameters.AddWithValue("@Monto", monto);
-                        cmd.Parameters.AddWithValue("@PagoID", _pagoId);
-                        cmd.ExecuteNonQuery();
-                        MessageBox.Show("✅ ¡Pago actualizado correctamente!", "Éxito",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                if (!_esEdicion)
+                {
+                    db.RegistrarPago(dni, ordenId, monto);
+                    MessageBox.Show("✅ ¡Pago registrado correctamente!", "Éxito",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    db.ActualizarPago(_pagoId, dni, ordenId, monto);
+                    MessageBox.Show("✅ ¡Pago actualizado correctamente!", "Éxito",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
 
                 _menuRef.CargarPago();
                 this.Close();
             }
             catch (Exception ex)
             {
-                MostrarMensaje("⚠ Error inesperado: " + ex.Message);
+                MostrarMensaje("⚠ " + ex.Message);
             }
         }
 

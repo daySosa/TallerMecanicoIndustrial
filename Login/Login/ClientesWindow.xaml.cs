@@ -9,7 +9,8 @@ namespace InterfazClientes
     public partial class ClientesWindow : Window
     {
         private string _dniEditando = string.Empty;
-        public Cliente ClienteResultado { get; private set; }
+        public clsCliente ClienteResultado { get; private set; }
+        clsConsultasBD db = new clsConsultasBD();
 
         public ClientesWindow()
         {
@@ -49,7 +50,7 @@ namespace InterfazClientes
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
 
-        public void CargarClienteParaEditar(Cliente c)
+        public void CargarClienteParaEditar(clsCliente c)
         {
             _dniEditando = c.Cliente_DPI;
             txtDPI.Text = c.Cliente_DPI;
@@ -91,78 +92,34 @@ namespace InterfazClientes
         {
             btnAgregar.IsEnabled = false;
 
-            if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim()))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
-
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente"))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
-
-            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente"))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
-
-            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
-
+            if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
 
             try
             {
-                var db = new clsConexion();
-                db.Abrir();
+                bool insertado = db.AgregarCliente( 
+                    txtDPI.Text.Trim(),
+                    txtNombre.Text.Trim(),
+                    txtApellido.Text.Trim(),
+                    txtTelefono.Text.Trim(),
+                    txtCorreo.Text.Trim(),
+                    txtDireccion.Text.Trim()
+                );
 
-                string sql = @"
-                    IF NOT EXISTS (SELECT 1 FROM Cliente WHERE Cliente_DNI = @DNI)
-                    BEGIN
-                        INSERT INTO Cliente
-                            (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                             Cliente_TelefonoPrincipal, Cliente_Email,
-                             Cliente_Direccion, Cliente_Activo)
-                        VALUES
-                            (@DNI, @Nombres, @Apellidos, @Telefono, @Email,
-                             @Direccion, 1)
-                        SELECT 1
-                    END
-                    ELSE
-                        SELECT 0";
-
-                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+                if (!insertado)
                 {
-                    cmd.Parameters.AddWithValue("@DNI", txtDPI.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Nombres", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Apellidos", txtApellido.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Telefono", txtTelefono.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(txtCorreo.Text)
-                        ? (object)DBNull.Value : txtCorreo.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(txtDireccion.Text)
-                        ? (object)DBNull.Value : txtDireccion.Text.Trim());
+                    MessageBox.Show("Ya existe un cliente con ese DNI.",
+                        "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    btnAgregar.IsEnabled = true;
+                    return;
+                }
 
-                    int resultado = Convert.ToInt32(cmd.ExecuteScalar());
-
-                    if (resultado == 0)
-                    {
-                        MessageBox.Show("Ya existe un cliente con ese DNI.",
-                            "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        btnAgregar.IsEnabled = true;
-                        return;
-                    }
-
-                db.Cerrar();
-
-                ClienteResultado = new Cliente
+                ClienteResultado = new clsCliente
                 {
                     Cliente_DPI = txtDPI.Text.Trim(),
                     Cliente_Nombre = txtNombre.Text.Trim(),
@@ -205,34 +162,15 @@ namespace InterfazClientes
 
             try
             {
-                var db = new clsConexion();
-                db.Abrir();
-
-                string sql = @"
-                    UPDATE Cliente SET
-                        Cliente_Nombres           = @Nombres,
-                        Cliente_Apellidos         = @Apellidos,
-                        Cliente_TelefonoPrincipal = @Telefono,
-                        Cliente_Email             = @Email,
-                        Cliente_Direccion         = @Direccion,
-                        Cliente_Activo            = @Activo
-                    WHERE Cliente_DNI = @DNI";
-
-                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Nombres", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Apellidos", txtApellido.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Telefono", txtTelefono.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(txtCorreo.Text)
-                        ? (object)DBNull.Value : txtCorreo.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(txtDireccion.Text)
-                        ? (object)DBNull.Value : txtDireccion.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Activo", toggleActivo.IsChecked == true ? 1 : 0);
-                    cmd.Parameters.AddWithValue("@DNI", _dniEditando);
-                    cmd.ExecuteNonQuery();
-                }
-
-                db.Cerrar();
+                db.ActualizarCliente( 
+                    _dniEditando,
+                    txtNombre.Text.Trim(),
+                    txtApellido.Text.Trim(),
+                    txtTelefono.Text.Trim(),
+                    txtCorreo.Text.Trim(),
+                    txtDireccion.Text.Trim(),
+                    toggleActivo.IsChecked == true
+                );
 
                 MessageBox.Show("✅ Cliente actualizado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);

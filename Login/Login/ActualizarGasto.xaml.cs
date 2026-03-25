@@ -16,6 +16,7 @@ namespace Contabilidad
     public partial class ActualizarGasto : Window
     {
         private int _gastoId;
+        clsConsultasBD db = new clsConsultasBD(); 
 
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
