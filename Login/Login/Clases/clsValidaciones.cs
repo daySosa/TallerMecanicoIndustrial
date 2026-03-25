@@ -404,5 +404,36 @@ namespace Login.Clases
             return true;
         }
 
+        // Validar placa de vehículo
+        public static bool ValidarPlaca(string placa)
+        {
+            string p = placa.Trim().ToUpper();
+
+            if (string.IsNullOrWhiteSpace(p))
+            {
+                MessageBox.Show("⚠ La placa es obligatoria.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            // Solo letras y números
+            if (!Regex.IsMatch(p, @"^[A-Z0-9]+$"))
+            {
+                MessageBox.Show("⚠ La placa solo puede contener letras y números.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            // Longitud razonable
+            if (p.Length < 6)
+            {
+                MessageBox.Show("⚠ La placa debe tener entre 6 y 8 caracteres.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
     }
 }
