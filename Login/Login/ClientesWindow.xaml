@@ -51,7 +51,7 @@
                                  Padding="10,0" Margin="0,0,0,16"
                                  MaxLength="13"
                                  materialDesign:HintAssist.Hint="Ej: 0801199012345"
-                                 PreviewTextInput="txtDPI_PreviewTextInput"/>
+                                 PreviewTextInput="txtDPI_PreviewTextInput" TextChanged="txtDPI_TextChanged"/>
 
                         <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11"
                                    FontWeight="Medium" Margin="0,0,0,4"/>
