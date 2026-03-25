@@ -240,5 +240,43 @@ namespace Login.Clases
             return true;
         }
 
+        // ✅ Validaciones en Login (correo y contraseña)
+        public static string ValidarCorreoLogin(string correo)
+        {
+            correo = correo.Trim().ToLower();
+
+            if (string.IsNullOrWhiteSpace(correo))
+                return "⚠ El correo es obligatorio.";
+
+            if (correo.Contains(" "))
+                return "⚠ El correo no puede contener espacios.";
+
+            if (correo.Length > 100)
+                return "⚠ El correo es demasiado largo.";
+
+            if (!Regex.IsMatch(correo, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+                return "⚠ Ingresa un correo electrónico válido.";
+
+            string[] dominios = { "@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com" };
+
+            if (!dominios.Any(d => correo.EndsWith(d)))
+                return "⚠ Dominio de correo no permitido.";
+
+            return null;
+        }
+
+        public static string ValidarContrasenaLogin(string contrasena)
+        {
+            if (string.IsNullOrWhiteSpace(contrasena))
+                return "⚠ La contraseña es obligatoria.";
+
+            if (contrasena.Contains(" "))
+                return "⚠ La contraseña no puede contener espacios.";
+
+            if (contrasena.Length > 50)
+                return "⚠ La contraseña es demasiado larga.";
+
+            return null;
+        }
     }
 }
