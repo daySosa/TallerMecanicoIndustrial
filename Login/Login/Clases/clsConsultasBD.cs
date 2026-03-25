@@ -1197,8 +1197,48 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
             return lista;
         }
-    
 
+        public List<clsCliente> ObtenerClientes()
+        {
+            var lista = new List<clsCliente>();
+            try
+            {
+                string sql = @"
+            SELECT Cliente_DNI,
+                   Cliente_Nombres,
+                   Cliente_Apellidos,
+                   Cliente_TelefonoPrincipal,
+                   Cliente_Email,
+                   Cliente_Direccion,
+                   Cliente_Activo
+            FROM   Cliente
+            ORDER  BY Cliente_Nombres";
+
+                SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
+                _conexion.Abrir();
+                SqlDataReader rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new clsCliente
+                    {
+                        Cliente_DPI = rd["Cliente_DNI"].ToString(),
+                        Cliente_Nombre = rd["Cliente_Nombres"].ToString(),
+                        Cliente_Apellido = rd["Cliente_Apellidos"].ToString(),
+                        Cliente_Telefono = rd["Cliente_TelefonoPrincipal"].ToString(),
+                        Cliente_Correo = rd["Cliente_Email"].ToString(),
+                        Cliente_Direccion = rd["Cliente_Direccion"].ToString(),
+                        Cliente_Activo = rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"]
+                    });
+                }
+                rd.Close();
+                return lista;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al cargar clientes: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
 
 
 
