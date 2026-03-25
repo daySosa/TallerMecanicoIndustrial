@@ -55,7 +55,9 @@ namespace Vehículos
             }
         }
 
+
         private bool ValidarDNIHondureño(string dni) => Regex.IsMatch(dni, @"^\d{13}$");
+
 
         public void EstablecerCliente(int clienteDNI)
         {
@@ -66,7 +68,12 @@ namespace Vehículos
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
             string dni = txtClienteDNI.Text.Trim();
+
+
+            if (!clsValidaciones.ValidarDNIHondureño(dni))
+
             if (!ValidarDNIHondureño(dni))
+
             {
                 MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.");
                 return;
@@ -142,8 +149,19 @@ namespace Vehículos
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(_placaSeleccionada))
+            {
+                MessageBox.Show("No hay ningún vehículo cargado para actualizar.",
+                    "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out int año)) return;
+
+
             if (string.IsNullOrEmpty(_placaSeleccionada)) return;
             if (!ValidarCampos(out int año)) return;
+
             try
             {
                 var datos = new
@@ -207,6 +225,25 @@ namespace Vehículos
         private bool ValidarCampos(out int año)
         {
             año = 0;
+
+
+            if (!clsValidaciones.ValidarTextoRequerido(txtPlaca.Text, "placa del vehículo")) { txtPlaca.Focus(); return false; }
+            if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca del vehículo")) { txtMarca.Focus(); return false; }
+            if (!clsValidaciones.ValidarTextoRequerido(txtModelo.Text, "modelo del vehículo")) { txtModelo.Focus(); return false; }
+            if (!clsValidaciones.ValidarTextoRequerido(txtAnio.Text, "año del vehículo")) { txtAnio.Focus(); return false; }
+            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipo.SelectedItem, "tipo de vehículo")) { cmbTipo.Focus(); return false; }
+            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out año)) { txtAnio.Focus(); return false; }
+            if (!clsValidaciones.ValidarSinCaracteresEspeciales(txtMarca.Text, "marca")) return false;
+            if (!clsValidaciones.ValidarSinCaracteresEspeciales(txtModelo.Text, "modelo")) return false;
+
+            if (string.IsNullOrEmpty(_clienteDNI))
+            {
+                MessageBox.Show("⚠ Debes verificar el DNI del cliente antes de guardar.",
+                    "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+
             if (string.IsNullOrWhiteSpace(txtPlaca.Text)) { MessageBox.Show("⚠ La placa es obligatoria."); return false; }
             if (string.IsNullOrWhiteSpace(txtMarca.Text)) { MessageBox.Show("⚠ La marca es obligatoria."); return false; }
             if (string.IsNullOrWhiteSpace(txtModelo.Text)) { MessageBox.Show("⚠ El modelo es obligatorio."); return false; }
