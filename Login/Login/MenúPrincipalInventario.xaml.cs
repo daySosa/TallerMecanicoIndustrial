@@ -6,7 +6,6 @@ using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -128,7 +127,7 @@ namespace InterfazInventario
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
             => popupFiltros.IsOpen = !popupFiltros.IsOpen;
 
-<<<<<<< HEAD
+
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
@@ -143,9 +142,7 @@ namespace InterfazInventario
             _vistaRepuestos?.Refresh();
             ActualizarContador();
         }
-=======
-        
->>>>>>> b51606ab9ce257aef7cbc334a1e8ad244d7fed0b
+
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
