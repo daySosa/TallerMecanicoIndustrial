@@ -94,6 +94,40 @@ namespace InterfazInventario
             }
         }
 
+        private bool AplicarFiltros(object item)
+        {
+            if (item is not Repuesto r) return false;
+
+            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+            if (!string.IsNullOrEmpty(texto))
+            {
+                bool coincide =
+                    (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Modelo ?? "").ToLower().Contains(texto);
+                if (!coincide) return false;
+            }
+
+            if (_filtroCategoria != null && _filtroCategoria != "Todas")
+                if (r.Producto_Categoria != _filtroCategoria) return false;
+
+            if (r.Producto_Precio < _filtroPrecioMin) return false;
+            if (r.Producto_Precio > _filtroPrecioMax) return false;
+            if (_filtroStockBajo && !r.StockBajo) return false;
+
+            return true;
+        }
+
+        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _vistaRepuestos?.Refresh();
+            ActualizarContador();
+        }
+
+        private void btnFiltrar_Click(object sender, RoutedEventArgs e)
+            => popupFiltros.IsOpen = !popupFiltros.IsOpen;
+
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
@@ -109,16 +143,6 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            _vistaRepuestos?.Refresh();
-            ActualizarContador();
-        }
-
-        private void btnFiltrar_Click(object sender, RoutedEventArgs e)
-            => popupFiltros.IsOpen = !popupFiltros.IsOpen;
-
-        
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
