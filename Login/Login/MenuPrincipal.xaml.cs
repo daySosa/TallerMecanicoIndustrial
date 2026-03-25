@@ -34,7 +34,7 @@ namespace Dasboard_Prueba
 
     public partial class MenuPrincipal : Window
     {
-        private readonly clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD();
         private DateTime _mesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         private List<NotificacionItem> _notificaciones = new List<NotificacionItem>();
         private int _mesesRango = 6;
@@ -90,65 +90,13 @@ namespace Dasboard_Prueba
         {
             try
             {
-                _conexion.Abrir();
-
                 DateTime fechaDesde = _mesesRango > 0
                     ? DateTime.Today.AddMonths(-_mesesRango + 1).AddDays(1 - DateTime.Today.Day)
                     : new DateTime(2000, 1, 1);
 
-                var balanceVals = new List<double>();
-                var balanceLabels = new List<string>();
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
-                           SUM(OrdenPrecio_Total) AS Total
-                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
-                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
-                    ORDER  BY Anio, Mes", _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
-                    using SqlDataReader rd = cmd.ExecuteReader();
-                    while (rd.Read())
-                    {
-                        balanceVals.Add(Convert.ToDouble(rd["Total"]));
-                        balanceLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
-                    }
-                }
-
-                var orderVals = new List<double>();
-                var orderLabels = new List<string>();
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
-                           COUNT(*) AS Cantidad
-                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
-                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
-                    ORDER  BY Anio, Mes", _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
-                    using SqlDataReader rd = cmd.ExecuteReader();
-                    while (rd.Read())
-                    {
-                        orderVals.Add(Convert.ToDouble(rd["Cantidad"]));
-                        orderLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
-                    }
-                }
-
-                var gastosVals = new List<double>();
-                var gastosLabels = new List<string>();
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT YEAR(Fecha_Gasto) AS Anio, MONTH(Fecha_Gasto) AS Mes,
-                           SUM(Precio_Gasto) AS Total
-                    FROM   Contabilidad_Gastos WHERE Fecha_Gasto >= @Desde
-                    GROUP  BY YEAR(Fecha_Gasto), MONTH(Fecha_Gasto)
-                    ORDER  BY Anio, Mes", _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
-                    using SqlDataReader rd = cmd.ExecuteReader();
-                    while (rd.Read())
-                    {
-                        gastosVals.Add(Convert.ToDouble(rd["Total"]));
-                        gastosLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
-                    }
-                }
+                var (balanceVals, balanceLabels) = _db.ObtenerDatosGraficaOrdenes(fechaDesde);
+                var (orderVals, orderLabels) = _db.ObtenerDatosGraficaCantidadOrdenes(fechaDesde);
+                var (gastosVals, gastosLabels) = _db.ObtenerDatosGraficaGastos(fechaDesde);
 
                 BalanceValues.Clear();
                 foreach (var v in balanceVals) BalanceValues.Add(v);
@@ -175,58 +123,25 @@ namespace Dasboard_Prueba
                 MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarDatos()
         {
             try
             {
-                _conexion.Abrir();
-
-                var ordenes = new List<OrdenReciente>();
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT TOP 10
-                        o.Orden_ID,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                        o.Vehiculo_Placa, o.Fecha, o.Estado, o.OrdenPrecio_Total
-                    FROM Orden_Trabajo o
-                    INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY o.Fecha DESC", _conexion.SqlC))
-                using (SqlDataReader rd = cmd.ExecuteReader())
-                {
-                    while (rd.Read())
-                    {
-                        ordenes.Add(new OrdenReciente
-                        {
-                            Orden_ID = Convert.ToInt32(rd["Orden_ID"]),
-                            Cliente_NombreCompleto = rd["Cliente_NombreCompleto"].ToString(),
-                            Vehiculo_Placa = rd["Vehiculo_Placa"].ToString(),
-                            Fecha = Convert.ToDateTime(rd["Fecha"]),
-                            Estado = rd["Estado"].ToString(),
-                            OrdenPrecio_Total = Convert.ToDecimal(rd["OrdenPrecio_Total"])
-                        });
-                    }
-                }
+                var (ordenes, balanceTotal, gastosTotal) = _db.ObtenerDatosDashboard();
 
                 dgOrdenes.ItemsSource = ordenes;
                 tbTotalOrdenes.Text = $"{ordenes.Count} órdenes";
                 txtTotalOrdenes.Text = ordenes.Count.ToString();
-
-                using (SqlCommand cmd = new SqlCommand(
-                    "SELECT ISNULL(SUM(OrdenPrecio_Total), 0) FROM Orden_Trabajo", _conexion.SqlC))
-                    txtBalanceTotal.Text = $"L {Convert.ToDecimal(cmd.ExecuteScalar()):N2}";
-
-                using (SqlCommand cmd = new SqlCommand(
-                    "SELECT ISNULL(SUM(Precio_Gasto), 0) FROM Contabilidad_Gastos", _conexion.SqlC))
-                    txtGastosTotales.Text = $"L {Convert.ToDecimal(cmd.ExecuteScalar()):N2}";
+                txtBalanceTotal.Text = $"L {balanceTotal:N2}";
+                txtGastosTotales.Text = $"L {gastosTotal:N2}";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar datos:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificaciones()
@@ -234,26 +149,9 @@ namespace Dasboard_Prueba
             _notificaciones.Clear();
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand(
-                    "SELECT Notificacion_ID, Tipo_Notificacion, Mensaje, Leida FROM Notificaciones ORDER BY Notificacion_ID DESC",
-                    _conexion.SqlC))
-                using (SqlDataReader rd = cmd.ExecuteReader())
-                {
-                    while (rd.Read())
-                    {
-                        _notificaciones.Add(new NotificacionItem
-                        {
-                            Notificacion_ID = Convert.ToInt32(rd["Notificacion_ID"]),
-                            Tipo_Notificacion = rd["Tipo_Notificacion"].ToString(),
-                            Mensaje = rd["Mensaje"].ToString(),
-                            Leida = Convert.ToBoolean(rd["Leida"])
-                        });
-                    }
-                }
+                _notificaciones = _db.ObtenerTodasNotificaciones();
             }
             catch { }
-            finally { _conexion.Cerrar(); }
             ActualizarPanelNotificaciones();
         }
 
@@ -374,16 +272,9 @@ namespace Dasboard_Prueba
         {
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC))
-                {
-                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID", id);
-                    cmd.ExecuteNonQuery();
-                }
+                _db.MarcarNotificacionLeida(id);
             }
             catch { }
-            finally { _conexion.Cerrar(); }
 
             var n = _notificaciones.FirstOrDefault(x => x.Notificacion_ID == id);
             if (n != null) n.Leida = true;
@@ -394,16 +285,9 @@ namespace Dasboard_Prueba
         {
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC))
-                {
-                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID", DBNull.Value);
-                    cmd.ExecuteNonQuery();
-                }
+                _db.MarcarNotificacionLeida(null);
             }
             catch { }
-            finally { _conexion.Cerrar(); }
 
             foreach (var n in _notificaciones) n.Leida = true;
             ActualizarPanelNotificaciones();

@@ -7,7 +7,7 @@ namespace InterfazInventario
 {
     public partial class InventarioWindow : Window
     {
-        private readonly clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD();
         private int _productoIdSeleccionado = -1;
 
         public InventarioWindow()
@@ -47,29 +47,14 @@ namespace InterfazInventario
 
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    INSERT INTO Producto
-                        (Producto_Nombre, Producto_Categoria, Producto_Marca,
-                         Producto_Modelo, Producto_Precio,
-                         Producto_Cantidad_Actual, Producto_Stock_Minimo)
-                    VALUES
-                        (@Nombre, @Categoria, @Marca, @Modelo,
-                         @Precio, @Cantidad, 10)";
-
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Nombre", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Categoria", (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
-                    cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Modelo",
-                        string.IsNullOrWhiteSpace(txtModelo.Text)
-                            ? (object)DBNull.Value
-                            : txtModelo.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Precio", precio);
-                    cmd.Parameters.AddWithValue("@Cantidad", cantidad);
-                    cmd.ExecuteNonQuery();
-                }
+                _db.AgregarProducto(
+                    txtNombre.Text.Trim(),
+                    (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString(),
+                    txtMarca.Text.Trim(),
+                    txtModelo.Text,
+                    precio,
+                    cantidad
+                );
 
                 MessageBox.Show("Producto agregado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -81,7 +66,6 @@ namespace InterfazInventario
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 btnAgregar.IsEnabled = true;
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
@@ -105,31 +89,15 @@ namespace InterfazInventario
 
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    UPDATE Producto SET
-                        Producto_Nombre          = @Nombre,
-                        Producto_Categoria       = @Categoria,
-                        Producto_Marca           = @Marca,
-                        Producto_Modelo          = @Modelo,
-                        Producto_Precio          = @Precio,
-                        Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
-                    WHERE Producto_ID = @ID";
-
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Nombre", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Categoria", (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
-                    cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Modelo",
-                        string.IsNullOrWhiteSpace(txtModelo.Text)
-                            ? (object)DBNull.Value
-                            : txtModelo.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Precio", precio);
-                    cmd.Parameters.AddWithValue("@Cantidad", cantidadAgregar);
-                    cmd.Parameters.AddWithValue("@ID", _productoIdSeleccionado);
-                    cmd.ExecuteNonQuery();
-                }
+                _db.ActualizarProducto(
+                    _productoIdSeleccionado,
+                    txtNombre.Text.Trim(),
+                    (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString(),
+                    txtMarca.Text.Trim(),
+                    txtModelo.Text,
+                    precio,
+                    cantidadAgregar
+                );
 
                 string msg = cantidadAgregar > 0
                     ? $"Producto actualizado.\n+{cantidadAgregar} unidades agregadas al stock."
@@ -144,7 +112,6 @@ namespace InterfazInventario
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 btnActualizar.IsEnabled = true;
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
