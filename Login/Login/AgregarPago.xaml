@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:Contabilidad"
         mc:Ignorable="d"
-        Title="AgregarPago" Height="543" Width="480"
+        Title="AgregarPago" Height="604" Width="480"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1e2130"
