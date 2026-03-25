@@ -11,6 +11,7 @@ namespace Login
     public partial class MainWindow : Window
     {
         private bool _contrasenaVisible = false;
+        private clsConsultasBD _db = new clsConsultasBD();
 
         private readonly string _archivoRecordar =
             Path.Combine(Environment.GetFolderPath(
@@ -175,20 +176,9 @@ namespace Login
         {
             try
             {
-                clsConexion conexion = new clsConexion();
-                conexion.Abrir();
+                bool valido = _db.ValidarLogin(correo, contrasena);
 
-                string consulta = @"SELECT * FROM LOGIN
-                                    WHERE Usuario_Email      = @correo
-                                    AND   Usuario_Contraseña = @contrasena";
-
-                SqlCommand comando = new SqlCommand(consulta, conexion.SqlC);
-                comando.Parameters.AddWithValue("@correo", correo);
-                comando.Parameters.AddWithValue("@contrasena", contrasena);
-
-                SqlDataReader lector = comando.ExecuteReader();
-
-                if (lector.Read())
+                if (valido)
                 {
                     clsAutenticacion autenticacion = new clsAutenticacion();
                     string codigo2FA = autenticacion.GenerarCodigo(correo);
