@@ -99,6 +99,11 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
+            if (!clsValidaciones.Telefono(txtTelefono.Text))
+            {
+                btnAgregar.IsEnabled = true;
+                return;
+            }
 
             try
             {
@@ -155,7 +160,12 @@ namespace InterfazClientes
 
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
-            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9)) return;
+            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 8)) return;
+            if (!clsValidaciones.Telefono(txtTelefono.Text))
+            {
+                btnAgregar.IsEnabled = true;
+                return;
+            }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
