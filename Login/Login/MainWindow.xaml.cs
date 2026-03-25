@@ -123,10 +123,6 @@ namespace Login
         {
             bool hayError = false;
 
-            /*if (!clsValidaciones.ValidarCorreo(txtCorreo.Text.Trim()))
-            {
-
-            }*/
 
             if (string.IsNullOrWhiteSpace(txtCorreo.Text))
             {
@@ -194,9 +190,6 @@ namespace Login
 
                 if (lector.Read())
                 {
-                    lector.Close();
-                    conexion.Cerrar();
-
                     clsAutenticacion autenticacion = new clsAutenticacion();
                     string codigo2FA = autenticacion.GenerarCodigo(correo);
                     bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
@@ -215,9 +208,6 @@ namespace Login
                 }
                 else
                 {
-                    lector.Close();
-                    conexion.Cerrar();
-
                     txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
                     txtErrorCorreo.Visibility = Visibility.Visible;
                     borderCorreo.BorderBrush =

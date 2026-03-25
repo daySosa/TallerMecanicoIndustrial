@@ -9,12 +9,8 @@ using Vehículos;
 
 namespace Contabilidad
 {
-
-
     public partial class ContaWindow : Window
     {
-
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         public ContaWindow()
         {
@@ -22,9 +18,6 @@ namespace Contabilidad
             CargarEgreso();
             CargarNotificaciones();
         }
-
-
-
 
         public void CargarEgreso(string busqueda = null)
         {
@@ -53,7 +46,6 @@ namespace Contabilidad
 
                     dgGastos.ItemsSource = dt.DefaultView;
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar gastos: " + ex.Message, "Error",
@@ -74,8 +66,6 @@ namespace Contabilidad
             if (ventana.ShowDialog() == true)
                 CargarEgreso();
         }
-
-
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
@@ -159,7 +149,6 @@ namespace Contabilidad
             MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnClientes_Click(object sender, RoutedEventArgs e)
@@ -211,7 +200,6 @@ namespace Contabilidad
                         : Visibility.Collapsed;
                     txtContadorNotificaciones.Text = cantidad.ToString();
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
@@ -244,7 +232,6 @@ namespace Contabilidad
                             Margin = new Thickness(0, 20, 0, 20)
                         };
 
-                        // ── Label en vez de TextBlock para el emoji ──
                         vacio.Children.Add(new Label
                         {
                             Content = "🎉",
@@ -282,7 +269,6 @@ namespace Contabilidad
                         panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
                     }
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error: " + ex.Message);
@@ -373,25 +359,6 @@ namespace Contabilidad
             CargarNotificaciones();
         }
 
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID",
-                        id.HasValue ? (object)id.Value : DBNull.Value);
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.Message);
-            }
-        }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
@@ -400,5 +367,3 @@ namespace Contabilidad
         }
     }
 }
-
-

@@ -57,20 +57,6 @@ namespace InterfazInventario
                         (@Nombre, @Categoria, @Marca, @Modelo,
                          @Precio, @Cantidad, 10)";
 
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Nombre", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Categoria", (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString());
-                    cmd.Parameters.AddWithValue("@Marca", txtMarca.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Modelo",
-                        string.IsNullOrWhiteSpace(txtModelo.Text)
-                            ? (object)DBNull.Value
-                            : txtModelo.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Precio", precio);
-                    cmd.Parameters.AddWithValue("@Cantidad", cantidad);
-                    cmd.ExecuteNonQuery();
-                }
-
                 MessageBox.Show("Producto agregado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
@@ -81,7 +67,6 @@ namespace InterfazInventario
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 btnAgregar.IsEnabled = true;
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
@@ -144,7 +129,6 @@ namespace InterfazInventario
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 btnActualizar.IsEnabled = true;
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();

@@ -53,7 +53,6 @@ namespace Contabilidad
 
                     dgPagos.ItemsSource = dt.DefaultView;
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar pagos: " + ex.Message, "Error",
@@ -135,7 +134,6 @@ namespace Contabilidad
                         : Visibility.Collapsed;
                     txtContadorNotificaciones.Text = cantidad.ToString();
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message, "Error",
@@ -206,7 +204,6 @@ namespace Contabilidad
                         panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
                     }
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message, "Error",
@@ -298,26 +295,6 @@ namespace Contabilidad
             CargarNotificaciones();
         }
 
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(_conexion))
-                {
-                    SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID",
-                        id.HasValue ? (object)id.Value : DBNull.Value);
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al marcar notificación: " + ex.Message, "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {

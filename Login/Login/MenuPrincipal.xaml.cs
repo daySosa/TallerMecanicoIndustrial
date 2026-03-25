@@ -90,8 +90,6 @@ namespace Dasboard_Prueba
         {
             try
             {
-                _conexion.Abrir();
-
                 DateTime fechaDesde = _mesesRango > 0
                     ? DateTime.Today.AddMonths(-_mesesRango + 1).AddDays(1 - DateTime.Today.Day)
                     : new DateTime(2000, 1, 1);
@@ -111,42 +109,6 @@ namespace Dasboard_Prueba
                     {
                         balanceVals.Add(Convert.ToDouble(rd["Total"]));
                         balanceLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
-                    }
-                }
-
-                var orderVals = new List<double>();
-                var orderLabels = new List<string>();
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
-                           COUNT(*) AS Cantidad
-                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
-                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
-                    ORDER  BY Anio, Mes", _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
-                    using SqlDataReader rd = cmd.ExecuteReader();
-                    while (rd.Read())
-                    {
-                        orderVals.Add(Convert.ToDouble(rd["Cantidad"]));
-                        orderLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
-                    }
-                }
-
-                var gastosVals = new List<double>();
-                var gastosLabels = new List<string>();
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT YEAR(Fecha_Gasto) AS Anio, MONTH(Fecha_Gasto) AS Mes,
-                           SUM(Precio_Gasto) AS Total
-                    FROM   Contabilidad_Gastos WHERE Fecha_Gasto >= @Desde
-                    GROUP  BY YEAR(Fecha_Gasto), MONTH(Fecha_Gasto)
-                    ORDER  BY Anio, Mes", _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Desde", fechaDesde);
-                    using SqlDataReader rd = cmd.ExecuteReader();
-                    while (rd.Read())
-                    {
-                        gastosVals.Add(Convert.ToDouble(rd["Total"]));
-                        gastosLabels.Add($"{Convert.ToInt32(rd["Mes"]):D2}/{Convert.ToInt32(rd["Anio"])}");
                     }
                 }
 
@@ -175,7 +137,6 @@ namespace Dasboard_Prueba
                 MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarDatos()
@@ -226,7 +187,6 @@ namespace Dasboard_Prueba
                 MessageBox.Show("Error al cargar datos:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificaciones()
@@ -253,7 +213,6 @@ namespace Dasboard_Prueba
                 }
             }
             catch { }
-            finally { _conexion.Cerrar(); }
             ActualizarPanelNotificaciones();
         }
 
@@ -383,7 +342,6 @@ namespace Dasboard_Prueba
                 }
             }
             catch { }
-            finally { _conexion.Cerrar(); }
 
             var n = _notificaciones.FirstOrDefault(x => x.Notificacion_ID == id);
             if (n != null) n.Leida = true;
@@ -403,7 +361,6 @@ namespace Dasboard_Prueba
                 }
             }
             catch { }
-            finally { _conexion.Cerrar(); }
 
             foreach (var n in _notificaciones) n.Leida = true;
             ActualizarPanelNotificaciones();
