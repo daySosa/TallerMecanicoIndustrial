@@ -57,7 +57,10 @@
                              BorderThickness="0" VerticalAlignment="Center"
                              MaxLength="13"
                              Margin="14,0" FontSize="14" CaretBrush="White">
+<<<<<<< HEAD
 
+=======
+>>>>>>> 294a90e672aee3f8d8d6322b56076c41faefc0da
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>
@@ -114,8 +117,7 @@
                           RowBackground="Transparent"
                           AlternatingRowBackground="#1A1D2E"
                           MaxHeight="150"
-                          FontSize="12"
-                          SelectionChanged="dgOrdenes_SelectionChanged">
+                          FontSize="12">
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="#1A1D2E"/>
@@ -150,8 +152,7 @@
                     <TextBox x:Name="txtOrdenID"
                              Background="Transparent" Foreground="White"
                              BorderThickness="0" VerticalAlignment="Center"
-                             Margin="14,0" FontSize="14" CaretBrush="White"
-                             TextChanged="txtOrdenID_TextChanged">
+                             Margin="14,0" FontSize="14" CaretBrush="White">
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ej: 1"/>

@@ -43,6 +43,7 @@
 
                         <TextBlock Text="DNI Hondureño (13 dígitos sin guiones)"
                                    Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                        
                         <TextBox x:Name="txtDPI"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Background="#1e2130" Foreground="White"
@@ -51,7 +52,7 @@
                                  Padding="10,0" Margin="0,0,0,16"
                                  MaxLength="13"
                                  materialDesign:HintAssist.Hint="Ej: 0801199012345"
-                                 PreviewTextInput="txtDPI_PreviewTextInput" TextChanged="txtDPI_TextChanged"/>
+                                 PreviewTextInput="txtDPI_PreviewTextInput"/>
 
                         <TextBlock Text="Nombre" Foreground="#6c7293" FontSize="11"
                                    FontWeight="Medium" Margin="0,0,0,4"/>
@@ -86,6 +87,7 @@
                                 <materialDesign:PackIcon Kind="Phone" Foreground="#4f6ef7"
                                                          Width="16" Height="16" VerticalAlignment="Center"/>
                             </Border>
+                            
                             <TextBox x:Name="txtTelefono" Grid.Column="1"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Background="#1e2130" Foreground="White"
@@ -94,8 +96,7 @@
                                      Padding="10,0"
                                      MaxLength="9"
                                      materialDesign:HintAssist.Hint="Ej: 9999-9999"
-                                     PreviewTextInput="txtTelefono_PreviewTextInput"
-                                     TextChanged="txtTelefono_TextChanged"/>
+                                     PreviewTextInput="txtTelefono_PreviewTextInput"/>
                         </Grid>
 
                     </StackPanel>
