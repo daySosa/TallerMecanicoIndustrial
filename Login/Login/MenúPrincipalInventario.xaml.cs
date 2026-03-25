@@ -127,10 +127,6 @@ namespace InterfazInventario
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
             => popupFiltros.IsOpen = !popupFiltros.IsOpen;
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
@@ -145,7 +141,6 @@ namespace InterfazInventario
             _vistaRepuestos?.Refresh();
             ActualizarContador();
         }
-
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
@@ -345,19 +340,6 @@ namespace InterfazInventario
             CargarNotificaciones();
         }
 
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                _db.MarcarNotificacionLeida(id);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al marcar notificación:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void btnHome_Click(object sender, RoutedEventArgs e) { new MenuPrincipal().Show(); this.Close(); }
         private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new Vehículos.MenúPrincipalVehículos().Show(); this.Close(); }
         private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
@@ -379,28 +361,6 @@ namespace InterfazInventario
         {
             var ventana = new ReportesWindow("Inventario");
             ventana.ShowDialog();
-        }
-
-        private bool AplicarFiltros(object item)
-        {
-            if (item is not Repuesto r)
-                return false;
-
-            if (!string.IsNullOrWhiteSpace(txtBuscar.Text) &&
-                !(r.Producto_Nombre?.ToLower().Contains(txtBuscar.Text.ToLower()) ?? false))
-                return false;
-
-            if (!string.IsNullOrEmpty(_filtroCategoria) && _filtroCategoria != "Todas" &&
-                r.Producto_Categoria != _filtroCategoria)
-                return false;
-
-            if (r.Producto_Precio < _filtroPrecioMin || r.Producto_Precio > _filtroPrecioMax)
-                return false;
-
-            if (_filtroStockBajo && !r.StockBajo)
-                return false;
-
-            return true;
         }
     }
 }

@@ -27,7 +27,6 @@ namespace Vehículos
 
     public partial class VehiWindow : Window
     {
-
         private clsConsultasBD _db = new clsConsultasBD();
         private string _placaSeleccionada = string.Empty;
         private string _clienteDNI = string.Empty;
@@ -53,9 +52,7 @@ namespace Vehículos
             }
         }
 
-
         private bool ValidarDNIHondureño(string dni) => Regex.IsMatch(dni, @"^\d{13}$");
-
 
         public void EstablecerCliente(int clienteDNI)
         {
@@ -67,24 +64,12 @@ namespace Vehículos
         {
             string dni = txtClienteDNI.Text.Trim();
 
-
             if (!clsValidaciones.ValidarDNIHondureño(dni))
-
-<<<<<<< HEAD
-            if (!ValidarDNIHondureño(dni))
-
             {
                 MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.");
                 return;
             }
-=======
-                if (!ValidarDNIHondureño(dni))
 
-                {
-                    MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.");
-                    return;
-                }
->>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
             VerificarClienteEnBD(dni);
         }
 
@@ -156,10 +141,6 @@ namespace Vehículos
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
-<<<<<<< HEAD
-=======
-
->>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
             if (string.IsNullOrEmpty(_placaSeleccionada))
             {
                 MessageBox.Show("No hay ningún vehículo cargado para actualizar.",
@@ -167,13 +148,6 @@ namespace Vehículos
                 return;
             }
 
-            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out int año)) return;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
-            if (string.IsNullOrEmpty(_placaSeleccionada)) return;
             if (!ValidarCampos(out int año)) return;
 
             try
@@ -195,8 +169,6 @@ namespace Vehículos
             }
             catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
-
-
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
@@ -240,15 +212,32 @@ namespace Vehículos
         {
             año = 0;
 
-
             if (!clsValidaciones.ValidarTextoRequerido(txtPlaca.Text, "placa del vehículo")) { txtPlaca.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca del vehículo")) { txtMarca.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtModelo.Text, "modelo del vehículo")) { txtModelo.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtAnio.Text, "año del vehículo")) { txtAnio.Focus(); return false; }
             if (!clsValidaciones.ValidarComboSeleccionado(cmbTipo.SelectedItem, "tipo de vehículo")) { cmbTipo.Focus(); return false; }
-            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out año)) { txtAnio.Focus(); return false; }
-            if (!clsValidaciones.ValidarSinCaracteresEspeciales(txtMarca.Text, "marca")) return false;
-            if (!clsValidaciones.ValidarSinCaracteresEspeciales(txtModelo.Text, "modelo")) return false;
+
+            if (!int.TryParse(txtAnio.Text, out año) || año < 1900 || año > DateTime.Now.Year + 1)
+            {
+                MessageBox.Show("⚠ El año ingresado no es válido.", "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus();
+                return false;
+            }
+
+            if (!txtMarca.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ La marca no debe contener caracteres especiales.", "Marca inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtMarca.Focus();
+                return false;
+            }
+
+            if (!txtModelo.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show("⚠ El modelo no debe contener caracteres especiales.", "Modelo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtModelo.Focus();
+                return false;
+            }
 
             if (string.IsNullOrEmpty(_clienteDNI))
             {
@@ -256,17 +245,6 @@ namespace Vehículos
                     "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
-
-
-            if (string.IsNullOrWhiteSpace(txtPlaca.Text)) { MessageBox.Show("⚠ La placa es obligatoria."); return false; }
-            if (string.IsNullOrWhiteSpace(txtMarca.Text)) { MessageBox.Show("⚠ La marca es obligatoria."); return false; }
-            if (string.IsNullOrWhiteSpace(txtModelo.Text)) { MessageBox.Show("⚠ El modelo es obligatorio."); return false; }
-            if (string.IsNullOrWhiteSpace(txtAnio.Text)) { MessageBox.Show("⚠ El año es obligatorio."); return false; }
-            if (cmbTipo.SelectedItem == null) { MessageBox.Show("⚠ Selecciona el tipo."); return false; }
-            if (!int.TryParse(txtAnio.Text, out año) || año < 1900 || año > DateTime.Now.Year + 1) { MessageBox.Show("⚠ Año inválido."); return false; }
-            if (!txtMarca.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))) return false;
-            if (!txtModelo.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))) return false;
-            if (string.IsNullOrEmpty(_clienteDNI)) { MessageBox.Show("⚠ Debes verificar el DNI."); return false; }
 
             return true;
         }
@@ -283,7 +261,9 @@ namespace Vehículos
         {
             txtPlaca.Clear(); txtMarca.Clear(); txtModelo.Clear(); txtAnio.Clear(); txtObservaciones.Clear();
             cmbTipo.SelectedIndex = -1; toggleActivo.IsChecked = true; txtClienteDNI.Clear();
-            borderClienteInfo.Visibility = Visibility.Collapsed; _placaSeleccionada = string.Empty; _clienteDNI = string.Empty;
+            borderClienteInfo.Visibility = Visibility.Collapsed;
+            _placaSeleccionada = string.Empty;
+            _clienteDNI = string.Empty;
         }
     }
 }
