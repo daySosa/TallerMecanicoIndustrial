@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,15 +16,17 @@ namespace Contabilidad
 {
     public partial class ActualizarPago : Window
     {
+        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private MenuDePagos _menuRef;
         private int _pagoId;
-        clsConsultasBD db = new clsConsultasBD();
+        private DateTime _fechaRegistro; 
 
         public ActualizarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto, DateTime fecha)
         {
             InitializeComponent();
             _menuRef = menuRef;
             _pagoId = pagoId;
+            _fechaRegistro = fecha; 
 
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
@@ -35,6 +38,26 @@ namespace Contabilidad
 
             txtOrdenID.TextChanged += txtOrdenID_TextChanged;
             txtDNI.TextChanged += txtDNI_TextChanged;
+
+            VerificarBloqueoEdicion(); 
+        }
+
+        //Bloquea la edicion si ya paso 1 dia despues del registro
+        private void VerificarBloqueoEdicion()
+        {
+            if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
+            {
+                txtDNI.IsEnabled = false;
+                txtOrdenID.IsEnabled = false;
+                txtPrecio.IsEnabled = false;
+                btnGuardar.IsEnabled = false;
+
+                MessageBox.Show(
+                    "⚠ Este pago ya no puede editarse porque tiene más de 1 día de haber sido registrado.",
+                    "Edición bloqueada",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
@@ -52,18 +75,25 @@ namespace Contabilidad
 
             try
             {
-                var (nombres, apellidos) = db.BuscarNombreCliente(dni);
+                using (SqlConnection conn = new SqlConnection(conexion))
+                {
+                    string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@DNI", dni);
+                    conn.Open();
+                    SqlDataReader reader = cmd.ExecuteReader();
 
-                if (nombres != null)
-                {
-                    txtNombreCliente.Text = nombres + " " + apellidos;
-                    txtNombreCliente.Foreground = System.Windows.Media.Brushes.White;
-                    OcultarMensaje();
-                }
-                else
-                {
-                    txtNombreCliente.Text = "";
-                    MostrarMensaje("No se encontró ningún cliente con ese DNI.");
+                    if (reader.Read())
+                    {
+                        txtNombreCliente.Text = reader["Cliente_Nombres"].ToString() + " " + reader["Cliente_Apellidos"].ToString();
+                        txtNombreCliente.Foreground = System.Windows.Media.Brushes.White;
+                        OcultarMensaje();
+                    }
+                    else
+                    {
+                        txtNombreCliente.Text = "";
+                        MostrarMensaje("No se encontró ningún cliente con ese DNI.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -82,10 +112,17 @@ namespace Contabilidad
 
             try
             {
-                decimal? total = db.ObtenerTotalOrden(ordenId);
-                txtPrecio.Text = total.HasValue
-                    ? "L " + total.Value.ToString("N2")
-                    : "L 0.00";
+                using (SqlConnection conn = new SqlConnection(conexion))
+                {
+                    string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    txtPrecio.Text = (result != null && result != DBNull.Value)
+                        ? "L " + Convert.ToDecimal(result).ToString("N2")
+                        : "L 0.00";
+                }
             }
             catch
             {
@@ -122,17 +159,33 @@ namespace Contabilidad
 
             try
             {
-                db.ActualizarPago(_pagoId, dni, ordenId, monto);
+                using (SqlConnection conn = new SqlConnection(conexion))
+                {
+                    conn.Open();
+                    string query = @"
+                    UPDATE Contabilidad_Pago
+                    SET Cliente_DNI = @DNI,
+                        Orden_ID    = @OrdenID,
+                        Precio_Pago = @Monto
+                    WHERE Pago_ID = @PagoID";
 
-                MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@DNI", Convert.ToInt32(dni));
+                    cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                    cmd.Parameters.AddWithValue("@Monto", monto);
+                    cmd.Parameters.AddWithValue("@PagoID", _pagoId);
+                    cmd.ExecuteNonQuery();
+
+                    MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
 
                 _menuRef.CargarPago();
                 this.Close();
             }
             catch (Exception ex)
             {
-                MostrarMensaje("⚠ " + ex.Message);
+                MostrarMensaje("⚠ Error al actualizar: " + ex.Message);
             }
         }
 

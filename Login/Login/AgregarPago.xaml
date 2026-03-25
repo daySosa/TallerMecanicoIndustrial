@@ -56,11 +56,8 @@
                              Background="Transparent" Foreground="White"
                              BorderThickness="0" VerticalAlignment="Center"
                              MaxLength="13"
-                             Margin="14,0" FontSize="14" CaretBrush="White">
-<<<<<<< HEAD
-
-=======
->>>>>>> 294a90e672aee3f8d8d6322b56076c41faefc0da
+                             Margin="14,0" FontSize="14" CaretBrush="White"
+                             TextChanged="txtDNI_TextChanged">
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>
@@ -117,7 +114,8 @@
                           RowBackground="Transparent"
                           AlternatingRowBackground="#1A1D2E"
                           MaxHeight="150"
-                          FontSize="12">
+                          FontSize="12"
+                          SelectionChanged="dgOrdenes_SelectionChanged">
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="#1A1D2E"/>
@@ -137,7 +135,7 @@
                 </DataGrid>
             </Border>
         </StackPanel>
-        
+
         <Grid Grid.Row="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -152,7 +150,8 @@
                     <TextBox x:Name="txtOrdenID"
                              Background="Transparent" Foreground="White"
                              BorderThickness="0" VerticalAlignment="Center"
-                             Margin="14,0" FontSize="14" CaretBrush="White">
+                             Margin="14,0" FontSize="14" CaretBrush="White"
+                             TextChanged="txtOrdenID_TextChanged">
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ej: 1"/>
@@ -184,10 +183,10 @@
             </StackPanel>
         </Grid>
 
-
         <TextBlock Grid.Row="10" x:Name="txtMensaje"
                    Foreground="#FF5252" FontSize="12"
                    TextWrapping="Wrap" Visibility="Collapsed"/>
+
         <Grid Grid.Row="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
