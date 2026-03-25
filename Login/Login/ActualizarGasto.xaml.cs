@@ -18,12 +18,34 @@ namespace Contabilidad
     {
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private int _gastoId;
+        private DateTime _fechaRegistro; // ← NUEVO
 
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
             _gastoId = gastoId;
+            _fechaRegistro = fecha; // ← NUEVO
             CargarDatos(tipo, nombre, precio, fecha, observaciones);
+            VerificarBloqueoEdicion(); // ← NUEVO
+        }
+
+        // ← NUEVO
+        private void VerificarBloqueoEdicion()
+        {
+            if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
+            {
+                cmbTipoGasto.IsEnabled = false;
+                txtNombre.IsEnabled = false;
+                txtPrecio.IsEnabled = false;
+                txtObservaciones.IsEnabled = false;
+                btnGuardar.IsEnabled = false;
+
+                MessageBox.Show(
+                    "⚠ Este gasto ya no puede editarse porque tiene más de 1 día de haber sido registrado.",
+                    "Edición bloqueada",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         private void CargarDatos(string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)

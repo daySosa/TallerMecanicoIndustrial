@@ -17,10 +17,13 @@ namespace Contabilidad
     public partial class AgregarGasto : Window
     {
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+        private int gastoId;
+        private DateTime fechaRegistro;
 
         public AgregarGasto()
         {
             InitializeComponent();
+            
         }
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e)

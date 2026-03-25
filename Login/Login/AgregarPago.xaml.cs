@@ -44,6 +44,16 @@ namespace Contabilidad
             BuscarCliente(dni);
         }
 
+        // Limpia todo al cambiar el DNI
+        private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            txtNombre.Text = "";
+            panelOrdenes.Visibility = Visibility.Collapsed;
+            dgOrdenes.ItemsSource = null;
+            txtOrdenID.Text = "";
+            txtMonto.Text = "";
+        }
+
         private void btnBuscar_Click(object sender, RoutedEventArgs e)
         {
             OcultarMensaje();
@@ -69,10 +79,13 @@ namespace Contabilidad
                     {
                         txtNombre.Text = reader["Cliente_Nombres"].ToString() + " " + reader["Cliente_Apellidos"].ToString();
                         txtNombre.Foreground = System.Windows.Media.Brushes.White;
+                        reader.Close();
+                        CargarOrdenesCliente(dni);
                     }
                     else
                     {
                         txtNombre.Text = "";
+                        panelOrdenes.Visibility = Visibility.Collapsed;
                         MostrarMensaje("No se encontró ningún cliente con ese DNI.");
                     }
                 }
@@ -80,6 +93,54 @@ namespace Contabilidad
             catch (Exception ex)
             {
                 MostrarMensaje("Error al buscar cliente: " + ex.Message);
+            }
+        }
+
+        private void CargarOrdenesCliente(string dni)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(conexion))
+                {
+                    string query = @"
+                        SELECT Orden_ID, Vehiculo_Placa, Estado,
+                               OrdenPrecio_Total, Fecha
+                        FROM Orden_Trabajo
+                        WHERE Cliente_DNI = @DNI
+                        ORDER BY Fecha DESC";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@DNI", dni);
+                    conn.Open();
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+
+                    if (dt.Rows.Count > 0)
+                    {
+                        dgOrdenes.ItemsSource = dt.DefaultView;
+                        panelOrdenes.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        dgOrdenes.ItemsSource = null;
+                        panelOrdenes.Visibility = Visibility.Collapsed;
+                        MostrarMensaje("Este cliente no tiene órdenes registradas.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje("Error al cargar órdenes: " + ex.Message);
+            }
+        }
+
+        private void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (dgOrdenes.SelectedItem is DataRowView row)
+            {
+                txtOrdenID.Text = row["Orden_ID"].ToString();
             }
         }
 
@@ -125,7 +186,6 @@ namespace Contabilidad
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarEntero(ordenStr, out int ordenId, "⚠ El ID de la orden debe ser un número.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarPrecio(montoStr, out decimal monto, MostrarMensaje)) return;
-            
 
             try
             {
@@ -191,11 +251,6 @@ namespace Contabilidad
         private void OcultarMensaje()
         {
             txtMensaje.Visibility = Visibility.Collapsed;
-        }
-
-        private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
         }
     }
 }
