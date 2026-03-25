@@ -103,6 +103,12 @@ namespace InterfazClientes
         {
             btnAgregar.IsEnabled = false;
 
+            if (!clsValidaciones.DNI(txtDPI.Text.Trim()))
+            {
+                btnAgregar.IsEnabled = true;
+                return;
+            }
+
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim()))
             {
                 btnAgregar.IsEnabled = true;
@@ -216,6 +222,7 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
+            if (!clsValidaciones.DNI(txtDPI.Text)) return;
 
             try
             {
@@ -259,6 +266,11 @@ namespace InterfazClientes
                 MessageBox.Show("Error al actualizar:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void txtDPI_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+
         }
     }
 }
