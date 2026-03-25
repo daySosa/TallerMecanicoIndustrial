@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Login.Clases;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,7 +11,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Login.Clases;
 
 namespace Contabilidad
 {
@@ -129,6 +130,14 @@ namespace Contabilidad
             catch (Exception ex)
             {
                 MostrarMensaje("⚠ " + ex.Message);
+            }
+        }
+
+        private void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (dgOrdenes.SelectedItem is DataRowView row)
+            {
+                txtOrdenID.Text = row["Orden_ID"].ToString();
             }
         }
 

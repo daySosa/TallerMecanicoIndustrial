@@ -42,10 +42,7 @@ namespace Contabilidad
                 lblTipo.Foreground = System.Windows.Media.Brushes.White;
             }
 
-            // Observaciones
-            //lblObservaciones.Text = string.IsNullOrWhiteSpace(observaciones)
-                //? "Sin observaciones registradas."
-                //: observaciones;
+
         }
 
         private void btnCerrar_Click(object sender, RoutedEventArgs e)

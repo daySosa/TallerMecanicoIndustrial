@@ -31,7 +31,7 @@ namespace Órdenes_de_Trabajo
 
     public partial class MenúPrincipalOrdenes : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD();
         private ObservableCollection<OrdenTrabajo> _listaOrdenes = new ObservableCollection<OrdenTrabajo>();
         private ICollectionView? _vistaOrdenes;
 
@@ -44,7 +44,6 @@ namespace Órdenes_de_Trabajo
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }
-
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
@@ -79,9 +78,7 @@ namespace Órdenes_de_Trabajo
             var ventana = new Contabilidad.ContaWindow();
             ventana.Show();
             this.Close();
-
         }
-
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
@@ -108,51 +105,9 @@ namespace Órdenes_de_Trabajo
             _listaOrdenes.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT
-                        o.Orden_ID,
-                        o.Cliente_DNI,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                        o.Vehiculo_Placa,
-                        o.Producto_ID,
-                        ISNULL(p.Producto_Nombre,   '—') AS Producto_Nombre,
-                        ISNULL(p.Producto_Categoria,'—') AS Producto_Categoria,
-                        o.Estado,
-                        o.Fecha,
-                        o.Fecha_Entrega,
-                        ISNULL(o.Observaciones, '') AS Observaciones,
-                        o.Servicio_Precio,
-                        o.OrdenPrecio_Total
-                    FROM  Orden_Trabajo o
-                    INNER JOIN Cliente c      ON o.Cliente_DNI   = c.Cliente_DNI
-                    LEFT  JOIN Producto p     ON o.Producto_ID   = p.Producto_ID
-                    ORDER BY o.Orden_ID DESC";
-
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                using (SqlDataReader rd = cmd.ExecuteReader())
-                {
-                    while (rd.Read())
-                    {
-                        _listaOrdenes.Add(new OrdenTrabajo
-                        {
-                            Orden_ID = rd.GetInt32(rd.GetOrdinal("Orden_ID")),
-                            Cliente_DNI = rd["Cliente_DNI"].ToString(),
-                            Cliente_NombreCompleto = rd["Cliente_NombreCompleto"].ToString(),
-                            Vehiculo_Placa = rd["Vehiculo_Placa"].ToString(),
-                            Producto_Nombre = rd["Producto_Nombre"].ToString(),
-                            Producto_Categoria = rd["Producto_Categoria"].ToString(),
-                            Estado = rd["Estado"].ToString(),
-                            Fecha = rd.GetDateTime(rd.GetOrdinal("Fecha")),
-                            Fecha_Entrega = rd["Fecha_Entrega"] != DBNull.Value
-                                                     ? rd.GetDateTime(rd.GetOrdinal("Fecha_Entrega"))
-                                                     : null,
-                            Observaciones = rd["Observaciones"].ToString(),
-                            Servicio_Precio = rd.GetDecimal(rd.GetOrdinal("Servicio_Precio")),
-                            OrdenPrecio_Total = rd.GetDecimal(rd.GetOrdinal("OrdenPrecio_Total"))
-                        });
-                    }
-                }
+                var ordenes = _db.ObtenerOrdenes();
+                foreach (var o in ordenes)
+                    _listaOrdenes.Add(o);
 
                 _vistaOrdenes = CollectionViewSource.GetDefaultView(_listaOrdenes);
                 _vistaOrdenes.Filter = AplicarFiltros;
@@ -164,7 +119,6 @@ namespace Órdenes_de_Trabajo
                 MessageBox.Show("Error al cargar órdenes:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private bool AplicarFiltros(object item)
@@ -261,7 +215,6 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -273,20 +226,14 @@ namespace Órdenes_de_Trabajo
         {
             try
             {
-                _conexion.Abrir();
-                string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                {
-                    int cantidad = (int)cmd.ExecuteScalar();
-                    badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                    txtContadorNotificaciones.Text = cantidad.ToString();
-                }
+                int cantidad = _db.ContarNotificacionesPendientes();
+                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad.ToString();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificacionesEnPopup()
@@ -294,15 +241,7 @@ namespace Órdenes_de_Trabajo
             panelNotificaciones.Children.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM   Vista_Notificaciones_Pendientes
-                    ORDER  BY Notificacion_ID DESC";
-
-                DataTable dt = new DataTable();
-                using (SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, _conexion.SqlC)))
-                    da.Fill(dt);
+                DataTable dt = _db.ObtenerNotificacionesPendientes();
 
                 if (dt.Rows.Count == 0)
                 {
@@ -331,7 +270,6 @@ namespace Órdenes_de_Trabajo
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private Border CrearTarjeta(int id, string tipo, string mensaje)
@@ -386,7 +324,7 @@ namespace Órdenes_de_Trabajo
             };
             btnLeida.Click += (s, e) =>
             {
-                MarcarLeida((int)((Button)s).Tag);
+                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
@@ -398,7 +336,7 @@ namespace Órdenes_de_Trabajo
 
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            MarcarLeida(null);
+            _db.MarcarNotificacionLeida(null);
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
@@ -407,17 +345,12 @@ namespace Órdenes_de_Trabajo
         {
             try
             {
-                _conexion.Abrir();
-                SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NotificacionID", id.HasValue ? (object)id.Value : DBNull.Value);
-                cmd.ExecuteNonQuery();
+                _db.MarcarNotificacionLeida(id);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
