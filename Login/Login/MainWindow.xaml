@@ -71,7 +71,7 @@
                                      Padding="0,0,10,0"
                                      CaretBrush="#333"
                                      GotFocus="TxtCorreo_GotFocus"
-                                     LostFocus="TxtCorreo_LostFocus">
+                                     LostFocus="TxtCorreo_LostFocus" HorizontalAlignment="Left" Width="241" TextChanged="txtCorreo_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox"
                                            BasedOn="{StaticResource MaterialDesignTextBox}">

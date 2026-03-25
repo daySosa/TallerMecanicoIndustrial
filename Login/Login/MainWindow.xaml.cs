@@ -121,24 +121,16 @@ namespace Login
 
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
+            string correo = txtCorreo.Text.Trim();
+            string contrasena = ObtenerContrasena();
+
             bool hayError = false;
 
-            /*if (!clsValidaciones.ValidarCorreo(txtCorreo.Text.Trim()))
-            {
+            string errorCorreo = clsValidaciones.ValidarCorreoLogin(correo);
 
-            }*/
-
-            if (string.IsNullOrWhiteSpace(txtCorreo.Text))
+            if (errorCorreo != null)
             {
-                txtErrorCorreo.Text = "⚠ El correo es obligatorio.";
-                txtErrorCorreo.Visibility = Visibility.Visible;
-                borderCorreo.BorderBrush =
-                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
-                hayError = true;
-            }
-            else if (!txtCorreo.Text.Contains("@") || !txtCorreo.Text.Contains("."))
-            {
-                txtErrorCorreo.Text = "⚠ Ingresa un correo electrónico válido.";
+                txtErrorCorreo.Text = errorCorreo;
                 txtErrorCorreo.Visibility = Visibility.Visible;
                 borderCorreo.BorderBrush =
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
@@ -150,10 +142,11 @@ namespace Login
                 borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             }
 
-            string contrasena = ObtenerContrasena();
-            if (string.IsNullOrWhiteSpace(contrasena))
+            string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
+
+            if (errorContrasena != null)
             {
-                txtErrorContrasena.Text = "⚠ La contraseña es obligatoria.";
+                txtErrorContrasena.Text = errorContrasena;
                 txtErrorContrasena.Visibility = Visibility.Visible;
                 borderContrasena.BorderBrush =
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
@@ -168,11 +161,11 @@ namespace Login
             if (hayError) return;
 
             if (chkRecordar.IsChecked == true)
-                GuardarCredenciales(txtCorreo.Text.Trim(), contrasena);
+                GuardarCredenciales(correo, contrasena);
             else
                 EliminarCredenciales();
 
-            IniciarSesion(txtCorreo.Text.Trim(), contrasena);
+            IniciarSesion(correo, contrasena);
         }
 
         private void IniciarSesion(string correo, string contrasena)
@@ -218,7 +211,7 @@ namespace Login
                     lector.Close();
                     conexion.Cerrar();
 
-                    txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
+                    txtErrorCorreo.Text = clsValidaciones.ErrorLogin();
                     txtErrorCorreo.Visibility = Visibility.Visible;
                     borderCorreo.BorderBrush =
                         new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
