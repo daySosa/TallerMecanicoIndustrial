@@ -278,10 +278,5 @@ namespace Login.Clases
 
             return null;
         }
-
-        public static string ErrorLogin()
-        {
-            return "⚠ Correo o contraseña incorrectos.";
-        }
     }
 }

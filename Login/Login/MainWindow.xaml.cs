@@ -211,7 +211,7 @@ namespace Login
                     lector.Close();
                     conexion.Cerrar();
 
-                    txtErrorCorreo.Text = clsValidaciones.ErrorLogin();
+                    txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
                     txtErrorCorreo.Visibility = Visibility.Visible;
                     borderCorreo.BorderBrush =
                         new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
