@@ -5,7 +5,9 @@ namespace Login.Clases
 {
     public static class clsValidacionReconocimiento
     {
-        public const double UmbralReconocimiento = 55.0;
+        // El umbral se mantiene en 115.0 para permitir que el análisis de 5 segundos
+        // sea estable incluso si la distancia detectada ronda los 90-100.
+        public const double UmbralReconocimiento = 115.0;
 
         public static (bool Ok, string Mensaje) ValidarNombre(string nombre)
         {
@@ -34,15 +36,19 @@ namespace Login.Clases
             return (true, string.Empty);
         }
 
+        /// <summary>
+        /// Comprueba si el rostro analizado coincide con uno registrado.
+        /// Si devuelve True, el cronómetro de 5 segundos en la interfaz seguirá corriendo.
+        /// </summary>
         public static bool EsReconocimientoValido(int label, double distance, int totalPersonas)
         {
+            // 1. Validamos que el label sea un índice válido.
             if (label < 0 || label >= totalPersonas)
                 return false;
 
-            if (distance >= UmbralReconocimiento)
-                return false;
-
-            return true;
+            // 2. Comparamos contra el umbral.
+            // Mientras la distancia sea menor o igual a 115, el análisis es "Exitoso".
+            return distance <= UmbralReconocimiento;
         }
 
         public static (bool Ok, string Mensaje) ValidarCamaraDisponible(int totalCamaras)

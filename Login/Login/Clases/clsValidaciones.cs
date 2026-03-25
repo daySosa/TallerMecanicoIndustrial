@@ -404,6 +404,26 @@ namespace Login.Clases
             return true;
         }
 
-        
+        //Validación para teléfono
+        public static bool Telefono(string valor, Control campo = null)
+        {
+            string tel = valor.Trim();
+
+            if (!Regex.IsMatch(tel, @"^\d{8}$"))
+            {
+                MessageBox.Show("El teléfono debe contener solo números y tener exactamente 8 dígitos.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!Regex.IsMatch(tel, @"^[2389]"))
+            {
+                MessageBox.Show("El teléfono debe iniciar con 2, 3, 8 o 9.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
     }
 }

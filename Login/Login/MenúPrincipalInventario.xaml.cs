@@ -6,7 +6,6 @@ using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -94,6 +93,40 @@ namespace InterfazInventario
             }
         }
 
+        private bool AplicarFiltros(object item)
+        {
+            if (item is not Repuesto r) return false;
+
+            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+            if (!string.IsNullOrEmpty(texto))
+            {
+                bool coincide =
+                    (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Modelo ?? "").ToLower().Contains(texto);
+                if (!coincide) return false;
+            }
+
+            if (_filtroCategoria != null && _filtroCategoria != "Todas")
+                if (r.Producto_Categoria != _filtroCategoria) return false;
+
+            if (r.Producto_Precio < _filtroPrecioMin) return false;
+            if (r.Producto_Precio > _filtroPrecioMax) return false;
+            if (_filtroStockBajo && !r.StockBajo) return false;
+
+            return true;
+        }
+
+        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _vistaRepuestos?.Refresh();
+            ActualizarContador();
+        }
+
+        private void btnFiltrar_Click(object sender, RoutedEventArgs e)
+            => popupFiltros.IsOpen = !popupFiltros.IsOpen;
+
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
@@ -108,17 +141,6 @@ namespace InterfazInventario
             _vistaRepuestos?.Refresh();
             ActualizarContador();
         }
-
-        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            _vistaRepuestos?.Refresh();
-            ActualizarContador();
-        }
-
-        private void btnFiltrar_Click(object sender, RoutedEventArgs e)
-            => popupFiltros.IsOpen = !popupFiltros.IsOpen;
-
-        
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
@@ -318,19 +340,6 @@ namespace InterfazInventario
             CargarNotificaciones();
         }
 
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                _db.MarcarNotificacionLeida(id);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al marcar notificación:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void btnHome_Click(object sender, RoutedEventArgs e) { new MenuPrincipal().Show(); this.Close(); }
         private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new Vehículos.MenúPrincipalVehículos().Show(); this.Close(); }
         private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
@@ -352,28 +361,6 @@ namespace InterfazInventario
         {
             var ventana = new ReportesWindow("Inventario");
             ventana.ShowDialog();
-        }
-
-        private bool AplicarFiltros(object item)
-        {
-            if (item is not Repuesto r)
-                return false;
-
-            if (!string.IsNullOrWhiteSpace(txtBuscar.Text) &&
-                !(r.Producto_Nombre?.ToLower().Contains(txtBuscar.Text.ToLower()) ?? false))
-                return false;
-
-            if (!string.IsNullOrEmpty(_filtroCategoria) && _filtroCategoria != "Todas" &&
-                r.Producto_Categoria != _filtroCategoria)
-                return false;
-
-            if (r.Producto_Precio < _filtroPrecioMin || r.Producto_Precio > _filtroPrecioMax)
-                return false;
-
-            if (_filtroStockBajo && !r.StockBajo)
-                return false;
-
-            return true;
         }
     }
 }
