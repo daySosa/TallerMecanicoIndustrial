@@ -1,4 +1,5 @@
 ﻿using Dasboard_Prueba;
+using InterfazClientes;
 using InterfazInventario;
 using Login.Clases;
 using Órdenes_de_Trabajo;
@@ -13,7 +14,7 @@ namespace Login.Clases
 {
     public class clsConsultasBD
     {
-        private clsConexion _conexion = new clsConexion(); 
+        private clsConexion _conexion = new clsConexion();
 
         public bool ActualizarGasto(int gastoId, string tipoGasto, string nombreGasto,
                                      string observaciones, decimal precio, DateTime fecha)
@@ -78,8 +79,6 @@ namespace Login.Clases
             }
             finally { _conexion.Cerrar(); }
         }
-
-
 
         public (string nombres, string apellidos) BuscarNombreCliente(string dni)
         {
@@ -179,7 +178,6 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-
         public List<clsProductoInventario> ObtenerProductosInventario()
         {
             var lista = new List<clsProductoInventario>();
@@ -213,26 +211,25 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-
         public bool AgregarCliente(string dni, string nombres, string apellidos,
                                     string telefono, string email, string direccion)
         {
             try
             {
                 string sql = @"
-            IF NOT EXISTS (SELECT 1 FROM Cliente WHERE Cliente_DNI = @DNI)
-            BEGIN
-                INSERT INTO Cliente
-                    (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                     Cliente_TelefonoPrincipal, Cliente_Email,
-                     Cliente_Direccion, Cliente_Activo)
-                VALUES
-                    (@DNI, @Nombres, @Apellidos, @Telefono, @Email,
-                     @Direccion, 1)
-                SELECT 1
-            END
-            ELSE
-                SELECT 0";
+                    IF NOT EXISTS (SELECT 1 FROM Cliente WHERE Cliente_DNI = @DNI)
+                    BEGIN
+                        INSERT INTO Cliente
+                            (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                             Cliente_TelefonoPrincipal, Cliente_Email,
+                             Cliente_Direccion, Cliente_Activo)
+                        VALUES
+                            (@DNI, @Nombres, @Apellidos, @Telefono, @Email,
+                             @Direccion, 1)
+                        SELECT 1
+                    END
+                    ELSE
+                        SELECT 0";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@DNI", dni);
@@ -246,7 +243,7 @@ namespace Login.Clases
 
                 _conexion.Abrir();
                 int resultado = Convert.ToInt32(cmd.ExecuteScalar());
-                return resultado == 1; 
+                return resultado == 1;
             }
             catch (Exception ex)
             {
@@ -261,14 +258,14 @@ namespace Login.Clases
             try
             {
                 string sql = @"
-            UPDATE Cliente SET
-                Cliente_Nombres           = @Nombres,
-                Cliente_Apellidos         = @Apellidos,
-                Cliente_TelefonoPrincipal = @Telefono,
-                Cliente_Email             = @Email,
-                Cliente_Direccion         = @Direccion,
-                Cliente_Activo            = @Activo
-            WHERE Cliente_DNI = @DNI";
+                    UPDATE Cliente SET
+                        Cliente_Nombres           = @Nombres,
+                        Cliente_Apellidos         = @Apellidos,
+                        Cliente_TelefonoPrincipal = @Telefono,
+                        Cliente_Email             = @Email,
+                        Cliente_Direccion         = @Direccion,
+                        Cliente_Activo            = @Activo
+                    WHERE Cliente_DNI = @DNI";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Nombres", nombres);
@@ -297,12 +294,12 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT 
-                Pago_ID, Precio_Pago, Fecha_Pago,
-                Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                Orden_ID
-            FROM Vista_Pagos_Completos
-            WHERE Pago_ID = @PagoID";
+                    SELECT 
+                        Pago_ID, Precio_Pago, Fecha_Pago,
+                        Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                        Orden_ID
+                    FROM Vista_Pagos_Completos
+                    WHERE Pago_ID = @PagoID";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@PagoID", pagoId);
@@ -325,12 +322,12 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto, Observaciones_Gasto
-            FROM Contabilidad_Gastos
-            WHERE (@Busqueda IS NULL
-                   OR Nombre_Gasto LIKE '%' + @Busqueda + '%'
-                   OR Tipo_Gasto   LIKE '%' + @Busqueda + '%')
-            ORDER BY Fecha_Gasto DESC";
+                    SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto, Observaciones_Gasto
+                    FROM Contabilidad_Gastos
+                    WHERE (@Busqueda IS NULL
+                           OR Nombre_Gasto LIKE '%' + @Busqueda + '%'
+                           OR Tipo_Gasto   LIKE '%' + @Busqueda + '%')
+                    ORDER BY Fecha_Gasto DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Busqueda", string.IsNullOrEmpty(busqueda)
@@ -370,9 +367,9 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-            FROM Vista_Notificaciones_Pendientes
-            ORDER BY Notificacion_ID DESC";
+                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
+                    FROM Vista_Notificaciones_Pendientes
+                    ORDER BY Notificacion_ID DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
@@ -407,18 +404,18 @@ namespace Login.Clases
         }
 
         public bool AgregarProducto(string nombre, string categoria, string marca,
-                             string modelo, decimal precio, int cantidad)
+                                     string modelo, decimal precio, int cantidad)
         {
             try
             {
                 string query = @"
-            INSERT INTO Producto
-                (Producto_Nombre, Producto_Categoria, Producto_Marca,
-                 Producto_Modelo, Producto_Precio,
-                 Producto_Cantidad_Actual, Producto_Stock_Minimo)
-            VALUES
-                (@Nombre, @Categoria, @Marca, @Modelo,
-                 @Precio, @Cantidad, 10)";
+                    INSERT INTO Producto
+                        (Producto_Nombre, Producto_Categoria, Producto_Marca,
+                         Producto_Modelo, Producto_Precio,
+                         Producto_Cantidad_Actual, Producto_Stock_Minimo)
+                    VALUES
+                        (@Nombre, @Categoria, @Marca, @Modelo,
+                         @Precio, @Cantidad, 10)";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Nombre", nombre);
@@ -446,14 +443,14 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            UPDATE Producto SET
-                Producto_Nombre          = @Nombre,
-                Producto_Categoria       = @Categoria,
-                Producto_Marca           = @Marca,
-                Producto_Modelo          = @Modelo,
-                Producto_Precio          = @Precio,
-                Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
-            WHERE Producto_ID = @ID";
+                    UPDATE Producto SET
+                        Producto_Nombre          = @Nombre,
+                        Producto_Categoria       = @Categoria,
+                        Producto_Marca           = @Marca,
+                        Producto_Modelo          = @Modelo,
+                        Producto_Precio          = @Precio,
+                        Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
+                    WHERE Producto_ID = @ID";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Nombre", nombre);
@@ -481,8 +478,8 @@ namespace Login.Clases
             try
             {
                 string query = @"SELECT * FROM LOGIN
-                         WHERE Usuario_Email      = @correo
-                         AND   Usuario_Contraseña = @contrasena";
+                                 WHERE Usuario_Email      = @correo
+                                 AND   Usuario_Contraseña = @contrasena";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@correo", correo);
@@ -506,19 +503,19 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT 
-                Pago_ID,
-                Cliente_DNI,
-                Cliente_Nombres,
-                Orden_ID,
-                Precio_Pago,
-                Fecha_Pago
-            FROM Vista_Pagos_Completos
-            WHERE (@Busqueda IS NULL
-                   OR CAST(Pago_ID AS VARCHAR) LIKE '%' + @Busqueda + '%'
-                   OR Cliente_Nombres        LIKE '%' + @Busqueda + '%'
-                   OR Cliente_Apellidos      LIKE '%' + @Busqueda + '%')
-            ORDER BY Fecha_Pago DESC";
+                    SELECT 
+                        Pago_ID,
+                        Cliente_DNI,
+                        Cliente_Nombres,
+                        Orden_ID,
+                        Precio_Pago,
+                        Fecha_Pago
+                    FROM Vista_Pagos_Completos
+                    WHERE (@Busqueda IS NULL
+                           OR CAST(Pago_ID AS VARCHAR) LIKE '%' + @Busqueda + '%'
+                           OR Cliente_Nombres        LIKE '%' + @Busqueda + '%'
+                           OR Cliente_Apellidos      LIKE '%' + @Busqueda + '%')
+                    ORDER BY Fecha_Pago DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Busqueda", (object)busqueda ?? DBNull.Value);
@@ -543,11 +540,11 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
-                   SUM(OrdenPrecio_Total) AS Total
-            FROM   Orden_Trabajo WHERE Fecha >= @Desde
-            GROUP  BY YEAR(Fecha), MONTH(Fecha)
-            ORDER  BY Anio, Mes";
+                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
+                           SUM(OrdenPrecio_Total) AS Total
+                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
+                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
+                    ORDER  BY Anio, Mes";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Desde", fechaDesde);
@@ -571,11 +568,11 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
-                   COUNT(*) AS Cantidad
-            FROM   Orden_Trabajo WHERE Fecha >= @Desde
-            GROUP  BY YEAR(Fecha), MONTH(Fecha)
-            ORDER  BY Anio, Mes";
+                    SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes,
+                           COUNT(*) AS Cantidad
+                    FROM   Orden_Trabajo WHERE Fecha >= @Desde
+                    GROUP  BY YEAR(Fecha), MONTH(Fecha)
+                    ORDER  BY Anio, Mes";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Desde", fechaDesde);
@@ -599,11 +596,11 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT YEAR(Fecha_Gasto) AS Anio, MONTH(Fecha_Gasto) AS Mes,
-                   SUM(Precio_Gasto) AS Total
-            FROM   Contabilidad_Gastos WHERE Fecha_Gasto >= @Desde
-            GROUP  BY YEAR(Fecha_Gasto), MONTH(Fecha_Gasto)
-            ORDER  BY Anio, Mes";
+                    SELECT YEAR(Fecha_Gasto) AS Anio, MONTH(Fecha_Gasto) AS Mes,
+                           SUM(Precio_Gasto) AS Total
+                    FROM   Contabilidad_Gastos WHERE Fecha_Gasto >= @Desde
+                    GROUP  BY YEAR(Fecha_Gasto), MONTH(Fecha_Gasto)
+                    ORDER  BY Anio, Mes";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Desde", fechaDesde);
@@ -627,13 +624,13 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT TOP 10
-                o.Orden_ID,
-                c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                o.Vehiculo_Placa, o.Fecha, o.Estado, o.OrdenPrecio_Total
-            FROM Orden_Trabajo o
-            INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
-            ORDER BY o.Fecha DESC";
+                    SELECT TOP 10
+                        o.Orden_ID,
+                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
+                        o.Vehiculo_Placa, o.Fecha, o.Estado, o.OrdenPrecio_Total
+                    FROM Orden_Trabajo o
+                    INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
+                    ORDER BY o.Fecha DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
@@ -673,9 +670,9 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT Notificacion_ID, Tipo_Notificacion, Mensaje, Leida 
-            FROM Notificaciones 
-            ORDER BY Notificacion_ID DESC";
+                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje, Leida 
+                    FROM Notificaciones 
+                    ORDER BY Notificacion_ID DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
@@ -702,16 +699,16 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT Producto_ID,
-                   Producto_Nombre,
-                   Producto_Categoria,
-                   ISNULL(Producto_Marca,  '—') AS Producto_Marca,
-                   ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
-                   Producto_Cantidad_Actual,
-                   Producto_Stock_Minimo,
-                   Producto_Precio
-            FROM   Producto
-            ORDER  BY Producto_Nombre";
+                    SELECT Producto_ID,
+                           Producto_Nombre,
+                           Producto_Categoria,
+                           ISNULL(Producto_Marca,  '—') AS Producto_Marca,
+                           ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
+                           Producto_Cantidad_Actual,
+                           Producto_Stock_Minimo,
+                           Producto_Precio
+                    FROM   Producto
+                    ORDER  BY Producto_Nombre";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
@@ -745,24 +742,24 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT
-                o.Orden_ID,
-                o.Cliente_DNI,
-                c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                o.Vehiculo_Placa,
-                o.Producto_ID,
-                ISNULL(p.Producto_Nombre,   '—') AS Producto_Nombre,
-                ISNULL(p.Producto_Categoria,'—') AS Producto_Categoria,
-                o.Estado,
-                o.Fecha,
-                o.Fecha_Entrega,
-                ISNULL(o.Observaciones, '') AS Observaciones,
-                o.Servicio_Precio,
-                o.OrdenPrecio_Total
-            FROM  Orden_Trabajo o
-            INNER JOIN Cliente c  ON o.Cliente_DNI = c.Cliente_DNI
-            LEFT  JOIN Producto p ON o.Producto_ID = p.Producto_ID
-            ORDER BY o.Orden_ID DESC";
+                    SELECT
+                        o.Orden_ID,
+                        o.Cliente_DNI,
+                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
+                        o.Vehiculo_Placa,
+                        o.Producto_ID,
+                        ISNULL(p.Producto_Nombre,   '—') AS Producto_Nombre,
+                        ISNULL(p.Producto_Categoria,'—') AS Producto_Categoria,
+                        o.Estado,
+                        o.Fecha,
+                        o.Fecha_Entrega,
+                        ISNULL(o.Observaciones, '') AS Observaciones,
+                        o.Servicio_Precio,
+                        o.OrdenPrecio_Total
+                    FROM  Orden_Trabajo o
+                    INNER JOIN Cliente c  ON o.Cliente_DNI = c.Cliente_DNI
+                    LEFT  JOIN Producto p ON o.Producto_ID = p.Producto_ID
+                    ORDER BY o.Orden_ID DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
@@ -796,7 +793,47 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        // ==================== VEHÍCULOS ====================
+        public List<clsCliente> ObtenerClientes()
+        {
+            var lista = new List<clsCliente>();
+            try
+            {
+                string sql = @"
+                    SELECT Cliente_DNI,
+                           Cliente_Nombres,
+                           Cliente_Apellidos,
+                           Cliente_TelefonoPrincipal,
+                           Cliente_Email,
+                           Cliente_Direccion,
+                           Cliente_Activo
+                    FROM   Cliente
+                    ORDER  BY Cliente_Nombres";
+
+                SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
+                _conexion.Abrir();
+                SqlDataReader rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new clsCliente
+                    {
+                        Cliente_DPI = rd["Cliente_DNI"].ToString(),
+                        Cliente_Nombre = rd["Cliente_Nombres"].ToString(),
+                        Cliente_Apellido = rd["Cliente_Apellidos"].ToString(),
+                        Cliente_Telefono = rd["Cliente_TelefonoPrincipal"].ToString(),
+                        Cliente_Correo = rd["Cliente_Email"].ToString(),
+                        Cliente_Direccion = rd["Cliente_Direccion"].ToString(),
+                        Cliente_Activo = rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"]
+                    });
+                }
+                rd.Close();
+                return lista;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al cargar clientes: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
 
         public List<Vehiculo> ObtenerVehiculos()
         {
@@ -804,19 +841,19 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT
-                v.Vehiculo_Placa,
-                v.Vehiculo_Marca,
-                v.Vehiculo_Modelo,
-                v.Vehiculo_Año,
-                v.Vehiculo_Tipo,
-                ISNULL(v.Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
-                v.Vehiculo_Activo,
-                c.Cliente_DNI,
-                c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto
-            FROM Vehiculo v
-            INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-            ORDER BY v.Vehiculo_Placa";
+                    SELECT
+                        v.Vehiculo_Placa,
+                        v.Vehiculo_Marca,
+                        v.Vehiculo_Modelo,
+                        v.Vehiculo_Año,
+                        v.Vehiculo_Tipo,
+                        ISNULL(v.Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
+                        v.Vehiculo_Activo,
+                        c.Cliente_DNI,
+                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto
+                    FROM Vehiculo v
+                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
+                    ORDER BY v.Vehiculo_Placa";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
@@ -848,7 +885,6 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-
         public (string nombreCompleto, string telefono, string email,
                 string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca,
                 string clienteDNI, string estado, DateTime fecha, DateTime? fechaEntrega,
@@ -858,18 +894,18 @@ namespace Login.Clases
             try
             {
                 string sql = @"
-            SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
-                   o.Fecha, o.Fecha_Entrega, o.Observaciones,
-                   o.Servicio_Precio, o.OrdenPrecio_Total,
-                   o.Adjuntos_Fotos,
-                   c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                   c.Cliente_TelefonoPrincipal, c.Cliente_Email,
-                   v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                   v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
-            FROM   Orden_Trabajo o
-            INNER JOIN Cliente  c ON o.Cliente_DNI    = c.Cliente_DNI
-            INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
-            WHERE  o.Orden_ID = @OrdenID";
+                    SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
+                           o.Fecha, o.Fecha_Entrega, o.Observaciones,
+                           o.Servicio_Precio, o.OrdenPrecio_Total,
+                           o.Adjuntos_Fotos,
+                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                           c.Cliente_TelefonoPrincipal, c.Cliente_Email,
+                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
+                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
+                    FROM   Orden_Trabajo o
+                    INNER JOIN Cliente  c ON o.Cliente_DNI    = c.Cliente_DNI
+                    INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
+                    WHERE  o.Orden_ID = @OrdenID";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@OrdenID", ordenID);
@@ -907,9 +943,9 @@ namespace Login.Clases
             try
             {
                 string sqlCliente = @"
-            SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
-                   Cliente_TelefonoPrincipal, Cliente_Email
-            FROM   Cliente WHERE Cliente_DNI = @DNI";
+                    SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
+                           Cliente_TelefonoPrincipal, Cliente_Email
+                    FROM   Cliente WHERE Cliente_DNI = @DNI";
 
                 SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@DNI", dni);
@@ -923,11 +959,11 @@ namespace Login.Clases
                 rd.Close();
 
                 string sqlVehiculo = @"
-            SELECT TOP 1
-                   Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
-                   Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
-                   Vehiculo_Placa
-            FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
+                    SELECT TOP 1
+                           Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
+                           Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
+                           Vehiculo_Placa
+                    FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
 
                 SqlCommand cmd2 = new SqlCommand(sqlVehiculo, _conexion.SqlC);
                 cmd2.Parameters.AddWithValue("@DNI", dni);
@@ -952,14 +988,14 @@ namespace Login.Clases
             try
             {
                 string sql = @"
-            SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                   v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
-                   c.Cliente_DNI,
-                   c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                   c.Cliente_TelefonoPrincipal, c.Cliente_Email
-            FROM   Vehiculo v
-            INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-            WHERE  v.Vehiculo_Placa = @Placa";
+                    SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
+                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
+                           c.Cliente_DNI,
+                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                           c.Cliente_TelefonoPrincipal, c.Cliente_Email
+                    FROM   Vehiculo v
+                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
+                    WHERE  v.Vehiculo_Placa = @Placa";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Placa", placa);
@@ -988,15 +1024,15 @@ namespace Login.Clases
             try
             {
                 string queryOrden = @"
-            INSERT INTO Orden_Trabajo
-                (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
-                 Fecha, Fecha_Entrega, Observaciones,
-                 Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
-            VALUES
-                (@ClienteDNI, @Placa, @ProductoID, @Estado,
-                 @Fecha, @FechaEntrega, @Observaciones,
-                 @ServicioPrecio, @Total, @Foto);
-            SELECT SCOPE_IDENTITY();";
+                    INSERT INTO Orden_Trabajo
+                        (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
+                         Fecha, Fecha_Entrega, Observaciones,
+                         Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
+                    VALUES
+                        (@ClienteDNI, @Placa, @ProductoID, @Estado,
+                         @Fecha, @FechaEntrega, @Observaciones,
+                         @ServicioPrecio, @Total, @Foto);
+                    SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(queryOrden, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@ClienteDNI", clienteDNI);
@@ -1038,15 +1074,15 @@ namespace Login.Clases
             try
             {
                 string sqlUpdate = @"
-            UPDATE Orden_Trabajo SET
-                Estado            = @Estado,
-                Fecha             = @Fecha,
-                Fecha_Entrega     = @FechaEntrega,
-                Observaciones     = @Observaciones,
-                Servicio_Precio   = @ServicioPrecio,
-                OrdenPrecio_Total = @Total,
-                Adjuntos_Fotos    = @Foto
-            WHERE Orden_ID = @OrdenID";
+                    UPDATE Orden_Trabajo SET
+                        Estado            = @Estado,
+                        Fecha             = @Fecha,
+                        Fecha_Entrega     = @FechaEntrega,
+                        Observaciones     = @Observaciones,
+                        Servicio_Precio   = @ServicioPrecio,
+                        OrdenPrecio_Total = @Total,
+                        Adjuntos_Fotos    = @Foto
+                    WHERE Orden_ID = @OrdenID";
 
                 SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Estado", estado);
@@ -1093,9 +1129,7 @@ namespace Login.Clases
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
-                    {
                         return (reader["Nombre"].ToString(), true);
-                    }
                 }
                 return (string.Empty, false);
             }
@@ -1103,12 +1137,8 @@ namespace Login.Clases
             {
                 throw new Exception("Error al consultar el cliente: " + ex.Message);
             }
-            finally
-            {
-                _conexion.Cerrar();
-            }
+            finally { _conexion.Cerrar(); }
         }
-
 
         public void GuardarOActualizarVehiculo(bool esNuevo, dynamic v, string placaOriginal = "")
         {
@@ -1119,13 +1149,11 @@ namespace Login.Clases
 
                 if (esNuevo)
                 {
-
                     cmd = new SqlCommand("sp_RegistrarVehiculo", _conexion.SqlC);
                     cmd.CommandType = CommandType.StoredProcedure;
                 }
                 else
                 {
-
                     string query = @"UPDATE Vehiculo SET 
                                     Vehiculo_Placa = @Placa, 
                                     Vehiculo_Marca = @Marca, 
@@ -1141,7 +1169,6 @@ namespace Login.Clases
                     cmd.Parameters.AddWithValue("@Activo", v.Activo ? 1 : 0);
                 }
 
-                // Parámetros comunes para ambos casos
                 cmd.Parameters.AddWithValue("@Placa", v.Placa);
                 cmd.Parameters.AddWithValue("@Marca", v.Marca);
                 cmd.Parameters.AddWithValue("@Modelo", v.Modelo);
@@ -1156,12 +1183,8 @@ namespace Login.Clases
             {
                 throw new Exception("Error al procesar el vehículo: " + ex.Message);
             }
-            finally
-            {
-                _conexion.Cerrar();
-            }
+            finally { _conexion.Cerrar(); }
         }
-
 
         public List<RepuestoOrden> ObtenerRepuestosOrden(int ordenID)
         {
@@ -1197,50 +1220,5 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
             return lista;
         }
-
-        public List<clsCliente> ObtenerClientes()
-        {
-            var lista = new List<clsCliente>();
-            try
-            {
-                string sql = @"
-            SELECT Cliente_DNI,
-                   Cliente_Nombres,
-                   Cliente_Apellidos,
-                   Cliente_TelefonoPrincipal,
-                   Cliente_Email,
-                   Cliente_Direccion,
-                   Cliente_Activo
-            FROM   Cliente
-            ORDER  BY Cliente_Nombres";
-
-                SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
-                _conexion.Abrir();
-                SqlDataReader rd = cmd.ExecuteReader();
-                while (rd.Read())
-                {
-                    lista.Add(new clsCliente
-                    {
-                        Cliente_DPI = rd["Cliente_DNI"].ToString(),
-                        Cliente_Nombre = rd["Cliente_Nombres"].ToString(),
-                        Cliente_Apellido = rd["Cliente_Apellidos"].ToString(),
-                        Cliente_Telefono = rd["Cliente_TelefonoPrincipal"].ToString(),
-                        Cliente_Correo = rd["Cliente_Email"].ToString(),
-                        Cliente_Direccion = rd["Cliente_Direccion"].ToString(),
-                        Cliente_Activo = rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"]
-                    });
-                }
-                rd.Close();
-                return lista;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al cargar clientes: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
-
-
-
     }
 }
