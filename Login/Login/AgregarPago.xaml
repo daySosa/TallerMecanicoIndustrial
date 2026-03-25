@@ -57,10 +57,7 @@
                              BorderThickness="0" VerticalAlignment="Center"
                              MaxLength="13"
                              Margin="14,0" FontSize="14" CaretBrush="White">
-<<<<<<< HEAD
 
-=======
->>>>>>> 294a90e672aee3f8d8d6322b56076c41faefc0da
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>
