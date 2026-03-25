@@ -1,7 +1,5 @@
 ﻿using Login.Clases;
-using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -72,12 +70,21 @@ namespace Vehículos
 
             if (!clsValidaciones.ValidarDNIHondureño(dni))
 
+<<<<<<< HEAD
             if (!ValidarDNIHondureño(dni))
 
             {
                 MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.");
                 return;
             }
+=======
+                if (!ValidarDNIHondureño(dni))
+
+                {
+                    MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.");
+                    return;
+                }
+>>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
             VerificarClienteEnBD(dni);
         }
 
@@ -149,6 +156,10 @@ namespace Vehículos
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
             if (string.IsNullOrEmpty(_placaSeleccionada))
             {
                 MessageBox.Show("No hay ningún vehículo cargado para actualizar.",
@@ -157,8 +168,11 @@ namespace Vehículos
             }
 
             if (!clsValidaciones.ValidarAnio(txtAnio.Text, out int año)) return;
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
             if (string.IsNullOrEmpty(_placaSeleccionada)) return;
             if (!ValidarCampos(out int año)) return;
 
@@ -253,6 +267,7 @@ namespace Vehículos
             if (!txtMarca.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))) return false;
             if (!txtModelo.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))) return false;
             if (string.IsNullOrEmpty(_clienteDNI)) { MessageBox.Show("⚠ Debes verificar el DNI."); return false; }
+
             return true;
         }
 

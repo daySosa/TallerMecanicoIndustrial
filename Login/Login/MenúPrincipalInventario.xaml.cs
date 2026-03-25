@@ -6,7 +6,6 @@ using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -128,6 +127,10 @@ namespace InterfazInventario
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
             => popupFiltros.IsOpen = !popupFiltros.IsOpen;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1164db827acb51bf44f7b1e60d56b6ed09a588a6
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
