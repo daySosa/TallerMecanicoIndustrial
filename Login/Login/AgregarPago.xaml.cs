@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,7 +9,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Microsoft.Data.SqlClient;
 using Login.Clases;
 
 namespace Contabilidad
@@ -74,7 +72,6 @@ namespace Contabilidad
                         MostrarMensaje("No se encontró ningún cliente con ese DNI.");
                     }
                 }
-            }
             catch (Exception ex)
             {
                 MostrarMensaje("Error al buscar cliente: " + ex.Message);
@@ -103,7 +100,6 @@ namespace Contabilidad
                         ? "L " + Convert.ToDecimal(result).ToString("N2")
                         : "L 0.00";
                 }
-            }
             catch
             {
                 txtMonto.Text = "L 0.00";
@@ -125,10 +121,6 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    conn.Open();
-
                     if (!_esEdicion)
                     {
                         SqlCommand cmd = new SqlCommand("sp_RegistrarPago", conn);
@@ -158,14 +150,9 @@ namespace Contabilidad
                         MessageBox.Show("✅ ¡Pago actualizado correctamente!", "Éxito",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-                }
 
                 _menuRef.CargarPago();
                 this.Close();
-            }
-            catch (SqlException sqlEx)
-            {
-                MostrarMensaje("⚠ " + sqlEx.Message);
             }
             catch (Exception ex)
             {

@@ -67,7 +67,6 @@ namespace Contabilidad
                         this.Close();
                     }
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar comprobante: " + ex.Message, "Error",

@@ -1,8 +1,6 @@
 ﻿using Login.Clases;
-using System.Data.SqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -12,19 +10,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-
-
 namespace Órdenes_de_Trabajo
 {
-    public class ProductoInventario
-    {
-        public int Producto_ID { get; set; }
-        public string Producto_Nombre { get; set; }
-        public string Producto_Categoria { get; set; }
-        public int Producto_Cantidad_Actual { get; set; }
-        public decimal Producto_Precio { get; set; }
-    }
-
     public partial class AgregarRepuesto : Window
     {
         private clsConexion _conexion = new clsConexion();
@@ -73,7 +60,6 @@ namespace Órdenes_de_Trabajo
                 MessageBox.Show("Error al cargar productos:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)

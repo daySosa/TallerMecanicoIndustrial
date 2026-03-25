@@ -16,7 +16,6 @@ namespace Contabilidad
 {
     public partial class ActualizarPago : Window
     {
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private MenuDePagos _menuRef;
         private int _pagoId;
 
@@ -73,7 +72,6 @@ namespace Contabilidad
                         MostrarMensaje("No se encontró ningún cliente con ese DNI.");
                     }
                 }
-            }
             catch (Exception ex)
             {
                 MostrarMensaje("Error: " + ex.Message);
@@ -101,7 +99,6 @@ namespace Contabilidad
                         ? "L " + Convert.ToDecimal(result).ToString("N2")
                         : "L 0.00";
                 }
-            }
             catch
             {
                 txtPrecio.Text = "L 0.00";
@@ -156,7 +153,6 @@ namespace Contabilidad
 
                     MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
                         MessageBoxButton.OK, MessageBoxImage.Information);
-                }
 
                 _menuRef.CargarPago();
                 this.Close();

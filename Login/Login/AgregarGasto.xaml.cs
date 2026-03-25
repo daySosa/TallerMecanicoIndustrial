@@ -4,7 +4,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using Microsoft.Data.SqlClient;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;

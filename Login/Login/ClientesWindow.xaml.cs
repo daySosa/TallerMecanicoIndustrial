@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using System.Data.SqlClient;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -7,17 +6,6 @@ using System.Windows.Media;
 
 namespace InterfazClientes
 {
-    public class Cliente
-    {
-        public string Cliente_DPI { get; set; }
-        public string Cliente_Nombre { get; set; }
-        public string Cliente_Apellido { get; set; }
-        public string Cliente_Telefono { get; set; }
-        public string Cliente_Correo { get; set; }
-        public string Cliente_Direccion { get; set; }
-        public bool Cliente_Activo { get; set; } = true;
-    }
-
     public partial class ClientesWindow : Window
     {
         private string _dniEditando = string.Empty;
@@ -168,11 +156,9 @@ namespace InterfazClientes
                     {
                         MessageBox.Show("Ya existe un cliente con ese DNI.",
                             "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        db.Cerrar();
                         btnAgregar.IsEnabled = true;
                         return;
                     }
-                }
 
                 db.Cerrar();
 
