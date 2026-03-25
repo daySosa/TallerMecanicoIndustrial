@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,17 +15,15 @@ namespace Contabilidad
 {
     public partial class ActualizarPago : Window
     {
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private MenuDePagos _menuRef;
         private int _pagoId;
-        private DateTime _fechaRegistro; // ← NUEVO
+        clsConsultasBD db = new clsConsultasBD();
 
         public ActualizarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto, DateTime fecha)
         {
             InitializeComponent();
             _menuRef = menuRef;
             _pagoId = pagoId;
-            _fechaRegistro = fecha; // ← NUEVO
 
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
@@ -38,26 +35,6 @@ namespace Contabilidad
 
             txtOrdenID.TextChanged += txtOrdenID_TextChanged;
             txtDNI.TextChanged += txtDNI_TextChanged;
-
-            VerificarBloqueoEdicion(); // ← NUEVO (siempre al final del constructor)
-        }
-
-        // ── NUEVO: Bloquea edición si ya pasó 1 día ─────────────────────────
-        private void VerificarBloqueoEdicion()
-        {
-            if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
-            {
-                txtDNI.IsEnabled = false;
-                txtOrdenID.IsEnabled = false;
-                txtPrecio.IsEnabled = false;
-                btnGuardar.IsEnabled = false;
-
-                MessageBox.Show(
-                    "⚠ Este pago ya no puede editarse porque tiene más de 1 día de haber sido registrado.",
-                    "Edición bloqueada",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-            }
         }
 
         private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
@@ -75,25 +52,18 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@DNI", dni);
-                    conn.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
+                var (nombres, apellidos) = db.BuscarNombreCliente(dni);
 
-                    if (reader.Read())
-                    {
-                        txtNombreCliente.Text = reader["Cliente_Nombres"].ToString() + " " + reader["Cliente_Apellidos"].ToString();
-                        txtNombreCliente.Foreground = System.Windows.Media.Brushes.White;
-                        OcultarMensaje();
-                    }
-                    else
-                    {
-                        txtNombreCliente.Text = "";
-                        MostrarMensaje("No se encontró ningún cliente con ese DNI.");
-                    }
+                if (nombres != null)
+                {
+                    txtNombreCliente.Text = nombres + " " + apellidos;
+                    txtNombreCliente.Foreground = System.Windows.Media.Brushes.White;
+                    OcultarMensaje();
+                }
+                else
+                {
+                    txtNombreCliente.Text = "";
+                    MostrarMensaje("No se encontró ningún cliente con ese DNI.");
                 }
             }
             catch (Exception ex)
@@ -112,17 +82,10 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                    conn.Open();
-                    object result = cmd.ExecuteScalar();
-                    txtPrecio.Text = (result != null && result != DBNull.Value)
-                        ? "L " + Convert.ToDecimal(result).ToString("N2")
-                        : "L 0.00";
-                }
+                decimal? total = db.ObtenerTotalOrden(ordenId);
+                txtPrecio.Text = total.HasValue
+                    ? "L " + total.Value.ToString("N2")
+                    : "L 0.00";
             }
             catch
             {
@@ -159,33 +122,17 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    conn.Open();
-                    string query = @"
-                    UPDATE Contabilidad_Pago
-                    SET Cliente_DNI = @DNI,
-                        Orden_ID    = @OrdenID,
-                        Precio_Pago = @Monto
-                    WHERE Pago_ID = @PagoID";
+                db.ActualizarPago(_pagoId, dni, ordenId, monto);
 
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@DNI", dni);
-                    cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                    cmd.Parameters.AddWithValue("@Monto", monto);
-                    cmd.Parameters.AddWithValue("@PagoID", _pagoId);
-                    cmd.ExecuteNonQuery();
-
-                    MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                MessageBox.Show("¡Pago actualizado correctamente!", "Éxito",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
 
                 _menuRef.CargarPago();
                 this.Close();
             }
             catch (Exception ex)
             {
-                MostrarMensaje("⚠ Error al actualizar: " + ex.Message);
+                MostrarMensaje("⚠ " + ex.Message);
             }
         }
 

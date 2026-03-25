@@ -4,7 +4,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using Microsoft.Data.SqlClient;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -16,7 +15,7 @@ namespace Contabilidad
 {
     public partial class AgregarGasto : Window
     {
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+        clsConsultasBD db = new clsConsultasBD();
 
         public AgregarGasto()
         {
@@ -48,24 +47,12 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    string query = @"
-                    INSERT INTO Contabilidad_Gastos 
-                        (Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto)
-                    VALUES 
-                        (@TipoGasto, @NombreGasto, @Observaciones, @Precio, GETDATE())";
-
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@TipoGasto", ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString());
-                    cmd.Parameters.AddWithValue("@NombreGasto", txtNombreGasto.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
-                        ? (object)DBNull.Value
-                        : txtObservaciones.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Precio", precio);
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
+                db.AgregarGasto(
+                    ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString(),
+                    txtNombreGasto.Text.Trim(),
+                    txtObservaciones.Text.Trim(),
+                    precio
+                );
 
                 MessageBox.Show("✅ Gasto guardado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -75,7 +62,7 @@ namespace Contabilidad
             }
             catch (Exception ex)
             {
-                MessageBox.Show("⚠ Error al guardar el gasto: " + ex.Message, "Error",
+                MessageBox.Show("⚠ " + ex.Message, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

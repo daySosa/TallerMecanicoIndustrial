@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,8 +15,8 @@ namespace Contabilidad
 {
     public partial class ActualizarGasto : Window
     {
-        private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private int _gastoId;
+        clsConsultasBD db = new clsConsultasBD(); 
 
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
@@ -69,28 +68,14 @@ namespace Contabilidad
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(conexion))
-                {
-                    string query = @"
-                    UPDATE Contabilidad_Gastos SET
-                        Tipo_Gasto          = @TipoGasto,
-                        Nombre_Gasto        = @NombreGasto,
-                        Observaciones_Gasto = @Observaciones,
-                        Precio_Gasto        = @Precio,
-                        Fecha_Gasto         = @Fecha
-                    WHERE Gasto_ID = @GastoID";
-
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@TipoGasto", ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString());
-                    cmd.Parameters.AddWithValue("@NombreGasto", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Precio", precio);
-                    cmd.Parameters.AddWithValue("@Fecha", fechaFinal);
-                    cmd.Parameters.AddWithValue("@GastoID", _gastoId);
-
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
+                db.ActualizarGasto(
+                    _gastoId,
+                    ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString(),
+                    txtNombre.Text.Trim(),
+                    txtObservaciones.Text.Trim(),
+                    precio,
+                    fechaFinal
+                );
 
                 MessageBox.Show("Gasto actualizado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -100,7 +85,7 @@ namespace Contabilidad
             }
             catch (Exception ex)
             {
-                MessageBox.Show("⚠ Error al actualizar el gasto: " + ex.Message, "Error",
+                MessageBox.Show("⚠ " + ex.Message, "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
