@@ -12,7 +12,7 @@ namespace Órdenes_de_Trabajo
 {
     public partial class OrdenWindow : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD(); 
         private string _clienteDNI = string.Empty;
         private string _vehiculoPlaca = string.Empty;
         private bool _buscarPorDNI = true;
@@ -62,86 +62,50 @@ namespace Órdenes_de_Trabajo
             _ordenIDEditar = ordenID;
             try
             {
-                _conexion.Abrir();
+                var orden = _db.ObtenerOrdenParaEditar(ordenID); 
+                if (orden == default) return;
 
-                string sqlOrden = @"
-                    SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
-                           o.Fecha, o.Fecha_Entrega, o.Observaciones,
-                           o.Servicio_Precio, o.OrdenPrecio_Total,
-                           o.Adjuntos_Fotos,
-                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email,
-                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
-                    FROM   Orden_Trabajo o
-                    INNER JOIN Cliente  c ON o.Cliente_DNI    = c.Cliente_DNI
-                    INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
-                    WHERE  o.Orden_ID = @OrdenID";
+                _clienteDNI = orden.clienteDNI;
+                _vehiculoPlaca = orden.vehiculoPlaca;
 
                 txtClienteNombre.Text = orden.nombreCompleto;
                 txtClienteTelefono.Text = orden.telefono;
                 txtClienteEmail.Text = orden.email;
-                            borderClienteInfo.Visibility = Visibility.Visible;
+                borderClienteInfo.Visibility = Visibility.Visible;
 
-                            txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
-                            txtVehiculoTipo.Text = rd["TipoAño"].ToString();
-                            txtVehiculoPropietario.Text = rd["NombreCompleto"].ToString();
-                            borderVehiculoInfo.Visibility = Visibility.Visible;
+                txtVehiculoNombre.Text = orden.vehiculoNombre;
+                txtVehiculoTipo.Text = orden.vehiculoTipo;
+                txtVehiculoPropietario.Text = orden.nombreCompleto;
+                borderVehiculoInfo.Visibility = Visibility.Visible;
 
-                            dpFecha.SelectedDate = rd["Fecha"] as DateTime?;
-                            dpEntrega.SelectedDate = rd["Fecha_Entrega"] as DateTime?;
+                dpFecha.SelectedDate = orden.fecha;
+                dpEntrega.SelectedDate = orden.fechaEntrega;
+                txtObservaciones.Text = orden.observaciones;
+                txtPrecioServicio.Text = $"L {orden.servicioPrecio:N2}";
 
-                            txtObservaciones.Text = rd["Observaciones"].ToString();
-
-                            decimal servicioPrecio = Convert.ToDecimal(rd["Servicio_Precio"]);
-                            txtPrecioServicio.Text = $"L {servicioPrecio:N2}";
-
-                            string foto = rd["Adjuntos_Fotos"]?.ToString() ?? string.Empty;
-                            if (!string.IsNullOrEmpty(foto) && System.IO.File.Exists(foto))
-                            {
-                                _rutaFoto = foto;
-                                imgFoto.Source = new BitmapImage(new Uri(foto));
-                                imgFoto.Visibility = Visibility.Visible;
-                                txtFotoPlaceholder.Visibility = Visibility.Collapsed;
-                            }
-
-                            foreach (ComboBoxItem item in cmbEstado.Items)
-                            {
-                                if (item.Content.ToString() == estado)
-                                {
-                                    cmbEstado.SelectedItem = item;
-                                    break;
-                                }
-                            }
-
-                string sqlRepuestos = @"
-                    SELECT r.Producto_ID,
-                           r.Repuesto_Nombre,
-                           r.Repuesto_Cantidad,
-                           r.Repuesto_Precio
-                    FROM   Orden_Repuesto r
-                    WHERE  r.Orden_ID = @OrdenID";
-
-                using (SqlCommand cmd2 = new SqlCommand(sqlRepuestos, _conexion.SqlC))
+                if (!string.IsNullOrEmpty(orden.foto) && System.IO.File.Exists(orden.foto))
                 {
-                    cmd2.Parameters.AddWithValue("@OrdenID", ordenID);
-                    using (SqlDataReader rd2 = cmd2.ExecuteReader())
+                    _rutaFoto = orden.foto;
+                    imgFoto.Source = new BitmapImage(new Uri(orden.foto));
+                    imgFoto.Visibility = Visibility.Visible;
+                    txtFotoPlaceholder.Visibility = Visibility.Collapsed;
+                }
+
+                foreach (ComboBoxItem item in cmbEstado.Items)
+                {
+                    if (item.Content.ToString() == orden.estado)
                     {
-                        int numero = 1;
-                        while (rd2.Read())
-                        {
-                            var repuesto = new RepuestoOrden
-                            {
-                                Numero = numero++,
-                                ProductoID = Convert.ToInt32(rd2["Producto_ID"]),
-                                Nombre = rd2["Repuesto_Nombre"].ToString(),
-                                Cantidad = Convert.ToInt32(rd2["Repuesto_Cantidad"]),
-                                Precio = Convert.ToDecimal(rd2["Repuesto_Precio"]),
-                                Incluido = true
-                            };
-                            repuesto.PropertyChanged += (s, e) => RecalcularPrecios();
-                            _repuestos.Add(repuesto);
-                        }
+                        cmbEstado.SelectedItem = item;
+                        break;
+                    }
+                }
+
+                var repuestos = _db.ObtenerRepuestosOrden(ordenID); 
+                foreach (var rep in repuestos)
+                {
+                    rep.PropertyChanged += (s, e) => RecalcularPrecios();
+                    _repuestos.Add(rep);
+                }
 
                 foreach (ComboBoxItem item in cmbPrioridad.Items)
                 {
@@ -201,92 +165,54 @@ namespace Órdenes_de_Trabajo
         {
             try
             {
-                _conexion.Abrir();
-                string sqlCliente = @"
-                    SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
-                           Cliente_TelefonoPrincipal, Cliente_Email
-                    FROM   Cliente WHERE Cliente_DNI = @DNI";
-
-                bool encontrado = false;
-                using (SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC))
+                var resultado = _db.BuscarClientePorDNI(dni); 
+                if (resultado == default)
                 {
-                    cmd.Parameters.AddWithValue("@DNI", dni);
-                    using (SqlDataReader rd = cmd.ExecuteReader())
-                    {
-                        if (rd.Read())
-                        {
-                            encontrado = true;
-                            _clienteDNI = dni;
-                            txtClienteNombre.Text = rd["NombreCompleto"].ToString();
-                            txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
-                            txtClienteEmail.Text = rd["Cliente_Email"].ToString();
-                            borderClienteInfo.Visibility = Visibility.Visible;
-
-                if (!encontrado) { MostrarError($"No existe cliente con DNI '{dni}'."); return; }
-
-                string sqlVehiculo = @"
-                    SELECT TOP 1
-                           Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
-                           Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           Vehiculo_Placa
-                    FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
-
-                using (SqlCommand cmd2 = new SqlCommand(sqlVehiculo, _conexion.SqlC))
-                {
-                    cmd2.Parameters.AddWithValue("@DNI", dni);
-                    using (SqlDataReader rd2 = cmd2.ExecuteReader())
-                    {
-                        if (rd2.Read())
-                        {
-                            _vehiculoPlaca = rd2["Vehiculo_Placa"].ToString();
-                            txtVehiculoNombre.Text = rd2["NombreVehiculo"].ToString();
-                            txtVehiculoTipo.Text = rd2["TipoAño"].ToString();
-                            txtVehiculoPropietario.Text = txtClienteNombre.Text;
-                            borderVehiculoInfo.Visibility = Visibility.Visible;
-                        }
-                    }
+                    MostrarError($"No existe cliente con DNI '{dni}'.");
+                    return;
                 }
+
+                _clienteDNI = dni;
+                txtClienteNombre.Text = resultado.nombreCompleto;
+                txtClienteTelefono.Text = resultado.telefono;
+                txtClienteEmail.Text = resultado.email;
+                borderClienteInfo.Visibility = Visibility.Visible;
+
+                if (!string.IsNullOrEmpty(resultado.vehiculoPlaca))
+                {
+                    _vehiculoPlaca = resultado.vehiculoPlaca;
+                    txtVehiculoNombre.Text = resultado.vehiculoNombre;
+                    txtVehiculoTipo.Text = resultado.vehiculoTipo;
+                    txtVehiculoPropietario.Text = resultado.nombreCompleto;
+                    borderVehiculoInfo.Visibility = Visibility.Visible;
+                }
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+        }
 
         private void BuscarPorPlaca(string placa)
         {
             try
             {
-                _conexion.Abrir();
-                string sql = @"
-                    SELECT v.Vehiculo_Placa,
-                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           c.Cliente_DNI,
-                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email
-                    FROM   Vehiculo v
-                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-                    WHERE  v.Vehiculo_Placa = @Placa";
-
-                using (SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC))
+                var resultado = _db.BuscarVehiculoPorPlaca(placa); 
+                if (resultado == default)
                 {
-                    cmd.Parameters.AddWithValue("@Placa", placa);
-                    using (SqlDataReader rd = cmd.ExecuteReader())
-                    {
-                        if (rd.Read())
-                        {
-                            _vehiculoPlaca = placa;
-                            _clienteDNI = rd["Cliente_DNI"].ToString();
-                            txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
-                            txtVehiculoTipo.Text = rd["TipoAño"].ToString();
-                            txtVehiculoPropietario.Text = rd["NombreCompleto"].ToString();
-                            txtClienteNombre.Text = rd["NombreCompleto"].ToString();
-                            txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
-                            txtClienteEmail.Text = rd["Cliente_Email"].ToString();
-                            borderVehiculoInfo.Visibility = Visibility.Visible;
-                            borderClienteInfo.Visibility = Visibility.Visible;
-                        }
-                        else { MostrarError($"No existe vehículo con placa '{placa}'."); }
-                    }
+                    MostrarError($"No existe vehículo con placa '{placa}'.");
+                    return;
                 }
+
+                _vehiculoPlaca = placa;
+                _clienteDNI = resultado.clienteDNI;
+                txtVehiculoNombre.Text = resultado.vehiculoNombre;
+                txtVehiculoTipo.Text = resultado.vehiculoTipo;
+                txtVehiculoPropietario.Text = resultado.nombreCompleto;
+                txtClienteNombre.Text = resultado.nombreCompleto;
+                txtClienteTelefono.Text = resultado.telefono;
+                txtClienteEmail.Text = resultado.email;
+                borderVehiculoInfo.Visibility = Visibility.Visible;
+                borderClienteInfo.Visibility = Visibility.Visible;
             }
-            catch (Exception ex) { MostrarError("Error: " + ex.Message); }
-            finally { _conexion.Cerrar(); }
+            catch (Exception ex) { MostrarError(ex.Message); }
         }
 
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
@@ -337,11 +263,8 @@ namespace Órdenes_de_Trabajo
 
             string precioTexto = txtPrecioServicio.Text
                 .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-
-            decimal.TryParse(precioTexto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal precioServicio);
+            decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out decimal precioServicio);
 
             decimal total = totalRepuestos + precioServicio;
             string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
@@ -349,52 +272,14 @@ namespace Órdenes_de_Trabajo
 
             try
             {
-                _conexion.Abrir();
-
-                string queryOrden = @"
-                    INSERT INTO Orden_Trabajo
-                        (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
-                         Fecha, Fecha_Entrega, Observaciones,
-                         Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
-                    VALUES
-                        (@ClienteDNI, @Placa, @ProductoID, @Estado,
-                         @Fecha, @FechaEntrega, @Observaciones,
-                         @ServicioPrecio, @Total, @Foto);
-                    SELECT SCOPE_IDENTITY();";
-
-                int ordenID;
-                using (SqlCommand cmd = new SqlCommand(queryOrden, _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@ClienteDNI", _clienteDNI);
-                    cmd.Parameters.AddWithValue("@Placa", _vehiculoPlaca);
-                    cmd.Parameters.AddWithValue("@ProductoID", productoID);
-                    cmd.Parameters.AddWithValue("@Estado", estado);
-                    cmd.Parameters.AddWithValue("@Fecha", dpFecha.SelectedDate ?? DateTime.Today);
-                    cmd.Parameters.AddWithValue("@FechaEntrega", dpEntrega.SelectedDate.HasValue
-                                                                    ? (object)dpEntrega.SelectedDate.Value
-                                                                    : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
-                                                                    ? (object)DBNull.Value
-                                                                    : txtObservaciones.Text.Trim());
-                    cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
-                    cmd.Parameters.AddWithValue("@Total", total);
-                    cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(_rutaFoto)
-                                                                    ? (object)DBNull.Value : _rutaFoto);
-                    ordenID = Convert.ToInt32(Convert.ToDecimal(cmd.ExecuteScalar()));
-                }
-
-                foreach (var rep in _repuestos)
-                {
-                    if (!rep.Incluido) continue;
-                    using (SqlCommand cmdRep = new SqlCommand("sp_AgregarRepuestoOrden", _conexion.SqlC))
-                    {
-                        cmdRep.CommandType = CommandType.StoredProcedure;
-                        cmdRep.Parameters.AddWithValue("@OrdenID", ordenID);
-                        cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                        cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                        cmdRep.ExecuteNonQuery();
-                    }
-                }
+                _db.AgregarOrden( 
+                    _clienteDNI, _vehiculoPlaca, productoID, estado,
+                    dpFecha.SelectedDate ?? DateTime.Today,
+                    dpEntrega.SelectedDate,
+                    txtObservaciones.Text.Trim(),
+                    precioServicio, total, _rutaFoto,
+                    _repuestos.ToList()
+                );
 
                 MessageBox.Show("✅ Orden guardada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -403,8 +288,7 @@ namespace Órdenes_de_Trabajo
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error inesperado:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -425,11 +309,8 @@ namespace Órdenes_de_Trabajo
 
             string precioTexto = txtPrecioServicio.Text
                 .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-
-            decimal.TryParse(precioTexto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal precioServicio);
+            decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out decimal precioServicio);
 
             decimal totalRepuestos = 0;
             foreach (var r in _repuestos)
@@ -440,56 +321,14 @@ namespace Órdenes_de_Trabajo
 
             try
             {
-                _conexion.Abrir();
-
-                string sqlUpdate = @"
-                    UPDATE Orden_Trabajo SET
-                        Estado            = @Estado,
-                        Fecha             = @Fecha,
-                        Fecha_Entrega     = @FechaEntrega,
-                        Observaciones     = @Observaciones,
-                        Servicio_Precio   = @ServicioPrecio,
-                        OrdenPrecio_Total = @Total,
-                        Adjuntos_Fotos    = @Foto
-                    WHERE Orden_ID = @OrdenID";
-
-                using (SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Estado", estado);
-                    cmd.Parameters.AddWithValue("@Fecha", dpFecha.SelectedDate ?? DateTime.Today);
-                    cmd.Parameters.AddWithValue("@FechaEntrega", dpEntrega.SelectedDate.HasValue
-                                                                    ? (object)dpEntrega.SelectedDate.Value
-                                                                    : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
-                                                                    ? (object)DBNull.Value
-                                                                    : txtObservaciones.Text.Trim());
-                    cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
-                    cmd.Parameters.AddWithValue("@Total", total);
-                    cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(_rutaFoto)
-                                                                    ? (object)DBNull.Value : _rutaFoto);
-                    cmd.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
-                    cmd.ExecuteNonQuery();
-                }
-
-                using (SqlCommand cmd = new SqlCommand(
-                    "DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
-                    cmd.ExecuteNonQuery();
-                }
-
-                foreach (var rep in _repuestos)
-                {
-                    if (!rep.Incluido) continue;
-                    using (SqlCommand cmdRep = new SqlCommand("sp_AgregarRepuestoOrden", _conexion.SqlC))
-                    {
-                        cmdRep.CommandType = CommandType.StoredProcedure;
-                        cmdRep.Parameters.AddWithValue("@OrdenID", _ordenIDEditar);
-                        cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                        cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                        cmdRep.ExecuteNonQuery();
-                    }
-                }
+                _db.ActualizarOrden( 
+                    _ordenIDEditar, estado,
+                    dpFecha.SelectedDate ?? DateTime.Today,
+                    dpEntrega.SelectedDate,
+                    txtObservaciones.Text.Trim(),
+                    precioServicio, total, _rutaFoto,
+                    _repuestos.ToList()
+                );
 
                 MessageBox.Show("✅ Orden actualizada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -546,11 +385,8 @@ namespace Órdenes_de_Trabajo
 
             string precioTexto = txtPrecioServicio.Text
                 .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-
-            decimal.TryParse(precioTexto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal servicio);
+            decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out decimal servicio);
 
             txtCostoTotal.Text = $"L {(totalRepuestos + servicio):N2}";
         }

@@ -47,7 +47,7 @@ namespace InterfazInventario
 
     public partial class MenúPrincipalInventario : Window
     {
-        private readonly clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD();
         private ObservableCollection<Repuesto> _listaRepuestos = new ObservableCollection<Repuesto>();
         private ICollectionView? _vistaRepuestos;
 
@@ -68,18 +68,9 @@ namespace InterfazInventario
             _listaRepuestos.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Producto_ID,
-                           Producto_Nombre,
-                           Producto_Categoria,
-                           ISNULL(Producto_Marca,  '—') AS Producto_Marca,
-                           ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
-                           Producto_Cantidad_Actual,
-                           Producto_Stock_Minimo,
-                           Producto_Precio
-                    FROM   Producto
-                    ORDER  BY Producto_Nombre";
+                var productos = _db.ObtenerProductos();
+                foreach (var p in productos)
+                    _listaRepuestos.Add(p);
 
                 var categorias = _listaRepuestos
                     .Select(r => r.Producto_Categoria)
@@ -229,14 +220,10 @@ namespace InterfazInventario
         {
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand(
-                    "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0", _conexion.SqlC))
-                {
-                    int cantidad = (int)cmd.ExecuteScalar();
-                    badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                    txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
-                }
+                int cantidad = _db.ContarNotificacionesPendientes();
+                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
+            }
             catch { }
         }
 
@@ -245,13 +232,7 @@ namespace InterfazInventario
             panelNotificaciones.Children.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM   Notificaciones
-                    WHERE  Leida = 0
-                    ORDER  BY Notificacion_ID DESC";
-
+                DataTable dt = _db.ObtenerNotificacionesPendientes();
 
                 if (dt.Rows.Count == 0)
                 {
@@ -364,7 +345,7 @@ namespace InterfazInventario
             };
             btnLeida.Click += (s, e) =>
             {
-                MarcarLeida((int)((Button)s).Tag);
+                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
@@ -377,7 +358,7 @@ namespace InterfazInventario
 
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            MarcarLeida(null);
+            _db.MarcarNotificacionLeida(null);
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
@@ -386,14 +367,7 @@ namespace InterfazInventario
         {
             try
             {
-                _conexion.Abrir();
-                using (SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID",
-                        id.HasValue ? (object)id.Value : DBNull.Value);
-                    cmd.ExecuteNonQuery();
-                }
+                _db.MarcarNotificacionLeida(id);
             }
             catch (Exception ex)
             {

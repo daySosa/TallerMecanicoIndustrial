@@ -14,7 +14,7 @@ namespace Vehículos
 {
     public partial class MenúPrincipalVehículos : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD(); 
         private ObservableCollection<Vehiculo> _listaVehiculos = new ObservableCollection<Vehiculo>();
         private ICollectionView _vistaVehiculos;
 
@@ -87,22 +87,9 @@ namespace Vehículos
             _listaVehiculos.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT
-                        v.Vehiculo_Placa,
-                        v.Vehiculo_Marca,
-                        v.Vehiculo_Modelo,
-                        v.Vehiculo_Año,
-                        v.Vehiculo_Tipo,
-                        ISNULL(v.Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
-                        v.Vehiculo_Activo,
-                        c.Cliente_DNI,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto
-                    FROM Vehiculo v
-                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY v.Vehiculo_Placa";
-
+                var vehiculos = _db.ObtenerVehiculos(); 
+                foreach (var v in vehiculos)
+                    _listaVehiculos.Add(v);
 
                 _vistaVehiculos = CollectionViewSource.GetDefaultView(_listaVehiculos);
                 _vistaVehiculos.Filter = AplicarFiltros;
@@ -213,14 +200,10 @@ namespace Vehículos
         {
             try
             {
-                _conexion.Abrir();
-                string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                {
-                    int cantidad = (int)cmd.ExecuteScalar();
-                    badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                    txtContadorNotificaciones.Text = cantidad.ToString();
-                }
+                int cantidad = _db.ContarNotificacionesPendientes();
+                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad.ToString();
+            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
@@ -232,15 +215,7 @@ namespace Vehículos
             panelNotificaciones.Children.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM   Vista_Notificaciones_Pendientes
-                    ORDER  BY Notificacion_ID DESC";
-
-                DataTable dt = new DataTable();
-                using (SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, _conexion.SqlC)))
-                    da.Fill(dt);
+                DataTable dt = _db.ObtenerNotificacionesPendientes();
 
                 if (dt.Rows.Count == 0)
                 {
@@ -323,7 +298,7 @@ namespace Vehículos
             };
             btnLeida.Click += (s, e) =>
             {
-                MarcarLeida((int)((Button)s).Tag);
+                _db.MarcarNotificacionLeida((int)((Button)s).Tag); 
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
@@ -335,7 +310,7 @@ namespace Vehículos
 
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            MarcarLeida(null);
+            _db.MarcarNotificacionLeida(null); 
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
