@@ -1,8 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Login.Clases; 
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -193,14 +191,8 @@ namespace Contabilidad
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@NotificacionID", id.HasValue ? (object)id.Value : DBNull.Value);
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
+
+                _db.MarcarNotificacionLeida(id);
             }
             catch (Exception ex)
             {

@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,28 +10,6 @@ using System.Windows.Media.Imaging;
 
 namespace Órdenes_de_Trabajo
 {
-    public class RepuestoOrden : INotifyPropertyChanged
-    {
-        public int Numero { get; set; }
-        public string Nombre { get; set; }
-        public int Cantidad { get; set; }
-        public decimal Precio { get; set; }
-        public int ProductoID { get; set; }
-
-        private bool _incluido = true;
-        public bool Incluido
-        {
-            get => _incluido;
-            set
-            {
-                _incluido = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Incluido)));
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-    }
-
     public partial class OrdenWindow : Window
     {
         private clsConexion _conexion = new clsConexion();
@@ -66,13 +43,9 @@ namespace Órdenes_de_Trabajo
                     System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture,
                     out decimal valor))
-                {
                     txtPrecioServicio.Text = $"L {valor:N2}";
-                }
                 else
-                {
                     txtPrecioServicio.Text = "L 0.00";
-                }
             };
 
             txtPrecioServicio.GotFocus += (s, e) =>
@@ -87,7 +60,6 @@ namespace Órdenes_de_Trabajo
         public async Task CargarOrdenParaEditar(int ordenID)
         {
             _ordenIDEditar = ordenID;
-
             try
             {
                 _conexion.Abrir();
@@ -106,19 +78,9 @@ namespace Órdenes_de_Trabajo
                     INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
                     WHERE  o.Orden_ID = @OrdenID";
 
-                using (SqlCommand cmd = new SqlCommand(sqlOrden, _conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@OrdenID", ordenID);
-                    using (SqlDataReader rd = cmd.ExecuteReader())
-                    {
-                        if (rd.Read())
-                        {
-                            _clienteDNI = rd["Cliente_DNI"].ToString();
-                            _vehiculoPlaca = rd["Vehiculo_Placa"].ToString();
-
-                            txtClienteNombre.Text = rd["NombreCompleto"].ToString();
-                            txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
-                            txtClienteEmail.Text = rd["Cliente_Email"].ToString();
+                txtClienteNombre.Text = orden.nombreCompleto;
+                txtClienteTelefono.Text = orden.telefono;
+                txtClienteEmail.Text = orden.email;
                             borderClienteInfo.Visibility = Visibility.Visible;
 
                             txtVehiculoNombre.Text = rd["NombreVehiculo"].ToString();
@@ -143,7 +105,6 @@ namespace Órdenes_de_Trabajo
                                 txtFotoPlaceholder.Visibility = Visibility.Collapsed;
                             }
 
-                            string estado = rd["Estado"].ToString();
                             foreach (ComboBoxItem item in cmbEstado.Items)
                             {
                                 if (item.Content.ToString() == estado)
@@ -152,9 +113,6 @@ namespace Órdenes_de_Trabajo
                                     break;
                                 }
                             }
-                        }
-                    }
-                }
 
                 string sqlRepuestos = @"
                     SELECT r.Producto_ID,
@@ -184,8 +142,6 @@ namespace Órdenes_de_Trabajo
                             repuesto.PropertyChanged += (s, e) => RecalcularPrecios();
                             _repuestos.Add(repuesto);
                         }
-                    }
-                }
 
                 foreach (ComboBoxItem item in cmbPrioridad.Items)
                 {
@@ -204,7 +160,6 @@ namespace Órdenes_de_Trabajo
                 RecalcularPrecios();
             }
             catch (Exception ex) { MostrarError("Error al cargar la orden: " + ex.Message); }
-            finally { _conexion.Cerrar(); }
         }
 
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
@@ -266,9 +221,6 @@ namespace Órdenes_de_Trabajo
                             txtClienteTelefono.Text = rd["Cliente_TelefonoPrincipal"].ToString();
                             txtClienteEmail.Text = rd["Cliente_Email"].ToString();
                             borderClienteInfo.Visibility = Visibility.Visible;
-                        }
-                    }
-                }
 
                 if (!encontrado) { MostrarError($"No existe cliente con DNI '{dni}'."); return; }
 
@@ -294,10 +246,6 @@ namespace Órdenes_de_Trabajo
                         }
                     }
                 }
-            }
-            catch (Exception ex) { MostrarError("Error: " + ex.Message); }
-            finally { _conexion.Cerrar(); }
-        }
 
         private void BuscarPorPlaca(string placa)
         {
@@ -453,17 +401,11 @@ namespace Órdenes_de_Trabajo
                 LimpiarFormulario();
                 this.Close();
             }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Error de base de datos:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error inesperado:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
@@ -558,7 +500,6 @@ namespace Órdenes_de_Trabajo
                 MessageBox.Show("Error al actualizar:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)

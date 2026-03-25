@@ -45,7 +45,6 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MenuPrincipal();
@@ -79,9 +78,7 @@ namespace Órdenes_de_Trabajo
             var ventana = new Contabilidad.ContaWindow();
             ventana.Show();
             this.Close();
-
         }
-
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
@@ -164,7 +161,6 @@ namespace Órdenes_de_Trabajo
                 MessageBox.Show("Error al cargar órdenes:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private bool AplicarFiltros(object item)
@@ -261,7 +257,6 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -281,12 +276,10 @@ namespace Órdenes_de_Trabajo
                     badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
                     txtContadorNotificaciones.Text = cantidad.ToString();
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificacionesEnPopup()
@@ -331,7 +324,6 @@ namespace Órdenes_de_Trabajo
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private Border CrearTarjeta(int id, string tipo, string mensaje)
@@ -417,7 +409,6 @@ namespace Órdenes_de_Trabajo
             {
                 MessageBox.Show("Error: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)

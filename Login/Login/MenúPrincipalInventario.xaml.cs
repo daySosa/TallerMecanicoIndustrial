@@ -81,25 +81,6 @@ namespace InterfazInventario
                     FROM   Producto
                     ORDER  BY Producto_Nombre";
 
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                using (SqlDataReader rd = cmd.ExecuteReader())
-                {
-                    while (rd.Read())
-                    {
-                        _listaRepuestos.Add(new Repuesto
-                        {
-                            Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
-                            Producto_Nombre = rd["Producto_Nombre"].ToString(),
-                            Producto_Categoria = rd["Producto_Categoria"].ToString(),
-                            Producto_Marca = rd["Producto_Marca"].ToString(),
-                            Producto_Modelo = rd["Producto_Modelo"].ToString(),
-                            Producto_Cantidad_Actual = rd.GetInt32(rd.GetOrdinal("Producto_Cantidad_Actual")),
-                            Producto_Cantidad_Minima = rd.GetInt32(rd.GetOrdinal("Producto_Stock_Minimo")),
-                            Producto_Precio = rd.GetDecimal(rd.GetOrdinal("Producto_Precio"))
-                        });
-                    }
-                }
-
                 var categorias = _listaRepuestos
                     .Select(r => r.Producto_Categoria)
                     .Distinct()
@@ -120,7 +101,6 @@ namespace InterfazInventario
                 MessageBox.Show("Error al cargar inventario:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private bool AplicarFiltros(object item)
@@ -257,9 +237,7 @@ namespace InterfazInventario
                     badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
                     txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
                 }
-            }
             catch { }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificacionesEnPopup()
@@ -274,9 +252,6 @@ namespace InterfazInventario
                     WHERE  Leida = 0
                     ORDER  BY Notificacion_ID DESC";
 
-                var dt = new DataTable();
-                using (SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, _conexion.SqlC)))
-                    da.Fill(dt);
 
                 if (dt.Rows.Count == 0)
                 {
@@ -328,7 +303,6 @@ namespace InterfazInventario
                 MessageBox.Show("Error al cargar notificaciones:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private Border CrearTarjetaNotificacion(int id, string tipo, string mensaje)
@@ -426,7 +400,6 @@ namespace InterfazInventario
                 MessageBox.Show("Error al marcar notificación:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void btnHome_Click(object sender, RoutedEventArgs e) { new MenuPrincipal().Show(); this.Close(); }

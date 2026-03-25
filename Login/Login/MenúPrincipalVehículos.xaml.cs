@@ -5,7 +5,6 @@ using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -28,7 +27,6 @@ namespace Vehículos
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }
-
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
@@ -63,7 +61,6 @@ namespace Vehículos
             var ventana = new Contabilidad.ContaWindow();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
@@ -71,7 +68,6 @@ namespace Vehículos
             var ventana = new Contabilidad.MenuDePagos();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
@@ -107,26 +103,6 @@ namespace Vehículos
                     INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
                     ORDER BY v.Vehiculo_Placa";
 
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        _listaVehiculos.Add(new Vehiculo
-                        {
-                            Vehiculo_Placa = reader["Vehiculo_Placa"].ToString(),
-                            Vehiculo_Marca = reader["Vehiculo_Marca"].ToString(),
-                            Vehiculo_Modelo = reader["Vehiculo_Modelo"].ToString(),
-                            Vehiculo_Año = reader.GetInt32(reader.GetOrdinal("Vehiculo_Año")),
-                            Vehiculo_Tipo = reader["Vehiculo_Tipo"].ToString(),
-                            Vehiculo_Observaciones = reader["Vehiculo_Observaciones"].ToString(),
-                            Cliente_DNI = reader["Cliente_DNI"].ToString(),
-                            Cliente_NombreCompleto = reader["Cliente_NombreCompleto"].ToString(),
-                            EstaActivo = reader["Vehiculo_Activo"] != DBNull.Value
-                                                     && (bool)reader["Vehiculo_Activo"]
-                        });
-                    }
-                }
 
                 _vistaVehiculos = CollectionViewSource.GetDefaultView(_listaVehiculos);
                 _vistaVehiculos.Filter = AplicarFiltros;
@@ -138,7 +114,6 @@ namespace Vehículos
                 MessageBox.Show("Error al cargar vehículos:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private bool AplicarFiltros(object item)
@@ -246,12 +221,10 @@ namespace Vehículos
                     badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
                     txtContadorNotificaciones.Text = cantidad.ToString();
                 }
-            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificacionesEnPopup()
@@ -296,7 +269,6 @@ namespace Vehículos
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private Border CrearTarjeta(int id, string tipo, string mensaje)
@@ -368,22 +340,6 @@ namespace Vehículos
             CargarNotificaciones();
         }
 
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                _conexion.Abrir();
-                SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NotificacionID", id.HasValue ? (object)id.Value : DBNull.Value);
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
