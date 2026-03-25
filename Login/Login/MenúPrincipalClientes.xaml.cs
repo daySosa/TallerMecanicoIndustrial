@@ -6,7 +6,7 @@ using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-#pragma warning disable CS0618
+
 
 namespace InterfazClientes
 {
@@ -14,7 +14,7 @@ namespace InterfazClientes
     {
         private List<clsCliente> _listaClientes = new List<clsCliente>();
         private List<clsCliente> _listaFiltrada = new List<clsCliente>();
-        private clsConexion _db = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD();
 
         private string _filtroNombre = "";
         private string _filtroTelefono = "";
@@ -96,42 +96,17 @@ namespace InterfazClientes
             _listaClientes.Clear();
             try
             {
-                _db.Abrir();
-                string sql = @"
-                    SELECT Cliente_DNI,
-                           Cliente_Nombres,
-                           Cliente_Apellidos,
-                           Cliente_TelefonoPrincipal,
-                           Cliente_Email,
-                           Cliente_Direccion,
-                           Cliente_Activo
-                    FROM   Cliente
-                    ORDER  BY Cliente_Nombres";
-
-                SqlCommand cmd = new SqlCommand(sql, _db.SqlC);
-                SqlDataReader rd = cmd.ExecuteReader();
-
-                while (rd.Read())
+                var clientes = _db.ObtenerClientes();
+                foreach (var c in clientes)
                 {
-                    _listaClientes.Add(new clsCliente
-                    {
-                        Cliente_DPI = rd["Cliente_DNI"].ToString(),
-                        Cliente_Nombre = rd["Cliente_Nombres"].ToString(),
-                        Cliente_Apellido = rd["Cliente_Apellidos"].ToString(),
-                        Cliente_Telefono = FormatearTelefono(rd["Cliente_TelefonoPrincipal"].ToString()),
-                        Cliente_Correo = rd["Cliente_Email"].ToString(),
-                        Cliente_Direccion = rd["Cliente_Direccion"].ToString(),
-                        Cliente_Activo = rd["Cliente_Activo"] != DBNull.Value
-                                            && (bool)rd["Cliente_Activo"]
-                    });
+                    c.Cliente_Telefono = FormatearTelefono(c.Cliente_Telefono);
+                    _listaClientes.Add(c);
                 }
-                rd.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar: " + ex.Message);
             }
-            finally { _db.Cerrar(); }
 
             AplicarFiltros();
         }
@@ -243,20 +218,14 @@ namespace InterfazClientes
         {
             try
             {
-                _db.Abrir();
-                string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
-                using (SqlCommand cmd = new SqlCommand(query, _db.SqlC))
-                {
-                    int cantidad = (int)cmd.ExecuteScalar();
-                    badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                    txtContadorNotificaciones.Text = cantidad.ToString();
-                }
+                int cantidad = _db.ContarNotificacionesPendientes();
+                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad.ToString();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _db.Cerrar(); }
         }
 
         private void CargarNotificacionesEnPopup()
@@ -264,15 +233,7 @@ namespace InterfazClientes
             panelNotificaciones.Children.Clear();
             try
             {
-                _db.Abrir();
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM   Vista_Notificaciones_Pendientes
-                    ORDER  BY Notificacion_ID DESC";
-
-                DataTable dt = new DataTable();
-                using (SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, _db.SqlC)))
-                    da.Fill(dt);
+                DataTable dt = _db.ObtenerNotificacionesPendientes();
 
                 if (dt.Rows.Count == 0)
                 {
@@ -301,7 +262,6 @@ namespace InterfazClientes
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _db.Cerrar(); }
         }
 
         private Border CrearTarjeta(int id, string tipo, string mensaje)
@@ -369,7 +329,7 @@ namespace InterfazClientes
             };
             btnLeida.Click += (s, e) =>
             {
-                MarcarLeida((int)((Button)s).Tag);
+                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
@@ -381,7 +341,7 @@ namespace InterfazClientes
 
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            MarcarLeida(null);
+            _db.MarcarNotificacionLeida(null);
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
@@ -390,17 +350,12 @@ namespace InterfazClientes
         {
             try
             {
-                _db.Abrir();
-                SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _db.SqlC);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NotificacionID", id.HasValue ? (object)id.Value : DBNull.Value);
-                cmd.ExecuteNonQuery();
+                _db.MarcarNotificacionLeida(id);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error: " + ex.Message);
             }
-            finally { _db.Cerrar(); }
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)

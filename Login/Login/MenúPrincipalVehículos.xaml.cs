@@ -5,7 +5,6 @@ using Login.Clases;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -15,7 +14,7 @@ namespace Vehículos
 {
     public partial class MenúPrincipalVehículos : Window
     {
-        private clsConexion _conexion = new clsConexion();
+        private clsConsultasBD _db = new clsConsultasBD(); 
         private ObservableCollection<Vehiculo> _listaVehiculos = new ObservableCollection<Vehiculo>();
         private ICollectionView _vistaVehiculos;
 
@@ -28,7 +27,6 @@ namespace Vehículos
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }
-
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
@@ -63,7 +61,6 @@ namespace Vehículos
             var ventana = new Contabilidad.ContaWindow();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
@@ -71,7 +68,6 @@ namespace Vehículos
             var ventana = new Contabilidad.MenuDePagos();
             ventana.Show();
             this.Close();
-
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
@@ -91,42 +87,9 @@ namespace Vehículos
             _listaVehiculos.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT
-                        v.Vehiculo_Placa,
-                        v.Vehiculo_Marca,
-                        v.Vehiculo_Modelo,
-                        v.Vehiculo_Año,
-                        v.Vehiculo_Tipo,
-                        ISNULL(v.Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
-                        v.Vehiculo_Activo,
-                        c.Cliente_DNI,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto
-                    FROM Vehiculo v
-                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY v.Vehiculo_Placa";
-
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        _listaVehiculos.Add(new Vehiculo
-                        {
-                            Vehiculo_Placa = reader["Vehiculo_Placa"].ToString(),
-                            Vehiculo_Marca = reader["Vehiculo_Marca"].ToString(),
-                            Vehiculo_Modelo = reader["Vehiculo_Modelo"].ToString(),
-                            Vehiculo_Año = reader.GetInt32(reader.GetOrdinal("Vehiculo_Año")),
-                            Vehiculo_Tipo = reader["Vehiculo_Tipo"].ToString(),
-                            Vehiculo_Observaciones = reader["Vehiculo_Observaciones"].ToString(),
-                            Cliente_DNI = reader["Cliente_DNI"].ToString(),
-                            Cliente_NombreCompleto = reader["Cliente_NombreCompleto"].ToString(),
-                            EstaActivo = reader["Vehiculo_Activo"] != DBNull.Value
-                                                     && (bool)reader["Vehiculo_Activo"]
-                        });
-                    }
-                }
+                var vehiculos = _db.ObtenerVehiculos(); 
+                foreach (var v in vehiculos)
+                    _listaVehiculos.Add(v);
 
                 _vistaVehiculos = CollectionViewSource.GetDefaultView(_listaVehiculos);
                 _vistaVehiculos.Filter = AplicarFiltros;
@@ -138,7 +101,6 @@ namespace Vehículos
                 MessageBox.Show("Error al cargar vehículos:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private bool AplicarFiltros(object item)
@@ -238,20 +200,14 @@ namespace Vehículos
         {
             try
             {
-                _conexion.Abrir();
-                string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
-                using (SqlCommand cmd = new SqlCommand(query, _conexion.SqlC))
-                {
-                    int cantidad = (int)cmd.ExecuteScalar();
-                    badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                    txtContadorNotificaciones.Text = cantidad.ToString();
-                }
+                int cantidad = _db.ContarNotificacionesPendientes();
+                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad.ToString();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private void CargarNotificacionesEnPopup()
@@ -259,15 +215,7 @@ namespace Vehículos
             panelNotificaciones.Children.Clear();
             try
             {
-                _conexion.Abrir();
-                string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM   Vista_Notificaciones_Pendientes
-                    ORDER  BY Notificacion_ID DESC";
-
-                DataTable dt = new DataTable();
-                using (SqlDataAdapter da = new SqlDataAdapter(new SqlCommand(query, _conexion.SqlC)))
-                    da.Fill(dt);
+                DataTable dt = _db.ObtenerNotificacionesPendientes();
 
                 if (dt.Rows.Count == 0)
                 {
@@ -296,7 +244,6 @@ namespace Vehículos
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
             }
-            finally { _conexion.Cerrar(); }
         }
 
         private Border CrearTarjeta(int id, string tipo, string mensaje)
@@ -351,7 +298,7 @@ namespace Vehículos
             };
             btnLeida.Click += (s, e) =>
             {
-                MarcarLeida((int)((Button)s).Tag);
+                _db.MarcarNotificacionLeida((int)((Button)s).Tag); 
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
@@ -363,27 +310,11 @@ namespace Vehículos
 
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            MarcarLeida(null);
+            _db.MarcarNotificacionLeida(null); 
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
 
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                _conexion.Abrir();
-                SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NotificacionID", id.HasValue ? (object)id.Value : DBNull.Value);
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {

@@ -382,35 +382,5 @@ namespace Login.Clases
             }
             return true;
         }
-
-        // ✅ Valida que un año esté en un rango válido
-        public static bool ValidarAnio(string texto, out int anio)
-        {
-            if (!int.TryParse(texto, out anio))
-            {
-                MessageBox.Show("⚠ El año debe ser un número entero. Ejemplo: 2020",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            if (anio < 1900 || anio > DateTime.Now.Year + 1)
-            {
-                MessageBox.Show($"⚠ El año debe estar entre 1900 y {DateTime.Now.Year + 1}.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        // ✅ Valida que un texto no contenga caracteres especiales (solo letras, números y espacios)
-        public static bool ValidarSinCaracteresEspeciales(string texto, string nombreCampo)
-        {
-            if (!texto.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
-            {
-                MessageBox.Show($"⚠ El/La {nombreCampo} no debe contener caracteres especiales.",
-                    $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
     }
 }

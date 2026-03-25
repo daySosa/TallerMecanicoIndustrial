@@ -56,8 +56,11 @@
                              Background="Transparent" Foreground="White"
                              BorderThickness="0" VerticalAlignment="Center"
                              MaxLength="13"
-                             Margin="14,0" FontSize="14" CaretBrush="White"
-                             TextChanged="txtDNI_TextChanged">
+                             Margin="14,0" FontSize="14" CaretBrush="White">
+<<<<<<< HEAD
+
+=======
+>>>>>>> 294a90e672aee3f8d8d6322b56076c41faefc0da
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>
@@ -98,7 +101,7 @@
         </StackPanel>
 
         <StackPanel Grid.Row="6" x:Name="panelOrdenes" Visibility="Collapsed">
-            <TextBlock Text="ÓRDENES DEL CLIENTE" Foreground="#8B9BB4"
+            <TextBlock Text="ORDENES DEL CLIENTE" Foreground="#8B9BB4"
                        FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
             <Border Background="#252836" CornerRadius="6" BorderBrush="#2A3A4D" BorderThickness="1">
                 <DataGrid x:Name="dgOrdenes"
@@ -114,8 +117,7 @@
                           RowBackground="Transparent"
                           AlternatingRowBackground="#1A1D2E"
                           MaxHeight="150"
-                          FontSize="12"
-                          SelectionChanged="dgOrdenes_SelectionChanged">
+                          FontSize="12">
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="#1A1D2E"/>
@@ -150,8 +152,7 @@
                     <TextBox x:Name="txtOrdenID"
                              Background="Transparent" Foreground="White"
                              BorderThickness="0" VerticalAlignment="Center"
-                             Margin="14,0" FontSize="14" CaretBrush="White"
-                             TextChanged="txtOrdenID_TextChanged">
+                             Margin="14,0" FontSize="14" CaretBrush="White">
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                                 <Setter Property="materialDesign:HintAssist.Hint" Value="Ej: 1"/>
