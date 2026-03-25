@@ -123,6 +123,11 @@ namespace Login
         {
             bool hayError = false;
 
+            /*if (!clsValidaciones.ValidarCorreo(txtCorreo.Text.Trim()))
+            {
+
+            }*/
+
             if (string.IsNullOrWhiteSpace(txtCorreo.Text))
             {
                 txtErrorCorreo.Text = "⚠ El correo es obligatorio.";
@@ -226,6 +231,11 @@ namespace Login
                 MessageBox.Show("Error al conectar: " + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+
         }
     }
 }
