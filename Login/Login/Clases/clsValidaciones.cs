@@ -278,5 +278,109 @@ namespace Login.Clases
 
             return null;
         }
+
+        public static bool ValidarRangoPrecios(string textoMin, string textoMax, out decimal pMin, out decimal pMax)
+        {
+            pMin = 0;
+            pMax = decimal.MaxValue;
+
+            if (!string.IsNullOrWhiteSpace(textoMin) && !decimal.TryParse(textoMin, out pMin))
+            {
+                MessageBox.Show("⚠ El precio mínimo debe ser un número válido.",
+                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(textoMax) && !decimal.TryParse(textoMax, out pMax))
+            {
+                MessageBox.Show("⚠ El precio máximo debe ser un número válido.",
+                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            pMin = decimal.TryParse(textoMin, out decimal pm) ? pm : 0;
+            pMax = decimal.TryParse(textoMax, out decimal px) ? px : decimal.MaxValue;
+
+            if (pMin > pMax)
+            {
+                MessageBox.Show("⚠ El precio mínimo no puede ser mayor que el precio máximo.",
+                    "Rango inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        // Valida que se haya seleccionado un cliente y vehículo en la orden
+        public static bool ValidarClienteVehiculoOrden(string clienteDNI, string vehiculoPlaca)
+        {
+            if (string.IsNullOrEmpty(clienteDNI) || string.IsNullOrEmpty(vehiculoPlaca))
+            {
+                MessageBox.Show("⚠ Busca un cliente o vehículo antes de guardar.",
+                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // Valida que la fecha de inicio no sea mayor a un año en el futuro
+        public static bool ValidarFechaOrden(DateTime? fecha)
+        {
+            if (fecha.HasValue && fecha.Value > DateTime.Today.AddYears(1))
+            {
+                MessageBox.Show("⚠ La fecha de inicio no puede ser mayor a un año en el futuro.",
+                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // Valida que la fecha de entrega no sea anterior a la fecha de inicio
+        public static bool ValidarFechaEntrega(DateTime? fechaInicio, DateTime? fechaEntrega)
+        {
+            if (fechaInicio.HasValue && fechaEntrega.HasValue &&
+                fechaEntrega.Value < fechaInicio.Value)
+            {
+                MessageBox.Show("⚠ La fecha de entrega no puede ser anterior a la fecha de inicio.",
+                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // Valida que el precio de servicio sea un número válido (acepta vacío)
+        public static bool ValidarPrecioServicio(string texto, out decimal precio)
+        {
+            precio = 0;
+            string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+            if (!string.IsNullOrWhiteSpace(limpio) &&
+                !decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out precio))
+            {
+                MessageBox.Show("⚠ El precio del servicio debe ser un número válido.",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out precio);
+            return true;
+        }
+
+        // Valida que la orden no sea de un mes anterior
+        public static bool ValidarMesOrden(DateTime? fecha)
+        {
+            if (fecha.HasValue)
+            {
+                var hoy = DateTime.Today;
+                if (fecha.Value.Year < hoy.Year ||
+                   (fecha.Value.Year == hoy.Year && fecha.Value.Month < hoy.Month))
+                {
+                    MessageBox.Show("No se pueden actualizar órdenes de meses anteriores.",
+                        "Operación no permitida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

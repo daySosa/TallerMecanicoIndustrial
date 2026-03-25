@@ -343,57 +343,15 @@ namespace Órdenes_de_Trabajo
 
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
-            {
-                MessageBox.Show("⚠ Busca un cliente o vehículo antes de guardar.",
-                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (cmbEstado.SelectedItem == null)
-            {
-                MessageBox.Show("⚠ Selecciona el estado de la orden.",
-                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (dpFecha.SelectedDate.HasValue &&
-                    dpFecha.SelectedDate.Value > DateTime.Today.AddYears(1))
-            {
-                MessageBox.Show("⚠ La fecha de inicio no puede ser mayor a un año en el futuro.",
-                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (dpFecha.SelectedDate.HasValue && dpEntrega.SelectedDate.HasValue &&
-                    dpEntrega.SelectedDate.Value < dpFecha.SelectedDate.Value)
-            {
-                MessageBox.Show("⚠ La fecha de entrega no puede ser anterior a la fecha de inicio.",
-                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string precioCheck = txtPrecioServicio.Text.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-            if (!string.IsNullOrWhiteSpace(precioCheck) &&
-                !decimal.TryParse(precioCheck, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out _))
-            {
-                MessageBox.Show("⚠ El precio del servicio debe ser un número válido.",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidaciones.ValidarClienteVehiculoOrden(_clienteDNI, _vehiculoPlaca)) return;
+            if (!clsValidaciones.ValidarComboSeleccionado(cmbEstado.SelectedItem, "estado de la orden")) return;
+            if (!clsValidaciones.ValidarFechaOrden(dpFecha.SelectedDate)) return;
+            if (!clsValidaciones.ValidarFechaEntrega(dpFecha.SelectedDate, dpEntrega.SelectedDate)) return;
+            if (!clsValidaciones.ValidarPrecioServicio(txtPrecioServicio.Text, out decimal precioServicio)) return;
 
             decimal totalRepuestos = 0;
             foreach (var r in _repuestos)
                 if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
-
-            string precioTexto = txtPrecioServicio.Text
-                .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-
-            decimal.TryParse(precioTexto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal precioServicio);
 
             decimal total = totalRepuestos + precioServicio;
             string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
@@ -404,15 +362,15 @@ namespace Órdenes_de_Trabajo
                 _conexion.Abrir();
 
                 string queryOrden = @"
-                    INSERT INTO Orden_Trabajo
-                        (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
-                         Fecha, Fecha_Entrega, Observaciones,
-                         Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
-                    VALUES
-                        (@ClienteDNI, @Placa, @ProductoID, @Estado,
-                         @Fecha, @FechaEntrega, @Observaciones,
-                         @ServicioPrecio, @Total, @Foto);
-                    SELECT SCOPE_IDENTITY();";
+            INSERT INTO Orden_Trabajo
+                (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
+                 Fecha, Fecha_Entrega, Observaciones,
+                 Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
+            VALUES
+                (@ClienteDNI, @Placa, @ProductoID, @Estado,
+                 @Fecha, @FechaEntrega, @Observaciones,
+                 @ServicioPrecio, @Total, @Foto);
+            SELECT SCOPE_IDENTITY();";
 
                 int ordenID;
                 using (SqlCommand cmd = new SqlCommand(queryOrden, _conexion.SqlC))
@@ -468,26 +426,9 @@ namespace Órdenes_de_Trabajo
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (dpFecha.SelectedDate.HasValue)
-            {
-                var fechaOrden = dpFecha.SelectedDate.Value;
-                var hoy = DateTime.Today;
-                if (fechaOrden.Year < hoy.Year ||
-                   (fechaOrden.Year == hoy.Year && fechaOrden.Month < hoy.Month))
-                {
-                    MessageBox.Show("No se pueden actualizar órdenes de meses anteriores.",
-                        "Operación no permitida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-            }
+            if (!clsValidaciones.ValidarMesOrden(dpFecha.SelectedDate)) return;
 
-            string precioTexto = txtPrecioServicio.Text
-                .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-
-            decimal.TryParse(precioTexto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal precioServicio);
+            if (!clsValidaciones.ValidarPrecioServicio(txtPrecioServicio.Text, out decimal precioServicio)) return;
 
             decimal totalRepuestos = 0;
             foreach (var r in _repuestos)
@@ -501,15 +442,15 @@ namespace Órdenes_de_Trabajo
                 _conexion.Abrir();
 
                 string sqlUpdate = @"
-                    UPDATE Orden_Trabajo SET
-                        Estado            = @Estado,
-                        Fecha             = @Fecha,
-                        Fecha_Entrega     = @FechaEntrega,
-                        Observaciones     = @Observaciones,
-                        Servicio_Precio   = @ServicioPrecio,
-                        OrdenPrecio_Total = @Total,
-                        Adjuntos_Fotos    = @Foto
-                    WHERE Orden_ID = @OrdenID";
+            UPDATE Orden_Trabajo SET
+                Estado            = @Estado,
+                Fecha             = @Fecha,
+                Fecha_Entrega     = @FechaEntrega,
+                Observaciones     = @Observaciones,
+                Servicio_Precio   = @ServicioPrecio,
+                OrdenPrecio_Total = @Total,
+                Adjuntos_Fotos    = @Foto
+            WHERE Orden_ID = @OrdenID";
 
                 using (SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC))
                 {

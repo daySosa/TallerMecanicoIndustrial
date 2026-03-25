@@ -73,12 +73,8 @@ namespace Contabilidad
 
         private void btnMostrarComprobantes_Click(object sender, RoutedEventArgs e)
         {
-            if (dgPagos.SelectedItem == null)
-            {
-                MessageBox.Show("⚠ Selecciona un pago para ver el comprobante.", "Aviso",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!clsValidaciones.ValidarComboSeleccionado(dgPagos.SelectedItem, "pago para ver el comprobante"))
                 return;
-            }
 
             DataRowView fila = (DataRowView)dgPagos.SelectedItem;
             int pagoId = Convert.ToInt32(fila["Pago_ID"]);
@@ -254,7 +250,6 @@ namespace Contabilidad
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
-
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {

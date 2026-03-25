@@ -123,29 +123,19 @@ namespace InterfazInventario
             finally { _conexion.Cerrar(); }
         }
 
-        private bool AplicarFiltros(object item)
+        private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
-            if (item is not Repuesto r) return false;
+            if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
+                    out decimal pMin, out decimal pMax))
+                return;
 
-            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
-            if (!string.IsNullOrEmpty(texto))
-            {
-                bool coincide =
-                    (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Modelo ?? "").ToLower().Contains(texto);
-                if (!coincide) return false;
-            }
-
-            if (_filtroCategoria != null && _filtroCategoria != "Todas")
-                if (r.Producto_Categoria != _filtroCategoria) return false;
-
-            if (r.Producto_Precio < _filtroPrecioMin) return false;
-            if (r.Producto_Precio > _filtroPrecioMax) return false;
-            if (_filtroStockBajo && !r.StockBajo) return false;
-
-            return true;
+            _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
+            _filtroPrecioMin = pMin;
+            _filtroPrecioMax = pMax;
+            _filtroStockBajo = chkStockBajo.IsChecked == true;
+            popupFiltros.IsOpen = false;
+            _vistaRepuestos?.Refresh();
+            ActualizarContador();
         }
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
