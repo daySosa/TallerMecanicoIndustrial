@@ -123,19 +123,29 @@ namespace InterfazInventario
             finally { _conexion.Cerrar(); }
         }
 
-        private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
+        private bool AplicarFiltros(object item)
         {
-            if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
-                    out decimal pMin, out decimal pMax))
-                return;
+            if (item is not Repuesto r) return false;
 
-            _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
-            _filtroPrecioMin = pMin;
-            _filtroPrecioMax = pMax;
-            _filtroStockBajo = chkStockBajo.IsChecked == true;
-            popupFiltros.IsOpen = false;
-            _vistaRepuestos?.Refresh();
-            ActualizarContador();
+            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+            if (!string.IsNullOrEmpty(texto))
+            {
+                bool coincide =
+                    (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||
+                    (r.Producto_Modelo ?? "").ToLower().Contains(texto);
+                if (!coincide) return false;
+            }
+
+            if (_filtroCategoria != null && _filtroCategoria != "Todas")
+                if (r.Producto_Categoria != _filtroCategoria) return false;
+
+            if (r.Producto_Precio < _filtroPrecioMin) return false;
+            if (r.Producto_Precio > _filtroPrecioMax) return false;
+            if (_filtroStockBajo && !r.StockBajo) return false;
+
+            return true;
         }
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
@@ -149,31 +159,9 @@ namespace InterfazInventario
 
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(txtPrecioMin.Text) &&
-                    !decimal.TryParse(txtPrecioMin.Text, out _))
-            {
-                MessageBox.Show("⚠ El precio mínimo debe ser un número válido.",
-                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
+                    out decimal pMin, out decimal pMax))
                 return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(txtPrecioMax.Text) &&
-                !decimal.TryParse(txtPrecioMax.Text, out _))
-            {
-                MessageBox.Show("⚠ El precio máximo debe ser un número válido.",
-                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            decimal pMin = decimal.TryParse(txtPrecioMin.Text, out decimal pm) ? pm : 0;
-            decimal pMax = decimal.TryParse(txtPrecioMax.Text, out decimal px) ? px : decimal.MaxValue;
-
-            if (pMin > pMax)
-            {
-                MessageBox.Show("⚠ El precio mínimo no puede ser mayor que el precio máximo.",
-                    "Rango inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
 
             _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
             _filtroPrecioMin = pMin;
