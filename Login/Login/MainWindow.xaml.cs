@@ -124,18 +124,11 @@ namespace Login
         {
             bool hayError = false;
 
+            string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
 
-            if (string.IsNullOrWhiteSpace(txtCorreo.Text))
+            if (errorCorreo != null)
             {
-                txtErrorCorreo.Text = "⚠ El correo es obligatorio.";
-                txtErrorCorreo.Visibility = Visibility.Visible;
-                borderCorreo.BorderBrush =
-                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
-                hayError = true;
-            }
-            else if (!txtCorreo.Text.Contains("@") || !txtCorreo.Text.Contains("."))
-            {
-                txtErrorCorreo.Text = "⚠ Ingresa un correo electrónico válido.";
+                txtErrorCorreo.Text = errorCorreo;
                 txtErrorCorreo.Visibility = Visibility.Visible;
                 borderCorreo.BorderBrush =
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
@@ -148,9 +141,11 @@ namespace Login
             }
 
             string contrasena = ObtenerContrasena();
-            if (string.IsNullOrWhiteSpace(contrasena))
+            string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
+
+            if (errorContrasena != null)
             {
-                txtErrorContrasena.Text = "⚠ La contraseña es obligatoria.";
+                txtErrorContrasena.Text = errorContrasena;
                 txtErrorContrasena.Visibility = Visibility.Visible;
                 borderContrasena.BorderBrush =
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
