@@ -191,48 +191,38 @@ namespace InterfazInventario
             precio = 0;
             cantidad = 0;
 
-            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            // Nombre
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del producto"))
             {
-                MessageBox.Show("⚠ El nombre del producto es obligatorio.",
-                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 txtNombre.Focus();
                 return false;
             }
 
-            if (cmbCategoria.SelectedItem == null)
+            // Categoría
+            if (!clsValidaciones.ValidarComboSeleccionado(cmbCategoria.SelectedItem, "categoría"))
             {
-                MessageBox.Show("⚠ Debes seleccionar una categoría.",
-                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 cmbCategoria.Focus();
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(txtMarca.Text))
+            // Marca
+            if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca"))
             {
-                MessageBox.Show("⚠ La marca del producto es obligatoria.",
-                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 txtMarca.Focus();
                 return false;
             }
 
-            if (!string.IsNullOrWhiteSpace(txtPrecio.Text))
+            // Precio
+            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out precio))
             {
-                string precioTexto = txtPrecio.Text.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-
-                if (!decimal.TryParse(precioTexto, System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out precio) || precio < 0)
-                {
-                    MessageBox.Show("⚠ El precio debe ser un número válido mayor o igual a 0.\nEjemplo: 150.00",
-                        "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    txtPrecio.Focus();
-                    return false;
-                }
+                txtPrecio.Focus();
+                return false;
             }
 
-            if (!int.TryParse(txtCantidad.Text, out cantidad) || cantidad < 0)
+            // Cantidad
+            if (!clsValidaciones.ValidarEnteroPositivo(txtCantidad.Text, out cantidad, "Cantidad inválida"))
             {
-                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor o igual a 0.",
-                    "Cantidad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtCantidad.Focus();
                 return false;
             }
 
