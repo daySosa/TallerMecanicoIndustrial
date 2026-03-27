@@ -12,18 +12,42 @@ using System.Windows.Shapes;
 
 namespace Órdenes_de_Trabajo
 {
+    /// <summary>
+    /// Ventana encargada de agregar un repuesto desde el inventario a una orden de trabajo.
+    /// Permite seleccionar un producto, visualizar su información y calcular el subtotal según la cantidad.
+    /// </summary>
     public partial class AgregarRepuesto : Window
     {
+        //// <summary>
+        /// Instancia utilizada para realizar consultas a la base de datos.
+        /// </summary>
         clsConsultasBD db = new clsConsultasBD();
-        public RepuestoOrden RepuestoResultado { get; private set; } = null;
-        private clsProductoInventario _productoSeleccionado = null; 
 
+        /// <summary>
+        /// Objeto que almacena el repuesto seleccionado con sus datos,
+        /// el cual será devuelto a la orden de trabajo.
+        /// </summary>
+        public RepuestoOrden RepuestoResultado { get; private set; } = null;
+
+        // <summary>
+        /// Producto seleccionado del inventario.
+        /// </summary>
+        private clsProductoInventario _productoSeleccionado = null;
+
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="AgregarRepuesto"/>
+        /// y carga los productos disponibles del inventario.
+        /// </summary>
         public AgregarRepuesto()
         {
             InitializeComponent();
             CargarProductos();
         }
 
+        /// <summary>
+        /// Carga la lista de productos disponibles en el inventario
+        /// y los muestra en el ComboBox para su selección.
+        /// </summary>
         private void CargarProductos()
         {
             try
@@ -39,6 +63,10 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Evento que se ejecuta al seleccionar un producto del inventario.
+        /// Muestra su información (categoría, precio y stock) y recalcula el subtotal.
+        /// </summary>
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _productoSeleccionado = cmbProducto.SelectedItem as clsProductoInventario; 
@@ -56,11 +84,18 @@ namespace Órdenes_de_Trabajo
             CalcularSubtotal();
         }
 
+        /// <summary>
+        /// Evento que se ejecuta al modificar la cantidad.
+        /// Recalcula automáticamente el subtotal.
+        /// </summary>
         private void txtCantidad_TextChanged(object sender, TextChangedEventArgs e)
         {
             CalcularSubtotal();
         }
 
+        /// <summary>
+        /// Calcula el subtotal del repuesto en función del precio unitario y la cantidad ingresada.
+        /// </summary>
         private void CalcularSubtotal()
         {
             if (_productoSeleccionado == null) return;
@@ -74,6 +109,10 @@ namespace Órdenes_de_Trabajo
             txtSubtotal.Text = $"L {_productoSeleccionado.Producto_Precio * cantidad:N2}";
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y crea el objeto del repuesto seleccionado
+        /// para ser agregado a la orden de trabajo.
+        /// </summary>
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarComboSeleccionado(_productoSeleccionado, "producto del inventario")) return;
@@ -92,6 +131,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Cancela la operación y cierra la ventana sin seleccionar ningún repuesto.
+        /// </summary>
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             RepuestoResultado = null;

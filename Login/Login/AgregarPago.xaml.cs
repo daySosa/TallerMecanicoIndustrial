@@ -10,20 +10,51 @@ using Login.Clases;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Ventana encargada de registrar o actualizar pagos en el sistema.
+    /// Permite buscar clientes, cargar órdenes pendientes y validar la información antes de guardar.
+    /// </summary>
     public partial class AgregarPago : Window
     {
+        /// <summary>
+        /// Cadena de conexión utilizada para acceder a la base de datos.
+        /// </summary>
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
+        /// <summary>
+        /// Referencia al menú principal de pagos para actualizar la vista después de registrar o editar.
+        /// </summary>
         private MenuDePagos _menuRef;
+
+        /// <summary>
+        /// Indica si la ventana se encuentra en modo edición o en modo registro.
+        /// </summary>
         private bool _esEdicion = false;
+
+        // <summary>
+        /// Identificador del pago (utilizado únicamente en modo edición).
+        /// </summary>
         private int _pagoId = 0;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="AgregarPago"/> en modo registro.
+        /// </summary>
+        /// <param name="menuRef">Referencia al menú de pagos.</param>
         public AgregarPago(MenuDePagos menuRef)
         {
             InitializeComponent();
             _menuRef = menuRef;
         }
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="AgregarPago"/> en modo edición,
+        /// cargando los datos del pago seleccionado.
+        /// </summary>
+        /// <param name="menuRef">Referencia al menú de pagos.</param>
+        /// <param name="pagoId">Identificador del pago.</param>
+        /// <param name="dni">DNI del cliente.</param>
+        /// <param name="ordenId">Identificador de la orden.</param>
+        /// <param name="monto">Monto del pago.</param>
         public AgregarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto)
         {
             InitializeComponent();
@@ -38,11 +69,17 @@ namespace Contabilidad
             BuscarCliente(dni);
         }
 
+        /// <summary>
+        /// Restringe la entrada del DNI a únicamente valores numéricos.
+        /// </summary>
         private void txtDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
+        /// <summary>
+        /// Limpia los campos relacionados cuando el DNI cambia.
+        /// </summary>
         private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
             txtNombre.Text = "";
@@ -52,6 +89,9 @@ namespace Contabilidad
             txtMonto.Text = "";
         }
 
+        /// <summary>
+        /// Ejecuta la búsqueda del cliente al presionar el botón correspondiente.
+        /// </summary>
         private void btnBuscar_Click(object sender, RoutedEventArgs e)
         {
             OcultarMensaje();
@@ -59,6 +99,10 @@ namespace Contabilidad
             BuscarCliente(txtDNI.Text.Trim());
         }
 
+        /// <summary>
+        /// Busca un cliente en la base de datos utilizando el DNI ingresado.
+        /// Si existe, muestra su nombre y carga sus órdenes disponibles.
+        /// </summary>
         private void BuscarCliente(string dni)
         {
             OcultarMensaje();
@@ -94,6 +138,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Carga las órdenes finalizadas del cliente que aún no tienen un pago registrado.
+        /// </summary>
         private void CargarOrdenesCliente(string dni)
         {
             try
@@ -141,6 +188,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Asigna automáticamente el ID de la orden seleccionada en el DataGrid.
+        /// </summary>
         private void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgOrdenes.SelectedItem is DataRowView row)
@@ -149,6 +199,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Actualiza automáticamente el monto al cambiar el ID de la orden.
+        /// </summary>
         private void txtOrdenID_TextChanged(object sender, TextChangedEventArgs e)
         {
             OcultarMensaje();
@@ -188,6 +241,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y registra o actualiza el pago en la base de datos.
+        /// </summary>
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
             OcultarMensaje();
@@ -279,17 +335,26 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Cancela la operación y cierra la ventana.
+        /// </summary>
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
+        /// <summary>
+        /// Muestra un mensaje de error o validación en la interfaz.
+        /// </summary>
         private void MostrarMensaje(string msg)
         {
             txtMensaje.Text = msg;
             txtMensaje.Visibility = Visibility.Visible;
         }
 
+        /// <summary>
+        /// Oculta el mensaje de validación.
+        /// </summary>
         private void OcultarMensaje()
         {
             txtMensaje.Visibility = Visibility.Collapsed;

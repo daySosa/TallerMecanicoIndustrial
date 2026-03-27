@@ -6,20 +6,22 @@ using System.Windows;
 namespace Login.Clases
 {
     /// <summary>
-    /// 
+    /// Clase encargada de gestionar la autenticación en dos factores (2FA),
+    /// incluyendo la generación, validación y envío de códigos OTP al usuario.
     /// </summary>
     internal class clsAutenticacion
     {
         /// <summary>
-        /// The conexion 2 fa
+        /// Instancia de la clase de conexión utilizada para interactuar con la base de datos.
         /// </summary>
         private clsConexion conexion_2FA = new clsConexion();
 
         /// <summary>
-        /// Generars the codigo.
+        /// Genera un código OTP de 6 dígitos, lo almacena en la base de datos
+        /// con una expiración de 5 minutos e invalida cualquier código previo no utilizado.
         /// </summary>
-        /// <param name="correo">The correo.</param>
-        /// <returns></returns>
+        /// <param name="correo">Correo electrónico del usuario.</param>
+        /// <returns>Código OTP generado.</returns>
         public string GenerarCodigo(string correo)
         {
             string codigo = new Random().Next(100000, 999999).ToString();
@@ -57,11 +59,13 @@ namespace Login.Clases
         }
 
         /// <summary>
-        /// Validars the codigo.
+        /// Valida un código OTP ingresado por el usuario, verificando que:
+        /// no haya expirado, no haya sido utilizado y no supere el límite de intentos (3).
+        /// Si es válido, se marca como usado; de lo contrario, se incrementa el contador de intentos.
         /// </summary>
-        /// <param name="correo">The correo.</param>
-        /// <param name="codigoIngresado">The codigo ingresado.</param>
-        /// <returns></returns>
+        /// <param name="correo">Correo electrónico del usuario.</param>
+        /// <param name="codigoIngresado">Código OTP ingresado.</param>
+        /// <returns>True si el código es válido; de lo contrario, false.</returns>
         public bool ValidarCodigo(string correo, string codigoIngresado)
         {
             try
@@ -120,11 +124,12 @@ namespace Login.Clases
         }
 
         /// <summary>
-        /// Enviars the correo.
+        /// Envía el código OTP al correo electrónico del usuario mediante SMTP,
+        /// utilizando un mensaje en formato HTML con información de verificación.
         /// </summary>
-        /// <param name="correoDestino">The correo destino.</param>
-        /// <param name="codigo">The codigo.</param>
-        /// <returns></returns>
+        /// <param name="correoDestino">Correo electrónico del destinatario.</param>
+        /// <param name="codigo">Código OTP a enviar.</param>
+        /// <returns>True si el correo fue enviado correctamente; de lo contrario, false.</returns>
         public bool EnviarCorreo(string correoDestino, string codigo)
         {
             try

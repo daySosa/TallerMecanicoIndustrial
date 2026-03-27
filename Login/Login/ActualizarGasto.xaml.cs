@@ -14,12 +14,38 @@ using Login.Clases;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Ventana encargada de permitir la edición de un gasto registrado en el sistema.
+    /// Incluye validaciones, carga de datos y restricción de edición según la fecha de registro.
+    /// </summary>
     public partial class ActualizarGasto : Window
     {
+        /// <summary>
+        /// Cadena de conexión utilizada para acceder a la base de datos.
+        /// </summary>
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
-        private int _gastoId;
-        private DateTime _fechaRegistro; 
 
+        /// <summary>
+        /// Identificador único del gasto que se va a actualizar.
+        /// </summary>
+        private int _gastoId;
+
+        /// <summary>
+        /// Fecha en la que fue registrado el gasto.
+        /// Se utiliza para validar si aún es editable.
+        /// </summary>
+        private DateTime _fechaRegistro;
+
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="ActualizarGasto"/>
+        /// y carga los datos del gasto seleccionado.
+        /// </summary>
+        /// <param name="gastoId">Identificador del gasto.</param>
+        /// <param name="tipo">Tipo de gasto.</param>
+        /// <param name="nombre">Nombre del gasto.</param>
+        /// <param name="precio">Monto del gasto.</param>
+        /// <param name="fecha">Fecha de registro del gasto.</param>
+        /// <param name="observaciones">Observaciones adicionales del gasto.</param>
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
@@ -29,7 +55,11 @@ namespace Contabilidad
             VerificarBloqueoEdicion(); 
         }
 
-    
+
+        /// <summary>
+        /// Verifica si el gasto puede ser editado.
+        /// Si ha pasado más de un día desde su registro, se bloquean los controles de edición.
+        /// </summary>
         private void VerificarBloqueoEdicion()
         {
             if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
@@ -48,6 +78,14 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Carga los datos del gasto en los controles de la interfaz para su visualización y edición.
+        /// </summary>
+        /// <param name="tipo">Tipo de gasto.</param>
+        /// <param name="nombre">Nombre del gasto.</param>
+        /// <param name="precio">Monto del gasto.</param>
+        /// <param name="fecha">Fecha de registro.</param>
+        /// <param name="observaciones">Observaciones del gasto.</param>
         private void CargarDatos(string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             foreach (ComboBoxItem item in cmbTipoGasto.Items)
@@ -65,23 +103,36 @@ namespace Contabilidad
             txtObservaciones.Text = observaciones;
         }
 
+        /// <summary>
+        /// Cancela la operación de edición y cierra la ventana sin guardar cambios.
+        /// </summary>       
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
             this.Close();
         }
 
+        /// <summary>
+        /// Formatea el valor del precio al perder el foco, aplicando el formato de moneda.
+        /// </summary>
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
             txtPrecio.Text = clsValidaciones.FormatearPrecio(txtPrecio.Text);
         }
 
+        /// <summary>
+        /// Limpia el formato del precio al obtener el foco, permitiendo al usuario editar el valor numérico.
+        /// </summary>
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
             txtPrecio.Text = clsValidaciones.LimpiarPrefijoPrecio(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y actualiza el gasto en la base de datos.
+        /// Si la operación es exitosa, muestra un mensaje de confirmación y cierra la ventana.
+        /// </summary>
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
