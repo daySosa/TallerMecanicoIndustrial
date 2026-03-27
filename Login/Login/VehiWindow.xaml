@@ -39,13 +39,21 @@
                         </StackPanel>
 
                         <TextBlock Text="Placa" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
+                        <!-- ✅ MaxLength, PreviewTextInput y contador -->
                         <TextBox x:Name="txtPlaca"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Background="#1e2130" Foreground="White"
                                  BorderBrush="#3a3f5c" CaretBrush="White"
                                  Height="40" VerticalContentAlignment="Center"
-                                 Padding="10,0" Margin="0,0,0,14"
+                                 Padding="10,0" Margin="0,0,0,4"
+                                 MaxLength="7"
+                                 PreviewTextInput="txtPlaca_PreviewTextInput"
                                  TextChanged="txtPlaca_TextChanged"/>
+
+                        <TextBlock x:Name="txtContadorPlaca"
+                                   Foreground="#6c7293" FontSize="10"
+                                   HorizontalAlignment="Right"
+                                   Margin="0,2,0,12"/>
 
                         <TextBlock Text="Marca" Foreground="#6c7293" FontSize="11" FontWeight="Medium" Margin="0,0,0,4"/>
                         <TextBox x:Name="txtMarca"
@@ -176,7 +184,7 @@
                             </Button>
                         </Grid>
 
-                        <TextBlock Text="Formato: 0801-1990-12345 → escribe 0801199012345"
+                        <TextBlock Text=""
                                    Foreground="#4A5568" FontSize="10" Margin="0,0,0,10"
                                    FontStyle="Italic"/>
 
@@ -285,8 +293,8 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" VerticalAlignment="Center"
                    Foreground="#6c7293" FontSize="11">
-            <Run Text="⚠ "/>
-            <Run Text="Verifica el DNI del cliente antes de guardar"/>
+                        <Run Text="⚠ "/>
+                        <Run Text="Verifica el DNI del cliente antes de guardar"/>
                     </TextBlock>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <Button Content="Cancelar"

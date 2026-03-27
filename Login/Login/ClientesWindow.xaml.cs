@@ -26,7 +26,17 @@ namespace InterfazClientes
 
         private void txtTelefono_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+            if (!Regex.IsMatch(e.Text, @"^\d+$"))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
+            if (soloNumeros.Length >= 8)
+            {
+                e.Handled = true;
+            }
         }
 
         private void txtTelefono_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -38,15 +48,36 @@ namespace InterfazClientes
             if (soloNumeros.Length > 8)
                 soloNumeros = soloNumeros.Substring(0, 8);
 
+<<<<<<< HEAD
             string formateado = "";
 
             if (soloNumeros.Length <= 4)
                 formateado = soloNumeros;
             else
                 formateado = soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
+=======
+            string formateado;
+>>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
 
+            if (soloNumeros.Length == 0)
+                formateado = "";
+            else if (soloNumeros.Length <= 4)
+                formateado = soloNumeros;
+            else
+                formateado = soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
+
+            int caretPos = txtTelefono.CaretIndex;
             txtTelefono.Text = formateado;
+<<<<<<< HEAD
             txtTelefono.CaretIndex = txtTelefono.Text.Length;
+=======
+
+            int nuevosCaret = caretPos;
+            if (nuevosCaret > 4) nuevosCaret = Math.Min(nuevosCaret + 1, formateado.Length);
+            else nuevosCaret = Math.Min(nuevosCaret, formateado.Length);
+
+            txtTelefono.CaretIndex = nuevosCaret;
+>>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
 
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
@@ -58,7 +89,13 @@ namespace InterfazClientes
             txtDPI.IsReadOnly = false;
             txtNombre.Text = c.Cliente_Nombre;
             txtApellido.Text = c.Cliente_Apellido;
-            txtTelefono.Text = c.Cliente_Telefono;
+
+            string soloNumeros = Regex.Replace(c.Cliente_Telefono, @"\D", "");
+            if (soloNumeros.Length > 8) soloNumeros = soloNumeros.Substring(0, 8);
+            txtTelefono.Text = soloNumeros.Length == 8
+                ? soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4)
+                : soloNumeros;
+
             txtCorreo.Text = c.Cliente_Correo;
             txtDireccion.Text = c.Cliente_Direccion;
             toggleActivo.IsChecked = c.Cliente_Activo;
@@ -98,10 +135,22 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
+<<<<<<< HEAD
             if (!clsValidaciones.Telefono(telefonoLimpio)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
+=======
+            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
+            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
+            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
+            if (!clsValidaciones.Telefono(telefonoLimpio))
+            {
+                btnAgregar.IsEnabled = true;
+                return;
+            }
+>>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
 
             try
             {
@@ -156,10 +205,20 @@ namespace InterfazClientes
                 return;
             }
 
+<<<<<<< HEAD
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
+=======
+            string nuevoDni = txtDPI.Text.Trim();
+            string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
+
+            if (!clsValidaciones.ValidarDNIHondureño(nuevoDni)) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
+            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
+            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) return;
+>>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
             if (!clsValidaciones.Telefono(telefonoLimpio)) return;
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
@@ -174,8 +233,11 @@ namespace InterfazClientes
                     telefonoLimpio,
                     txtCorreo.Text.Trim(),
                     txtDireccion.Text.Trim(),
-                    toggleActivo.IsChecked == true
+                    toggleActivo.IsChecked == true,
+                    nuevoDni
                 );
+
+                _dniEditando = nuevoDni;
 
                 MessageBox.Show("✅ Cliente actualizado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);

@@ -43,6 +43,11 @@ namespace Vehículos
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
+        private void txtPlaca_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-Z0-9]+$");
+        }
+
         private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (borderClienteInfo != null && txtClienteDNI.IsFocused && txtClienteDNI.Text != _clienteDNI)
@@ -163,7 +168,9 @@ namespace Vehículos
                     Obs = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim(),
                     Activo = toggleActivo.IsChecked == true
                 };
+
                 _db.GuardarOActualizarVehiculo(false, datos, _placaSeleccionada);
+
                 MessageBox.Show("✅ Vehículo actualizado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
@@ -191,6 +198,7 @@ namespace Vehículos
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
+
             txtPlaca.Text = vehiculo.Vehiculo_Placa;
             txtMarca.Text = vehiculo.Vehiculo_Marca;
             txtModelo.Text = vehiculo.Vehiculo_Modelo;
@@ -199,13 +207,21 @@ namespace Vehículos
             txtClienteDNI.Text = vehiculo.Cliente_DNI;
             _clienteDNI = vehiculo.Cliente_DNI;
             MostrarClienteOk(vehiculo.Cliente_NombreCompleto);
+
             foreach (ComboBoxItem item in cmbTipo.Items)
             {
-                if (item.Content.ToString() == vehiculo.Vehiculo_Tipo) { cmbTipo.SelectedItem = item; break; }
+                if (item.Content.ToString() == vehiculo.Vehiculo_Tipo)
+                {
+                    cmbTipo.SelectedItem = item;
+                    break;
+                }
             }
+
             toggleActivo.IsChecked = vehiculo.EstaActivo;
-            btnGuardar.IsEnabled = false; btnGuardar.Opacity = 0.4;
-            btnActualizar.IsEnabled = true; btnActualizar.Opacity = 1;
+            btnGuardar.IsEnabled = false;
+            btnGuardar.Opacity = 0.4;
+            btnActualizar.IsEnabled = true;
+            btnActualizar.Opacity = 1;
         }
 
         private bool ValidarCampos(out int año)
@@ -213,6 +229,10 @@ namespace Vehículos
             año = 0;
 
             if (!clsValidaciones.ValidarTextoRequerido(txtPlaca.Text, "placa del vehículo")) { txtPlaca.Focus(); return false; }
+<<<<<<< HEAD
+=======
+            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text)) { txtPlaca.Focus(); return false; }
+>>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
             if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca del vehículo")) { txtMarca.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtModelo.Text, "modelo del vehículo")) { txtModelo.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtAnio.Text, "año del vehículo")) { txtAnio.Focus(); return false; }
@@ -252,6 +272,7 @@ namespace Vehículos
             return true;
         }
 
+        // Convierte a mayúsculas — el contador lo maneja MaterialDesign automáticamente
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtPlaca.IsReadOnly) return;
@@ -262,8 +283,14 @@ namespace Vehículos
 
         private void LimpiarFormulario()
         {
-            txtPlaca.Clear(); txtMarca.Clear(); txtModelo.Clear(); txtAnio.Clear(); txtObservaciones.Clear();
-            cmbTipo.SelectedIndex = -1; toggleActivo.IsChecked = true; txtClienteDNI.Clear();
+            txtPlaca.Clear();
+            txtMarca.Clear();
+            txtModelo.Clear();
+            txtAnio.Clear();
+            txtObservaciones.Clear();
+            cmbTipo.SelectedIndex = -1;
+            toggleActivo.IsChecked = true;
+            txtClienteDNI.Clear();
             borderClienteInfo.Visibility = Visibility.Collapsed;
             _placaSeleccionada = string.Empty;
             _clienteDNI = string.Empty;

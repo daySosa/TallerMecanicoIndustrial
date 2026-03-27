@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:Contabilidad"
         mc:Ignorable="d"
-        Title="AgregarPago" Height="604" Width="480"
+        Title="AgregarPago" Height="480" Width="480"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1e2130"
@@ -21,204 +21,345 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="30">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
 
-        <!-- TÍTULO -->
-        <TextBlock Grid.Row="0" Text="Nuevo Pago"
-                   Foreground="White" FontSize="22" FontWeight="Bold"/>
+        <Grid Margin="30,20,30,30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- DNI DEL CLIENTE -->
-        <StackPanel Grid.Row="2">
-            <TextBlock Text="DNI DEL CLIENTE" Foreground="#8B9BB4"
-                       FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
-            <Grid>
+            <!-- Título -->
+            <TextBlock Grid.Row="0" Text="Nuevo Pago"
+                       Foreground="White" FontSize="22" FontWeight="Bold"/>
+
+            <!-- DNI -->
+            <StackPanel Grid.Row="2">
+                <TextBlock Text="DNI DEL CLIENTE" Foreground="#8B9BB4"
+                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Name="txtDNI" Grid.Column="0"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Background="#252836" Foreground="White"
+                             BorderBrush="#3a3f5c" CaretBrush="White"
+                             Height="44" VerticalContentAlignment="Center"
+                             Padding="10,0" MaxLength="13" FontSize="14"
+                             materialDesign:HintAssist.Hint="Ingresa el DNI..."
+                             materialDesign:HintAssist.Foreground="#6B7280"
+                             PreviewTextInput="txtDNI_PreviewTextInput"
+                             TextChanged="txtDNI_TextChanged"/>
+
+                    <Button Grid.Column="2" x:Name="btnBuscar"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="#3D7EFF" BorderBrush="#3D7EFF"
+                            materialDesign:ButtonAssist.CornerRadius="6"
+                            Height="44" Padding="18,0"
+                            Click="btnBuscar_Click">
+                        <TextBlock Text="Buscar" FontSize="14" FontWeight="SemiBold"/>
+                    </Button>
+                </Grid>
+            </StackPanel>
+
+            <!-- Nombre del cliente -->
+            <StackPanel Grid.Row="4">
+                <TextBlock Text="NOMBRE DEL CLIENTE" Foreground="#8B9BB4"
+                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <TextBox x:Name="txtNombre"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Background="#1e2130" Foreground="#6B7280"
+                         BorderBrush="#3a3f5c" CaretBrush="White"
+                         Height="44" VerticalContentAlignment="Center"
+                         Padding="10,0" FontSize="14" IsReadOnly="True"
+                         materialDesign:HintAssist.Hint="Se llena automáticamente..."
+                         materialDesign:HintAssist.Foreground="#6B7280"/>
+            </StackPanel>
+
+            <!-- Tabla de órdenes -->
+            <StackPanel Grid.Row="6" x:Name="panelOrdenes" Visibility="Collapsed">
+                <TextBlock Text="ÓRDENES FINALIZADAS DEL CLIENTE" Foreground="#8B9BB4"
+                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+
+                <Border Background="#252836" CornerRadius="6"
+                        BorderBrush="#3a3f5c" BorderThickness="1">
+                    <DataGrid x:Name="dgOrdenes"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserResizeRows="False"
+                              CanUserSortColumns="False"
+                              CanUserReorderColumns="False"
+                              CanUserResizeColumns="False"
+                              Background="Transparent"
+                              Foreground="White"
+                              BorderThickness="0"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#2e3250"
+                              RowBackground="Transparent"
+                              AlternatingRowBackground="Transparent"
+                              MaxHeight="150"
+                              FontSize="12"
+                              SelectionChanged="dgOrdenes_SelectionChanged">
+
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#e2e8f0"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#2a2f45"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#2a2f45"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    Padding="10,8">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.Resources>
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#2e3250"/>
+                                <Setter Property="Foreground" Value="#a0a8c8"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridColumnHeader">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    Padding="10,8">
+                                                <ContentPresenter
+                                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                    VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.Columns>
+
+                            <!-- ID Orden -->
+                            <DataGridTextColumn Header="ID Orden"
+                                                Binding="{Binding Orden_ID}"
+                                                Width="60">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#e2e8f0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Vehículo -->
+                            <DataGridTextColumn Header="Vehículo"
+                                                Binding="{Binding Vehiculo_Placa}"
+                                                Width="75">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#e2e8f0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Estado con badge -->
+                            <DataGridTemplateColumn Header="Estado" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#0d2e20"
+                                                CornerRadius="12"
+                                                Padding="10,3"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Estado}"
+                                                       Foreground="#34d399"
+                                                       FontSize="11"
+                                                       FontWeight="Medium"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Total -->
+                            <DataGridTextColumn Header="Total"
+                                                Binding="{Binding OrdenPrecio_Total, StringFormat='L {0:N2}'}"
+                                                Width="*">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="#2e3250"/>
+                                        <Setter Property="Foreground" Value="#a0a8c8"/>
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="DataGridColumnHeader">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            Padding="10,8">
+                                                        <ContentPresenter
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#e2e8f0"/>
+                                        <Setter Property="TextAlignment" Value="Right"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Fecha -->
+                            <DataGridTextColumn Header="Fecha"
+                                                Binding="{Binding Fecha, StringFormat='dd/MM/yyyy'}"
+                                                Width="85">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="#2e3250"/>
+                                        <Setter Property="Foreground" Value="#a0a8c8"/>
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="DataGridColumnHeader">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            Padding="10,8">
+                                                        <ContentPresenter
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#e2e8f0"/>
+                                        <Setter Property="TextAlignment" Value="Right"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </StackPanel>
+
+            <!-- ID Orden y Monto -->
+            <Grid Grid.Row="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="#252836" CornerRadius="6" Height="44">
-                    <TextBox x:Name="txtDNI"
-                             Background="Transparent" Foreground="White"
-                             BorderThickness="0" VerticalAlignment="Center"
-                             MaxLength="13"
-                             Margin="14,0" FontSize="14" CaretBrush="White"
-                             TextChanged="txtDNI_TextChanged">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa el DNI..."/>
-                                <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
-                </Border>
-
-                <Button Grid.Column="2" x:Name="btnBuscar"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Foreground="#3D7EFF" BorderBrush="#3D7EFF"
-                        materialDesign:ButtonAssist.CornerRadius="6"
-                        Height="44" Padding="18,0"
-                        Click="btnBuscar_Click">
-                    <TextBlock Text="Buscar" FontSize="14" FontWeight="SemiBold"/>
-                </Button>
-            </Grid>
-        </StackPanel>
-
-        <!-- NOMBRE DEL CLIENTE -->
-        <StackPanel Grid.Row="4">
-            <TextBlock Text="NOMBRE DEL CLIENTE" Foreground="#8B9BB4"
-                       FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
-            <Border Background="#1A1D2E" CornerRadius="6" Height="44"
-                    BorderBrush="#2A3A4D" BorderThickness="1">
-                <TextBox x:Name="txtNombre"
-                         Background="Transparent" Foreground="#6B7280"
-                         BorderThickness="0" VerticalAlignment="Center"
-                         Margin="14,0" FontSize="14" IsReadOnly="True">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                            <Setter Property="materialDesign:HintAssist.Hint" Value="Se llena automáticamente..."/>
-                            <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
-            </Border>
-        </StackPanel>
-
-        <!-- ÓRDENES DEL CLIENTE -->
-        <StackPanel Grid.Row="6" x:Name="panelOrdenes" Visibility="Collapsed">
-            <TextBlock Text="ÓRDENES DEL CLIENTE" Foreground="#8B9BB4"
-                       FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
-            <Border Background="#252836" CornerRadius="6" BorderBrush="#2A3A4D" BorderThickness="1">
-                <DataGrid x:Name="dgOrdenes"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          CanUserResizeRows="False"
-                          CanUserSortColumns="False"
-                          Background="Transparent"
-                          Foreground="White"
-                          BorderThickness="0"
-                          GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#2A3A4D"
-                          RowBackground="Transparent"
-                          AlternatingRowBackground="#1A1D2E"
-                          MaxHeight="150"
-                          FontSize="12"
-                          SelectionChanged="dgOrdenes_SelectionChanged">
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#1A1D2E"/>
-                            <Setter Property="Foreground" Value="#8B9BB4"/>
-                            <Setter Property="FontSize" Value="11"/>
-                            <Setter Property="Padding" Value="10,6"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID Orden"  Binding="{Binding Orden_ID}"         Width="70"/>
-                        <DataGridTextColumn Header="Vehículo"  Binding="{Binding Vehiculo_Placa}"    Width="90"/>
-                        <DataGridTextColumn Header="Estado"    Binding="{Binding Estado}"            Width="90"/>
-                        <DataGridTextColumn Header="Total"     Binding="{Binding OrdenPrecio_Total, StringFormat='L {0:N2}'}" Width="*"/>
-                        <DataGridTextColumn Header="Fecha"     Binding="{Binding Fecha, StringFormat='dd/MM/yyyy'}"           Width="90"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
-        </StackPanel>
-
-        <!-- ID DE ORDEN Y MONTO -->
-        <Grid Grid.Row="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="ID DE LA ORDEN" Foreground="#8B9BB4"
-                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                <Border Background="#252836" CornerRadius="6" Height="44">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="ID DE LA ORDEN" Foreground="#8B9BB4"
+                               FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
                     <TextBox x:Name="txtOrdenID"
-                             Background="Transparent" Foreground="White"
-                             BorderThickness="0" VerticalAlignment="Center"
-                             Margin="14,0" FontSize="14" CaretBrush="White"
-                             TextChanged="txtOrdenID_TextChanged">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                <Setter Property="materialDesign:HintAssist.Hint" Value="Ej: 1"/>
-                                <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
-                </Border>
-            </StackPanel>
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Background="#252836" Foreground="White"
+                             BorderBrush="#3a3f5c" CaretBrush="White"
+                             Height="44" VerticalContentAlignment="Center"
+                             Padding="10,0" FontSize="14"
+                             materialDesign:HintAssist.Hint="Ej: 1"
+                             materialDesign:HintAssist.Foreground="#6B7280"
+                             TextChanged="txtOrdenID_TextChanged"/>
+                </StackPanel>
 
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="MONTO A PAGAR" Foreground="#8B9BB4"
-                           FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                <Border Background="#1A1D2E" CornerRadius="6" Height="44"
-                        BorderBrush="#2A3A4D" BorderThickness="1">
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="MONTO A PAGAR" Foreground="#8B9BB4"
+                               FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
                     <TextBox x:Name="txtMonto"
-                             Background="Transparent" Foreground="#4CAF50"
-                             BorderThickness="0" VerticalAlignment="Center"
-                             Margin="14,0" FontSize="14" FontWeight="SemiBold"
-                             IsReadOnly="True">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                <Setter Property="materialDesign:HintAssist.Hint" Value="L 0.00"/>
-                                <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
-                </Border>
-            </StackPanel>
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Background="#1e2130" Foreground="#4CAF50"
+                             BorderBrush="#3a3f5c" CaretBrush="White"
+                             Height="44" VerticalContentAlignment="Center"
+                             Padding="10,0" FontSize="14" FontWeight="SemiBold"
+                             IsReadOnly="True"
+                             materialDesign:HintAssist.Hint="L 0.00"
+                             materialDesign:HintAssist.Foreground="#6B7280"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Mensaje de error -->
+            <TextBlock Grid.Row="10" x:Name="txtMensaje"
+                       Foreground="#FF5252" FontSize="12"
+                       TextWrapping="Wrap" Visibility="Collapsed"/>
+
+            <!-- Botones -->
+            <Grid Grid.Row="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" x:Name="btnCancelar"
+                        Content="Cancelar" Height="44"
+                        Style="{StaticResource BtnCancelarStyle}"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        materialDesign:RippleAssist.Feedback="#6c7293"
+                        Click="btnCancelar_Click"/>
+
+                <Button Grid.Column="2" x:Name="btnGuardar"
+                        Content="Guardar Pago" Height="44"
+                        Background="#3D7EFF" Foreground="White"
+                        BorderBrush="#3D7EFF" BorderThickness="0"
+                        FontSize="14" FontWeight="SemiBold"
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        materialDesign:ElevationAssist.Elevation="Dp0"
+                        materialDesign:RippleAssist.Feedback="White"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Click="btnGuardar_Click"/>
+            </Grid>
+
         </Grid>
-
-        <!-- MENSAJE DE ERROR / VALIDACIÓN -->
-        <TextBlock Grid.Row="10" x:Name="txtMensaje"
-                   Foreground="#FF5252" FontSize="12"
-                   TextWrapping="Wrap" Visibility="Collapsed"/>
-
-        <!-- BOTONES -->
-        <Grid Grid.Row="12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <Button Grid.Column="0" x:Name="btnCancelar"
-                    Content="Cancelar" Height="44"
-                    Style="{StaticResource BtnCancelarStyle}"
-                    materialDesign:ButtonAssist.CornerRadius="8"
-                    materialDesign:RippleAssist.Feedback="#6c7293"
-                    Click="btnCancelar_Click"/>
-
-            <Button Grid.Column="2" x:Name="btnGuardar"
-                    Content="Guardar Pago" Height="44"
-                    Background="#3D7EFF" Foreground="White"
-                    BorderBrush="#3D7EFF" BorderThickness="0"
-                    FontSize="14" FontWeight="SemiBold"
-                    materialDesign:ButtonAssist.CornerRadius="8"
-                    materialDesign:ElevationAssist.Elevation="Dp0"
-                    materialDesign:RippleAssist.Feedback="White"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Click="btnGuardar_Click"/>
-        </Grid>
-
-    </Grid>
+    </ScrollViewer>
 </Window>
