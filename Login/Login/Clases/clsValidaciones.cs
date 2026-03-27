@@ -306,16 +306,6 @@ namespace Login.Clases
             if (!dominiosPermitidos.Any(d => correo.EndsWith(d)))
                 return "⚠ Dominio no permitido.";
 
-            // Evitar caracteres repetidos en el usuario (antes del @)
-            if (correo.Contains("@"))
-            {
-                string usuario = correo.Split('@')[0];
-
-                // Si todos los caracteres son iguales (ej: aaaaaaa o 111111)
-                if (usuario.Distinct().Count() == 1)
-                    return "⚠ El correo no puede tener caracteres repetidos.";
-            }
-
             return null;
         }
 
