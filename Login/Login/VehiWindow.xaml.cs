@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using MainWindow.Clases;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -9,29 +8,96 @@ using System.Windows.Media;
 
 namespace Vehículos
 {
+    /// <summary>
+    /// Representa un vehículo con sus datos principales y notifica cambios en sus propiedades.
+    /// </summary>
+    /// <seealso cref="System.ComponentModel.INotifyPropertyChanged" />
     public class Vehiculo : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Placa del vehículo.
+        /// </summary>
         public string? Vehiculo_Placa { get; set; }
+        
+        /// <summary>
+        /// Placa del vehículo.
+        /// </summary>
         public string? Vehiculo_Marca { get; set; }
+
+        /// <summary>
+        /// Modelo del vehículo.
+        /// </summary>
         public string? Vehiculo_Modelo { get; set; }
+
+        /// <summary>
+        /// Año del vehículo.
+        /// </summary>
         public int Vehiculo_Año { get; set; }
+
+        /// <summary>
+        /// Tipo del vehículo.
+        /// </summary>
         public string? Vehiculo_Tipo { get; set; }
+
+        /// <summary>
+        /// Observaciones adicionales del vehículo.
+        /// </summary>
         public string? Vehiculo_Observaciones { get; set; }
+
+        /// <summary>
+        /// Observaciones adicionales del vehículo.
+        /// </summary>
         public string Cliente_DNI { get; set; }
+
+        /// <summary>
+        /// Nombre completo del cliente.
+        /// </summary>
         public string? Cliente_NombreCompleto { get; set; }
+
+        /// <summary>
+        /// Indica si el vehículo está activo.
+        /// </summary>
         public bool EstaActivo { get; set; } = true;
 
+        /// <summary>
+        /// Evento que se dispara cuando una propiedad cambia.
+        /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        /// <summary>
+        /// Notifica que una propiedad ha cambiado.
+        /// </summary>
+        /// <param name="name">Nombre de la propiedad modificada.</param>
         protected void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
+    /// <summary>
+    /// Ventana encargada de la gestión de vehículos (registro y actualización).
+    /// Permite validar datos, asociar clientes y guardar información en la base de datos.
+    /// </summary>
+    /// <seealso cref="System.Windows.Window" />
+    /// <seealso cref="System.Windows.Markup.IComponentConnector" />
     public partial class VehiWindow : Window
     {
+        /// <summary>
+        /// Instancia de acceso a base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Placa del vehículo seleccionado para edición.
+        /// </summary>
         private string _placaSeleccionada = string.Empty;
+
+        /// <summary>
+        /// Placa del vehículo seleccionado para edición.
+        /// </summary>
         private string _clienteDNI = string.Empty;
 
+        /// <summary>
+        /// DNI del cliente asociado.
+        /// </summary>
         public VehiWindow()
         {
             InitializeComponent();
@@ -41,17 +107,26 @@ namespace Vehículos
         }
 
 
+        /// <summary>
+        /// Valida que solo se ingresen números en el campo DNI del cliente.
+        /// </summary>
         private void txtClienteDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
+        /// <summary>
+        /// Valida que solo se ingresen números en el campo DNI del cliente.
+        /// </summary>
         private void txtPlaca_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-Z0-9]+$");
         }
 
 
+        /// <summary>
+        /// Convierte la placa a mayúsculas y actualiza el contador de caracteres.
+        /// </summary>
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtPlaca.IsReadOnly) return;
@@ -74,6 +149,9 @@ namespace Vehículos
             }
         }
 
+        /// <summary>
+        /// Detecta cambios en el DNI del cliente y oculta la información previa si es modificada.
+        /// </summary>
         private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (borderClienteInfo != null && txtClienteDNI.IsFocused && txtClienteDNI.Text != _clienteDNI)
@@ -84,6 +162,9 @@ namespace Vehículos
         }
 
 
+        /// <summary>
+        /// Maneja la verificación del cliente mediante su DNI.
+        /// </summary>
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
             string dni = txtClienteDNI.Text.Trim();
@@ -97,6 +178,9 @@ namespace Vehículos
             VerificarClienteEnBD(dni);
         }
 
+        /// <summary>
+        /// Maneja la verificación del cliente mediante su DNI.
+        /// </summary>
         private void VerificarClienteEnBD(string dni)
         {
             try
@@ -120,6 +204,9 @@ namespace Vehículos
             }
         }
 
+        /// <summary>
+        /// Muestra información visual cuando el cliente es válido.
+        /// </summary>
         private void MostrarClienteOk(string nombreCompleto)
         {
             borderClienteInfo.Visibility = Visibility.Visible;
@@ -130,6 +217,9 @@ namespace Vehículos
             txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
         }
 
+        /// <summary>
+        /// Muestra información visual cuando el cliente es válido.
+        /// </summary>
         private void MostrarClienteError(string mensaje)
         {
             borderClienteInfo.Visibility = Visibility.Visible;
@@ -140,6 +230,9 @@ namespace Vehículos
             txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
+        /// <summary>
+        /// Guarda un nuevo vehículo en la base de datos.
+        /// </summary>
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos(out int año)) return;
@@ -163,6 +256,9 @@ namespace Vehículos
             catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
 
+        /// <summary>
+        /// Actualiza un vehículo existente en la base de datos.
+        /// </summary>
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_placaSeleccionada))
@@ -194,8 +290,14 @@ namespace Vehículos
             catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
 
+        /// <summary>
+        /// Cierra la ventana sin realizar cambios.
+        /// </summary>
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
+        /// <summary>
+        /// Cambia la interfaz cuando el vehículo está activo.
+        /// </summary>
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -204,6 +306,9 @@ namespace Vehículos
             if (iconEstado != null) iconEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"));
         }
 
+        /// <summary>
+        /// Cambia la interfaz cuando el vehículo está inactivo.
+        /// </summary>
         private void ToggleActivo_Unchecked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -212,6 +317,9 @@ namespace Vehículos
             if (iconEstado != null) iconEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
+        /// <summary>
+        /// Carga los datos de un vehículo en la interfaz para su edición.
+        /// </summary>
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
@@ -240,6 +348,9 @@ namespace Vehículos
             btnActualizar.Opacity = 1;
         }
 
+        /// <summary>
+        /// Valida que todos los campos del formulario sean correctos antes de guardar o actualizar.
+        /// </summary>
         private bool ValidarCampos(out int año)
         {
             año = 0;
