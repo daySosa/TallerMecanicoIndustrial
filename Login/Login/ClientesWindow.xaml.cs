@@ -6,12 +6,30 @@ using System.Windows.Media;
 
 namespace InterfazClientes
 {
+    /// <summary>
+    /// Ventana encargada de gestionar el registro y actualización de clientes.
+    /// Incluye validaciones de entrada, formateo automático y control de estado del cliente.
+    /// </summary>
     public partial class ClientesWindow : Window
     {
+        /// <summary>
+        /// DNI del cliente que se encuentra en edición.
+        /// </summary>
         private string _dniEditando = string.Empty;
+
+        /// <summary>
+        /// Objeto que almacena el cliente registrado o actualizado.
+        /// </summary>
         public clsCliente ClienteResultado { get; private set; }
+
+        /// <summary>
+        /// Instancia para realizar operaciones en la base de datos.
+        /// </summary>
         clsConsultasBD db = new clsConsultasBD();
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="ClientesWindow"/>.
+        /// </summary>
         public ClientesWindow()
         {
             InitializeComponent();
@@ -19,11 +37,17 @@ namespace InterfazClientes
             btnActualizar.Opacity = 0.4;
         }
 
+        /// <summary>
+        /// Restringe la entrada del DNI a únicamente valores numéricos.
+        /// </summary>
         private void txtDPI_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
+        /// <summary>
+        /// Restringe la entrada del teléfono a números y limita su longitud a 8 dígitos.
+        /// </summary>
         private void txtTelefono_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Regex.IsMatch(e.Text, @"^\d+$"))
@@ -39,6 +63,9 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Formatea automáticamente el número telefónico en el formato ####-####.
+        /// </summary>
         private void txtTelefono_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             txtTelefono.TextChanged -= txtTelefono_TextChanged;
@@ -48,16 +75,13 @@ namespace InterfazClientes
             if (soloNumeros.Length > 8)
                 soloNumeros = soloNumeros.Substring(0, 8);
 
-<<<<<<< HEAD
             string formateado = "";
 
             if (soloNumeros.Length <= 4)
                 formateado = soloNumeros;
             else
                 formateado = soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
-=======
             string formateado;
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
 
             if (soloNumeros.Length == 0)
                 formateado = "";
@@ -68,20 +92,20 @@ namespace InterfazClientes
 
             int caretPos = txtTelefono.CaretIndex;
             txtTelefono.Text = formateado;
-<<<<<<< HEAD
             txtTelefono.CaretIndex = txtTelefono.Text.Length;
-=======
 
             int nuevosCaret = caretPos;
             if (nuevosCaret > 4) nuevosCaret = Math.Min(nuevosCaret + 1, formateado.Length);
             else nuevosCaret = Math.Min(nuevosCaret, formateado.Length);
 
             txtTelefono.CaretIndex = nuevosCaret;
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
 
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
 
+        /// <summary>
+        /// Carga los datos de un cliente en la interfaz para su edición.
+        /// </summary>
         public void CargarClienteParaEditar(clsCliente c)
         {
             _dniEditando = c.Cliente_DPI;
@@ -106,6 +130,9 @@ namespace InterfazClientes
             btnActualizar.Opacity = 1;
         }
 
+        /// <summary>
+        /// Cambia el estado visual del cliente a activo.
+        /// </summary>
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -115,6 +142,9 @@ namespace InterfazClientes
             iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
         }
 
+        /// <summary>
+        /// Cambia el estado visual del cliente a inactivo.
+        /// </summary>
         private void ToggleActivo_Unchecked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -124,8 +154,14 @@ namespace InterfazClientes
             iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CloseCircleOutline;
         }
 
+        /// <summary>
+        /// Cierra la ventana sin realizar ninguna acción.
+        /// </summary>
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
+        /// <summary>
+        /// Valida los datos ingresados y registra un nuevo cliente en la base de datos.
+        /// </summary>
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
             btnAgregar.IsEnabled = false;
@@ -135,12 +171,10 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
-<<<<<<< HEAD
             if (!clsValidaciones.Telefono(telefonoLimpio)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
-=======
             if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
@@ -150,7 +184,6 @@ namespace InterfazClientes
                 btnAgregar.IsEnabled = true;
                 return;
             }
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
 
             try
             {
@@ -196,6 +229,9 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y actualiza la información de un cliente existente.
+        /// </summary>
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_dniEditando))
@@ -205,12 +241,10 @@ namespace InterfazClientes
                 return;
             }
 
-<<<<<<< HEAD
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
-=======
             string nuevoDni = txtDPI.Text.Trim();
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
@@ -218,7 +252,6 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
             if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) return;
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
             if (!clsValidaciones.Telefono(telefonoLimpio)) return;
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
