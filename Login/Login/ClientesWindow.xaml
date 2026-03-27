@@ -94,7 +94,7 @@
                                      BorderBrush="#3a3f5c" CaretBrush="White"
                                      Height="40" VerticalContentAlignment="Center"
                                      Padding="10,0"
-                                     MaxLength="9"
+                                     MaxLength="8"
                                      materialDesign:HintAssist.Hint="Ej: 9999-9999"
                                      PreviewTextInput="txtTelefono_PreviewTextInput"/>
                         </Grid>

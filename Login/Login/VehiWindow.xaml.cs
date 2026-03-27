@@ -45,7 +45,7 @@ namespace Vehículos
 
         private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (borderClienteInfo != null && txtClienteDNI.IsFocused)
+            if (borderClienteInfo != null && txtClienteDNI.IsFocused && txtClienteDNI.Text != _clienteDNI)
             {
                 borderClienteInfo.Visibility = Visibility.Collapsed;
                 _clienteDNI = string.Empty;
@@ -213,33 +213,31 @@ namespace Vehículos
             año = 0;
 
             if (!clsValidaciones.ValidarTextoRequerido(txtPlaca.Text, "placa del vehículo")) { txtPlaca.Focus(); return false; }
-            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text))
-            {
-                txtPlaca.Focus();
-                return false;
-            }
             if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca del vehículo")) { txtMarca.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtModelo.Text, "modelo del vehículo")) { txtModelo.Focus(); return false; }
             if (!clsValidaciones.ValidarTextoRequerido(txtAnio.Text, "año del vehículo")) { txtAnio.Focus(); return false; }
             if (!clsValidaciones.ValidarComboSeleccionado(cmbTipo.SelectedItem, "tipo de vehículo")) { cmbTipo.Focus(); return false; }
 
-            if (!int.TryParse(txtAnio.Text, out año) || año < 1900 || año > DateTime.Now.Year + 1)
+            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text.Trim()))
             {
-                MessageBox.Show("⚠ El año ingresado no es válido.", "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPlaca.Focus();
+                return false;
+            }
+
+            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out año))
+            {
                 txtAnio.Focus();
                 return false;
             }
 
-            if (!txtMarca.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            if (!clsValidaciones.ValidarTextoAlfanumerico(txtMarca.Text, "marca"))
             {
-                MessageBox.Show("⚠ La marca no debe contener caracteres especiales.", "Marca inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 txtMarca.Focus();
                 return false;
             }
 
-            if (!txtModelo.Text.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            if (!clsValidaciones.ValidarTextoAlfanumerico(txtModelo.Text, "modelo"))
             {
-                MessageBox.Show("⚠ El modelo no debe contener caracteres especiales.", "Modelo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 txtModelo.Focus();
                 return false;
             }

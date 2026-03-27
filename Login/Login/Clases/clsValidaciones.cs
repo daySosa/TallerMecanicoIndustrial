@@ -427,8 +427,34 @@ namespace Login.Clases
             // Longitud razonable
             if (p.Length < 6)
             {
-                MessageBox.Show("⚠ La placa debe tener entre 6 y 8 caracteres.",
+                MessageBox.Show("⚠ La placa debe tener 6 caracteres.",
                     "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool ValidarAnio(string texto, out int año)
+        {
+            año = 0;
+
+            if (!int.TryParse(texto, out año) || año < 1900 || año > DateTime.Now.Year + 1)
+            {
+                MessageBox.Show("⚠ El año ingresado no es válido.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool ValidarTextoAlfanumerico(string texto, string nombreCampo)
+        {
+            if (!texto.Trim().All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show($"⚠ El {nombreCampo} no debe contener caracteres especiales.",
+                    $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 

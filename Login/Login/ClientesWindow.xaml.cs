@@ -31,8 +31,6 @@ namespace InterfazClientes
 
         private void txtTelefono_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            if (txtTelefono == null) return;
-
             txtTelefono.TextChanged -= txtTelefono_TextChanged;
 
             string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
@@ -40,12 +38,15 @@ namespace InterfazClientes
             if (soloNumeros.Length > 8)
                 soloNumeros = soloNumeros.Substring(0, 8);
 
-            string formateado = soloNumeros.Length == 8
-                ? soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4)
-                : soloNumeros;
+            string formateado = "";
+
+            if (soloNumeros.Length <= 4)
+                formateado = soloNumeros;
+            else
+                formateado = soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
 
             txtTelefono.Text = formateado;
-            txtTelefono.CaretIndex = formateado.Length;
+            txtTelefono.CaretIndex = txtTelefono.Text.Length;
 
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
@@ -92,26 +93,23 @@ namespace InterfazClientes
         {
             btnAgregar.IsEnabled = false;
 
+            string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
+
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
-            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9)) { btnAgregar.IsEnabled = true; return; }
-            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
-            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
-            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
-            if (!clsValidaciones.Telefono(txtTelefono.Text))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
+            if (!clsValidaciones.Telefono(telefonoLimpio)) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
 
             try
             {
-                bool insertado = db.AgregarCliente( 
+                bool insertado = db.AgregarCliente(
                     txtDPI.Text.Trim(),
                     txtNombre.Text.Trim(),
                     txtApellido.Text.Trim(),
-                    txtTelefono.Text.Trim(),
+                    telefonoLimpio,
                     txtCorreo.Text.Trim(),
                     txtDireccion.Text.Trim()
                 );
@@ -129,7 +127,7 @@ namespace InterfazClientes
                     Cliente_DPI = txtDPI.Text.Trim(),
                     Cliente_Nombre = txtNombre.Text.Trim(),
                     Cliente_Apellido = txtApellido.Text.Trim(),
-                    Cliente_Telefono = txtTelefono.Text.Trim(),
+                    Cliente_Telefono = telefonoLimpio,
                     Cliente_Correo = txtCorreo.Text.Trim(),
                     Cliente_Direccion = txtDireccion.Text.Trim(),
                     Cliente_Activo = true
@@ -158,25 +156,22 @@ namespace InterfazClientes
                 return;
             }
 
+            string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
+
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
-            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 8)) return;
-            if (!clsValidaciones.Telefono(txtTelefono.Text))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
+            if (!clsValidaciones.Telefono(telefonoLimpio)) return;
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
 
             try
             {
-                db.ActualizarCliente( 
+                db.ActualizarCliente(
                     _dniEditando,
                     txtNombre.Text.Trim(),
                     txtApellido.Text.Trim(),
-                    txtTelefono.Text.Trim(),
+                    telefonoLimpio,
                     txtCorreo.Text.Trim(),
                     txtDireccion.Text.Trim(),
                     toggleActivo.IsChecked == true
