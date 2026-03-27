@@ -10,10 +10,22 @@ using Login.Clases;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Ventana principal del módulo de contabilidad.
+    /// Permite gestionar egresos, visualizar comprobantes, acceder a otros módulos
+    /// y administrar notificaciones del sistema.
+    /// </summary>
     public partial class ContaWindow : Window
     {
+        /// <summary>
+        /// Instancia utilizada para realizar consultas y operaciones en la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="ContaWindow"/>
+        /// y carga los datos iniciales del módulo.
+        /// </summary>
         public ContaWindow()
         {
             InitializeComponent();
@@ -21,6 +33,10 @@ namespace Contabilidad
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Carga la lista de gastos en el DataGrid, aplicando un filtro opcional de búsqueda.
+        /// </summary>
+        /// <param name="busqueda">Texto de búsqueda para filtrar los gastos.</param>
         public void CargarEgreso(string busqueda = null)
         {
             try
@@ -34,12 +50,18 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Filtra los gastos en tiempo real según el texto ingresado en el campo de búsqueda.
+        /// </summary>
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             string texto = txtBuscar.Text.Trim();
             CargarEgreso(string.IsNullOrEmpty(texto) ? null : texto);
         }
 
+        /// <summary>
+        /// Abre la ventana para registrar un nuevo gasto.
+        /// </summary>
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarGasto();
@@ -48,11 +70,17 @@ namespace Contabilidad
                 CargarEgreso();
         }
 
+        //// <summary>
+        /// Evento reservado para futuras funcionalidades de actualización manual.
+        /// </summary>
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
 
         }
 
+        /// <summary>
+        /// Abre la ventana de edición de un gasto al hacer doble clic sobre un registro.
+        /// </summary>
         private void dgGastos_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (dgGastos.SelectedItem is DataRowView fila)
@@ -74,6 +102,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Muestra el comprobante del gasto seleccionado.
+        /// </summary>
         private void btnMostrarComprobante_Click(object sender, RoutedEventArgs e)
         {
             if (dgGastos.SelectedItem == null)
@@ -100,11 +131,17 @@ namespace Contabilidad
             ventana.ShowDialog();
         }
 
+        /// <summary>
+        /// Recarga la lista de egresos.
+        /// </summary>
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
             CargarEgreso();
         }
 
+        /// <summary>
+        /// Navega al módulo de ingresos (pagos).
+        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
             MenuDePagos ventana = new MenuDePagos();
@@ -112,6 +149,9 @@ namespace Contabilidad
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al menú principal del sistema.
+        /// </summary>
         private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MenuPrincipal();
@@ -119,6 +159,9 @@ namespace Contabilidad
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de inventario.
+        /// </summary>
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InterfazInventario.MenúPrincipalInventario();
@@ -126,6 +169,9 @@ namespace Contabilidad
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de vehículos.
+        /// </summary>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
         {
             MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
@@ -133,6 +179,9 @@ namespace Contabilidad
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de clientes.
+        /// </summary>
         private void btnClientes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InterfazClientes.MenúPrincipalClientes();
@@ -140,6 +189,9 @@ namespace Contabilidad
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de órdenes de trabajo.
+        /// </summary>
         private void btnOrdenes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
@@ -147,6 +199,9 @@ namespace Contabilidad
             this.Close();
         }
 
+        /// <summary>
+        /// Cierra la sesión del usuario actual y regresa a la pantalla de inicio de sesión.
+        /// </summary>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
@@ -159,6 +214,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Muestra u oculta el panel de notificaciones.
+        /// </summary>
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -166,6 +224,9 @@ namespace Contabilidad
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
+        /// <summary>
+        /// Carga el número de notificaciones pendientes y actualiza el indicador visual.
+        /// </summary>
         public void CargarNotificaciones()
         {
             try
@@ -182,6 +243,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Carga las notificaciones pendientes dentro del panel emergente (popup).
+        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -241,6 +305,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Crea una tarjeta visual para mostrar una notificación en el panel.
+        /// </summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -318,6 +385,9 @@ namespace Contabilidad
             return card;
         }
 
+        /// <summary>
+        /// Marca todas las notificaciones como leídas.
+        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -326,6 +396,9 @@ namespace Contabilidad
         }
 
 
+        /// <summary>
+        /// Abre la ventana de reportes del módulo de egresos.
+        /// </summary>
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ReportesWindow("Egresos");

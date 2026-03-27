@@ -5,11 +5,26 @@ using System.Windows.Controls;
 
 namespace InterfazInventario
 {
+    /// <summary>
+    /// Ventana encargada de gestionar el inventario de productos.
+    /// Permite agregar nuevos productos, actualizar información existente
+    /// y controlar el stock disponible.
+    /// </summary>
     public partial class InventarioWindow : Window
     {
+        /// <summary>
+        /// Instancia utilizada para realizar operaciones en la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Identificador del producto seleccionado para edición.
+        /// </summary>
         private int _productoIdSeleccionado = -1;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="InventarioWindow"/>.
+        /// </summary>
         public InventarioWindow()
         {
             InitializeComponent();
@@ -17,6 +32,9 @@ namespace InterfazInventario
             btnActualizar.Opacity = 0.4;
         }
 
+        /// <summary>
+        /// Incrementa la cantidad ingresada en el campo de stock.
+        /// </summary>
         private void BtnSumar_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(txtCantidad.Text, out int val))
@@ -25,6 +43,9 @@ namespace InterfazInventario
                 txtCantidad.Text = "1";
         }
 
+        /// <summary>
+        /// Disminuye la cantidad ingresada en el campo de stock.
+        /// </summary>
         private void BtnRestar_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(txtCantidad.Text, out int val) && val > 0)
@@ -33,6 +54,9 @@ namespace InterfazInventario
                 txtCantidad.Text = "0";
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y registra un nuevo producto en el inventario.
+        /// </summary>
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
             btnAgregar.IsEnabled = false;
@@ -68,6 +92,10 @@ namespace InterfazInventario
             }
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y actualiza la información de un producto existente,
+        /// incluyendo la modificación del stock.
+        /// </summary>
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             btnAgregar.IsEnabled = false;
@@ -114,8 +142,15 @@ namespace InterfazInventario
             }
         }
 
+        /// <summary>
+        /// Cancela la operación actual y cierra la ventana.
+        /// </summary>
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
+        /// <summary>
+        /// Carga la información de un producto seleccionado para su edición.
+        /// </summary>
+        /// <param name="producto">Producto seleccionado del inventario.</param>
         public void CargarProductoParaEditar(Repuesto producto)
         {
             _productoIdSeleccionado = producto.Producto_ID;
@@ -144,6 +179,13 @@ namespace InterfazInventario
             Title = "Inventario - Editar Producto";
         }
 
+        /// <summary>
+        /// Obtiene y valida los valores ingresados por el usuario,
+        /// incluyendo nombre, categoría, marca, precio y cantidad.
+        /// </summary>
+        /// <param name="precio">Precio del producto.</param>
+        /// <param name="cantidad">Cantidad a agregar o registrar.</param>
+        /// <returns>True si los valores son válidos; de lo contrario, false.</returns>
         private bool ObtenerValores(out decimal precio, out int cantidad)
         {
             precio = 0;
@@ -197,6 +239,9 @@ namespace InterfazInventario
             return true;
         }
 
+        /// <summary>
+        /// Evento reservado para futuras validaciones dinámicas del precio.
+        /// </summary>
         private void txtPrecio_TextChanged(object sender, TextChangedEventArgs e)
         {
 

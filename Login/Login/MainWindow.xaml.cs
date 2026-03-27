@@ -8,29 +8,52 @@ using System.Windows.Media;
 
 namespace Login
 {
+    /// <summary>
+    /// Ventana principal de inicio de sesión.
+    /// Permite autenticación de usuarios, validación de credenciales
+    /// y manejo de autenticación en dos factores (2FA).
+    /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Indica si la contraseña se muestra en texto visible o en modo oculto.
+        /// </summary>
         private bool _contrasenaVisible = false;
+
+        /// <summary>
+        /// Instancia utilizada para validar credenciales en la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
 
+        /// <summary>
+        /// Ruta del archivo donde se almacenan las credenciales recordadas del usuario.
+        /// </summary>
         private readonly string _archivoRecordar =
             Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="MainWindow"/>
+        /// y carga las credenciales guardadas si existen.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
         }
 
-
+        /// <summary>
+        /// Permite mover la ventana arrastrándola con el mouse.
+        /// </summary>
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 this.DragMove();
         }
 
-
+        /// <summary>
+        /// Aplica estilo visual al campo de correo cuando recibe el foco.
+        /// </summary>
         private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
         {
             borderCorreo.BorderBrush =
@@ -38,12 +61,18 @@ namespace Login
             borderCorreo.BorderThickness = new Thickness(2);
         }
 
+        /// <summary>
+        /// Restaura el estilo visual del campo de correo al perder el foco.
+        /// </summary>
         private void TxtCorreo_LostFocus(object sender, RoutedEventArgs e)
         {
             borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             borderCorreo.BorderThickness = new Thickness(1.5);
         }
 
+        /// <summary>
+        /// Aplica estilo visual al campo de contraseña cuando recibe el foco.
+        /// </summary>
         private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e)
         {
             borderContrasena.BorderBrush =
@@ -51,12 +80,18 @@ namespace Login
             borderContrasena.BorderThickness = new Thickness(2);
         }
 
+        /// <summary>
+        /// Restaura el estilo visual del campo de contraseña al perder el foco.
+        /// </summary>
         private void TxtContrasena_LostFocus(object sender, RoutedEventArgs e)
         {
             borderContrasena.BorderBrush = new SolidColorBrush(Colors.Transparent);
             borderContrasena.BorderThickness = new Thickness(1.5);
         }
 
+        /// <summary>
+        /// Alterna la visibilidad de la contraseña entre texto oculto y visible.
+        /// </summary>
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
             _contrasenaVisible = !_contrasenaVisible;
@@ -81,6 +116,10 @@ namespace Login
         }
 
 
+        /// <summary>
+        /// Obtiene la contraseña ingresada por el usuario según el modo de visualización.
+        /// </summary>
+        /// <returns>Contraseña ingresada.</returns>
         private string ObtenerContrasena()
         {
             return _contrasenaVisible
@@ -89,6 +128,9 @@ namespace Login
         }
 
 
+        /// <summary>
+        /// Guarda las credenciales del usuario en un archivo local en formato JSON.
+        /// </summary>
         private void GuardarCredenciales(string correo, string contrasena)
         {
             var datos = new { Correo = correo, Contrasena = contrasena };
@@ -96,12 +138,18 @@ namespace Login
             File.WriteAllText(_archivoRecordar, json);
         }
 
+        /// <summary>
+        /// Elimina las credenciales almacenadas localmente.
+        /// </summary>
         private void EliminarCredenciales()
         {
             if (File.Exists(_archivoRecordar))
                 File.Delete(_archivoRecordar);
         }
 
+        //// <summary>
+        /// Carga las credenciales almacenadas previamente y las muestra en la interfaz.
+        /// </summary>
         private void CargarCredencialesRecordadas()
         {
             try
@@ -120,6 +168,9 @@ namespace Login
             }
         }
 
+        /// <summary>
+        /// Valida los datos ingresados y ejecuta el proceso de inicio de sesión.
+        /// </summary>
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             bool hayError = false;
@@ -167,6 +218,9 @@ namespace Login
             IniciarSesion(txtCorreo.Text.Trim(), contrasena);
         }
 
+        /// <summary>
+        /// Verifica las credenciales del usuario y ejecuta la autenticación en dos factores (2FA).
+        /// </summary>
         private void IniciarSesion(string correo, string contrasena)
         {
             try

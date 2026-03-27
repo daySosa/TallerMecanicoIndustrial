@@ -14,50 +14,82 @@ using System.Windows.Shapes;
 namespace Órdenes_de_Trabajo.Controls
 {
     /// <summary>
-    /// Lógica de interacción para EspañolDatePicker.xaml
+    /// Control personalizado tipo DatePicker en español.
+    /// Permite seleccionar fechas mediante un calendario interactivo,
+    /// mostrando los meses y días en formato localizado.
     /// </summary>
     public partial class EspañolDatePicker : UserControl
     {
+        /// <summary>
+        /// Propiedad de dependencia que almacena la fecha seleccionada.
+        /// Permite el enlace bidireccional (TwoWay Binding) con otros controles.
+        /// </summary>
         public static readonly DependencyProperty SelectedDateProperty =
             DependencyProperty.Register("SelectedDate", typeof(DateTime?), typeof(EspañolDatePicker),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
+        /// <summary>
+        /// Obtiene o establece la fecha seleccionada en el control.
+        /// </summary>
         public DateTime? SelectedDate
         {
             get => (DateTime?)GetValue(SelectedDateProperty);
             set => SetValue(SelectedDateProperty, value);
         }
 
+        /// <summary>
+        /// Lista de nombres de los meses en español.
+        /// </summary>
         private DateTime _mesActual = DateTime.Today;
 
+        /// <summary>
+        /// Lista de nombres de los meses en español.
+        /// </summary>
         private static readonly string[] _meses = {
             "Enero","Febrero","Marzo","Abril","Mayo","Junio",
             "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
         };
 
+        /// <summary>
+        /// Inicializa una nueva instancia del control <see cref="EspañolDatePicker"/>
+        /// y carga el calendario inicial.
+        /// </summary>
         public EspañolDatePicker()
         {
             InitializeComponent();
             ActualizarCalendario();
         }
 
+        /// <summary>
+        /// Muestra u oculta el calendario al hacer clic en el campo de fecha.
+        /// </summary>
         private void TxtFecha_Click(object sender, MouseButtonEventArgs e)
         {
             popupCalendario.IsOpen = !popupCalendario.IsOpen;
         }
 
+        /// <summary>
+        /// Cambia al mes anterior en el calendario.
+        /// </summary>
         private void BtnAnterior_Click(object sender, RoutedEventArgs e)
         {
             _mesActual = _mesActual.AddMonths(-1);
             ActualizarCalendario();
         }
 
+        /// <summary>
+        /// Cambia al mes siguiente en el calendario.
+        /// </summary>
         private void BtnSiguiente_Click(object sender, RoutedEventArgs e)
         {
             _mesActual = _mesActual.AddMonths(1);
             ActualizarCalendario();
         }
 
+        /// <summary>
+        /// Genera y actualiza la visualización del calendario,
+        /// incluyendo días del mes actual y días de meses adyacentes.
+        /// </summary>
         private void ActualizarCalendario()
         {
             txtMesAnio.Text = $"{_meses[_mesActual.Month - 1]} {_mesActual.Year}";
@@ -88,6 +120,10 @@ namespace Órdenes_de_Trabajo.Controls
             icDias.ItemsSource = dias;
         }
 
+        /// <summary>
+        /// Maneja la selección de un día en el calendario,
+        /// actualizando la fecha seleccionada y cerrando el popup.
+        /// </summary>
         private void DiaClic(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is DateTime fecha)
@@ -100,14 +136,43 @@ namespace Órdenes_de_Trabajo.Controls
         }
     }
 
+    /// <summary>
+    /// Representa un día dentro del calendario,
+    /// incluyendo información de estado para su visualización.
+    /// </summary>
     public class DiaItem
     {
+        /// <summary>
+        /// Número del día en formato texto.
+        /// </summary>
         public string Dia { get; }
+
+        /// <summary>
+        /// Fecha completa asociada al día.
+        /// </summary>
         public DateTime Fecha { get; }
+
+        /// <summary>
+        /// Indica si el día pertenece a otro mes distinto al actual.
+        /// </summary>
         public bool EsOtroMes { get; }
+
+        /// <summary>
+        /// Indica si el día corresponde a la fecha actual (hoy).
+        /// </summary>
         public bool EsHoy { get; }
+
+        /// <summary>
+        /// Indica si el día está seleccionado.
+        /// </summary>
         public bool EsSeleccionado { get; }
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="DiaItem"/>.
+        /// </summary>
+        /// <param name="fecha">Fecha representada.</param>
+        /// <param name="seleccionada">Fecha seleccionada actualmente.</param>
+        /// <param name="esOtroMes">Indica si pertenece a otro mes.</param>
         public DiaItem(DateTime fecha, DateTime? seleccionada, bool esOtroMes)
         {
             Fecha = fecha;

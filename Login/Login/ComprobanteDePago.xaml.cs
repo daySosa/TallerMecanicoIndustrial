@@ -14,16 +14,32 @@ using Login.Clases;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Ventana encargada de mostrar el comprobante de un pago realizado,
+    /// incluyendo información del cliente, monto y fecha.
+    /// </summary>
     public partial class ComprobanteDePago : Window
     {
+        /// <summary>
+        /// Instancia utilizada para consultar la información del comprobante en la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="ComprobanteDePago"/>
+        /// y carga los datos del pago correspondiente.
+        /// </summary>
+        /// <param name="pagoId">Identificador del pago.</param>
         public ComprobanteDePago(int pagoId)
         {
             InitializeComponent();
             CargarComprobante(pagoId);
         }
 
+        /// <summary>
+        /// Obtiene y muestra la información del comprobante de pago desde la base de datos.
+        /// </summary>
+        /// <param name="pagoId">Identificador del pago.</param>
         private void CargarComprobante(int pagoId)
         {
             try
@@ -62,6 +78,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Cierra la ventana del comprobante.
+        /// </summary>
         private void btnCerrar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
