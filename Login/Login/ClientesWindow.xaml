@@ -88,7 +88,6 @@
                                                          Width="16" Height="16" VerticalAlignment="Center"/>
                             </Border>
                             <TextBox x:Name="txtTelefono" Grid.Column="1"
-<<<<<<< HEAD
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Background="#1e2130" Foreground="White"
                                      BorderBrush="#3a3f5c" CaretBrush="White"
@@ -96,19 +95,9 @@
                                      Padding="10,0"
                                      MaxLength="8"
                                      materialDesign:HintAssist.Hint="Ej: 9999-9999"
-                                     PreviewTextInput="txtTelefono_PreviewTextInput"/>
-=======
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Background="#1e2130" Foreground="White"
-                                 BorderBrush="#3a3f5c" CaretBrush="White"
-                                 Height="40" VerticalContentAlignment="Center"
-                                 Padding="10,0"
-                                 MaxLength="9"
-                                 materialDesign:HintAssist.Hint="Ej: 9999-9999"
-                                 materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed"
-                                 PreviewTextInput="txtTelefono_PreviewTextInput"
-                                 TextChanged="txtTelefono_TextChanged"/>
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
+                                     PreviewTextInput="txtTelefono_PreviewTextInput"
+                                     materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed"
+                                     TextChanged="txtTelefono_TextChanged"/>
                         </Grid>
 
                     </StackPanel>

@@ -1,4 +1,5 @@
 ﻿using Login.Clases;
+using MainWindow.Clases;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -34,9 +35,11 @@ namespace Vehículos
         public VehiWindow()
         {
             InitializeComponent();
+            txtAnio.MaxLength = 4;
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
         }
+
 
         private void txtClienteDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
@@ -48,6 +51,29 @@ namespace Vehículos
             e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-Z0-9]+$");
         }
 
+
+        private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (txtPlaca.IsReadOnly) return;
+
+            int caret = txtPlaca.CaretIndex;
+            string upper = txtPlaca.Text.ToUpper();
+            if (txtPlaca.Text != upper)
+            {
+                txtPlaca.Text = upper;
+                txtPlaca.CaretIndex = Math.Min(caret, txtPlaca.Text.Length);
+            }
+
+            if (txtContadorPlaca != null)
+            {
+                int len = txtPlaca.Text.Length;
+                txtContadorPlaca.Text = $"{len} / 7";
+                txtContadorPlaca.Foreground = (len >= 6 && len <= 7)
+                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50"))
+                    : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6c7293"));
+            }
+        }
+
         private void txtClienteDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (borderClienteInfo != null && txtClienteDNI.IsFocused && txtClienteDNI.Text != _clienteDNI)
@@ -57,13 +83,6 @@ namespace Vehículos
             }
         }
 
-        private bool ValidarDNIHondureño(string dni) => Regex.IsMatch(dni, @"^\d{13}$");
-
-        public void EstablecerCliente(int clienteDNI)
-        {
-            txtClienteDNI.Text = clienteDNI.ToString();
-            VerificarClienteEnBD(clienteDNI.ToString());
-        }
 
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
@@ -168,9 +187,7 @@ namespace Vehículos
                     Obs = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim(),
                     Activo = toggleActivo.IsChecked == true
                 };
-
                 _db.GuardarOActualizarVehiculo(false, datos, _placaSeleccionada);
-
                 MessageBox.Show("✅ Vehículo actualizado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
@@ -198,7 +215,6 @@ namespace Vehículos
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
-
             txtPlaca.Text = vehiculo.Vehiculo_Placa;
             txtMarca.Text = vehiculo.Vehiculo_Marca;
             txtModelo.Text = vehiculo.Vehiculo_Modelo;
@@ -228,72 +244,28 @@ namespace Vehículos
         {
             año = 0;
 
-            if (!clsValidaciones.ValidarTextoRequerido(txtPlaca.Text, "placa del vehículo")) { txtPlaca.Focus(); return false; }
-<<<<<<< HEAD
-=======
-            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text)) { txtPlaca.Focus(); return false; }
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
-            if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca del vehículo")) { txtMarca.Focus(); return false; }
-            if (!clsValidaciones.ValidarTextoRequerido(txtModelo.Text, "modelo del vehículo")) { txtModelo.Focus(); return false; }
-            if (!clsValidaciones.ValidarTextoRequerido(txtAnio.Text, "año del vehículo")) { txtAnio.Focus(); return false; }
-            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipo.SelectedItem, "tipo de vehículo")) { cmbTipo.Focus(); return false; }
+            bool ok = clsValidacionesVehiculo.ValidarFormularioCompleto(
+                placa: txtPlaca.Text.Trim(),
+                marca: txtMarca.Text.Trim(),
+                modelo: txtModelo.Text.Trim(),
+                anioTexto: txtAnio.Text.Trim(),
+                tipoSeleccionado: cmbTipo.SelectedItem,
+                observaciones: txtObservaciones.Text,
+                clienteDniVerificado: _clienteDNI,
+                año: out año);
 
-            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text.Trim()))
+            if (!ok)
             {
-                txtPlaca.Focus();
-                return false;
-            }
-
-            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out año))
-            {
-                txtAnio.Focus();
-                return false;
-            }
-
-            if (!clsValidaciones.ValidarTextoAlfanumerico(txtMarca.Text, "marca"))
-            {
-                txtMarca.Focus();
-                return false;
-            }
-
-            if (!clsValidaciones.ValidarTextoAlfanumerico(txtModelo.Text, "modelo"))
-            {
-                txtModelo.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(_clienteDNI))
-            {
-                MessageBox.Show("⚠ Debes verificar el DNI del cliente antes de guardar.",
-                    "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                if (string.IsNullOrWhiteSpace(txtPlaca.Text)) { txtPlaca.Focus(); return false; }
+                if (string.IsNullOrWhiteSpace(txtMarca.Text)) { txtMarca.Focus(); return false; }
+                if (string.IsNullOrWhiteSpace(txtModelo.Text)) { txtModelo.Focus(); return false; }
+                if (string.IsNullOrWhiteSpace(txtAnio.Text)) { txtAnio.Focus(); return false; }
+                if (cmbTipo.SelectedItem == null) { cmbTipo.Focus(); return false; }
                 return false;
             }
 
             return true;
         }
 
-        // Convierte a mayúsculas — el contador lo maneja MaterialDesign automáticamente
-        private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (txtPlaca.IsReadOnly) return;
-            int caret = txtPlaca.CaretIndex;
-            txtPlaca.Text = txtPlaca.Text.ToUpper();
-            txtPlaca.CaretIndex = caret;
-        }
-
-        private void LimpiarFormulario()
-        {
-            txtPlaca.Clear();
-            txtMarca.Clear();
-            txtModelo.Clear();
-            txtAnio.Clear();
-            txtObservaciones.Clear();
-            cmbTipo.SelectedIndex = -1;
-            toggleActivo.IsChecked = true;
-            txtClienteDNI.Clear();
-            borderClienteInfo.Visibility = Visibility.Collapsed;
-            _placaSeleccionada = string.Empty;
-            _clienteDNI = string.Empty;
-        }
     }
 }

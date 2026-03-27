@@ -2,10 +2,8 @@
 using InterfazClientes;
 using InterfazInventario;
 using LiveCharts;
-using Login;
 using Login.Clases;
 using Órdenes_de_Trabajo;
-using System.Data.SqlClient;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -387,7 +385,7 @@ namespace Dasboard_Prueba
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                new MainWindow().Show();
+                new Login.MainWindow().Show();
                 this.Close();
             }
         }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
-namespace Login.Clases
+namespace MainWindow.Clases
 {
     public class clsValidaciones
     {
@@ -96,7 +93,7 @@ namespace Login.Clases
             return true;
         }
 
-        
+
         public static bool ValidarEntero(string texto, out int resultado, string mensaje, Action<string> mostrarMensaje)
         {
             if (!int.TryParse(texto, out resultado))
@@ -458,6 +455,29 @@ namespace Login.Clases
                 return false;
             }
 
+            return true;
+        }
+
+        public static bool ValidarLongitudMaxima(string texto, int max, string nombreCampo)
+        {
+            if (!string.IsNullOrEmpty(texto) && texto.Length > max)
+            {
+                MessageBox.Show($"⚠ El {nombreCampo} no puede superar {max} caracteres.",
+                    "Longitud inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ✅ Valida que el año tenga exactamente 4 dígitos antes del parse
+        public static bool ValidarAnioFormato(string texto)
+        {
+            if (!Regex.IsMatch(texto.Trim(), @"^\d{4}$"))
+            {
+                MessageBox.Show("⚠ El año debe tener exactamente 4 dígitos.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
             return true;
         }
 
