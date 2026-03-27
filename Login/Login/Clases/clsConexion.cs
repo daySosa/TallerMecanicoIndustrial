@@ -10,26 +10,27 @@ using System.Data.SqlClient;
 
 
 
-
 namespace Login.Clases
 {
     /// <summary>
-    /// 
+    /// Clase encargada de gestionar la conexión a la base de datos SQL Server.
+    /// Permite abrir y cerrar la conexión de forma segura.
     /// </summary>
     internal class clsConexion
     {
-        /// <summary>
-        /// The conexion
+        //// <summary>
+        /// Cadena de conexión utilizada para acceder a la base de datos en Azure SQL.
         /// </summary>
         string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
         /// <summary>
-        /// The SQL c
+        /// Objeto de conexión SQL que se utiliza para ejecutar comandos en la base de datos.
         /// </summary>
         public SqlConnection SqlC = new SqlConnection();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="clsConexion"/> class.
+        /// Inicializa una nueva instancia de la clase <see cref="clsConexion"/>
+        /// y asigna la cadena de conexión al objeto SqlConnection.
         /// </summary>
         public clsConexion()
         {
@@ -37,7 +38,8 @@ namespace Login.Clases
         }
 
         /// <summary>
-        /// Abrirs this instance.
+        /// Abre la conexión a la base de datos si se encuentra cerrada.
+        /// Maneja excepciones en caso de error durante la apertura.
         /// </summary>
         public void Abrir() 
         { 
@@ -52,7 +54,8 @@ namespace Login.Clases
         }
 
         /// <summary>
-        /// Cerrars this instance.
+        /// Cierra la conexión a la base de datos si se encuentra abierta.
+        /// Maneja excepciones en caso de error durante el cierre.
         /// </summary>
         public void Cerrar() 
         { 
