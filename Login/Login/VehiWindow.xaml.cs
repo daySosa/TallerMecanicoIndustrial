@@ -124,6 +124,7 @@ namespace Vehículos
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidarCampos(out int año)) return;
+
             try
             {
                 var datos = new
@@ -134,14 +135,174 @@ namespace Vehículos
                     Modelo = txtModelo.Text.Trim(),
                     Anio = año,
                     Tipo = (cmbTipo.SelectedItem as ComboBoxItem)?.Content.ToString(),
-                    Obs = string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim(),
+                    Obs = string.IsNullOrWhiteSpace(txtObservaciones.Text)
+                                ? (object)DBNull.Value
+                                : txtObservaciones.Text.Trim(),
                     Activo = true
                 };
+
                 _db.GuardarOActualizarVehiculo(true, datos);
-                MessageBox.Show("✅ Vehículo registrado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("✅ Vehículo registrado correctamente.", "Éxito",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
-            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
+        }
+
+        private bool ValidarCampos(out int año)
+        {
+            año = 0;
+
+            // ── 1. PLACA ────────────────────────────────────────────────────
+            string placa = txtPlaca.Text.Trim().ToUpper();
+
+            if (string.IsNullOrWhiteSpace(placa))
+            {
+                MessageBox.Show("⚠ La placa del vehículo es obligatoria.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPlaca.Focus(); return false;
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(placa, @"^[A-Z0-9]+$"))
+            {
+                MessageBox.Show("⚠ La placa solo puede contener letras y números.",
+                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPlaca.Focus(); return false;
+            }
+
+            if (placa.Length < 5 || placa.Length > 8)
+            {
+                MessageBox.Show("⚠ La placa debe tener entre 5 y 8 caracteres.",
+                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPlaca.Focus(); return false;
+            }
+
+            bool formatoTurismo = System.Text.RegularExpressions.Regex.IsMatch(placa, @"^[A-Z]{3}\d{4}$");
+            bool formatoMoto = System.Text.RegularExpressions.Regex.IsMatch(placa, @"^[A-Z]{1,2}\d{4}$");
+            bool formatoCamion = System.Text.RegularExpressions.Regex.IsMatch(placa, @"^[A-Z]{1,3}\d{3,4}[A-Z]?$");
+
+            if (!formatoTurismo && !formatoMoto && !formatoCamion)
+            {
+                MessageBox.Show(
+                    "⚠ Formato de placa no reconocido.\n\n" +
+                    "Formatos válidos:\n" +
+                    "  • Turismo / Pickup:   ABC1234\n" +
+                    "  • Motocicleta:        A1234  o  AB1234\n" +
+                    "  • Camiones:           ABC1234A",
+                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPlaca.Focus(); return false;
+            }
+
+            // ── 2. MARCA ────────────────────────────────────────────────────
+            string marca = txtMarca.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(marca))
+            {
+                MessageBox.Show("⚠ La marca del vehículo es obligatoria.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtMarca.Focus(); return false;
+            }
+
+            if (marca.Length > 50)
+            {
+                MessageBox.Show("⚠ La marca no puede superar los 50 caracteres.",
+                    "Marca inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtMarca.Focus(); return false;
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(marca, @"^[a-zA-Z0-9\s\-\.]+$"))
+            {
+                MessageBox.Show("⚠ La marca solo puede contener letras, números, espacios, guiones y puntos.",
+                    "Marca inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtMarca.Focus(); return false;
+            }
+
+            // ── 3. MODELO ───────────────────────────────────────────────────
+            string modelo = txtModelo.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(modelo))
+            {
+                MessageBox.Show("⚠ El modelo del vehículo es obligatorio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtModelo.Focus(); return false;
+            }
+
+            if (modelo.Length > 80)
+            {
+                MessageBox.Show("⚠ El modelo no puede superar los 80 caracteres.",
+                    "Modelo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtModelo.Focus(); return false;
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(modelo, @"^[a-zA-Z0-9\s\-\.\(\)\/]+$"))
+            {
+                MessageBox.Show("⚠ El modelo contiene caracteres no permitidos.",
+                    "Modelo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtModelo.Focus(); return false;
+            }
+
+            // ── 4. AÑO ──────────────────────────────────────────────────────
+            string anioTexto = txtAnio.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(anioTexto))
+            {
+                MessageBox.Show("⚠ El año del vehículo es obligatorio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus(); return false;
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(anioTexto, @"^\d{4}$"))
+            {
+                MessageBox.Show("⚠ El año debe ser exactamente 4 dígitos numéricos.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus(); return false;
+            }
+
+            if (!int.TryParse(anioTexto, out año))
+            {
+                MessageBox.Show("⚠ El año ingresado no es válido.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus(); return false;
+            }
+
+            int añoActual = DateTime.Now.Year;
+            if (año < 1900 || año > añoActual + 1)
+            {
+                MessageBox.Show($"⚠ El año debe estar entre 1900 y {añoActual + 1}.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtAnio.Focus(); return false;
+            }
+
+            // ── 5. TIPO ──────────────────────────────────────────────────────
+            if (cmbTipo.SelectedItem == null)
+            {
+                MessageBox.Show("⚠ Debes seleccionar el tipo de vehículo.",
+                    "Tipo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                cmbTipo.Focus(); return false;
+            }
+
+            // ── 6. OBSERVACIONES ─────────────────────────────────────────────
+            if (!string.IsNullOrEmpty(txtObservaciones.Text) && txtObservaciones.Text.Length > 500)
+            {
+                MessageBox.Show("⚠ Las observaciones no pueden superar los 500 caracteres.",
+                    "Texto demasiado largo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtObservaciones.Focus(); return false;
+            }
+
+            // ── 7. CLIENTE DNI VERIFICADO ─────────────────────────────────────
+            // ESTE ES EL QUE DETIENE EL ERROR DEL SP
+            if (string.IsNullOrWhiteSpace(_clienteDNI))
+            {
+                MessageBox.Show("⚠ Debes buscar y verificar el DNI del cliente antes de guardar.\n\n" +
+                                "Ingresa el DNI y presiona el botón 'Buscar'.",
+                    "Cliente no verificado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtClienteDNI.Focus(); return false;
+            }
+
+            return true;
         }
 
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
@@ -222,54 +383,6 @@ namespace Vehículos
             btnGuardar.Opacity = 0.4;
             btnActualizar.IsEnabled = true;
             btnActualizar.Opacity = 1;
-        }
-
-        private bool ValidarCampos(out int año)
-        {
-            año = 0;
-
-            if (!clsValidaciones.ValidarTextoRequerido(txtPlaca.Text, "placa del vehículo")) { txtPlaca.Focus(); return false; }
-<<<<<<< HEAD
-=======
-            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text)) { txtPlaca.Focus(); return false; }
->>>>>>> 50570af77cd41100b96c7dfa9ee9d9a0b02f2f56
-            if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca del vehículo")) { txtMarca.Focus(); return false; }
-            if (!clsValidaciones.ValidarTextoRequerido(txtModelo.Text, "modelo del vehículo")) { txtModelo.Focus(); return false; }
-            if (!clsValidaciones.ValidarTextoRequerido(txtAnio.Text, "año del vehículo")) { txtAnio.Focus(); return false; }
-            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipo.SelectedItem, "tipo de vehículo")) { cmbTipo.Focus(); return false; }
-
-            if (!clsValidaciones.ValidarPlaca(txtPlaca.Text.Trim()))
-            {
-                txtPlaca.Focus();
-                return false;
-            }
-
-            if (!clsValidaciones.ValidarAnio(txtAnio.Text, out año))
-            {
-                txtAnio.Focus();
-                return false;
-            }
-
-            if (!clsValidaciones.ValidarTextoAlfanumerico(txtMarca.Text, "marca"))
-            {
-                txtMarca.Focus();
-                return false;
-            }
-
-            if (!clsValidaciones.ValidarTextoAlfanumerico(txtModelo.Text, "modelo"))
-            {
-                txtModelo.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(_clienteDNI))
-            {
-                MessageBox.Show("⚠ Debes verificar el DNI del cliente antes de guardar.",
-                    "Cliente requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
         }
 
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
