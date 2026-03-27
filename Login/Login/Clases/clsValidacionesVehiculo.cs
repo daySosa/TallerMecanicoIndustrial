@@ -49,21 +49,27 @@ namespace Login.Clases
         {
             string p = placa.Trim().ToUpper();
 
-            bool formatoAuto = Regex.IsMatch(p, @"^[A-Z]{2,3}\d{4}$");
-            bool formatoMoto = Regex.IsMatch(p, @"^[A-Z]{1,2}\d{4}$");
-            bool formatoGov = Regex.IsMatch(p, @"^[A-Z]{1,3}\d{3,4}[A-Z]?$");
+            // Turismo, Pickup, Camioneta: exactamente 3 letras + 4 dígitos
+            bool formatoTurismo = Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$");
 
-            if (!formatoAuto && !formatoMoto && !formatoGov)
+            // Motocicleta, MotoTaxi: exactamente 1 o 2 letras + 4 dígitos
+            bool formatoMoto = Regex.IsMatch(p, @"^[A-Z]{1,2}\d{4}$");
+
+            // Camiones/especiales: 1-3 letras + 3-4 dígitos + letra opcional al final
+            bool formatoCamion = Regex.IsMatch(p, @"^[A-Z]{1,3}\d{3,4}[A-Z]$");
+
+            if (!formatoTurismo && !formatoMoto && !formatoCamion)
             {
                 MessageBox.Show(
-                    "⚠ Formato de placa no reconocido.\n" +
-                    "Formatos aceptados:\n" +
-                    "  • Turismo/Pickup: ABC1234\n" +
-                    "  • Motocicleta:   AB1234\n" +
-                    "  • Gubernamental: AB1234G",
+                    "⚠ Formato de placa no reconocido.\n\n" +
+                    "Formatos válidos en Honduras:\n" +
+                    "  • Turismo / Pickup / Camioneta:  ABC1234\n" +
+                    "  • Motocicleta / MotoTaxi:        A1234  o  AB1234\n" +
+                    "  • Camiones / especiales:         ABC1234A",
                     "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+
             return true;
         }
 
@@ -229,21 +235,27 @@ namespace Login.Clases
         public static bool ValidarCoherenciaPlacaTipo(string placa, string tipo)
         {
             string p = placa.Trim().ToUpper();
-            bool esMoto = tipo == "Motocicleta" || tipo == "MotoTaxi";
 
-            if (esMoto && Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$"))
+            bool esMoto = tipo == "Motocicleta" || tipo == "MotoTaxi";
+            bool esTurismo = tipo == "Turismo" || tipo == "Pickup" || tipo == "Camioneta";
+
+            // Placa de moto (1-2 letras + 4 dígitos) pero tipo no es moto
+            if (!esMoto && Regex.IsMatch(p, @"^[A-Z]{1,2}\d{4}$"))
             {
                 var res = MessageBox.Show(
-                    $"⚠ La placa '{p}' (3 letras + 4 dígitos) corresponde normalmente a un vehículo de turismo.\n" +
+                    $"⚠ La placa '{p}' tiene formato de motocicleta (1-2 letras + 4 dígitos)\n" +
+                    $"pero el tipo seleccionado es '{tipo}'.\n\n" +
                     "¿Deseas continuar de todas formas?",
                     "Advertencia de coherencia", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 return res == MessageBoxResult.Yes;
             }
 
-            if (!esMoto && Regex.IsMatch(p, @"^[A-Z]{1}\d{4}$"))
+            // Placa de turismo (3 letras + 4 dígitos) pero tipo es moto
+            if (esMoto && Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$"))
             {
                 var res = MessageBox.Show(
-                    $"⚠ La placa '{p}' (1 letra + 4 dígitos) corresponde normalmente a una motocicleta.\n" +
+                    $"⚠ La placa '{p}' tiene formato de turismo/pickup (3 letras + 4 dígitos)\n" +
+                    $"pero el tipo seleccionado es '{tipo}'.\n\n" +
                     "¿Deseas continuar de todas formas?",
                     "Advertencia de coherencia", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 return res == MessageBoxResult.Yes;
