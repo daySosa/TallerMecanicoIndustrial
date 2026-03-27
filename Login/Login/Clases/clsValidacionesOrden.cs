@@ -233,72 +233,39 @@ namespace Login.Clases
         {
             precio = 0;
 
-            // Limpiar prefijo "L", comas, puntos de miles y espacios
-            string limpio = texto
-                .Replace("L", "")
-                .Replace(" ", "")
-                .Trim();
+            if (string.IsNullOrWhiteSpace(texto)) return true;
 
-            // Si está vacío o es cero, es válido (servicio gratuito)
-            if (string.IsNullOrWhiteSpace(limpio) || limpio == "0" || limpio == "0.00")
+            // 1. Quitar la "L", espacios y comas por completo
+            string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+
+            // 2. Manejar múltiples puntos (ej: 1.500.00 -> 1500.00)
+            // Si hay más de un punto, quitamos todos menos el último
+            int conteoPuntos = limpio.Count(f => f == '.');
+            if (conteoPuntos > 1)
             {
-                precio = 0;
-                return true;
+                int ultimoPunto = limpio.LastIndexOf('.');
+                // Quitamos todos los puntos y luego volvemos a poner el decimal al final
+                string parteEntera = limpio.Substring(0, ultimoPunto).Replace(".", "");
+                string parteDecimal = limpio.Substring(ultimoPunto);
+                limpio = parteEntera + parteDecimal;
             }
 
-            // Detectar si usa coma como decimal (ej: 1.500,00) o punto como decimal (ej: 1,500.00 / 1500.00)
-            bool tieneComa = limpio.Contains(',');
-            bool tienePunto = limpio.Contains('.');
+            // 3. Intentar convertir (usando InvariantCulture para que el punto sea decimal)
+            bool esValido = decimal.TryParse(limpio,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out precio);
 
-            if (tieneComa && tienePunto)
+            if (!esValido)
             {
-                // Formato europeo: 1.500,00 → quitar punto de miles, coma = decimal
-                limpio = limpio.Replace(".", "").Replace(",", ".");
-            }
-            else if (tieneComa && !tienePunto)
-            {
-                // Solo coma: puede ser decimal (1500,50) o miles (1,500)
-                // Si hay exactamente 3 dígitos tras la coma → miles; si no → decimal
-                int posicionComa = limpio.IndexOf(',');
-                int digitosTras = limpio.Length - posicionComa - 1;
-                limpio = digitosTras == 3
-                    ? limpio.Replace(",", "")       // era separador de miles
-                    : limpio.Replace(",", ".");     // era separador decimal
-            }
-            else if (tienePunto && !tieneComa)
-            {
-                // Solo punto: puede ser decimal (1500.50) o miles (1.500)
-                int posicionPunto = limpio.IndexOf('.');
-                int digitosTras = limpio.Length - posicionPunto - 1;
-                if (digitosTras == 3)
-                    limpio = limpio.Replace(".", ""); // era separador de miles → quitar
-                                                      // Si no, dejarlo como está (es separador decimal)
-            }
-
-            if (!decimal.TryParse(limpio,
-                    System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    out precio))
-            {
-                MessageBox.Show("⚠ El precio del servicio debe ser un número válido.\n" +
-                                "Ejemplo: 500 · 1500.50 · 2000",
+                MessageBox.Show("⚠ El precio debe ser un número válido.\nEjemplo: 1500.50",
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (precio < 0)
-            {
-                MessageBox.Show("⚠ El precio del servicio no puede ser negativo.",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (precio > 999999.99m)
-            {
-                MessageBox.Show("⚠ El precio del servicio no puede superar L 999,999.99.",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
+            // 4. Validaciones de rango
+            if (precio < 0) return false;
+            if (precio > 999999.99m) return false;
 
             return true;
         }
