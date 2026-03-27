@@ -92,7 +92,6 @@ namespace InterfazClientes
 
             int caretPos = txtTelefono.CaretIndex;
             txtTelefono.Text = formateado;
-            txtTelefono.CaretIndex = txtTelefono.Text.Length;
 
             int nuevosCaret = caretPos;
             if (nuevosCaret > 4) nuevosCaret = Math.Min(nuevosCaret + 1, formateado.Length);
@@ -171,7 +170,6 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
-            if (!clsValidaciones.Telefono(telefonoLimpio)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
@@ -251,8 +249,6 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarDNIHondureño(nuevoDni)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
-            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) return;
-            if (!clsValidaciones.Telefono(telefonoLimpio)) return;
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
