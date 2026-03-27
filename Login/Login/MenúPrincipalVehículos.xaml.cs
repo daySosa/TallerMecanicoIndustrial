@@ -12,15 +12,41 @@ using System.Windows.Media;
 
 namespace Vehículos
 {
+    /// <summary>
+    /// Ventana principal del módulo de vehículos.
+    /// Permite visualizar, filtrar, crear y gestionar vehículos,
+    /// así como manejar notificaciones y navegación entre módulos.
+    /// </summary>
     public partial class MenúPrincipalVehículos : Window
     {
-        private clsConsultasBD _db = new clsConsultasBD(); 
+        /// <summary>
+        /// Instancia para realizar consultas a la base de datos.
+        /// </summary>
+        private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Colección observable que almacena la lista de vehículos.
+        /// </summary>
         private ObservableCollection<Vehiculo> _listaVehiculos = new ObservableCollection<Vehiculo>();
+
+        /// <summary>
+        /// Vista de colección utilizada para aplicar filtros y ordenar los vehículos.
+        /// </summary>
         private ICollectionView _vistaVehiculos;
 
+        /// <summary>
+        /// Filtro por placa del vehículo.
+        /// </summary>
         private string _filtroPlaca = "";
+
+        /// <summary>
+        /// Filtro por modelo del vehículo.
+        /// </summary>
         private string _filtroModelo = "";
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="MenúPrincipalVehículos"/>.
+        /// </summary>
         public MenúPrincipalVehículos()
         {
             InitializeComponent();
@@ -28,6 +54,10 @@ namespace Vehículos
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Evento click del botón Home.
+        /// Navega hacia el menú principal.
+        /// </summary>
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MenuPrincipal();
@@ -35,6 +65,10 @@ namespace Vehículos
             this.Close();
         }
 
+        /// <summary>
+        /// Evento click del botón Inventario.
+        /// Abre el módulo de inventario.
+        /// </summary>
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InterfazInventario.MenúPrincipalInventario();
@@ -42,6 +76,10 @@ namespace Vehículos
             this.Close();
         }
 
+        /// <summary>
+        /// Evento click del botón Clientes.
+        /// Abre el módulo de clientes.
+        /// </summary>
         private void btnClientes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MenúPrincipalClientes();
@@ -49,6 +87,10 @@ namespace Vehículos
             this.Close();
         }
 
+        /// <summary>
+        /// Evento click del botón Órdenes.
+        /// Abre el módulo de órdenes de trabajo.
+        /// </summary>
         private void btnOrdenes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
@@ -56,6 +98,10 @@ namespace Vehículos
             this.Close();
         }
 
+        /// <summary>
+        /// Evento click del botón Egresos.
+        /// Abre el módulo de contabilidad (egresos).
+        /// </summary>
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Contabilidad.ContaWindow();
@@ -63,6 +109,10 @@ namespace Vehículos
             this.Close();
         }
 
+        /// <summary>
+        /// Evento click del botón Ingresos.
+        /// Abre el módulo de pagos/ingresos.
+        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Contabilidad.MenuDePagos();
@@ -70,6 +120,10 @@ namespace Vehículos
             this.Close();
         }
 
+        /// <summary>
+        /// Evento click del botón cerrar sesión.
+        /// Solicita confirmación y redirige al login si se confirma.
+        /// </summary>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
@@ -82,12 +136,15 @@ namespace Vehículos
             }
         }
 
+        /// <summary>
+        /// Carga los vehículos desde la base de datos y los muestra en la interfaz.
+        /// </summary>
         private void CargarDatosDesdeDB()
         {
             _listaVehiculos.Clear();
             try
             {
-                var vehiculos = _db.ObtenerVehiculos(); 
+                var vehiculos = _db.ObtenerVehiculos();
                 foreach (var v in vehiculos)
                     _listaVehiculos.Add(v);
 
@@ -102,7 +159,11 @@ namespace Vehículos
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
+        /// <summary>
+        /// Aplica los filtros de búsqueda, placa y modelo a la lista de vehículos.
+        /// </summary>
+        /// <param name="item">Elemento a evaluar.</param>
+        /// <returns>True si el elemento cumple los filtros; de lo contrario, false.</returns>
         private bool AplicarFiltros(object item)
         {
             if (item is not Vehiculo v) return false;
@@ -128,17 +189,27 @@ namespace Vehículos
             return true;
         }
 
+        /// <summary>
+        /// Evento de cambio de texto en el buscador.
+        /// Actualiza la vista filtrada.
+        /// </summary>
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaVehiculos?.Refresh();
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Muestra u oculta el popup de filtros.
+        /// </summary>
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
         {
             popupFiltros.IsOpen = !popupFiltros.IsOpen;
         }
 
+        /// <summary>
+        /// Aplica los filtros seleccionados por el usuario.
+        /// </summary>
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             _filtroPlaca = txtFiltroPlaca.Text?.Trim().ToLower() ?? "";
@@ -149,6 +220,10 @@ namespace Vehículos
             ActualizarContador();
         }
 
+
+        /// <summary>
+        /// Limpia los filtros aplicados.
+        /// </summary>
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
             txtFiltroPlaca.Clear();
@@ -161,6 +236,9 @@ namespace Vehículos
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Actualiza el contador de vehículos mostrados en la interfaz.
+        /// </summary>
         private void ActualizarContador()
         {
             int total = 0;
@@ -169,6 +247,10 @@ namespace Vehículos
             tbTotalVehiculos.Text = $"{total} vehículo{(total != 1 ? "s" : "")}";
         }
 
+        /// <summary>
+        /// Evento al seleccionar un vehículo en el DataGrid.
+        /// Abre la ventana de edición con los datos seleccionados.
+        /// </summary>
         private void dgVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgVehiculos.SelectedItem is Vehiculo seleccionado)
@@ -182,6 +264,10 @@ namespace Vehículos
             }
         }
 
+        /// <summary>
+        /// Evento click para crear un nuevo vehículo.
+        /// Abre la ventana de registro.
+        /// </summary>
         private void BtnNuevoVehiculo_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new VehiWindow();
@@ -189,6 +275,9 @@ namespace Vehículos
             CargarDatosDesdeDB();
         }
 
+        /// <summary>
+        /// Evento click para mostrar u ocultar notificaciones.
+        /// </summary>
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -196,6 +285,9 @@ namespace Vehículos
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
+        /// <summary>
+        /// Carga la cantidad de notificaciones pendientes desde la base de datos.
+        /// </summary>
         public void CargarNotificaciones()
         {
             try
@@ -210,6 +302,9 @@ namespace Vehículos
             }
         }
 
+        /// <summary>
+        /// Carga las notificaciones pendientes en el popup visual.
+        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -246,6 +341,9 @@ namespace Vehículos
             }
         }
 
+        /// <summary>
+        /// Crea una tarjeta visual para representar una notificación.
+        /// </summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -298,7 +396,7 @@ namespace Vehículos
             };
             btnLeida.Click += (s, e) =>
             {
-                _db.MarcarNotificacionLeida((int)((Button)s).Tag); 
+                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
@@ -308,14 +406,21 @@ namespace Vehículos
             return card;
         }
 
+
+        /// <summary>
+        /// Marca todas las notificaciones como leídas.
+        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            _db.MarcarNotificacionLeida(null); 
+            _db.MarcarNotificacionLeida(null);
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
 
 
+        /// <summary>
+        /// Abre la ventana de reportes para vehículos.
+        /// </summary>
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ReportesWindow("Vehiculos");

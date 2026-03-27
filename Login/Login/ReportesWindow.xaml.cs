@@ -9,10 +9,21 @@ using System.Windows;
 
 namespace Login
 {
+    /// <summary>
+    /// Ventana encargada de generar reportes en formato PDF
+    /// según el módulo seleccionado (Clientes, Inventario, Vehículos, etc.).
+    /// </summary>
     public partial class ReportesWindow : Window
     {
+        /// <summary>
+        /// Módulo seleccionado para generar el reporte.
+        /// </summary>
         private string _modulo;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="ReportesWindow"/>.
+        /// </summary>
+        /// <param name="modulo">Nombre del módulo (Clientes, Inventario, Vehículos, etc.).</param>
         public ReportesWindow(string modulo)
         {
             InitializeComponent();
@@ -20,6 +31,10 @@ namespace Login
             txtModulo.Text = $"Reporte de {modulo}";
         }
 
+        /// <summary>
+        /// Evento que se ejecuta al hacer clic en el botón para generar el PDF.
+        /// Dependiendo del módulo seleccionado, se llama al método correspondiente.
+        /// </summary>
         private void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
         {
             switch (_modulo)
@@ -33,6 +48,11 @@ namespace Login
             }
         }
 
+        /// <summary>
+        /// Obtiene el logo en formato Base64 para incrustarlo en el HTML del reporte.
+        /// Intenta cargarlo desde recursos embebidos o desde el sistema de archivos.
+        /// </summary>
+        /// <returns>Cadena en Base64 del logo o cadena vacía si no se encuentra.</returns>
         private string GetLogoBase64()
         {
             try
@@ -76,6 +96,11 @@ namespace Login
             return string.Empty;
         }
 
+        /// <summary>
+        /// Genera los estilos base en CSS utilizados en los reportes PDF.
+        /// </summary>
+        /// <param name="accentColor">Color principal del reporte.</param>
+        /// <returns>Cadena con estilos CSS.</returns>
         private string GetBaseStyles(string accentColor = "#1e2d5f")
         {
             return $@"
@@ -195,6 +220,12 @@ namespace Login
             </style>";
         }
 
+        /// <summary>
+        /// Genera el encabezado del reporte, incluyendo logo, nombre de empresa y metadatos.
+        /// </summary>
+        /// <param name="accentColor">Color principal del diseño.</param>
+        /// <param name="periodo">Período del reporte.</param>
+        /// <returns>HTML del encabezado.</returns>
         private string GetHeader(string accentColor, string periodo = "")
         {
             string periodoTexto = string.IsNullOrEmpty(periodo)
@@ -232,6 +263,12 @@ namespace Login
             </div>";
         }
 
+        /// <summary>
+        /// Genera la barra de título del reporte.
+        /// </summary>
+        /// <param name="accentColor">Color principal.</param>
+        /// <param name="titulo">Título del reporte.</param>
+        /// <returns>HTML de la barra de título.</returns>
         private string GetTitleBar(string accentColor, string titulo)
         {
             return $@"
@@ -240,6 +277,10 @@ namespace Login
             </div>";
         }
 
+        /// <summary>
+        /// Genera el pie de página del reporte.
+        /// </summary>
+        /// <returns>HTML del footer.</returns>
         private string GetFooter()
         {
             return $@"
@@ -250,6 +291,11 @@ namespace Login
             </div>";
         }
 
+        /// <summary>
+        /// Devuelve un badge HTML representando el estado de una orden.
+        /// </summary>
+        /// <param name="estado">Estado de la orden.</param>
+        /// <returns>HTML con estilo del estado.</returns>
         private string BadgeEstado(string estado)
         {
             return estado switch
@@ -263,6 +309,9 @@ namespace Login
             };
         }
 
+        /// <summary>
+        /// Genera el reporte de clientes en formato PDF.
+        /// </summary>
         private void GenerarReporteClientes()
         {
             string accent = "#1e2d5f";
@@ -306,6 +355,9 @@ namespace Login
             ExportarPDF(html, "Reporte_Clientes", landscape: false);
         }
 
+        /// <summary>
+        /// Genera el reporte de inventario en formato PDF.
+        /// </summary>
         private void GenerarReporteInventario()
         {
             string accent = "#1e2d5f";
@@ -361,6 +413,9 @@ namespace Login
             ExportarPDF(html, "Reporte_Inventario", landscape: false);
         }
 
+        // <summary>
+        /// Genera el reporte de vehículos en formato PDF.
+        /// </summary>
         private void GenerarReporteVehiculos()
         {
             string accent = "#1e2d5f";
@@ -417,6 +472,9 @@ namespace Login
             ExportarPDF(html, "Reporte_Vehiculos", landscape: true);
         }
 
+        /// <summary>
+        /// Genera el reporte de órdenes de trabajo en formato PDF.
+        /// </summary>
         private void GenerarReporteOrdenes()
         {
             string accent = "#1e2d5f";
@@ -484,6 +542,9 @@ namespace Login
             ExportarPDF(html, "Reporte_Ordenes", landscape: true);
         }
 
+        /// <summary>
+        /// Genera el reporte de egresos (gastos) en formato PDF.
+        /// </summary>
         private void GenerarReporteEgresos()
         {
             string accent = "#7f1d1d";
@@ -539,6 +600,9 @@ namespace Login
             ExportarPDF(html, "Reporte_Egresos", landscape: false);
         }
 
+        /// <summary>
+        /// Genera el reporte de ingresos en formato PDF.
+        /// </summary>
         private void GenerarReporteIngresos()
         {
             string accent = "#1b4332";
@@ -602,6 +666,12 @@ namespace Login
             ExportarPDF(html, "Reporte_Ingresos", landscape: false);
         }
 
+        /// <summary>
+        /// Exporta el contenido HTML a un archivo PDF.
+        /// </summary>
+        /// <param name="html">Contenido HTML del reporte.</param>
+        /// <param name="nombreArchivo">Nombre base del archivo PDF.</param>
+        /// <param name="landscape">Indica si el PDF será en orientación horizontal.</param>
         private void ExportarPDF(string html, string nombreArchivo, bool landscape = false)
         {
             var dialog = new SaveFileDialog
@@ -638,3 +708,4 @@ namespace Login
         }
     }
 }
+

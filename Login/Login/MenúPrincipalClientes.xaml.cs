@@ -10,17 +10,49 @@ using System.Windows.Media;
 
 namespace InterfazClientes
 {
+    /// <summary>
+    /// Ventana principal para la gestión de clientes.
+    /// </summary>
     public partial class MenúPrincipalClientes : Window
     {
+        /// <summary>
+        /// Lista completa de clientes.
+        /// </summary>
         private List<clsCliente> _listaClientes = new List<clsCliente>();
+
+        /// <summary>
+        /// Lista de clientes filtrados.
+        /// </summary>
         private List<clsCliente> _listaFiltrada = new List<clsCliente>();
+
+        /// <summary>
+        /// Instancia para consultas a la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
 
+        /// <summary>
+        /// Filtro por nombre o apellido del cliente.
+        /// </summary>
         private string _filtroNombre = "";
+
+        /// <summary>
+        /// Filtro por número de teléfono.
+        /// </summary>
         private string _filtroTelefono = "";
+
+        /// <summary>
+        /// Filtro por estado del cliente (Activo, Inactivo o Todos).
+        /// </summary>
         private string _filtroEstado = "Todos";
+
+        /// <summary>
+        /// Indica si se está editando un cliente.
+        /// </summary>
         private bool _editando = false;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana de clientes.
+        /// </summary>
         public MenúPrincipalClientes()
         {
             InitializeComponent();
@@ -28,6 +60,10 @@ namespace InterfazClientes
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de inicio.
+        /// Navega al menú principal.
+        /// </summary>
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MenuPrincipal();
@@ -35,6 +71,10 @@ namespace InterfazClientes
             this.Close();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de inventario.
+        /// Abre la ventana de inventario.
+        /// </summary>
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InterfazInventario.MenúPrincipalInventario();
@@ -42,6 +82,10 @@ namespace InterfazClientes
             this.Close();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de vehículos.
+        /// Abre la ventana de vehículos.
+        /// </summary>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Vehículos.MenúPrincipalVehículos();
@@ -49,6 +93,10 @@ namespace InterfazClientes
             this.Close();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de órdenes.
+        /// Abre la ventana de órdenes de trabajo.
+        /// </summary>
         private void btnOrdenes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
@@ -56,6 +104,10 @@ namespace InterfazClientes
             this.Close();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de egresos.
+        /// Abre la ventana de contabilidad.
+        /// </summary>
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Contabilidad.ContaWindow();
@@ -63,6 +115,10 @@ namespace InterfazClientes
             this.Close();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de ingresos.
+        /// Abre la ventana de pagos.
+        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Contabilidad.MenuDePagos();
@@ -70,6 +126,10 @@ namespace InterfazClientes
             this.Close();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de cerrar sesión.
+        /// Cierra la sesión del usuario actual.
+        /// </summary>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
@@ -82,6 +142,11 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Formatea un número de teléfono al formato ####-####.
+        /// </summary>
+        /// <param name="telefono">Número de teléfono sin formato.</param>
+        /// <returns>Número de teléfono formateado.</returns>
         private string FormatearTelefono(string telefono)
         {
             if (string.IsNullOrWhiteSpace(telefono)) return telefono;
@@ -91,6 +156,9 @@ namespace InterfazClientes
             return telefono;
         }
 
+        /// <summary>
+        /// Carga la lista de clientes desde la base de datos.
+        /// </summary>
         public void CargarClientes()
         {
             _listaClientes.Clear();
@@ -111,6 +179,9 @@ namespace InterfazClientes
             AplicarFiltros();
         }
 
+        /// <summary>
+        /// Aplica los filtros de búsqueda a la lista de clientes.
+        /// </summary>
         private void AplicarFiltros()
         {
             string busqueda = txtBuscar.Text?.Trim().ToLower() ?? "";
@@ -147,16 +218,26 @@ namespace InterfazClientes
             tbTotalClientes.Text = $"{_listaFiltrada.Count} cliente{(_listaFiltrada.Count != 1 ? "s" : "")}";
         }
 
+        /// <summary>
+        /// Maneja el evento de cambio de texto en el buscador.
+        /// </summary>
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             AplicarFiltros();
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de filtros.
+        /// Muestra u oculta el panel de filtros.
+        /// </summary>
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
         {
             popupFiltros.IsOpen = !popupFiltros.IsOpen;
         }
 
+        /// <summary>
+        /// Aplica los filtros seleccionados por el usuario.
+        /// </summary>
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             _filtroNombre = txtFiltroNombre.Text?.Trim().ToLower() ?? "";
@@ -167,6 +248,9 @@ namespace InterfazClientes
             AplicarFiltros();
         }
 
+        /// <summary>
+        /// Limpia todos los filtros aplicados.
+        /// </summary>
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
             txtFiltroNombre.Clear();
@@ -180,6 +264,9 @@ namespace InterfazClientes
             AplicarFiltros();
         }
 
+        /// <summary>
+        /// Maneja el evento Click para agregar un nuevo cliente.
+        /// </summary>
         private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
         {
             var formulario = new ClientesWindow();
@@ -191,6 +278,10 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Maneja la selección de un cliente en la tabla.
+        /// Permite editar el cliente seleccionado.
+        /// </summary>
         private void dgClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_editando) return;
@@ -207,6 +298,10 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de notificaciones.
+        /// Muestra u oculta el panel de notificaciones.
+        /// </summary>
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -214,6 +309,9 @@ namespace InterfazClientes
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
+        /// <summary>
+        /// Carga la cantidad de notificaciones pendientes.
+        /// </summary>
         public void CargarNotificaciones()
         {
             try
@@ -228,6 +326,9 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Carga las notificaciones dentro del panel emergente.
+        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -264,6 +365,13 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Crea una tarjeta visual para una notificación.
+        /// </summary>
+        /// <param name="id">Identificador de la notificación.</param>
+        /// <param name="tipo">Tipo de notificación.</param>
+        /// <param name="mensaje">Mensaje de la notificación.</param>
+        /// <returns>Elemento visual tipo Border con la notificación.</returns>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -339,6 +447,9 @@ namespace InterfazClientes
             return card;
         }
 
+        /// <summary>
+        /// Marca todas las notificaciones como leídas.
+        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -346,6 +457,10 @@ namespace InterfazClientes
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Marca una notificación como leída.
+        /// </summary>
+        /// <param name="id">Identificador de la notificación (puede ser nulo para todas).</param>
         private void MarcarLeida(int? id)
         {
             try
@@ -358,6 +473,10 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de reportes.
+        /// Abre la ventana de reportes de clientes.
+        /// </summary>
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ReportesWindow("Clientes");

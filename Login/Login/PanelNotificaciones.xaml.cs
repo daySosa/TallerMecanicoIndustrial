@@ -1,4 +1,4 @@
-﻿using Login.Clases; 
+﻿using Login.Clases;
 using System;
 using System.Data;
 using System.Windows;
@@ -7,12 +7,28 @@ using System.Windows.Media;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Ventana que muestra un panel de notificaciones del sistema.
+    /// Permite visualizar notificaciones pendientes, marcarlas como leídas
+    /// y actualizar el estado de las mismas en la base de datos.
+    /// </summary>
     public partial class PanelNotificaciones : Window
     {
 
+        /// <summary>
+        /// Instancia de acceso a la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Acción que se ejecuta al cerrar la ventana.
+        /// </summary>
         private Action _onCerrar;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="PanelNotificaciones"/>.
+        /// </summary>
+        /// <param name="onCerrar">Acción opcional que se ejecuta al cerrar la ventana.</param>
         public PanelNotificaciones(Action onCerrar = null)
         {
             InitializeComponent();
@@ -21,6 +37,10 @@ namespace Contabilidad
         }
 
 
+        /// <summary>
+        /// Carga las notificaciones pendientes desde la base de datos
+        /// y las muestra en el panel de la interfaz.
+        /// </summary>
         private void CargarNotificaciones()
         {
             panelNotificaciones.Children.Clear();
@@ -59,6 +79,9 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Muestra una vista cuando no existen notificaciones pendientes.
+        /// </summary>
         private void MostrarPantallaVacia()
         {
             StackPanel vacio = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 40, 0, 0) };
@@ -75,6 +98,13 @@ namespace Contabilidad
         }
 
 
+        /// <summary>
+        /// Crea una tarjeta visual que representa una notificación.
+        /// </summary>
+        /// <param name="id">Identificador de la notificación.</param>
+        /// <param name="tipo">Tipo de notificación.</param>
+        /// <param name="mensaje">Mensaje de la notificación.</param>
+        /// <returns>Un control <see cref="Border"/> que contiene la tarjeta.</returns>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -149,6 +179,11 @@ namespace Contabilidad
             return card;
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón para marcar una notificación como leída.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento <see cref="RoutedEventArgs"/>.</param>
         private void BtnLeida_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is int id)
@@ -158,12 +193,21 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón para marcar todas las notificaciones como leídas.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento <see cref="RoutedEventArgs"/>.</param>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             MarcarLeida(null);
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Marca una notificación como leída en la base de datos.
+        /// </summary>
+        /// <param name="id">Identificador de la notificación. Si es null, marca todas como leídas.</param>
         private void MarcarLeida(int? id)
         {
             try
@@ -177,10 +221,16 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Evento que se ejecuta cuando la ventana se cierra.
+        /// Permite ejecutar una acción adicional opcional definida externamente.
+        /// </summary>
+        /// <param name="e">Datos del evento <see cref="EventArgs"/>.</param>
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-            _onCerrar?.Invoke(); 
+            _onCerrar?.Invoke();
         }
     }
 }
+

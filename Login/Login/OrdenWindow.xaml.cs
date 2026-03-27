@@ -9,18 +9,52 @@ using System.Windows.Media.Imaging;
 
 namespace Órdenes_de_Trabajo
 {
+    /// <summary>
+    /// Ventana principal para la gestión de órdenes de trabajo.
+    /// Permite crear, editar y consultar órdenes, así como asociar clientes,
+    /// vehículos y repuestos.
+    /// </summary>
     public partial class OrdenWindow : Window
     {
+        /// <summary>
+        /// Instancia de acceso a la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// DNI del cliente seleccionado.
+        /// </summary>
         private string _clienteDNI = string.Empty;
+
+        /// <summary>
+        /// Placa del vehículo seleccionado.
+        /// </summary>
         private string _vehiculoPlaca = string.Empty;
+
+        /// <summary>
+        /// Indica si la búsqueda se realiza por DNI (true) o por placa (false).
+        /// </summary>
         private bool _buscarPorDNI = true;
+
+        /// <summary>
+        /// Identificador de la orden que se está editando.
+        /// </summary>
         private int _ordenIDEditar = 0;
+
+        /// <summary>
+        /// Ruta de la imagen asociada a la orden.
+        /// </summary>
         private string _rutaFoto = string.Empty;
 
+        /// <summary>
+        /// Colección de repuestos asociados a la orden.
+        /// </summary>
         private ObservableCollection<RepuestoOrden> _repuestos
             = new ObservableCollection<RepuestoOrden>();
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="OrdenWindow"/>.
+        /// </summary>
         public OrdenWindow()
         {
             InitializeComponent();
@@ -72,6 +106,10 @@ namespace Órdenes_de_Trabajo
             };
         }
 
+        /// <summary>
+        /// Carga una orden existente para su edición.
+        /// </summary>
+        /// <param name="ordenID">Identificador de la orden.</param>
         public async Task CargarOrdenParaEditar(int ordenID)
         {
             _ordenIDEditar = ordenID;
@@ -142,6 +180,9 @@ namespace Órdenes_de_Trabajo
             catch (Exception ex) { MostrarError("Error al cargar la orden: " + ex.Message); }
         }
 
+        /// <summary>
+        /// Evento de clic para seleccionar búsqueda por DNI.
+        /// </summary>
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
@@ -155,6 +196,9 @@ namespace Órdenes_de_Trabajo
             borderError.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Evento de clic para seleccionar búsqueda por placa.
+        /// </summary>
         private void TabPlaca_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = false;
@@ -168,6 +212,9 @@ namespace Órdenes_de_Trabajo
             borderError.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Ejecuta la búsqueda según el criterio seleccionado (DNI o placa).
+        /// </summary>
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
             string valor = txtBuscar.Text.Trim();
@@ -181,6 +228,10 @@ namespace Órdenes_de_Trabajo
             else BuscarPorPlaca(valor.ToUpper());
         }
 
+        /// <summary>
+        /// Busca un cliente por su DNI.
+        /// </summary>
+        /// <param name="dni">DNI del cliente.</param>
         private void BuscarPorDNI(string dni)
         {
             try
@@ -212,6 +263,10 @@ namespace Órdenes_de_Trabajo
             catch (Exception ex) { MostrarError(ex.Message); }
         }
 
+        /// <summary>
+        /// Busca un vehículo por su placa.
+        /// </summary>
+        /// <param name="placa">Placa del vehículo.</param>
         private void BuscarPorPlaca(string placa)
         {
             try
@@ -239,6 +294,9 @@ namespace Órdenes_de_Trabajo
             catch (Exception ex) { MostrarError(ex.Message); }
         }
 
+        /// <summary>
+        /// Recalcula los costos totales de repuestos y servicio.
+        /// </summary>
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_clienteDNI) || string.IsNullOrEmpty(_vehiculoPlaca))
@@ -316,6 +374,12 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón para actualizar una orden existente.
+        /// Valida fechas, calcula totales y guarda los cambios en la base de datos.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento <see cref="RoutedEventArgs"/>.</param>
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (dpFecha.SelectedDate.HasValue)
@@ -365,6 +429,12 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click para adjuntar una imagen del vehículo.
+        /// Abre un selector de archivos y carga la imagen seleccionada en la interfaz.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento <see cref="MouseButtonEventArgs"/>.</param>
         private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -382,6 +452,12 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click para abrir la ventana de agregar un repuesto.
+        /// Permite seleccionar un repuesto y añadirlo a la orden actual.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento <see cref="RoutedEventArgs"/>.</param>
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarRepuesto();
@@ -397,8 +473,18 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón cancelar.
+        /// Cierra la ventana actual sin guardar cambios.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento <see cref="RoutedEventArgs"/>.</param>
         private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
+        /// <summary>
+        /// Recalcula los precios totales de la orden.
+        /// Suma el costo de los repuestos seleccionados y el servicio.
+        /// </summary>
         private void RecalcularPrecios()
         {
             decimal totalRepuestos = 0;
@@ -415,12 +501,19 @@ namespace Órdenes_de_Trabajo
             txtCostoTotal.Text = $"L {(totalRepuestos + servicio):N2}";
         }
 
+        /// <summary>
+        /// Muestra un mensaje de error en la interfaz.
+        /// </summary>
+        /// <param name="mensaje">Mensaje de error.</param>
         private void MostrarError(string mensaje)
         {
             borderError.Visibility = Visibility.Visible;
             txtError.Text = mensaje;
         }
 
+        /// <summary>
+        /// Limpia los datos mostrados de cliente y vehículo.
+        /// </summary>
         private void LimpiarResultados()
         {
             borderClienteInfo.Visibility = Visibility.Collapsed;
@@ -430,6 +523,9 @@ namespace Órdenes_de_Trabajo
             _vehiculoPlaca = string.Empty;
         }
 
+        /// <summary>
+        /// Limpia completamente el formulario de entrada.
+        /// </summary>
         private void LimpiarFormulario()
         {
             LimpiarResultados();
