@@ -271,6 +271,10 @@ namespace Login.Clases
             if (correo.Contains(" "))
                 return "⚠ El correo no puede contener espacios.";
 
+            // Debe contener @
+            if (!correo.Contains("@"))
+                return "⚠ El correo debe contener '@'.";
+
             // Sin mayúsculas en usuario ni dominio
             if (correo.Contains("@"))
             {
