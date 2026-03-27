@@ -13,7 +13,7 @@ using Login.Clases;
 
 namespace Contabilidad
 {
-    //// <summary>
+    /// <summary>
     /// Ventana encargada de registrar un nuevo gasto en el sistema.
     /// Incluye validaciones de entrada y almacenamiento en la base de datos.
     /// </summary>
@@ -66,7 +66,10 @@ namespace Contabilidad
         {
             if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombreGasto.Text, "nombre del gasto")) return;
+            if (!clsValidacionesContabilidad.ValidarLongitudNombreGasto(txtNombreGasto.Text)) return;
             if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
+            // Observaciones son opcionales, solo validar longitud si tiene contenido
+            if (!clsValidacionesContabilidad.ValidarObservaciones(txtObservaciones.Text)) return;
 
             try
             {

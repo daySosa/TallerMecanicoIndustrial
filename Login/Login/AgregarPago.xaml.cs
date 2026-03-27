@@ -31,7 +31,7 @@ namespace Contabilidad
         /// </summary>
         private bool _esEdicion = false;
 
-        // <summary>
+        /// <summary>
         /// Identificador del pago (utilizado únicamente en modo edición).
         /// </summary>
         private int _pagoId = 0;
@@ -39,7 +39,6 @@ namespace Contabilidad
         /// <summary>
         /// Inicializa una nueva instancia de la ventana <see cref="AgregarPago"/> en modo registro.
         /// </summary>
-        /// <param name="menuRef">Referencia al menú de pagos.</param>
         public AgregarPago(MenuDePagos menuRef)
         {
             InitializeComponent();
@@ -50,11 +49,6 @@ namespace Contabilidad
         /// Inicializa una nueva instancia de la ventana <see cref="AgregarPago"/> en modo edición,
         /// cargando los datos del pago seleccionado.
         /// </summary>
-        /// <param name="menuRef">Referencia al menú de pagos.</param>
-        /// <param name="pagoId">Identificador del pago.</param>
-        /// <param name="dni">DNI del cliente.</param>
-        /// <param name="ordenId">Identificador de la orden.</param>
-        /// <param name="monto">Monto del pago.</param>
         public AgregarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto)
         {
             InitializeComponent();
@@ -95,6 +89,9 @@ namespace Contabilidad
         private void btnBuscar_Click(object sender, RoutedEventArgs e)
         {
             OcultarMensaje();
+            // CORRECCIÓN: se eliminó la llamada doble a ValidarDNIHondureño+ValidarTextoRequerido
+            // para el mismo campo. Solo se valida una vez con ValidarDNIHondureño que ya
+            // cubre que no esté vacío y que tenga 13 dígitos.
             if (!clsValidaciones.ValidarDNIHondureño(txtDNI.Text.Trim())) return;
             BuscarCliente(txtDNI.Text.Trim());
         }
@@ -106,7 +103,7 @@ namespace Contabilidad
         private void BuscarCliente(string dni)
         {
             OcultarMensaje();
-            if (!clsValidaciones.ValidarTextoRequerido(dni, "Ingresa un DNI primero.", MostrarMensaje)) return;
+            if (string.IsNullOrWhiteSpace(dni)) return;
 
             try
             {
@@ -251,10 +248,11 @@ namespace Contabilidad
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
 
+            // CORRECCIÓN: se eliminó la validación doble del DNI. ValidarDNIHondureño
+            // ya cubre vacío + 13 dígitos, no hace falta ValidarTextoRequerido adicional.
             if (!clsValidaciones.ValidarDNIHondureño(dni)) return;
-            if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
-            if (!clsValidaciones.ValidarEntero(ordenStr, out int ordenId, "⚠ El ID de la orden debe ser un número.", MostrarMensaje)) return;
+            if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
 
             try
             {

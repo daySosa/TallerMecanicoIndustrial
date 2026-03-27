@@ -40,21 +40,14 @@ namespace Contabilidad
         /// Inicializa una nueva instancia de la ventana <see cref="ActualizarGasto"/>
         /// y carga los datos del gasto seleccionado.
         /// </summary>
-        /// <param name="gastoId">Identificador del gasto.</param>
-        /// <param name="tipo">Tipo de gasto.</param>
-        /// <param name="nombre">Nombre del gasto.</param>
-        /// <param name="precio">Monto del gasto.</param>
-        /// <param name="fecha">Fecha de registro del gasto.</param>
-        /// <param name="observaciones">Observaciones adicionales del gasto.</param>
         public ActualizarGasto(int gastoId, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             InitializeComponent();
             _gastoId = gastoId;
-            _fechaRegistro = fecha; 
+            _fechaRegistro = fecha;
             CargarDatos(tipo, nombre, precio, fecha, observaciones);
-            VerificarBloqueoEdicion(); 
+            VerificarBloqueoEdicion();
         }
-
 
         /// <summary>
         /// Verifica si el gasto puede ser editado.
@@ -81,11 +74,6 @@ namespace Contabilidad
         /// <summary>
         /// Carga los datos del gasto en los controles de la interfaz para su visualización y edición.
         /// </summary>
-        /// <param name="tipo">Tipo de gasto.</param>
-        /// <param name="nombre">Nombre del gasto.</param>
-        /// <param name="precio">Monto del gasto.</param>
-        /// <param name="fecha">Fecha de registro.</param>
-        /// <param name="observaciones">Observaciones del gasto.</param>
         private void CargarDatos(string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
         {
             foreach (ComboBoxItem item in cmbTipoGasto.Items)
@@ -105,7 +93,7 @@ namespace Contabilidad
 
         /// <summary>
         /// Cancela la operación de edición y cierra la ventana sin guardar cambios.
-        /// </summary>       
+        /// </summary>
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
@@ -137,8 +125,11 @@ namespace Contabilidad
         {
             if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del gasto")) return;
+            if (!clsValidacionesContabilidad.ValidarLongitudNombreGasto(txtNombre.Text)) return;
             if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
             if (!clsValidaciones.ValidarFecha(txtFecha.Text, out DateTime fechaFinal)) return;
+            // Observaciones son opcionales, solo validar longitud si tiene contenido
+            if (!clsValidacionesContabilidad.ValidarObservaciones(txtObservaciones.Text)) return;
 
             try
             {
@@ -156,7 +147,9 @@ namespace Contabilidad
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@TipoGasto", ((ComboBoxItem)cmbTipoGasto.SelectedItem).Content.ToString());
                     cmd.Parameters.AddWithValue("@NombreGasto", txtNombre.Text.Trim());
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text) ? (object)DBNull.Value : txtObservaciones.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(txtObservaciones.Text)
+                        ? (object)DBNull.Value
+                        : txtObservaciones.Text.Trim());
                     cmd.Parameters.AddWithValue("@Precio", precio);
                     cmd.Parameters.AddWithValue("@Fecha", fechaFinal);
                     cmd.Parameters.AddWithValue("@GastoID", _gastoId);

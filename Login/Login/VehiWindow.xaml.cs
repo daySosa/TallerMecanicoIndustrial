@@ -272,7 +272,6 @@ namespace Vehículos
             return true;
         }
 
-        // Convierte a mayúsculas — el contador lo maneja MaterialDesign automáticamente
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtPlaca.IsReadOnly) return;

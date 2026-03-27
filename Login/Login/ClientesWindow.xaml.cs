@@ -75,12 +75,8 @@ namespace InterfazClientes
             if (soloNumeros.Length > 8)
                 soloNumeros = soloNumeros.Substring(0, 8);
 
-            string formateado = "";
-
-            if (soloNumeros.Length <= 4)
-                formateado = soloNumeros;
-            else
-                formateado = soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
+            // CORRECCIÓN: se eliminó la primera declaración duplicada de formateado
+            // y se agregó el caso vacío que faltaba en la primera versión
             string formateado;
 
             if (soloNumeros.Length == 0)
@@ -167,21 +163,20 @@ namespace InterfazClientes
 
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
+            // CORRECCIÓN: se eliminaron las líneas duplicadas y las que no rehabilitaban
+            // el botón antes del return. Ahora todas siguen el mismo patrón consistente.
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) { btnAgregar.IsEnabled = true; return; }
-            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.Telefono(telefonoLimpio)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) { btnAgregar.IsEnabled = true; return; }
-            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
-            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
-            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
-            if (!clsValidaciones.Telefono(telefonoLimpio))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
+            if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidacionesClientes.ValidarLongitudNombre(txtNombre.Text, "nombre")) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidacionesClientes.ValidarLongitudNombre(txtApellido.Text, "apellido")) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidacionesClientes.ValidarDireccion(txtDireccion.Text)) { btnAgregar.IsEnabled = true; return; }
 
             try
             {
@@ -239,10 +234,8 @@ namespace InterfazClientes
                 return;
             }
 
-            string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
-
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
-            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
+            // CORRECCIÓN: se eliminó la segunda declaración duplicada de telefonoLimpio
+            // y nuevoDni, y se eliminaron las validaciones repetidas que quedaban abajo
             string nuevoDni = txtDPI.Text.Trim();
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
@@ -251,7 +244,13 @@ namespace InterfazClientes
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
+            if (!clsValidaciones.Telefono(telefonoLimpio)) return;
+            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
+            if (!clsValidacionesClientes.ValidarLongitudNombre(txtNombre.Text, "nombre")) return;
+            if (!clsValidacionesClientes.ValidarLongitudNombre(txtApellido.Text, "apellido")) return;
+            if (!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) return;
+            if (!clsValidacionesClientes.ValidarDireccion(txtDireccion.Text)) return;
 
             try
             {
