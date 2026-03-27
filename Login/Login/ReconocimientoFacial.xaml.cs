@@ -12,28 +12,69 @@ using Drawing = System.Drawing;
 
 namespace Login
 {
+    /// <summary>
+    /// Ventana encargada del reconocimiento facial.
+    /// Permite capturar video desde la cámara, detectar rostros,
+    /// realizar reconocimiento facial, registrar nuevas personas
+    /// y gestionar el acceso al sistema.
+    /// </summary>
     public partial class ReconocimientoFacial : Window
     {
-        // Cámara
+        /// <summary>
+        /// Colección de cámaras disponibles en el sistema.
+        /// </summary>
         private FilterInfoCollection? _camarasDisponibles;
+
+        /// <summary>
+        /// Cámara actualmente activa.
+        /// </summary>
         private VideoCaptureDevice? _camaraActiva;
 
-        // Detección y reconocimiento
+        /// <summary>
+        /// Clasificador Haar utilizado para la detección de rostros.
+        /// </summary>
         private CascadeClassifier? _detectorRostros;
+
+        /// <summary>
+        /// Servicio encargado del entrenamiento y reconocimiento facial.
+        /// </summary>
         private readonly clsServicioReconocimiento _servicioReconocimiento = new();
 
-        // Estado
+        /// <summary>
+        /// Indica si se ha detectado un rostro en el frame actual.
+        /// </summary>
         private bool _rostroDetectado = false;
+
+        /// <summary>
+        /// Indica si el acceso ha sido concedido al usuario.
+        /// </summary>
         private bool _accesoOtorgado = false;
+
+        /// <summary>
+        /// Indica si la aplicación está en modo registro de personas.
+        /// </summary>
         private bool _esModoRegistro = false;
 
-        // Datos
+        /// <summary>
+        /// Lista de personas registradas en el sistema.
+        /// Contiene Id, Nombre y la fotografía asociada.
+        /// </summary>
         private readonly List<(int Id, string Nombre, Drawing.Bitmap Foto)> _personas = new();
+
+        /// <summary>
+        /// Fotografía capturada para registro de una nueva persona.
+        /// </summary>
         private Drawing.Bitmap? _fotoCapturada = null;
 
-        // Sesión
+        /// <summary>
+        /// Correo electrónico del usuario en sesión.
+        /// </summary>
         private readonly string _correoUsuario;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="ReconocimientoFacial"/>.
+        /// </summary>
+        /// <param name="correo">Correo del usuario en sesión.</param>
         public ReconocimientoFacial(string correo = "")
         {
             InitializeComponent();
@@ -46,8 +87,9 @@ namespace Login
             CargarPersonasDesdeBD();
         }
 
-        // ── Inicialización ────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Carga el modelo de detección de rostros desde un archivo XML.
+        /// </summary>
         private void CargarDetector()
         {
             const string ruta = "haarcascade_frontalface_default.xml";
@@ -57,8 +99,9 @@ namespace Login
                 MostrarEstado("⚠ No se encontró el XML de detección de rostros.", esError: true);
         }
 
-        // ── Base de datos ─────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Carga las personas registradas desde la base de datos y entrena el modelo.
+        /// </summary>
         private void CargarPersonasDesdeBD()
         {
             try
@@ -95,6 +138,11 @@ namespace Login
             }
         }
 
+        /// <summary>
+        /// Guarda una nueva persona en la base de datos.
+        /// </summary>
+        /// <param name="nombre">Nombre de la persona.</param>
+        /// <param name="foto">Fotografía asociada.</param>
         private void GuardarPersonaEnBD(string nombre, Drawing.Bitmap foto)
         {
             try
@@ -123,8 +171,9 @@ namespace Login
             }
         }
 
-        // ── Cámara ────────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Maneja el evento Click del botón para iniciar la cámara.
+        /// </summary>
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
             _camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
@@ -153,6 +202,9 @@ namespace Login
             MostrarEstado("Cámara iniciada — selecciona un modo.");
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón para detener la cámara.
+        /// </summary>
         private void btnDetenerCamara_Click(object sender, RoutedEventArgs e)
         {
             DetenerCamara();
@@ -165,6 +217,9 @@ namespace Login
             MostrarEstado("Cámara detenida.");
         }
 
+        /// <summary>
+        /// Detiene la cámara activa y libera recursos.
+        /// </summary>
         private void DetenerCamara()
         {
             if (_camaraActiva is { IsRunning: true })
@@ -175,8 +230,10 @@ namespace Login
             }
         }
 
-        // ── Procesamiento de frames ───────────────────────────────────────────────
-
+        /// <summary>
+        /// Maneja cada frame capturado por la cámara.
+        /// Realiza detección de rostros y reconocimiento facial.
+        /// </summary>
         private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs args)
         {
             if (_accesoOtorgado) return;
@@ -235,6 +292,9 @@ namespace Login
             ActualizarVisor(frame);
         }
 
+        /// <summary>
+        /// Actualiza la imagen mostrada en la interfaz con el frame actual.
+        /// </summary>
         private void ActualizarVisor(Drawing.Bitmap frame)
         {
             var src = BitmapToImageSource(frame);
@@ -256,6 +316,9 @@ namespace Login
 
         // ── Acceso concedido ──────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Finaliza el proceso de autenticación y concede acceso al sistema.
+        /// </summary>
         private async void FinalizarAcceso(string nombre)
         {
             if (_accesoOtorgado) return;
@@ -278,8 +341,9 @@ namespace Login
             });
         }
 
-        // ── Modos ─────────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Activa el modo de registro de nuevas personas.
+        /// </summary>
         private void btnModoRegistro_Click(object sender, RoutedEventArgs e)
         {
             _esModoRegistro = true;
@@ -290,6 +354,9 @@ namespace Login
             elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(230, 126, 34));
         }
 
+        /// <summary>
+        /// Activa el modo de inicio de sesión mediante reconocimiento facial.
+        /// </summary>
         private void btnModoLogin_Click(object sender, RoutedEventArgs e)
         {
             _esModoRegistro = false;
@@ -302,8 +369,9 @@ namespace Login
             MostrarEstado("Modo Login activo — coloca tu cara frente a la cámara.");
         }
 
-        // ── Captura y registro ────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Captura una fotografía del rostro detectado para su registro.
+        /// </summary>
         private void btnCapturarFoto_Click(object sender, RoutedEventArgs e)
         {
             var (modoOk, msgModo) =
@@ -354,6 +422,9 @@ namespace Login
             frame.Dispose();
         }
 
+        /// <summary>
+        /// Registra una nueva persona en la base de datos.
+        /// </summary>
         private void btnRegistrar_Click(object sender, RoutedEventArgs e)
         {
             string nombre = txtNombrePersona.Text.Trim();
@@ -382,8 +453,9 @@ namespace Login
             _fotoCapturada = null;
         }
 
-        // ── Regresar ──────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Regresa a la ventana de opciones de sesión.
+        /// </summary>
         private void btnRegresar_Click(object sender, RoutedEventArgs e)
         {
             DetenerCamara();
@@ -391,8 +463,9 @@ namespace Login
             this.Close();
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Muestra un mensaje de estado en la interfaz.
+        /// </summary>
         private void MostrarEstado(string mensaje, bool esError = false)
         {
             txtEstado.Text = mensaje;
@@ -401,6 +474,9 @@ namespace Login
                 : new SolidColorBrush(Color.FromRgb(170, 170, 170));
         }
 
+        /// <summary>
+        /// Obtiene el frame actual mostrado en la interfaz como Bitmap.
+        /// </summary>
         private Drawing.Bitmap? ObtenerFrameActual()
         {
             if (imgCamara.Source is not BitmapSource src) return null;
@@ -420,6 +496,9 @@ namespace Login
             return bmp;
         }
 
+        /// <summary>
+        /// Convierte un Bitmap de System.Drawing a BitmapImage para WPF.
+        /// </summary>
         private static BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
         {
             using MemoryStream ms = new();
@@ -434,8 +513,9 @@ namespace Login
             return img;
         }
 
-        // ── Ciclo de vida ─────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Libera recursos cuando la ventana se cierra.
+        /// </summary>
         protected override void OnClosed(EventArgs e)
         {
             DetenerCamara();
@@ -446,3 +526,4 @@ namespace Login
         }
     }
 }
+

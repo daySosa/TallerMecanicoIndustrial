@@ -12,40 +12,136 @@ using Vehículos;
 
 namespace Dasboard_Prueba
 {
+    /// <summary>
+    /// Representa una orden reciente dentro del sistema.
+    /// </summary>
     public class OrdenReciente
     {
+        //// <summary>
+        /// Obtiene o establece el identificador de la orden.
+        /// </summary>
         public int Orden_ID { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el nombre completo del cliente.
+        /// </summary>
         public string Cliente_NombreCompleto { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece la placa del vehículo.
+        /// </summary>
         public string Vehiculo_Placa { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece la fecha de la orden.
+        /// </summary>
         public DateTime Fecha { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el estado de la orden.
+        /// </summary>
         public string Estado { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el precio total de la orden.
+        /// </summary>
         public decimal OrdenPrecio_Total { get; set; }
     }
 
+    /// <summary>
+    /// Representa una notificación dentro del sistema.
+    /// </summary>
     public class NotificacionItem
     {
+        /// <summary>
+        /// Obtiene o establece el identificador de la notificación.
+        /// </summary>
         public int Notificacion_ID { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el tipo de notificación.
+        /// </summary>
         public string Tipo_Notificacion { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el mensaje de la notificación.
+        /// </summary>
         public string Mensaje { get; set; }
+
+        /// <summary>
+        /// Indica si la notificación ha sido leída.
+        /// </summary>
         public bool Leida { get; set; }
     }
 
+    /// <summary>
+    /// Ventana principal del sistema (Dashboard).
+    /// </summary>
     public partial class MenuPrincipal : Window
     {
+        /// <summary>
+        /// Instancia para consultas a la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Mes actualmente seleccionado en el calendario.
+        /// </summary>
         private DateTime _mesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+        /// <summary>
+        /// Lista de notificaciones.
+        /// </summary>
         private List<NotificacionItem> _notificaciones = new List<NotificacionItem>();
+
+        /// <summary>
+        /// Cantidad de meses a mostrar en las gráficas.
+        /// </summary>
         private int _mesesRango = 6;
 
+        /// <summary>
+        /// Valores del balance para la gráfica.
+        /// </summary>
         public ChartValues<double> BalanceValues { get; set; }
+
+        /// <summary>
+        /// Valores de órdenes para la gráfica.
+        /// </summary>
         public ChartValues<double> OrderValues { get; set; }
+
+        /// <summary>
+        /// Valores de gastos para la gráfica.
+        /// </summary>
         public ChartValues<double> GastosValues { get; set; }
+
+        /// <summary>
+        /// Valores de ingresos semanales.
+        /// </summary>
         public ChartValues<double> IngresosSemanalValues { get; set; }
+
+        /// <summary>
+        /// Etiquetas del eje para la gráfica de balance.
+        /// </summary>
         public string[] BalanceLabels { get; set; }
+
+        /// <summary>
+        /// Etiquetas del eje para la gráfica de órdenes.
+        /// </summary>
         public string[] OrderLabels { get; set; }
+
+        /// <summary>
+        /// Etiquetas del eje para la gráfica de gastos.
+        /// </summary>
         public string[] GastosLabels { get; set; }
+
+        /// <summary>
+        /// Etiquetas del eje para la gráfica de ingresos semanales.
+        /// </summary>
         public string[] IngresosSemanalLabels { get; set; }
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana principal.
+        /// </summary>
         public MenuPrincipal()
         {
             BalanceValues = new ChartValues<double>();
@@ -68,6 +164,9 @@ namespace Dasboard_Prueba
             GenerarCalendario();
         }
 
+        /// <summary>
+        /// Maneja el evento de cambio de selección del rango de meses.
+        /// </summary>
         private void cmbRango_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (cmbRango.SelectedItem is ComboBoxItem item)
@@ -84,6 +183,9 @@ namespace Dasboard_Prueba
             }
         }
 
+        /// <summary>
+        /// Carga y actualiza las gráficas del dashboard.
+        /// </summary>
         private void CargarGraficas()
         {
             try
@@ -123,6 +225,9 @@ namespace Dasboard_Prueba
             }
         }
 
+        /// <summary>
+        /// Carga los datos principales del dashboard.
+        /// </summary>
         private void CargarDatos()
         {
             try
@@ -142,6 +247,9 @@ namespace Dasboard_Prueba
             }
         }
 
+        /// <summary>
+        /// Carga las notificaciones desde la base de datos.
+        /// </summary>
         private void CargarNotificaciones()
         {
             _notificaciones.Clear();
@@ -153,6 +261,9 @@ namespace Dasboard_Prueba
             ActualizarPanelNotificaciones();
         }
 
+        /// <summary>
+        /// Actualiza el panel visual de notificaciones.
+        /// </summary>
         private void ActualizarPanelNotificaciones()
         {
             panelNotificaciones.Children.Clear();
@@ -266,6 +377,9 @@ namespace Dasboard_Prueba
             }
         }
 
+        /// <summary>
+        /// Marca una notificación como leída.
+        /// </summary>
         private void MarcarComoLeida(int id)
         {
             try
@@ -279,6 +393,9 @@ namespace Dasboard_Prueba
             ActualizarPanelNotificaciones();
         }
 
+        /// <summary>
+        /// Marca todas las notificaciones como leídas.
+        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -291,24 +408,36 @@ namespace Dasboard_Prueba
             ActualizarPanelNotificaciones();
         }
 
+        /// <summary>
+        /// Abre o cierra el panel de notificaciones.
+        /// </summary>
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             CargarNotificaciones();
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
+        /// <summary>
+        /// Muestra el mes anterior en el calendario.
+        /// </summary>
         private void btnAnterior_Click(object sender, RoutedEventArgs e)
         {
             _mesActual = _mesActual.AddMonths(-1);
             GenerarCalendario();
         }
 
+        /// <summary>
+        /// Muestra el siguiente mes en el calendario.
+        /// </summary>
         private void btnSiguiente_Click(object sender, RoutedEventArgs e)
         {
             _mesActual = _mesActual.AddMonths(1);
             GenerarCalendario();
         }
 
+        /// <summary>
+        /// Genera el calendario del mes actual.
+        /// </summary>
         private void GenerarCalendario()
         {
             var cultura = new CultureInfo("es-HN");
@@ -373,13 +502,57 @@ namespace Dasboard_Prueba
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón de órdenes.
+        /// Abre la ventana principal de órdenes.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnOrdenes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalOrdenes().Show(); this.Close(); }
+
+        /// <summary>
+        /// Maneja el evento Click del botón de vehículos.
+        /// Abre la ventana principal de vehículos.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new MenúPrincipalVehículos().Show(); this.Close(); }
+
+        /// <summary>
+        /// Maneja el evento Click del botón de inventario.
+        /// Abre la ventana principal de inventario.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnInventario_Click(object sender, RoutedEventArgs e) { new MenúPrincipalInventario().Show(); this.Close(); }
+
+        /// <summary>
+        /// Maneja el evento Click del botón de clientes.
+        /// Abre la ventana principal de clientes.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
+
+        /// <summary>
+        /// Maneja el evento Click del botón de egresos.
+        /// Abre la ventana de contabilidad.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnEgresos_Click(object sender, RoutedEventArgs e) { new ContaWindow().Show(); this.Close(); }
+
+        /// <summary>
+        /// Maneja el evento Click del botón de ingresos.
+        /// Abre la ventana de pagos.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnIngresos_Click(object sender, RoutedEventArgs e) { new MenuDePagos().Show(); this.Close(); }
 
+        /// <summary>
+        /// Cierra la sesión del usuario.
+        /// </summary>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
@@ -390,6 +563,9 @@ namespace Dasboard_Prueba
             }
         }
 
+        /// <summary>
+        /// Convierte el nombre de un ícono en su tipo correspondiente.
+        /// </summary>
         private MaterialDesignThemes.Wpf.PackIconKind ParseIconKind(string nombre)
         {
             if (Enum.TryParse<MaterialDesignThemes.Wpf.PackIconKind>(nombre, out var kind))

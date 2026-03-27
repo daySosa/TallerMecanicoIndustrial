@@ -14,18 +14,55 @@ using System.Windows.Media;
 
 namespace InterfazInventario
 {
+    /// <summary>
+    /// Representa un repuesto dentro del inventario e implementa notificación de cambios de propiedades.
+    /// </summary>
     public class Repuesto : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Cantidad actual del producto.
+        /// </summary>
         private int _producto_Cantidad_Actual;
 
+        /// <summary>
+        /// Obtiene o establece el identificador del producto.
+        /// </summary>
         public int Producto_ID { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el nombre del producto.
+        /// </summary>
         public string? Producto_Nombre { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece la categoría del producto.
+        /// </summary>
         public string? Producto_Categoria { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece la marca del producto.
+        /// </summary>
         public string? Producto_Marca { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el modelo del producto.
+        /// </summary>
         public string? Producto_Modelo { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece la cantidad mínima del producto.
+        /// </summary>
         public int Producto_Cantidad_Minima { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el precio del producto.
+        /// </summary>
         public decimal Producto_Precio { get; set; }
 
+        /// <summary>
+        /// Obtiene o establece la cantidad actual del producto.
+        /// Notifica cambios y evalúa si el stock es bajo.
+        /// </summary>
         public int Producto_Cantidad_Actual
         {
             get => _producto_Cantidad_Actual;
@@ -37,24 +74,68 @@ namespace InterfazInventario
             }
         }
 
+        /// <summary>
+        /// Indica si el stock del producto está por debajo del mínimo.
+        /// </summary>
         public bool StockBajo => Producto_Cantidad_Actual < Producto_Cantidad_Minima;
 
+        /// <summary>
+        /// Evento que se dispara cuando una propiedad cambia.
+        /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        /// <summary>
+        /// Notifica que una propiedad ha cambiado.
+        /// </summary>
+        /// <param name="name">Nombre de la propiedad.</param>
         protected void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
+    /// <summary>
+    /// Ventana principal del módulo de inventario.
+    /// Permite visualizar, filtrar, agregar y editar productos, así como gestionar notificaciones.
+    /// </summary>
     public partial class MenúPrincipalInventario : Window
     {
+        /// <summary>
+        /// Instancia de acceso a base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Lista observable de repuestos.
+        /// </summary>
         private ObservableCollection<Repuesto> _listaRepuestos = new ObservableCollection<Repuesto>();
+
+        /// <summary>
+        /// Vista filtrable de los repuestos.
+        /// </summary>
         private ICollectionView? _vistaRepuestos;
 
+        /// <summary>
+        /// Filtro por categoría.
+        /// </summary>
         private string? _filtroCategoria = null;
+
+        /// <summary>
+        /// Filtro de precio mínimo.
+        /// </summary>
         private decimal _filtroPrecioMin = 0;
+
+        /// <summary>
+        /// Filtro de precio máximo.
+        /// </summary>
         private decimal _filtroPrecioMax = decimal.MaxValue;
+
+        /// <summary>
+        /// Indica si se deben mostrar solo productos con stock bajo.
+        /// </summary>
         private bool _filtroStockBajo = false;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana principal de inventario.
+        /// </summary>
         public MenúPrincipalInventario()
         {
             InitializeComponent();
@@ -62,6 +143,9 @@ namespace InterfazInventario
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Carga los datos del inventario, incluyendo productos, categorías y configuración inicial de la vista.
+        /// </summary>
         private void CargarDatos()
         {
             _listaRepuestos.Clear();
@@ -93,6 +177,11 @@ namespace InterfazInventario
             }
         }
 
+        /// <summary>
+        /// Aplica los filtros definidos sobre un elemento del inventario.
+        /// </summary>
+        /// <param name="item">Elemento a evaluar.</param>
+        /// <returns>True si el elemento cumple con los filtros; de lo contrario, false.</returns>
         private bool AplicarFiltros(object item)
         {
             if (item is not Repuesto r) return false;
@@ -118,15 +207,24 @@ namespace InterfazInventario
             return true;
         }
 
+        /// <summary>
+        /// Maneja el evento TextChanged del control de búsqueda.
+        /// </summary>
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaRepuestos?.Refresh();
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Muestra u oculta el panel de filtros.
+        /// </summary>
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
             => popupFiltros.IsOpen = !popupFiltros.IsOpen;
 
+        /// <summary>
+        /// Aplica los filtros seleccionados por el usuario.
+        /// </summary>
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
@@ -142,6 +240,9 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Limpia todos los filtros aplicados.
+        /// </summary>
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
             cmbCategoria.SelectedIndex = 0;
@@ -157,6 +258,9 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Actualiza el contador de elementos visibles en la vista.
+        /// </summary>
         private void ActualizarContador()
         {
             int total = 0;
@@ -165,6 +269,9 @@ namespace InterfazInventario
             tbTotalItems.Text = $"{total} item{(total != 1 ? "s" : "")}";
         }
 
+        /// <summary>
+        /// Maneja el evento de doble clic sobre un producto del inventario para editarlo.
+        /// </summary>
         private void dgInventario_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (dgInventario.SelectedItem is Repuesto seleccionado)
@@ -178,6 +285,9 @@ namespace InterfazInventario
             }
         }
 
+        /// <summary>
+        /// Abre la ventana para agregar un nuevo repuesto al inventario.
+        /// </summary>
         private void btnAgregarRepuesto_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InventarioWindow();
@@ -186,6 +296,9 @@ namespace InterfazInventario
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Muestra u oculta el panel de notificaciones.
+        /// </summary>
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -193,6 +306,9 @@ namespace InterfazInventario
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
+        /// <summary>
+        /// Carga la cantidad de notificaciones pendientes.
+        /// </summary>
         public void CargarNotificaciones()
         {
             try
@@ -204,6 +320,9 @@ namespace InterfazInventario
             catch { }
         }
 
+        /// <summary>
+        /// Carga las notificaciones en el popup.
+        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -263,6 +382,13 @@ namespace InterfazInventario
             }
         }
 
+        /// <summary>
+        /// Crea una tarjeta de notificación.
+        /// </summary>
+        /// <param name="id">Identificador de la notificación.</param>
+        /// <param name="tipo">Tipo de notificación.</param>
+        /// <param name="mensaje">Mensaje de la notificación.</param>
+        /// <returns>Un control Border que representa la tarjeta de notificación.</returns>
         private Border CrearTarjetaNotificacion(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -333,6 +459,11 @@ namespace InterfazInventario
             return card;
         }
 
+        /// <summary>
+        /// Marca todas las notificaciones como leídas.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -340,13 +471,41 @@ namespace InterfazInventario
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Navega a la pantalla principal.
+        /// </summary>
         private void btnHome_Click(object sender, RoutedEventArgs e) { new MenuPrincipal().Show(); this.Close(); }
+
+        /// <summary>
+        /// Navega al módulo de vehículos.
+        /// </summary>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e) { new Vehículos.MenúPrincipalVehículos().Show(); this.Close(); }
+
+        /// <summary>
+        /// Navega al módulo de clientes.
+        /// </summary>
         private void btnClientes_Click(object sender, RoutedEventArgs e) { new MenúPrincipalClientes().Show(); this.Close(); }
+
+        /// <summary>
+        /// Navega al módulo de órdenes de trabajo.
+        /// </summary>
         private void btnOrdenes_Click(object sender, RoutedEventArgs e) { new Órdenes_de_Trabajo.MenúPrincipalOrdenes().Show(); this.Close(); }
+
+        /// <summary>
+        /// Navega al módulo de egresos.
+        /// </summary>
         private void btnEgresos_Click(object sender, RoutedEventArgs e) { new ContaWindow().Show(); this.Close(); }
+
+        /// <summary>
+        /// Navega al módulo de ingresos.
+        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e) { new Contabilidad.MenuDePagos().Show(); this.Close(); }
 
+        /// <summary>
+        /// Cierra la sesión del usuario actual.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
@@ -356,7 +515,11 @@ namespace InterfazInventario
                 this.Close();
             }
         }
-
+        /// <summary>
+        /// Abre la ventana de reportes del inventario.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ReportesWindow("Inventario");

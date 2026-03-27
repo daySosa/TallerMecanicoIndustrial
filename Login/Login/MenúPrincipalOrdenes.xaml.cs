@@ -12,32 +12,113 @@ using System.Windows.Media;
 
 namespace Órdenes_de_Trabajo
 {
+    /// <summary>
+    /// Representa una orden de trabajo dentro del sistema.
+    /// Contiene información del cliente, vehículo, productos asociados,
+    /// estado, fechas y costos.
+    /// </summary>
     public class OrdenTrabajo
     {
+        /// <summary>
+        /// Identificador único de la orden.
+        /// </summary>
         public int Orden_ID { get; set; }
+
+        /// <summary>
+        /// DNI del cliente asociado a la orden.
+        /// </summary>
         public string Cliente_DNI { get; set; }
+
+        /// <summary>
+        /// Nombre completo del cliente.
+        /// </summary>
         public string? Cliente_NombreCompleto { get; set; }
+
+        /// <summary>
+        /// Placa del vehículo asociado a la orden.
+        /// </summary>
         public string? Vehiculo_Placa { get; set; }
+
+        /// <summary>
+        /// Identificador del producto asociado.
+        /// </summary>
         public int? Producto_ID { get; set; }
+
+        /// <summary>
+        /// Nombre del producto asociado.
+        /// </summary>
         public string? Producto_Nombre { get; set; }
+
+        /// <summary>
+        /// Categoría del producto.
+        /// </summary>
         public string? Producto_Categoria { get; set; }
+
+        /// <summary>
+        /// Estado actual de la orden (Pendiente, En proceso, Finalizado, etc.).
+        /// </summary>
         public string? Estado { get; set; }
+
+        /// <summary>
+        /// Fecha de creación de la orden.
+        /// </summary>
         public DateTime Fecha { get; set; }
+
+        /// <summary>
+        /// Fecha estimada o real de entrega.
+        /// </summary>
         public DateTime? Fecha_Entrega { get; set; }
+
+        /// <summary>
+        /// Observaciones adicionales de la orden.
+        /// </summary>
         public string? Observaciones { get; set; }
+
+        /// <summary>
+        /// Observaciones adicionales de la orden.
+        /// </summary>
         public decimal Servicio_Precio { get; set; }
+
+        /// <summary>
+        /// Precio total de la orden (servicio + productos).
+        /// </summary>
         public decimal OrdenPrecio_Total { get; set; }
     }
 
+    /// <summary>
+    /// Ventana principal del módulo de órdenes de trabajo.
+    /// Permite visualizar, filtrar, crear, editar órdenes y gestionar notificaciones.
+    /// </summary>
     public partial class MenúPrincipalOrdenes : Window
     {
+        /// <summary>
+        /// Acceso a la capa de datos (base de datos).
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// Lista observable de órdenes cargadas desde la base de datos.
+        /// </summary>
         private ObservableCollection<OrdenTrabajo> _listaOrdenes = new ObservableCollection<OrdenTrabajo>();
+
+        /// <summary>
+        /// Vista filtrable de las órdenes para la UI.
+        /// </summary>
         private ICollectionView? _vistaOrdenes;
 
+        /// <summary>
+        /// Filtro por nombre de cliente.
+        /// </summary>
         private string _filtroCliente = "";
+
+        /// <summary>
+        /// Filtro por estado de la orden.
+        /// </summary>
         private string _filtroEstado = "Todos";
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana principal de órdenes.
+        /// </summary>
         public MenúPrincipalOrdenes()
         {
             InitializeComponent();
@@ -45,6 +126,9 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Navega a la pantalla principal.
+        /// </summary>
         private void btnHome_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new MenuPrincipal();
@@ -52,6 +136,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de inventario.
+        /// </summary>
         private void btnInventario_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InterfazInventario.MenúPrincipalInventario();
@@ -59,6 +146,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de vehículos.
+        /// </summary>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Vehículos.MenúPrincipalVehículos();
@@ -66,6 +156,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de clientes.
+        /// </summary>
         private void btnClientes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new InterfazClientes.MenúPrincipalClientes();
@@ -73,6 +166,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de egresos (contabilidad).
+        /// </summary>
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Contabilidad.ContaWindow();
@@ -80,6 +176,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Navega al módulo de ingresos (pagos).
+        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new Contabilidad.MenuDePagos();
@@ -87,6 +186,9 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
+        /// <summary>
+        /// Cierra la sesión del usuario actual.
+        /// </summary>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
@@ -100,6 +202,9 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Carga las órdenes desde la base de datos.
+        /// </summary>
         private void CargarDatosDesdeDB()
         {
             _listaOrdenes.Clear();
@@ -121,6 +226,9 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Aplica los filtros configurados sobre la lista de órdenes.
+        /// </summary>
         private bool AplicarFiltros(object item)
         {
             if (item is not OrdenTrabajo o) return false;
@@ -149,17 +257,26 @@ namespace Órdenes_de_Trabajo
             return true;
         }
 
+        /// <summary>
+        /// Actualiza la vista cuando cambia el texto de búsqueda.
+        /// </summary>
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaOrdenes?.Refresh();
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Muestra u oculta el panel de filtros.
+        /// </summary>
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
         {
             popupFiltros.IsOpen = !popupFiltros.IsOpen;
         }
 
+        /// <summary>
+        /// Aplica los filtros seleccionados por el usuario.
+        /// </summary>
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             _filtroCliente = txtFiltroCliente.Text?.Trim().ToLower() ?? "";
@@ -170,6 +287,9 @@ namespace Órdenes_de_Trabajo
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Limpia todos los filtros aplicados.
+        /// </summary>
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
             txtFiltroCliente.Clear();
@@ -182,6 +302,9 @@ namespace Órdenes_de_Trabajo
             ActualizarContador();
         }
 
+        /// <summary>
+        /// Actualiza el contador de órdenes visibles.
+        /// </summary>
         private void ActualizarContador()
         {
             int total = 0;
@@ -190,6 +313,9 @@ namespace Órdenes_de_Trabajo
             tbTotalOrdenes.Text = $"{total} orden{(total != 1 ? "es" : "")}";
         }
 
+        /// <summary>
+        /// Maneja la selección de una orden para edición.
+        /// </summary>
         private async void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgOrdenes.SelectedItem is not OrdenTrabajo seleccionada) return;
@@ -207,6 +333,9 @@ namespace Órdenes_de_Trabajo
             await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
         }
 
+        /// <summary>
+        /// Abre una nueva ventana para crear una orden.
+        /// </summary>
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new OrdenWindow();
@@ -215,6 +344,9 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Abre o cierra el popup de notificaciones.
+        /// </summary>
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -222,6 +354,9 @@ namespace Órdenes_de_Trabajo
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
+        /// <summary>
+        /// Carga el contador de notificaciones pendientes.
+        /// </summary>
         public void CargarNotificaciones()
         {
             try
@@ -236,6 +371,9 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Carga las notificaciones dentro del popup.
+        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -272,6 +410,9 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Crea una tarjeta visual para representar una notificación.
+        /// </summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -334,6 +475,9 @@ namespace Órdenes_de_Trabajo
             return card;
         }
 
+        /// <summary>
+        /// Marca todas las notificaciones como leídas.
+        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -341,6 +485,10 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
+        /// <summary>
+        /// Marca una notificación específica como leída.
+        /// </summary>
+        /// <param name="id">Identificador de la notificación.</param>
         private void MarcarLeida(int? id)
         {
             try
@@ -353,6 +501,9 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>
+        /// Abre la ventana de reportes del módulo de órdenes.
+        /// </summary>
         private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ReportesWindow("Ordenes");
