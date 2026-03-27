@@ -1,6 +1,5 @@
 ﻿using Login.Clases;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,7 +11,7 @@ namespace Órdenes_de_Trabajo
 {
     public partial class OrdenWindow : Window
     {
-        private clsConsultasBD _db = new clsConsultasBD(); 
+        private clsConsultasBD _db = new clsConsultasBD();
         private string _clienteDNI = string.Empty;
         private string _vehiculoPlaca = string.Empty;
         private bool _buscarPorDNI = true;
@@ -32,6 +31,22 @@ namespace Órdenes_de_Trabajo
 
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
+
+            txtBuscar.MaxLength = 13;
+
+            txtBuscar.PreviewTextInput += (s, e) =>
+            {
+                int limite = _buscarPorDNI ? 13 : 7;
+                if (txtBuscar.Text.Length >= limite) e.Handled = true;
+            };
+
+            txtBuscar.TextChanged += (s, e) =>
+            {
+                int limite = _buscarPorDNI ? 13 : 7;
+                if (txtBuscar.Text.Length > limite)
+                    txtBuscar.Text = txtBuscar.Text.Substring(0, limite);
+                txtContador.Text = $"{txtBuscar.Text.Length} / {limite}";
+            };
 
             txtPrecioServicio.TextChanged += (s, e) => RecalcularPrecios();
 
@@ -62,7 +77,7 @@ namespace Órdenes_de_Trabajo
             _ordenIDEditar = ordenID;
             try
             {
-                var orden = _db.ObtenerOrdenParaEditar(ordenID); 
+                var orden = _db.ObtenerOrdenParaEditar(ordenID);
                 if (orden == default) return;
 
                 _clienteDNI = orden.clienteDNI;
@@ -100,7 +115,7 @@ namespace Órdenes_de_Trabajo
                     }
                 }
 
-                var repuestos = _db.ObtenerRepuestosOrden(ordenID); 
+                var repuestos = _db.ObtenerRepuestosOrden(ordenID);
                 foreach (var rep in repuestos)
                 {
                     rep.PropertyChanged += (s, e) => RecalcularPrecios();
@@ -121,6 +136,7 @@ namespace Órdenes_de_Trabajo
                 btnActualizar.IsEnabled = true;
                 btnActualizar.Opacity = 1;
 
+                this.UpdateLayout();
                 RecalcularPrecios();
             }
             catch (Exception ex) { MostrarError("Error al cargar la orden: " + ex.Message); }
@@ -129,23 +145,27 @@ namespace Órdenes_de_Trabajo
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
+            txtBuscar.MaxLength = 13;
+            txtContador.Text = $"0 / 13";
             tabDNI.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6ef7"));
             tabPlaca.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e2130"));
             if (tabPlaca.Child is TextBlock tb) tb.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6c7293"));
             lblBuscar.Text = "DNI del Cliente";
             txtBuscar.Text = string.Empty;
-            LimpiarResultados();
+            borderError.Visibility = Visibility.Collapsed;
         }
 
         private void TabPlaca_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = false;
+            txtBuscar.MaxLength = 7;
+            txtContador.Text = $"0 / 7";
             tabPlaca.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6ef7"));
             tabDNI.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e2130"));
             if (tabPlaca.Child is TextBlock tb) tb.Foreground = new SolidColorBrush(Colors.White);
             lblBuscar.Text = "Placa del Vehículo";
             txtBuscar.Text = string.Empty;
-            LimpiarResultados();
+            borderError.Visibility = Visibility.Collapsed;
         }
 
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
@@ -165,7 +185,7 @@ namespace Órdenes_de_Trabajo
         {
             try
             {
-                var resultado = _db.BuscarClientePorDNI(dni); 
+                var resultado = _db.BuscarClientePorDNI(dni);
                 if (resultado == default)
                 {
                     MostrarError($"No existe cliente con DNI '{dni}'.");
@@ -186,6 +206,8 @@ namespace Órdenes_de_Trabajo
                     txtVehiculoPropietario.Text = resultado.nombreCompleto;
                     borderVehiculoInfo.Visibility = Visibility.Visible;
                 }
+
+                this.UpdateLayout();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
         }
@@ -194,7 +216,7 @@ namespace Órdenes_de_Trabajo
         {
             try
             {
-                var resultado = _db.BuscarVehiculoPorPlaca(placa); 
+                var resultado = _db.BuscarVehiculoPorPlaca(placa);
                 if (resultado == default)
                 {
                     MostrarError($"No existe vehículo con placa '{placa}'.");
@@ -211,6 +233,8 @@ namespace Órdenes_de_Trabajo
                 txtClienteEmail.Text = resultado.email;
                 borderVehiculoInfo.Visibility = Visibility.Visible;
                 borderClienteInfo.Visibility = Visibility.Visible;
+
+                this.UpdateLayout();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
         }
@@ -272,7 +296,7 @@ namespace Órdenes_de_Trabajo
 
             try
             {
-                _db.AgregarOrden( 
+                _db.AgregarOrden(
                     _clienteDNI, _vehiculoPlaca, productoID, estado,
                     dpFecha.SelectedDate ?? DateTime.Today,
                     dpEntrega.SelectedDate,
@@ -321,7 +345,7 @@ namespace Órdenes_de_Trabajo
 
             try
             {
-                _db.ActualizarOrden( 
+                _db.ActualizarOrden(
                     _ordenIDEditar, estado,
                     dpFecha.SelectedDate ?? DateTime.Today,
                     dpEntrega.SelectedDate,
@@ -428,6 +452,7 @@ namespace Órdenes_de_Trabajo
             btnAñadir.Opacity = 1;
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
+            txtContador.Text = "0 / 13";
         }
     }
 }

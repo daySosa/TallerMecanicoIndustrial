@@ -252,22 +252,28 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        public bool ActualizarCliente(string dni, string nombres, string apellidos,
-                                       string telefono, string email, string direccion, bool activo)
+        public bool ActualizarCliente(string dniOriginal, string nombres, string apellidos,
+                               string telefono, string email, string direccion,
+                               bool activo, string nuevoDni = null)
         {
+            string dniAGuardar = string.IsNullOrEmpty(nuevoDni) ? dniOriginal : nuevoDni;
+
             try
             {
                 string sql = @"
-                    UPDATE Cliente SET
-                        Cliente_Nombres           = @Nombres,
-                        Cliente_Apellidos         = @Apellidos,
-                        Cliente_TelefonoPrincipal = @Telefono,
-                        Cliente_Email             = @Email,
-                        Cliente_Direccion         = @Direccion,
-                        Cliente_Activo            = @Activo
-                    WHERE Cliente_DNI = @DNI";
+            UPDATE Cliente SET
+                Cliente_DNI               = @NuevoDNI,
+                Cliente_Nombres           = @Nombres,
+                Cliente_Apellidos         = @Apellidos,
+                Cliente_TelefonoPrincipal = @Telefono,
+                Cliente_Email             = @Email,
+                Cliente_Direccion         = @Direccion,
+                Cliente_Activo            = @Activo
+            WHERE Cliente_DNI = @DNIOriginal";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
+                cmd.Parameters.AddWithValue("@NuevoDNI", dniAGuardar);
                 cmd.Parameters.AddWithValue("@Nombres", nombres);
                 cmd.Parameters.AddWithValue("@Apellidos", apellidos);
                 cmd.Parameters.AddWithValue("@Telefono", telefono);
@@ -276,7 +282,6 @@ namespace Login.Clases
                 cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(direccion)
                     ? (object)DBNull.Value : direccion.Trim());
                 cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
-                cmd.Parameters.AddWithValue("@DNI", dni);
 
                 _conexion.Abrir();
                 cmd.ExecuteNonQuery();
@@ -288,7 +293,6 @@ namespace Login.Clases
             }
             finally { _conexion.Cerrar(); }
         }
-
         public DataRow ObtenerComprobantePago(int pagoId)
         {
             try

@@ -19,14 +19,14 @@ namespace Contabilidad
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
         private MenuDePagos _menuRef;
         private int _pagoId;
-        private DateTime _fechaRegistro; 
+        private DateTime _fechaRegistro;
 
         public ActualizarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto, DateTime fecha)
         {
             InitializeComponent();
             _menuRef = menuRef;
             _pagoId = pagoId;
-            _fechaRegistro = fecha; 
+            _fechaRegistro = fecha;
 
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
@@ -39,10 +39,9 @@ namespace Contabilidad
             txtOrdenID.TextChanged += txtOrdenID_TextChanged;
             txtDNI.TextChanged += txtDNI_TextChanged;
 
-            VerificarBloqueoEdicion(); 
+            VerificarBloqueoEdicion();
         }
 
-        //Bloquea la edicion si ya paso 1 dia despues del registro
         private void VerificarBloqueoEdicion()
         {
             if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
@@ -79,7 +78,7 @@ namespace Contabilidad
                 {
                     string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
                     SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@DNI", dni);
+                    cmd.Parameters.AddWithValue("@DNI", dni); // string, no int
                     conn.Open();
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -114,9 +113,19 @@ namespace Contabilidad
             {
                 using (SqlConnection conn = new SqlConnection(conexion))
                 {
-                    string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
+                    // Trae el monto actualizado desde Contabilidad_Pago si existe,
+                    // si no cae al total de la orden
+                    string query = @"
+                        SELECT COALESCE(cp.Precio_Pago, ot.OrdenPrecio_Total)
+                        FROM Orden_Trabajo ot
+                        LEFT JOIN Contabilidad_Pago cp
+                            ON cp.Orden_ID = ot.Orden_ID
+                            AND cp.Pago_ID = @PagoID
+                        WHERE ot.Orden_ID = @OrdenID";
+
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                    cmd.Parameters.AddWithValue("@PagoID", _pagoId);
                     conn.Open();
                     object result = cmd.ExecuteScalar();
                     txtPrecio.Text = (result != null && result != DBNull.Value)
@@ -163,14 +172,14 @@ namespace Contabilidad
                 {
                     conn.Open();
                     string query = @"
-                    UPDATE Contabilidad_Pago
-                    SET Cliente_DNI = @DNI,
-                        Orden_ID    = @OrdenID,
-                        Precio_Pago = @Monto
-                    WHERE Pago_ID = @PagoID";
+                        UPDATE Contabilidad_Pago
+                        SET Cliente_DNI = @DNI,
+                            Orden_ID    = @OrdenID,
+                            Precio_Pago = @Monto
+                        WHERE Pago_ID = @PagoID";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@DNI", Convert.ToInt32(dni));
+                    cmd.Parameters.AddWithValue("@DNI", dni); 
                     cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                     cmd.Parameters.AddWithValue("@Monto", monto);
                     cmd.Parameters.AddWithValue("@PagoID", _pagoId);

@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Microsoft.Data.SqlClient;
 using Login.Clases;
 
@@ -39,9 +34,13 @@ namespace Contabilidad
             Title = "Actualizar Pago";
             txtDNI.Text = dni;
             txtOrdenID.Text = ordenId.ToString();
-            txtMonto.Text = "L " + monto.ToString("N2");
 
             BuscarCliente(dni);
+        }
+
+        private void txtDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
         private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
@@ -102,14 +101,21 @@ namespace Contabilidad
                 using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     string query = @"
-                        SELECT Orden_ID, Vehiculo_Placa, Estado,
-                               OrdenPrecio_Total, Fecha
-                        FROM Orden_Trabajo
-                        WHERE Cliente_DNI = @DNI
-                        ORDER BY Fecha DESC";
+                        SELECT ot.Orden_ID, ot.Vehiculo_Placa, ot.Estado,
+                               ot.OrdenPrecio_Total, ot.Fecha
+                        FROM Orden_Trabajo ot
+                        WHERE ot.Cliente_DNI = @DNI
+                            AND ot.Estado = 'Finalizado'
+                            AND NOT EXISTS (
+                                SELECT 1 FROM Contabilidad_Pago cp
+                                WHERE cp.Orden_ID = ot.Orden_ID
+                                AND (@PagoID = -1 OR cp.Pago_ID <> @PagoID)
+                            )
+                        ORDER BY ot.Fecha DESC";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@DNI", dni);
+                    cmd.Parameters.AddWithValue("@PagoID", _esEdicion ? _pagoId : -1);
                     conn.Open();
 
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -125,7 +131,7 @@ namespace Contabilidad
                     {
                         dgOrdenes.ItemsSource = null;
                         panelOrdenes.Visibility = Visibility.Collapsed;
-                        MostrarMensaje("Este cliente no tiene órdenes registradas.");
+                        MostrarMensaje("Este cliente no tiene órdenes finalizadas sin pago registrado.");
                     }
                 }
             }
@@ -146,6 +152,7 @@ namespace Contabilidad
         private void txtOrdenID_TextChanged(object sender, TextChangedEventArgs e)
         {
             OcultarMensaje();
+
             if (!int.TryParse(txtOrdenID.Text.Trim(), out int ordenId))
             {
                 txtMonto.Text = "L 0.00";
@@ -156,11 +163,20 @@ namespace Contabilidad
             {
                 using (SqlConnection conn = new SqlConnection(conexion))
                 {
-                    string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
+                    string query = @"
+                        SELECT COALESCE(cp.Precio_Pago, ot.OrdenPrecio_Total)
+                        FROM Orden_Trabajo ot
+                        LEFT JOIN Contabilidad_Pago cp 
+                            ON cp.Orden_ID = ot.Orden_ID
+                            AND (@PagoID = -1 OR cp.Pago_ID = @PagoID)
+                        WHERE ot.Orden_ID = @OrdenID";
+
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@OrdenID", ordenId);
+                    cmd.Parameters.AddWithValue("@PagoID", _esEdicion ? _pagoId : -1);
                     conn.Open();
                     object result = cmd.ExecuteScalar();
+
                     txtMonto.Text = (result != null && result != DBNull.Value)
                         ? "L " + Convert.ToDecimal(result).ToString("N2")
                         : "L 0.00";
@@ -178,16 +194,41 @@ namespace Contabilidad
 
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
-            string montoStr = txtMonto.Text.Replace("L", "").Replace(" ", "").Trim();
 
             if (!clsValidaciones.ValidarDNIHondureño(dni)) return;
             if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidaciones.ValidarEntero(ordenStr, out int ordenId, "⚠ El ID de la orden debe ser un número.", MostrarMensaje)) return;
-            if (!clsValidaciones.ValidarPrecio(montoStr, out decimal monto, MostrarMensaje)) return;
 
             try
             {
+                decimal montoActualizado = 0;
+                using (SqlConnection connCheck = new SqlConnection(conexion))
+                {
+                    string qMonto = @"
+                        SELECT COALESCE(cp.Precio_Pago, ot.OrdenPrecio_Total)
+                        FROM Orden_Trabajo ot
+                        LEFT JOIN Contabilidad_Pago cp
+                            ON cp.Orden_ID = ot.Orden_ID
+                            AND (@PagoID = -1 OR cp.Pago_ID = @PagoID)
+                        WHERE ot.Orden_ID = @OID";
+
+                    SqlCommand cmdMonto = new SqlCommand(qMonto, connCheck);
+                    cmdMonto.Parameters.AddWithValue("@OID", ordenId);
+                    cmdMonto.Parameters.AddWithValue("@PagoID", _esEdicion ? _pagoId : -1);
+                    connCheck.Open();
+                    object res = cmdMonto.ExecuteScalar();
+
+                    if (res == null || res == DBNull.Value)
+                    {
+                        MostrarMensaje("⚠ No se encontró la orden especificada.");
+                        return;
+                    }
+                    montoActualizado = Convert.ToDecimal(res);
+                }
+
+                txtMonto.Text = "L " + montoActualizado.ToString("N2");
+
                 using (SqlConnection conn = new SqlConnection(conexion))
                 {
                     conn.Open();
@@ -198,26 +239,28 @@ namespace Contabilidad
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@ClienteDNI", dni);
                         cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                        cmd.Parameters.AddWithValue("@Monto", monto);
+                        cmd.Parameters.AddWithValue("@Monto", montoActualizado);
                         cmd.ExecuteNonQuery();
+
                         MessageBox.Show("✅ ¡Pago registrado correctamente!", "Éxito",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
                         string updateQuery = @"
-                        UPDATE Contabilidad_Pago
-                        SET Cliente_DNI = @DNI,
-                            Orden_ID    = @OrdenID,
-                            Precio_Pago = @Monto
-                        WHERE Pago_ID = @PagoID";
+                            UPDATE Contabilidad_Pago
+                            SET Cliente_DNI = @DNI,
+                                Orden_ID    = @OrdenID,
+                                Precio_Pago = @Monto
+                            WHERE Pago_ID = @PagoID";
 
                         SqlCommand cmd = new SqlCommand(updateQuery, conn);
                         cmd.Parameters.AddWithValue("@DNI", dni);
                         cmd.Parameters.AddWithValue("@OrdenID", ordenId);
-                        cmd.Parameters.AddWithValue("@Monto", monto);
+                        cmd.Parameters.AddWithValue("@Monto", montoActualizado);
                         cmd.Parameters.AddWithValue("@PagoID", _pagoId);
                         cmd.ExecuteNonQuery();
+
                         MessageBox.Show("✅ ¡Pago actualizado correctamente!", "Éxito",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }

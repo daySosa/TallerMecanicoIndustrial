@@ -26,7 +26,17 @@ namespace InterfazClientes
 
         private void txtTelefono_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+            if (!Regex.IsMatch(e.Text, @"^\d+$"))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            string soloNumeros = Regex.Replace(txtTelefono.Text, @"\D", "");
+            if (soloNumeros.Length >= 8)
+            {
+                e.Handled = true;
+            }
         }
 
         private void txtTelefono_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -40,12 +50,23 @@ namespace InterfazClientes
             if (soloNumeros.Length > 8)
                 soloNumeros = soloNumeros.Substring(0, 8);
 
-            string formateado = soloNumeros.Length == 8
-                ? soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4)
-                : soloNumeros;
+            string formateado;
 
+            if (soloNumeros.Length == 0)
+                formateado = "";
+            else if (soloNumeros.Length <= 4)
+                formateado = soloNumeros;
+            else
+                formateado = soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
+
+            int caretPos = txtTelefono.CaretIndex;
             txtTelefono.Text = formateado;
-            txtTelefono.CaretIndex = formateado.Length;
+
+            int nuevosCaret = caretPos;
+            if (nuevosCaret > 4) nuevosCaret = Math.Min(nuevosCaret + 1, formateado.Length);
+            else nuevosCaret = Math.Min(nuevosCaret, formateado.Length);
+
+            txtTelefono.CaretIndex = nuevosCaret;
 
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
@@ -57,7 +78,13 @@ namespace InterfazClientes
             txtDPI.IsReadOnly = false;
             txtNombre.Text = c.Cliente_Nombre;
             txtApellido.Text = c.Cliente_Apellido;
-            txtTelefono.Text = c.Cliente_Telefono;
+
+            string soloNumeros = Regex.Replace(c.Cliente_Telefono, @"\D", "");
+            if (soloNumeros.Length > 8) soloNumeros = soloNumeros.Substring(0, 8);
+            txtTelefono.Text = soloNumeros.Length == 8
+                ? soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4)
+                : soloNumeros;
+
             txtCorreo.Text = c.Cliente_Correo;
             txtDireccion.Text = c.Cliente_Direccion;
             toggleActivo.IsChecked = c.Cliente_Activo;
@@ -92,14 +119,16 @@ namespace InterfazClientes
         {
             btnAgregar.IsEnabled = false;
 
+            string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
+
             if (!clsValidaciones.ValidarDNIHondureño(txtDPI.Text.Trim())) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) { btnAgregar.IsEnabled = true; return; }
-            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 9)) { btnAgregar.IsEnabled = true; return; }
+            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) { btnAgregar.IsEnabled = true; return; }
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
-            if (!clsValidaciones.Telefono(txtTelefono.Text))
+            if (!clsValidaciones.Telefono(telefonoLimpio))
             {
                 btnAgregar.IsEnabled = true;
                 return;
@@ -107,7 +136,7 @@ namespace InterfazClientes
 
             try
             {
-                bool insertado = db.AgregarCliente( 
+                bool insertado = db.AgregarCliente(
                     txtDPI.Text.Trim(),
                     txtNombre.Text.Trim(),
                     txtApellido.Text.Trim(),
@@ -158,29 +187,32 @@ namespace InterfazClientes
                 return;
             }
 
+            string nuevoDni = txtDPI.Text.Trim();
+            string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
+
+            if (!clsValidaciones.ValidarDNIHondureño(nuevoDni)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return;
-            if (!clsValidaciones.ValidarTelefono(txtTelefono.Text, 8)) return;
-            if (!clsValidaciones.Telefono(txtTelefono.Text))
-            {
-                btnAgregar.IsEnabled = true;
-                return;
-            }
+            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) return;
+            if (!clsValidaciones.Telefono(telefonoLimpio)) return;
             if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return;
             if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return;
             if (!clsValidaciones.ValidarCorreo(txtCorreo.Text)) return;
 
             try
             {
-                db.ActualizarCliente( 
+                db.ActualizarCliente(
                     _dniEditando,
                     txtNombre.Text.Trim(),
                     txtApellido.Text.Trim(),
                     txtTelefono.Text.Trim(),
                     txtCorreo.Text.Trim(),
                     txtDireccion.Text.Trim(),
-                    toggleActivo.IsChecked == true
+                    toggleActivo.IsChecked == true,
+                    nuevoDni
                 );
+
+                _dniEditando = nuevoDni;
 
                 MessageBox.Show("✅ Cliente actualizado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);

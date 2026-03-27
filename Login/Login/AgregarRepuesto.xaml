@@ -24,7 +24,7 @@
                       Background="#252836" Foreground="White"
                       BorderBrush="#3a3f5c" BorderThickness="1"
                       DisplayMemberPath="Producto_Nombre"
-                      Padding="8,0,0,0"
+                      Padding="8,0,10,0"
                       VerticalContentAlignment="Center"
                       SelectionChanged="cmbProducto_SelectionChanged">
                 <ComboBox.ItemContainerStyle>
