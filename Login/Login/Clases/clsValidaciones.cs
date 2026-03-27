@@ -261,38 +261,81 @@ namespace Login.Clases
         // ✅ Validaciones en Login (correo y contraseña)
         public static string ValidarCorreoLogin(string correo)
         {
-            correo = correo.Trim().ToLower();
+            correo = correo.Trim();
 
+            // Campo vacío
             if (string.IsNullOrWhiteSpace(correo))
                 return "⚠ El correo es obligatorio.";
 
+            // Sin espacios
             if (correo.Contains(" "))
                 return "⚠ El correo no puede contener espacios.";
 
-            if (correo.Length > 100)
-                return "⚠ El correo es demasiado largo.";
+            // Sin mayúsculas en usuario ni dominio
+            if (correo.Contains("@"))
+            {
+                string[] partes = correo.Split('@');
+                string usuario = partes[0];
+                string dominio = partes[1];
 
-            if (!Regex.IsMatch(correo, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+                if (usuario.Any(char.IsUpper))
+                    return "⚠ El correo no puede contener letras mayúsculas.";
+
+                if (dominio.Any(char.IsUpper))
+                    return "⚠ El dominio no puede contener letras mayúsculas.";
+            }
+
+            // Máximo 100 caracteres
+            if (correo.Length > 100)
+                return "⚠ El correo es demasiado largo (máximo 100 caracteres).";
+
+            // Formato general con Regex estricto
+            if (!Regex.IsMatch(correo, @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$"))
                 return "⚠ Ingresa un correo electrónico válido.";
 
-            string[] dominios = { "@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com" };
+            // No puede empezar con punto
+            if (correo.StartsWith("."))
+                return "⚠ El correo no puede empezar con un punto.";
 
-            if (!dominios.Any(d => correo.EndsWith(d)))
-                return "⚠ Dominio de correo no permitido.";
+            // No puede tener puntos consecutivos
+            if (correo.Contains(".."))
+                return "⚠ El correo no puede tener puntos consecutivos.";
+
+            // Dominios permitidos
+            string[] dominiosPermitidos = { "@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com" };
+            if (!dominiosPermitidos.Any(d => correo.EndsWith(d)))
+                return "⚠ Dominio no permitido.";
+
+            // Evitar caracteres repetidos en el usuario (antes del @)
+            if (correo.Contains("@"))
+            {
+                string usuario = correo.Split('@')[0];
+
+                // Si todos los caracteres son iguales (ej: aaaaaaa o 111111)
+                if (usuario.Distinct().Count() == 1)
+                    return "⚠ El correo no puede tener caracteres repetidos.";
+            }
 
             return null;
         }
 
         public static string ValidarContrasenaLogin(string contrasena)
         {
+            // Campo vacío
             if (string.IsNullOrWhiteSpace(contrasena))
                 return "⚠ La contraseña es obligatoria.";
 
+            // Sin espacios
             if (contrasena.Contains(" "))
                 return "⚠ La contraseña no puede contener espacios.";
 
+            // Mínimo 8 caracteres
+            if (contrasena.Length < 8)
+                return "⚠ La contraseña debe tener al menos 8 caracteres.";
+
+            // Máximo 50 caracteres
             if (contrasena.Length > 50)
-                return "⚠ La contraseña es demasiado larga.";
+                return "⚠ La contraseña es demasiado larga (máximo 50 caracteres).";
 
             return null;
         }

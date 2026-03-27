@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Login
 {
@@ -175,7 +176,11 @@ namespace Login
         {
             bool hayError = false;
 
+            /// <summary>
+            /// Valida el correo electrónico ingresado utilizando la clase de validaciones.
+            /// </summary>
             string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
+            
 
             if (errorCorreo != null)
             {
@@ -191,8 +196,12 @@ namespace Login
                 borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
             }
 
+            /// <summary>
+            /// Valida la contraseña ingresada utilizando la clase de validaciones.
+            /// </summary>
             string contrasena = ObtenerContrasena();
             string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
+            
 
             if (errorContrasena != null)
             {
