@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using System.Windows;
 
-namespace MainWindow.Clases
+namespace Login.Clases
 {
     /// <summary>
     /// Validaciones específicas del formulario de vehículos.

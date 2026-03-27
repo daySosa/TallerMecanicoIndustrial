@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace MainWindow.Clases
+namespace Login.Clases
 {
     public class clsValidaciones
     {
