@@ -5,10 +5,21 @@ using System.Windows;
 
 namespace Login.Clases
 {
+    /// <summary>
+    /// 
+    /// </summary>
     internal class clsAutenticacion
     {
+        /// <summary>
+        /// The conexion 2 fa
+        /// </summary>
         private clsConexion conexion_2FA = new clsConexion();
 
+        /// <summary>
+        /// Generars the codigo.
+        /// </summary>
+        /// <param name="correo">The correo.</param>
+        /// <returns></returns>
         public string GenerarCodigo(string correo)
         {
             string codigo = new Random().Next(100000, 999999).ToString();
@@ -45,6 +56,12 @@ namespace Login.Clases
             return codigo;
         }
 
+        /// <summary>
+        /// Validars the codigo.
+        /// </summary>
+        /// <param name="correo">The correo.</param>
+        /// <param name="codigoIngresado">The codigo ingresado.</param>
+        /// <returns></returns>
         public bool ValidarCodigo(string correo, string codigoIngresado)
         {
             try
@@ -102,6 +119,12 @@ namespace Login.Clases
             }
         }
 
+        /// <summary>
+        /// Enviars the correo.
+        /// </summary>
+        /// <param name="correoDestino">The correo destino.</param>
+        /// <param name="codigo">The codigo.</param>
+        /// <returns></returns>
         public bool EnviarCorreo(string correoDestino, string codigo)
         {
             try

@@ -13,17 +13,32 @@ using System.Data.SqlClient;
 
 namespace Login.Clases
 {
+    /// <summary>
+    /// 
+    /// </summary>
     internal class clsConexion
     {
+        /// <summary>
+        /// The conexion
+        /// </summary>
         string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
 
+        /// <summary>
+        /// The SQL c
+        /// </summary>
         public SqlConnection SqlC = new SqlConnection();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="clsConexion"/> class.
+        /// </summary>
         public clsConexion()
         {
             SqlC.ConnectionString = conexion;
         }
 
+        /// <summary>
+        /// Abrirs this instance.
+        /// </summary>
         public void Abrir() 
         { 
             try 
@@ -36,6 +51,9 @@ namespace Login.Clases
             } 
         }
 
+        /// <summary>
+        /// Cerrars this instance.
+        /// </summary>
         public void Cerrar() 
         { 
             try 
