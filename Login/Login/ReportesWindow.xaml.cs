@@ -29,6 +29,7 @@ namespace Login
             InitializeComponent();
             _modulo = modulo;
             txtModulo.Text = $"Reporte de {modulo}";
+
         }
 
         /// <summary>
@@ -356,26 +357,91 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera el reporte de inventario en formato PDF.
+        /// Genera el reporte de inventario en formato PDF, filtrado por período de órdenes.
         /// </summary>
         private void GenerarReporteInventario()
         {
+            // Pedir período al usuario
+            if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
+                return;
+
             string accent = "#1e2d5f";
-            var db = new clsConexion(); db.Abrir();
-            string sql = "SELECT Producto_Nombre, Producto_Categoria, Producto_Marca, Producto_Modelo, Producto_Precio, Producto_Cantidad_Actual, Producto_Stock_Minimo FROM Producto ORDER BY Producto_Nombre";
+            var db = new clsConexion();
+            db.Abrir();
 
+            string sql;
             string filas = "";
-            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-            using (SqlDataReader r = cmd.ExecuteReader())
-                while (r.Read())
-                {
-                    int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
-                    int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
-                    string stockBadge = cant <= min
-                        ? $"<span class='badge-cancelado'>{cant}</span>"
-                        : $"<span class='badge-pagado'>{cant}</span>";
 
-                    filas += $@"<tr>
+            if (periodoTexto == "Todo")
+            {
+                // Sin filtro de fecha: muestra todo el inventario actual
+                sql = @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
+                       Producto_Modelo, Producto_Precio,
+                       Producto_Cantidad_Actual, Producto_Stock_Minimo,
+                       NULL AS Cantidad_Usada
+                FROM Producto
+                ORDER BY Producto_Nombre";
+
+                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+                using (SqlDataReader r = cmd.ExecuteReader())
+                    while (r.Read())
+                    {
+                        int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
+                        int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
+                        string stockBadge = cant <= min
+                            ? $"<span class='badge-cancelado'>{cant}</span>"
+                            : $"<span class='badge-pagado'>{cant}</span>";
+
+                        filas += $@"<tr>
+                    <td class='left'>{r["Producto_Nombre"]}</td>
+                    <td class='left'>{r["Producto_Categoria"]}</td>
+                    <td>{r["Producto_Marca"]}</td>
+                    <td>{r["Producto_Modelo"]}</td>
+                    <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
+                    <td>{stockBadge}</td>
+                    <td>{min}</td>
+                    <td>—</td>
+                </tr>";
+                    }
+            }
+            else
+            {
+                // Con filtro: productos usados en órdenes del período seleccionado
+                sql = @"SELECT p.Producto_Nombre, p.Producto_Categoria,
+                       p.Producto_Marca,  p.Producto_Modelo,
+                       p.Producto_Precio,
+                       p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
+                       SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
+                FROM Orden_Repuesto orep
+                INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
+                INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
+                WHERE ot.Fecha BETWEEN @FechaInicio AND @FechaFin
+                GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
+                         p.Producto_Marca, p.Producto_Modelo,
+                         p.Producto_Precio, p.Producto_Cantidad_Actual,
+                         p.Producto_Stock_Minimo
+                ORDER BY Cantidad_Usada DESC, p.Producto_Nombre";
+
+                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+                {
+                    cmd.Parameters.AddWithValue("@FechaInicio", fechaInicio);
+                    cmd.Parameters.AddWithValue("@FechaFin", fechaFin);
+
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        bool hayDatos = false;
+                        while (r.Read())
+                        {
+                            hayDatos = true;
+                            int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
+                            int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
+                            int usados = Convert.ToInt32(r["Cantidad_Usada"]);
+
+                            string stockBadge = cant <= min
+                                ? $"<span class='badge-cancelado'>{cant}</span>"
+                                : $"<span class='badge-pagado'>{cant}</span>";
+
+                            filas += $@"<tr>
                         <td class='left'>{r["Producto_Nombre"]}</td>
                         <td class='left'>{r["Producto_Categoria"]}</td>
                         <td>{r["Producto_Marca"]}</td>
@@ -383,34 +449,181 @@ namespace Login
                         <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
                         <td>{stockBadge}</td>
                         <td>{min}</td>
+                        <td><b>{usados}</b></td>
                     </tr>";
+                        }
+
+                        if (!hayDatos)
+                            filas = $@"<tr><td colspan='8' style='text-align:center; padding:20px; color:#888;'>
+                                   No se encontraron productos usados en el período: {periodoTexto}
+                               </td></tr>";
+                    }
                 }
+            }
+
             db.Cerrar();
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent)}
-                {GetTitleBar(accent, "Reporte de Inventario")}
-                <div class='content'>
-                <table>
-                    <colgroup>
-                        <col style='width:22%'/>
-                        <col style='width:15%'/>
-                        <col style='width:13%'/>
-                        <col style='width:13%'/>
-                        <col style='width:12%'/>
-                        <col style='width:13%'/>
-                        <col style='width:12%'/>
-                    </colgroup>
-                    <thead><tr>
-                        <th>Nombre</th><th>Categoría</th><th>Marca</th><th>Modelo</th><th>Precio</th><th>Stock Actual</th><th>Stock Mín.</th>
-                    </tr></thead>
-                    <tbody>{filas}</tbody>
-                </table>
-                </div>
-                {GetFooter()}
-            </body></html>";
+        {GetHeader(accent, periodoTexto)}
+        {GetTitleBar(accent, $"Reporte de Inventario — {periodoTexto}")}
+        <div class='content'>
+        <table>
+            <colgroup>
+                <col style='width:21%'/>
+                <col style='width:14%'/>
+                <col style='width:11%'/>
+                <col style='width:12%'/>
+                <col style='width:11%'/>
+                <col style='width:11%'/>
+                <col style='width:10%'/>
+                <col style='width:10%'/>
+            </colgroup>
+            <thead><tr>
+                <th>Nombre</th><th>Categoría</th><th>Marca</th><th>Modelo</th>
+                <th>Precio</th><th>Stock Actual</th><th>Stock Mín.</th><th>Usado (período)</th>
+            </tr></thead>
+            <tbody>{filas}</tbody>
+        </table>
+        </div>
+        {GetFooter()}
+    </body></html>";
 
-            ExportarPDF(html, "Reporte_Inventario", landscape: false);
+            ExportarPDF(html, $"Reporte_Inventario_{periodoTexto.Replace(" ", "_")}", landscape: true);
+        }
+
+        private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
+        {
+            fechaInicio = DateTime.MinValue;
+            fechaFin = DateTime.MaxValue;
+            periodoTexto = "Todo";
+
+            // Ventana de selección de período
+            var ventana = new Window
+            {
+                Title = "Seleccionar Período",
+                Width = 340,
+                Height = 200,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this,
+                ResizeMode = ResizeMode.NoResize,
+                Background = new System.Windows.Media.SolidColorBrush(
+                                    System.Windows.Media.Color.FromRgb(30, 45, 95))
+            };
+
+            var panel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
+
+            var lbl = new System.Windows.Controls.Label
+            {
+                Content = "Selecciona el período del reporte:",
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 13,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var cmb = new System.Windows.Controls.ComboBox
+            {
+                FontSize = 12,
+                Margin = new Thickness(0, 0, 0, 16)
+            };
+            cmb.Items.Add("Mes actual");
+            cmb.Items.Add("Mes anterior");
+            cmb.Items.Add("Trimestre actual");
+            cmb.Items.Add("Año actual");
+            cmb.Items.Add("Año anterior");
+            cmb.Items.Add("Todo");
+            cmb.SelectedIndex = 0;
+
+            var btnPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            bool confirmado = false;
+
+            var btnAceptar = new System.Windows.Controls.Button
+            {
+                Content = "Generar",
+                Width = 90,
+                Height = 32,
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = new System.Windows.Media.SolidColorBrush(
+                               System.Windows.Media.Color.FromRgb(255, 255, 255)),
+                Foreground = new System.Windows.Media.SolidColorBrush(
+                               System.Windows.Media.Color.FromRgb(30, 45, 95)),
+                FontWeight = FontWeights.Bold,
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+            btnAceptar.Click += (s, e) => { confirmado = true; ventana.Close(); };
+
+            var btnCancelar = new System.Windows.Controls.Button
+            {
+                Content = "Cancelar",
+                Width = 80,
+                Height = 32,
+                Background = System.Windows.Media.Brushes.Transparent,
+                Foreground = System.Windows.Media.Brushes.White,
+                BorderBrush = System.Windows.Media.Brushes.White,
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+            btnCancelar.Click += (s, e) => ventana.Close();
+
+            btnPanel.Children.Add(btnAceptar);
+            btnPanel.Children.Add(btnCancelar);
+            panel.Children.Add(lbl);
+            panel.Children.Add(cmb);
+            panel.Children.Add(btnPanel);
+            ventana.Content = panel;
+            ventana.ShowDialog();
+
+            if (!confirmado) return false;
+
+            // Calcular rango según opción elegida
+            DateTime hoy = DateTime.Today;
+            switch (cmb.SelectedItem?.ToString())
+            {
+                case "Mes actual":
+                    fechaInicio = new DateTime(hoy.Year, hoy.Month, 1);
+                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
+                    periodoTexto = hoy.ToString("MMMM yyyy");
+                    break;
+
+                case "Mes anterior":
+                    var mesAnt = hoy.AddMonths(-1);
+                    fechaInicio = new DateTime(mesAnt.Year, mesAnt.Month, 1);
+                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
+                    periodoTexto = mesAnt.ToString("MMMM yyyy");
+                    break;
+
+                case "Trimestre actual":
+                    int trimestre = (hoy.Month - 1) / 3;
+                    fechaInicio = new DateTime(hoy.Year, trimestre * 3 + 1, 1);
+                    fechaFin = fechaInicio.AddMonths(3).AddTicks(-1);
+                    periodoTexto = $"Q{trimestre + 1} {hoy.Year}";
+                    break;
+
+                case "Año actual":
+                    fechaInicio = new DateTime(hoy.Year, 1, 1);
+                    fechaFin = new DateTime(hoy.Year, 12, 31, 23, 59, 59);
+                    periodoTexto = hoy.Year.ToString();
+                    break;
+
+                case "Año anterior":
+                    fechaInicio = new DateTime(hoy.Year - 1, 1, 1);
+                    fechaFin = new DateTime(hoy.Year - 1, 12, 31, 23, 59, 59);
+                    periodoTexto = (hoy.Year - 1).ToString();
+                    break;
+
+                default: // "Todo"
+                    fechaInicio = DateTime.MinValue;
+                    fechaFin = DateTime.MaxValue;
+                    periodoTexto = "Todo";
+                    break;
+            }
+
+            return true;
+
+
         }
 
         // <summary>
