@@ -113,6 +113,23 @@ namespace Login.Clases
                 mostrarMensaje("⚠ El monto debe ser un número mayor a 0.");
                 return false;
             }
+
+            // Solo números válidos
+            if (!decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out precio))
+            {
+                MessageBox.Show("⚠ El precio solo puede contener números.\nEjemplo: 150.00",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            // Campo vacío
+            if (string.IsNullOrWhiteSpace(limpio))
+            {
+                MessageBox.Show("⚠ Ingresa un precio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
             return true;
         }
 
@@ -322,10 +339,6 @@ namespace Login.Clases
             // Sin espacios
             if (contrasena.Contains(" "))
                 return "⚠ La contraseña no puede contener espacios.";
-
-            // Mínimo 8 caracteres
-            if (contrasena.Length < 8)
-                return "⚠ La contraseña debe tener al menos 8 caracteres.";
 
             // Máximo 50 caracteres
             if (contrasena.Length > 50)
