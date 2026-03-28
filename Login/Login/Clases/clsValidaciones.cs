@@ -340,10 +340,6 @@ namespace Login.Clases
             if (contrasena.Contains(" "))
                 return "⚠ La contraseña no puede contener espacios.";
 
-            // Mínimo 8 caracteres
-            if (contrasena.Length < 8)
-                return "⚠ La contraseña debe tener al menos 8 caracteres.";
-
             // Máximo 50 caracteres
             if (contrasena.Length > 50)
                 return "⚠ La contraseña es demasiado larga (máximo 50 caracteres).";
