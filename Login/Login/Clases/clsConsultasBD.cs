@@ -482,8 +482,8 @@ namespace Login.Clases
             try
             {
                 string query = @"SELECT * FROM LOGIN
-                                 WHERE Usuario_Email      = @correo
-                                 AND   Usuario_Contraseña = @contrasena";
+                                WHERE Usuario_Email = @correo
+                                AND Usuario_Contraseña COLLATE Latin1_General_CS_AS = @contrasena";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@correo", correo);
@@ -1223,6 +1223,24 @@ namespace Login.Clases
             catch (Exception ex) { throw new Exception("Error repuestos: " + ex.Message); }
             finally { _conexion.Cerrar(); }
             return lista;
+        }
+
+        public bool ExistePlaca(string placa)
+        {
+            try
+            {
+                string query = "SELECT COUNT(1) FROM Vehiculo WHERE Vehiculo_Placa = @Placa";
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Placa", placa);
+
+                _conexion.Abrir();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al verificar placa: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -62,10 +61,17 @@ namespace InterfazInventario
             btnAgregar.IsEnabled = false;
             btnActualizar.IsEnabled = false;
 
-            if (!ObtenerValores(out decimal precio, out int cantidad))
+            if (!ObtenerValoresComunes(out decimal precio, out int cantidad))
             {
                 btnAgregar.IsEnabled = true;
                 btnActualizar.IsEnabled = false;
+                return;
+            }
+
+            if (!clsValidaciones.ValidarEnteroPositivo(txtCantidad.Text, out cantidad, "Cantidad inválida"))
+            {
+                txtCantidad.Focus();
+                btnAgregar.IsEnabled = true;
                 return;
             }
 
@@ -75,7 +81,7 @@ namespace InterfazInventario
                     txtNombre.Text.Trim(),
                     (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString(),
                     txtMarca.Text.Trim(),
-                    txtModelo.Text,
+                    txtModelo.Text.Trim(),
                     precio,
                     cantidad
                 );
@@ -109,8 +115,17 @@ namespace InterfazInventario
                 return;
             }
 
-            if (!ObtenerValores(out decimal precio, out int cantidadAgregar))
+            if (!ObtenerValoresComunes(out decimal precio, out int cantidadAgregar))
             {
+                btnActualizar.IsEnabled = true;
+                return;
+            }
+
+            if (!int.TryParse(txtCantidad.Text, out cantidadAgregar) || cantidadAgregar < 0)
+            {
+                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor o igual a 0.",
+                    "Cantidad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtCantidad.Focus();
                 btnActualizar.IsEnabled = true;
                 return;
             }
@@ -122,7 +137,7 @@ namespace InterfazInventario
                     txtNombre.Text.Trim(),
                     (cmbCategoria.SelectedItem as ComboBoxItem)?.Content.ToString(),
                     txtMarca.Text.Trim(),
-                    txtModelo.Text,
+                    txtModelo.Text.Trim(),
                     precio,
                     cantidadAgregar
                 );
@@ -150,7 +165,6 @@ namespace InterfazInventario
         /// <summary>
         /// Carga la información de un producto seleccionado para su edición.
         /// </summary>
-        /// <param name="producto">Producto seleccionado del inventario.</param>
         public void CargarProductoParaEditar(Repuesto producto)
         {
             _productoIdSeleccionado = producto.Producto_ID;
@@ -179,52 +193,66 @@ namespace InterfazInventario
             Title = "Inventario - Editar Producto";
         }
 
-        /// <summary>
-        /// Obtiene y valida los valores ingresados por el usuario,
-        /// incluyendo nombre, categoría, marca, precio y cantidad.
-        /// </summary>
-        /// <param name="precio">Precio del producto.</param>
-        /// <param name="cantidad">Cantidad a agregar o registrar.</param>
-        /// <returns>True si los valores son válidos; de lo contrario, false.</returns>
-        private bool ObtenerValores(out decimal precio, out int cantidad)
+        private bool ObtenerValoresComunes(out decimal precio, out int cantidad)
         {
             precio = 0;
             cantidad = 0;
 
-            // Nombre
+            // ── NOMBRE ───────────────────────────────────────────────────────
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del producto"))
-            {
-                txtNombre.Focus();
-                return false;
-            }
+            { txtNombre.Focus(); return false; }
 
-            // Categoría
+            if (!clsValidaciones.ValidarNoEsSoloNumeros(txtNombre.Text, "nombre del producto"))
+            { txtNombre.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarIniciaConLetra(txtNombre.Text, "nombre del producto"))
+            { txtNombre.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtNombre.Text, "nombre del producto"))
+            { txtNombre.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarLongitudMaxima(txtNombre.Text, 100, "nombre del producto"))
+            { txtNombre.Focus(); return false; }
+
+            // ── CATEGORÍA ────────────────────────────────────────────────────
             if (!clsValidaciones.ValidarComboSeleccionado(cmbCategoria.SelectedItem, "categoría"))
-            {
-                cmbCategoria.Focus();
-                return false;
-            }
+            { cmbCategoria.Focus(); return false; }
 
-            // Marca
+            // ── MARCA ────────────────────────────────────────────────────────
             if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca"))
+            { txtMarca.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarNoEsSoloNumeros(txtMarca.Text, "marca"))
+            { txtMarca.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarIniciaConLetra(txtMarca.Text, "marca"))
+            { txtMarca.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtMarca.Text, "marca"))
+            { txtMarca.Focus(); return false; }
+
+            if (!clsValidaciones.ValidarLongitudMaxima(txtMarca.Text, 50, "marca"))
+            { txtMarca.Focus(); return false; }
+
+            // ── MODELO (opcional) ────────────────────────────────────────────
+            if (!string.IsNullOrWhiteSpace(txtModelo.Text))
             {
-                txtMarca.Focus();
-                return false;
+                if (!clsValidaciones.ValidarNoEsSoloNumeros(txtModelo.Text, "modelo"))
+                { txtModelo.Focus(); return false; }
+
+                if (!clsValidaciones.ValidarIniciaConLetra(txtModelo.Text, "modelo"))
+                { txtModelo.Focus(); return false; }
+
+                if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtModelo.Text, "modelo"))
+                { txtModelo.Focus(); return false; }
+
+                if (!clsValidaciones.ValidarLongitudMaxima(txtModelo.Text, 80, "modelo"))
+                { txtModelo.Focus(); return false; }
             }
 
-            // Precio
+            // ── PRECIO ───────────────────────────────────────────────────────
             if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out precio))
-            {
-                txtPrecio.Focus();
-                return false;
-            }
-
-            // Cantidad
-            if (!clsValidaciones.ValidarEnteroPositivo(txtCantidad.Text, out cantidad, "Cantidad inválida"))
-            {
-                txtCantidad.Focus();
-                return false;
-            }
+            { txtPrecio.Focus(); return false; }
 
             return true;
         }
@@ -232,9 +260,6 @@ namespace InterfazInventario
         /// <summary>
         /// Evento reservado para futuras validaciones dinámicas del precio.
         /// </summary>
-        private void txtPrecio_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-        }
+        private void txtPrecio_TextChanged(object sender, TextChangedEventArgs e) { }
     }
 }
