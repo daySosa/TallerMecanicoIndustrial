@@ -149,11 +149,21 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
+        // PRIORIDAD DE LA ORDEN
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarPrioridad(object itemSeleccionado)
+        {
+            return clsValidaciones.ValidarComboSeleccionado(itemSeleccionado, "prioridad de la orden");
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // FECHAS
         // ─────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Valida que la fecha de inicio no sea mayor a un año en el futuro.
+        /// Valida que la fecha de inicio no sea anterior a hoy
+        /// ni mayor a un año en el futuro.
         /// </summary>
         public static bool ValidarFechaInicio(DateTime? fecha)
         {
@@ -164,7 +174,14 @@ namespace Login.Clases
                 return false;
             }
 
-            if (fecha.Value > DateTime.Today.AddYears(1))
+            if (fecha.Value.Date < DateTime.Today)
+            {
+                MessageBox.Show("⚠ La fecha de inicio no puede ser anterior al día de hoy.",
+                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (fecha.Value.Date > DateTime.Today.AddYears(1))
             {
                 MessageBox.Show("⚠ La fecha de inicio no puede ser mayor a un año en el futuro.",
                     "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -175,13 +192,19 @@ namespace Login.Clases
         }
 
         /// <summary>
-        /// Valida que la fecha de entrega no sea anterior a la fecha de inicio.
+        /// Valida que la fecha de entrega sea obligatoria, no anterior
+        /// a la fecha de inicio y no mayor a 2 años en el futuro.
         /// </summary>
         public static bool ValidarFechaEntrega(DateTime? fechaInicio, DateTime? fechaEntrega)
         {
-            if (!fechaEntrega.HasValue) return true; // La entrega es opcional
+            if (!fechaEntrega.HasValue)
+            {
+                MessageBox.Show("⚠ Debes seleccionar una fecha de entrega estimada.",
+                    "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
 
-            if (fechaInicio.HasValue && fechaEntrega.Value < fechaInicio.Value)
+            if (fechaInicio.HasValue && fechaEntrega.Value.Date < fechaInicio.Value.Date)
             {
                 MessageBox.Show("⚠ La fecha de entrega no puede ser anterior a la fecha de inicio.\n\n" +
                                 $"Fecha inicio:   {fechaInicio.Value:dd/MM/yyyy}\n" +
@@ -190,7 +213,7 @@ namespace Login.Clases
                 return false;
             }
 
-            if (fechaEntrega.Value > DateTime.Today.AddYears(2))
+            if (fechaEntrega.Value.Date > DateTime.Today.AddYears(2))
             {
                 MessageBox.Show("⚠ La fecha de entrega no puede ser mayor a 2 años en el futuro.",
                     "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -227,45 +250,46 @@ namespace Login.Clases
 
         /// <summary>
         /// Valida y extrae el precio del servicio desde el TextBox con formato "L 0.00".
-        /// Acepta vacío o cero (el servicio puede ser gratuito).
+        /// El precio es obligatorio y debe ser mayor a 0.
         /// </summary>
         public static bool ValidarPrecioServicio(string texto, out decimal precio)
         {
             precio = 0;
-
-            if (string.IsNullOrWhiteSpace(texto)) return true;
-
-            // 1. Quitar la "L", espacios y comas por completo
             string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
 
-            // 2. Manejar múltiples puntos (ej: 1.500.00 -> 1500.00)
-            // Si hay más de un punto, quitamos todos menos el último
+            if (string.IsNullOrWhiteSpace(limpio) || limpio == "0" || limpio == "0.00")
+            {
+                MessageBox.Show("⚠ El precio del servicio es obligatorio y debe ser mayor a 0.",
+                    "Precio requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            // Manejar múltiples puntos (ej: 1.500.00 → 1500.00)
             int conteoPuntos = limpio.Count(f => f == '.');
             if (conteoPuntos > 1)
             {
                 int ultimoPunto = limpio.LastIndexOf('.');
-                // Quitamos todos los puntos y luego volvemos a poner el decimal al final
                 string parteEntera = limpio.Substring(0, ultimoPunto).Replace(".", "");
                 string parteDecimal = limpio.Substring(ultimoPunto);
                 limpio = parteEntera + parteDecimal;
             }
 
-            // 3. Intentar convertir (usando InvariantCulture para que el punto sea decimal)
-            bool esValido = decimal.TryParse(limpio,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out precio);
-
-            if (!esValido)
+            if (!decimal.TryParse(limpio,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out precio) || precio <= 0)
             {
-                MessageBox.Show("⚠ El precio debe ser un número válido.\nEjemplo: 1500.50",
+                MessageBox.Show("⚠ El precio del servicio debe ser un número mayor a 0.\nEjemplo: 1500.50",
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            // 4. Validaciones de rango
-            if (precio < 0) return false;
-            if (precio > 999999.99m) return false;
+            if (precio > 999_999.99m)
+            {
+                MessageBox.Show("⚠ El precio del servicio supera el límite permitido (L 999,999.99).",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
 
             return true;
         }
@@ -324,17 +348,23 @@ namespace Login.Clases
         // ─────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Valida que las observaciones no superen el límite de caracteres.
+        /// Valida que las observaciones no superen el límite de caracteres
+        /// y no contengan caracteres repetidos excesivamente.
         /// </summary>
         public static bool ValidarObservaciones(string texto)
         {
-            if (!string.IsNullOrEmpty(texto) && texto.Length > 500)
+            if (string.IsNullOrWhiteSpace(texto)) return true; // Las observaciones son opcionales
+
+            if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
+
+            if (texto.Length > 500)
             {
                 MessageBox.Show("⚠ Las observaciones no pueden superar los 500 caracteres.\n\n" +
                                 $"Caracteres actuales: {texto.Length} / 500",
                     "Texto demasiado largo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+
             return true;
         }
 
@@ -373,7 +403,7 @@ namespace Login.Clases
             }
 
             long tamañoBytes = new System.IO.FileInfo(rutaFoto).Length;
-            if (tamañoBytes > 5 * 1024 * 1024) // 5 MB
+            if (tamañoBytes > 5 * 1024 * 1024)
             {
                 MessageBox.Show("⚠ La imagen no puede superar los 5 MB.\n\n" +
                                 $"Tamaño actual: {tamañoBytes / 1024 / 1024:N1} MB",
@@ -390,7 +420,6 @@ namespace Login.Clases
 
         /// <summary>
         /// Ejecuta todas las validaciones necesarias para GUARDAR una nueva orden.
-        /// Retorna false en el primer error encontrado.
         /// </summary>
         public static bool ValidarFormularioAñadir(
             string clienteDNI,
@@ -406,27 +435,14 @@ namespace Login.Clases
         {
             precioServicio = 0;
 
-            // — Cliente y vehículo —
             if (!ValidarClienteAsignado(clienteDNI)) return false;
             if (!ValidarVehiculoAsignado(vehiculoPlaca)) return false;
-
-            // — Estado —
             if (!ValidarEstadoOrden(estadoSeleccionado)) return false;
-
-            // — Fechas —
             if (!ValidarFechaInicio(fechaInicio)) return false;
             if (!ValidarFechaEntrega(fechaInicio, fechaEntrega)) return false;
-
-            // — Precio servicio —
             if (!ValidarPrecioServicio(precioServicioTexto, out precioServicio)) return false;
-
-            // — Observaciones —
             if (!ValidarObservaciones(observaciones)) return false;
-
-            // — Foto —
             if (!ValidarFoto(rutaFoto)) return false;
-
-            // — Repuestos (advertencia, no bloquea si el usuario confirma) —
             if (!ConfirmarOrdenSinRepuestos(cantidadRepuestos)) return false;
 
             return true;
@@ -438,7 +454,6 @@ namespace Login.Clases
 
         /// <summary>
         /// Ejecuta todas las validaciones necesarias para ACTUALIZAR una orden existente.
-        /// Retorna false en el primer error encontrado.
         /// </summary>
         public static bool ValidarFormularioActualizar(
             DateTime? fechaInicio,
@@ -450,19 +465,10 @@ namespace Login.Clases
         {
             precioServicio = 0;
 
-            // — Mes anterior (no se puede editar) —
             if (!ValidarMesActualizacion(fechaInicio)) return false;
-
-            // — Fechas —
             if (!ValidarFechaEntrega(fechaInicio, fechaEntrega)) return false;
-
-            // — Precio servicio —
             if (!ValidarPrecioServicio(precioServicioTexto, out precioServicio)) return false;
-
-            // — Observaciones —
             if (!ValidarObservaciones(observaciones)) return false;
-
-            // — Foto —
             if (!ValidarFoto(rutaFoto)) return false;
 
             return true;

@@ -125,7 +125,7 @@ namespace Contabilidad
         {
             if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del gasto")) return;
-            if (!clsValidacionesContabilidad.ValidarLongitudNombreGasto(txtNombre.Text)) return;
+            if (!clsValidacionesContabilidad.ValidarNombreGasto(txtNombre.Text)) return;
             if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
             if (!clsValidaciones.ValidarFecha(txtFecha.Text, out DateTime fechaFinal)) return;
             // Observaciones son opcionales, solo validar longitud si tiene contenido

@@ -38,10 +38,11 @@ namespace Contabilidad
             txtFecha.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
                               new System.Globalization.CultureInfo("es-ES"));
 
-            BuscarNombre(dni);
+            txtDNI.IsEnabled = false;
+            txtOrdenID.IsEnabled = false;
+            txtPrecio.IsEnabled = false;
 
-            txtOrdenID.TextChanged += txtOrdenID_TextChanged;
-            txtDNI.TextChanged += txtDNI_TextChanged;
+            BuscarNombre(dni);
 
             VerificarBloqueoEdicion();
         }

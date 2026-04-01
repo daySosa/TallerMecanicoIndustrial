@@ -67,9 +67,9 @@ namespace Vehículos
         {
             string dni = txtClienteDNI.Text.Trim();
 
-            if (!clsValidaciones.ValidarDNIHondureño(dni))
+            if (!clsValidaciones.ValidarFormatoDNI(dni))
             {
-                MostrarClienteError("El DNI debe tener exactamente 13 dígitos numéricos.");
+                txtClienteDNI.Focus();
                 return;
             }
 
@@ -119,12 +119,11 @@ namespace Vehículos
             txtClienteEstado.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
         }
 
-
         private bool ValidarCamposComunes(out int año)
         {
             año = 0;
 
-            // ── PLACA ────────────────────────────────────────────────────────
+            // ── PLACA ────────────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarPlacaNoNula(txtPlaca.Text))
             { txtPlaca.Focus(); return false; }
 
@@ -140,7 +139,7 @@ namespace Vehículos
             if (!clsValidacionesVehiculo.ValidarPlacaNoReservada(txtPlaca.Text))
             { txtPlaca.Focus(); return false; }
 
-            // ── TIPO (antes de coherencia placa-tipo) ────────────────────────
+            // ── TIPO ─────────────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarTipoVehiculo(cmbTipo.SelectedItem))
             { cmbTipo.Focus(); return false; }
 
@@ -149,30 +148,23 @@ namespace Vehículos
             if (!clsValidacionesVehiculo.ValidarCoherenciaPlacaTipo(txtPlaca.Text, tipoStr))
             { txtPlaca.Focus(); return false; }
 
-            // ── MARCA ────────────────────────────────────────────────────────
-            // ValidarMarca ya incluye: requerido, solo números, inicia con letra,
-            // repetición excesiva y longitud máxima
+            // ── MARCA ────────────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarMarca(txtMarca.Text))
             { txtMarca.Focus(); return false; }
 
-            // ── MODELO ───────────────────────────────────────────────────────
-            // ValidarModelo ya incluye: requerido, solo números, inicia con letra,
-            // repetición excesiva, longitud máxima y caracteres permitidos
+            // ── MODELO ───────────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarModelo(txtModelo.Text))
             { txtModelo.Focus(); return false; }
 
-            // ── AÑO ──────────────────────────────────────────────────────────
+            // ── AÑO ──────────────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarAnioVehiculo(txtAnio.Text, out año))
             { txtAnio.Focus(); return false; }
 
-            // ── OBSERVACIONES ────────────────────────────────────────────────
+            // ── OBSERVACIONES ────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarObservaciones(txtObservaciones.Text))
             { txtObservaciones.Focus(); return false; }
 
-            // ── CLIENTE / DNI ────────────────────────────────────────────────
-            if (!clsValidacionesVehiculo.ValidarClienteVerificado(_clienteDNI))
-            { txtClienteDNI.Focus(); return false; }
-
+            // ── CLIENTE ──────────────────────────────────────────────
             if (!clsValidacionesVehiculo.ValidarClienteDNI(_clienteDNI))
             { txtClienteDNI.Focus(); return false; }
 
@@ -277,7 +269,6 @@ namespace Vehículos
         public void CargarVehiculoParaEditar(Vehiculo vehiculo)
         {
             _placaSeleccionada = vehiculo.Vehiculo_Placa;
-
             txtPlaca.Text = vehiculo.Vehiculo_Placa;
             txtMarca.Text = vehiculo.Vehiculo_Marca;
             txtModelo.Text = vehiculo.Vehiculo_Modelo;

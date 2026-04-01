@@ -1020,35 +1020,39 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        public int AgregarOrden(string clienteDNI, string placa, int productoID, string estado,
-                                 DateTime fecha, DateTime? fechaEntrega, string observaciones,
-                                 decimal precioServicio, decimal total, string foto,
-                                 List<RepuestoOrden> repuestos)
+        public int AgregarOrden(string clienteDNI, string placa, int? productoID, string estado,
+                          DateTime fecha, DateTime? fechaEntrega, string observaciones,
+                          decimal precioServicio, decimal total, string foto,
+                          List<RepuestoOrden> repuestos)
         {
             try
             {
                 string queryOrden = @"
                     INSERT INTO Orden_Trabajo
                         (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
-                         Fecha, Fecha_Entrega, Observaciones,
-                         Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
+                            Fecha, Fecha_Entrega, Observaciones,
+                            Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
                     VALUES
                         (@ClienteDNI, @Placa, @ProductoID, @Estado,
-                         @Fecha, @FechaEntrega, @Observaciones,
-                         @ServicioPrecio, @Total, @Foto);
+                            @Fecha, @FechaEntrega, @Observaciones,
+                            @ServicioPrecio, @Total, @Foto);
                     SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(queryOrden, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@ClienteDNI", clienteDNI);
                 cmd.Parameters.AddWithValue("@Placa", placa);
-                cmd.Parameters.AddWithValue("@ProductoID", productoID);
+                cmd.Parameters.AddWithValue("@ProductoID",
+                    productoID.HasValue ? (object)productoID.Value : DBNull.Value);
                 cmd.Parameters.AddWithValue("@Estado", estado);
                 cmd.Parameters.AddWithValue("@Fecha", fecha);
-                cmd.Parameters.AddWithValue("@FechaEntrega", fechaEntrega.HasValue ? (object)fechaEntrega.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones) ? (object)DBNull.Value : observaciones.Trim());
+                cmd.Parameters.AddWithValue("@FechaEntrega",
+                    fechaEntrega.HasValue ? (object)fechaEntrega.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Observaciones",
+                    string.IsNullOrWhiteSpace(observaciones) ? (object)DBNull.Value : observaciones.Trim());
                 cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
                 cmd.Parameters.AddWithValue("@Total", total);
-                cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(foto) ? (object)DBNull.Value : foto);
+                cmd.Parameters.AddWithValue("@Foto",
+                    string.IsNullOrEmpty(foto) ? (object)DBNull.Value : foto);
 
                 _conexion.Abrir();
                 int ordenID = Convert.ToInt32(Convert.ToDecimal(cmd.ExecuteScalar()));

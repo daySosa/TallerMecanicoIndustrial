@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -8,7 +9,9 @@ namespace Login.Clases
     {
         public clsValidaciones() { }
 
-        // ── Validaciones de Actualizar Gasto ────────────────────────────────
+        // ─────────────────────────────────────────────────────────────
+        // COMBO / TEXTO REQUERIDO
+        // ─────────────────────────────────────────────────────────────
 
         public static bool ValidarComboSeleccionado(object selectedItem, string nombreCampo)
         {
@@ -32,6 +35,20 @@ namespace Login.Clases
             return true;
         }
 
+        public static bool ValidarTextoRequerido(string texto, string mensaje, Action<string> mostrarMensaje)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+            {
+                mostrarMensaje(mensaje);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // PRECIO
+        // ─────────────────────────────────────────────────────────────
+
         public static bool ValidarPrecio(string texto, out decimal precio)
         {
             string limpio = texto.Replace("L", "").Replace(" ", "").Trim();
@@ -44,16 +61,44 @@ namespace Login.Clases
             return true;
         }
 
-        public static bool ValidarFecha(string texto, out DateTime fecha)
+        public static bool ValidarPrecio(string texto, out decimal precio, Action<string> mostrarMensaje)
         {
-            if (!DateTime.TryParseExact(texto.Trim(), "dd/MM/yyyy HH:mm",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out fecha))
+            string limpio = texto.Replace("L", "").Replace(" ", "").Trim();
+            if (!decimal.TryParse(limpio, out precio) || precio <= 0)
             {
-                MessageBox.Show("⚠ Formato de fecha inválido. Usa dd/MM/yyyy HH:mm\nEjemplo: 13/03/2026 14:30",
-                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                mostrarMensaje("⚠ El monto debe ser un número mayor a 0.");
                 return false;
             }
+            if (!decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out precio))
+            {
+                MessageBox.Show("⚠ El precio solo puede contener números.\nEjemplo: 150.00",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(limpio))
+            {
+                MessageBox.Show("⚠ Ingresa un precio.",
+                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool ValidarPrecioServicio(string texto, out decimal precio)
+        {
+            precio = 0;
+            string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+            if (!string.IsNullOrWhiteSpace(limpio) &&
+                !decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out precio))
+            {
+                MessageBox.Show("⚠ El precio del servicio debe ser un número válido.",
+                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out precio);
             return true;
         }
 
@@ -70,289 +115,18 @@ namespace Login.Clases
             return texto.Replace("L", "").Replace(" ", "").Trim();
         }
 
-        // ── Validaciones Actualizar Pago ─────────────────────────────────────
+        // ─────────────────────────────────────────────────────────────
+        // FECHA
+        // ─────────────────────────────────────────────────────────────
 
-        public static bool ValidarTextoRequerido(string texto, string mensaje, Action<string> mostrarMensaje)
+        public static bool ValidarFecha(string texto, out DateTime fecha)
         {
-            if (string.IsNullOrWhiteSpace(texto))
+            if (!DateTime.TryParseExact(texto.Trim(), "dd/MM/yyyy HH:mm",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out fecha))
             {
-                mostrarMensaje(mensaje);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarSoloDigitos(string texto, string mensaje, Action<string> mostrarMensaje)
-        {
-            if (!texto.All(char.IsDigit))
-            {
-                mostrarMensaje(mensaje);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarEntero(string texto, out int resultado, string mensaje, Action<string> mostrarMensaje)
-        {
-            if (!int.TryParse(texto, out resultado))
-            {
-                mostrarMensaje(mensaje);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarPrecio(string texto, out decimal precio, Action<string> mostrarMensaje)
-        {
-            string limpio = texto.Replace("L", "").Replace(" ", "").Trim();
-            if (!decimal.TryParse(limpio, out precio) || precio <= 0)
-            {
-                mostrarMensaje("⚠ El monto debe ser un número mayor a 0.");
-                return false;
-            }
-
-            if (!decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out precio))
-            {
-                MessageBox.Show("⚠ El precio solo puede contener números.\nEjemplo: 150.00",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(limpio))
-            {
-                MessageBox.Show("⚠ Ingresa un precio.",
-                    "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarEnteroPositivo(string texto, out int resultado, string titulo)
-        {
-            if (!int.TryParse(texto.Trim(), out resultado) || resultado <= 0)
-            {
-                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor a 0.",
-                    titulo, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarStock(int cantidad, int stockDisponible)
-        {
-            if (cantidad > stockDisponible)
-            {
-                MessageBox.Show(
-                    $"⚠ Stock insuficiente. Solo hay {stockDisponible} unidades disponibles.",
-                    "Stock insuficiente", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarDNIHondureño(string dni)
-        {
-            if (string.IsNullOrWhiteSpace(dni) || !Regex.IsMatch(dni, @"^\d{13}$"))
-            {
-                MessageBox.Show("⚠ Ingrese un DNI válido de 13 dígitos.", "DNI inválido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarSoloLetras(string texto, string nombreCampo)
-        {
-            if (!texto.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
-            {
-                MessageBox.Show($"⚠ El {nombreCampo} solo puede contener letras y espacios.",
-                    $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarCorreo(string correo)
-        {
-            if (!string.IsNullOrWhiteSpace(correo) &&
-                !Regex.IsMatch(correo.Trim(), @"^[^@]+@[^@]+\.[^@]+$"))
-            {
-                MessageBox.Show("⚠ El correo no tiene un formato válido.\nEjemplo: nombre@dominio.com",
-                    "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarTelefono(string telefono, int longitudMinima)
-        {
-            if (string.IsNullOrWhiteSpace(telefono) || telefono.Length < longitudMinima)
-            {
-                MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool Telefono(string valor, Control campo = null)
-        {
-            string tel = valor.Trim();
-
-            if (!Regex.IsMatch(tel, @"^\d{8}$"))
-            {
-                MessageBox.Show("El teléfono debe contener solo números y tener exactamente 8 dígitos.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (!Regex.IsMatch(tel, @"^[2389]"))
-            {
-                MessageBox.Show("El teléfono debe iniciar con 2, 3, 8 o 9.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
-        }
-
-        public static bool DNI(string valor, Control campo = null)
-        {
-            string dni = valor.Trim();
-
-            if (!Regex.IsMatch(dni, @"^\d{13}$"))
-            {
-                MessageBox.Show("El DNI debe contener solo números y tener exactamente 13 dígitos.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            int codigoMunicipio = Convert.ToInt32(dni.Substring(0, 4));
-            if (codigoMunicipio < 101 || codigoMunicipio > 1899)
-            {
-                MessageBox.Show("Los primeros 4 dígitos del DNI deben corresponder a un código de municipio válido (ej: 0101 - 1818).",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            int anioRegistro = Convert.ToInt32(dni.Substring(4, 4));
-            int anioActual = DateTime.Now.Year;
-            if (anioRegistro < 1900 || anioRegistro > anioActual)
-            {
-                MessageBox.Show($"Los dígitos 5 al 8 del DNI deben ser un año válido entre 1900 y {anioActual}.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            string secuencial = dni.Substring(8, 5);
-            if (secuencial == "00000")
-            {
-                MessageBox.Show("Los últimos 5 dígitos del DNI no pueden ser todos ceros.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
-        }
-
-        public static string ValidarCorreoLogin(string correo)
-        {
-            correo = correo.Trim();
-
-            if (string.IsNullOrWhiteSpace(correo))
-                return "⚠ El correo es obligatorio.";
-
-            if (correo.Contains(" "))
-                return "⚠ El correo no puede contener espacios.";
-
-            if (!correo.Contains("@"))
-                return "⚠ El correo debe contener '@'.";
-
-            if (correo.Contains("@"))
-            {
-                string[] partes = correo.Split('@');
-                string usuario = partes[0];
-                string dominio = partes[1];
-
-                if (usuario.Any(char.IsUpper))
-                    return "⚠ El correo no puede contener letras mayúsculas.";
-
-                if (dominio.Any(char.IsUpper))
-                    return "⚠ El dominio no puede contener letras mayúsculas.";
-            }
-
-            if (correo.Length > 100)
-                return "⚠ El correo es demasiado largo (máximo 100 caracteres).";
-
-            if (!Regex.IsMatch(correo, @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$"))
-                return "⚠ Ingresa un correo electrónico válido.";
-
-            if (correo.StartsWith("."))
-                return "⚠ El correo no puede empezar con un punto.";
-
-            if (correo.Contains(".."))
-                return "⚠ El correo no puede tener puntos consecutivos.";
-
-            string[] dominiosPermitidos = { "@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com" };
-            if (!dominiosPermitidos.Any(d => correo.EndsWith(d)))
-                return "⚠ Dominio no permitido.";
-
-            return null;
-        }
-
-        public static string ValidarContrasenaLogin(string contrasena)
-        {
-            if (string.IsNullOrWhiteSpace(contrasena))
-                return "⚠ La contraseña es obligatoria.";
-
-            if (contrasena.Contains(" "))
-                return "⚠ La contraseña no puede contener espacios.";
-
-            if (contrasena.Length > 50)
-                return "⚠ La contraseña es demasiado larga (máximo 50 caracteres).";
-
-            return null;
-        }
-
-        public static bool ValidarRangoPrecios(string textoMin, string textoMax, out decimal pMin, out decimal pMax)
-        {
-            pMin = 0;
-            pMax = decimal.MaxValue;
-
-            if (!string.IsNullOrWhiteSpace(textoMin) && !decimal.TryParse(textoMin, out pMin))
-            {
-                MessageBox.Show("⚠ El precio mínimo debe ser un número válido.",
-                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (!string.IsNullOrWhiteSpace(textoMax) && !decimal.TryParse(textoMax, out pMax))
-            {
-                MessageBox.Show("⚠ El precio máximo debe ser un número válido.",
-                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            pMin = decimal.TryParse(textoMin, out decimal pm) ? pm : 0;
-            pMax = decimal.TryParse(textoMax, out decimal px) ? px : decimal.MaxValue;
-
-            if (pMin > pMax)
-            {
-                MessageBox.Show("⚠ El precio mínimo no puede ser mayor que el precio máximo.",
-                    "Rango inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
-        }
-
-        public static bool ValidarClienteVehiculoOrden(string clienteDNI, string vehiculoPlaca)
-        {
-            if (string.IsNullOrEmpty(clienteDNI) || string.IsNullOrEmpty(vehiculoPlaca))
-            {
-                MessageBox.Show("⚠ Busca un cliente o vehículo antes de guardar.",
-                    "Datos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("⚠ Formato de fecha inválido. Usa dd/MM/yyyy HH:mm\nEjemplo: 13/03/2026 14:30",
+                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
             return true;
@@ -381,23 +155,6 @@ namespace Login.Clases
             return true;
         }
 
-        public static bool ValidarPrecioServicio(string texto, out decimal precio)
-        {
-            precio = 0;
-            string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-            if (!string.IsNullOrWhiteSpace(limpio) &&
-                !decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out precio))
-            {
-                MessageBox.Show("⚠ El precio del servicio debe ser un número válido.",
-                    "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out precio);
-            return true;
-        }
-
         public static bool ValidarMesOrden(DateTime? fecha)
         {
             if (fecha.HasValue)
@@ -414,46 +171,65 @@ namespace Login.Clases
             return true;
         }
 
-        // ✅ Validar placa de vehículo (básica, para uso general)
-        public static bool ValidarPlaca(string placa)
+        // ─────────────────────────────────────────────────────────────
+        // CANTIDADES / ENTEROS
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarEntero(string texto, out int resultado, string mensaje, Action<string> mostrarMensaje)
         {
-            string p = placa.Trim().ToUpper();
-
-            if (string.IsNullOrWhiteSpace(p))
+            if (!int.TryParse(texto, out resultado))
             {
-                MessageBox.Show("⚠ La placa es obligatoria.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                mostrarMensaje(mensaje);
                 return false;
             }
-
-            if (!Regex.IsMatch(p, @"^[A-Z0-9]+$"))
-            {
-                MessageBox.Show("⚠ La placa solo puede contener letras y números.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (p.Length < 6)
-            {
-                MessageBox.Show("⚠ La placa debe tener al menos 6 caracteres.",
-                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
             return true;
         }
 
-        public static bool ValidarAnio(string texto, out int año)
+        public static bool ValidarEnteroPositivo(string texto, out int resultado, string titulo)
         {
-            año = 0;
-
-            if (!int.TryParse(texto, out año) || año < 1900 || año > DateTime.Now.Year + 1)
+            if (!int.TryParse(texto.Trim(), out resultado) || resultado <= 0)
             {
-                MessageBox.Show("⚠ El año ingresado no es válido.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("⚠ La cantidad debe ser un número entero mayor a 0.",
+                    titulo, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+            return true;
+        }
 
+        public static bool ValidarStock(int cantidad, int stockDisponible)
+        {
+            if (cantidad > stockDisponible)
+            {
+                MessageBox.Show(
+                    $"⚠ Stock insuficiente. Solo hay {stockDisponible} unidades disponibles.",
+                    "Stock insuficiente", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // TEXTO — formato y longitud
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarSoloLetras(string texto, string nombreCampo)
+        {
+            if (!texto.Trim().All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                MessageBox.Show($"⚠ El {nombreCampo} solo puede contener letras y espacios.",
+                    $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool ValidarSoloDigitos(string texto, string mensaje, Action<string> mostrarMensaje)
+        {
+            if (!texto.All(char.IsDigit))
+            {
+                mostrarMensaje(mensaje);
+                return false;
+            }
             return true;
         }
 
@@ -474,17 +250,6 @@ namespace Login.Clases
             {
                 MessageBox.Show($"⚠ El {nombreCampo} no puede superar {max} caracteres.",
                     "Longitud inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ValidarAnioFormato(string texto)
-        {
-            if (!Regex.IsMatch(texto.Trim(), @"^\d{4}$"))
-            {
-                MessageBox.Show("⚠ El año debe tener exactamente 4 dígitos.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
             return true;
@@ -521,6 +286,225 @@ namespace Login.Clases
                 return false;
             }
             return true;
+        }
+
+        public static bool ValidarTextoConCaracteresPermitidos(string texto, string nombreCampo)
+        {
+            if (!Regex.IsMatch(texto.Trim(), @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.\(\)\/]+$"))
+            {
+                MessageBox.Show($"⚠ El {nombreCampo} contiene caracteres no permitidos.",
+                    $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // CORREO
+        // ─────────────────────────────────────────────────────────────
+        public static bool ValidarLongitudCorreo(string correo)
+        {
+            if (string.IsNullOrWhiteSpace(correo)) return true;
+
+            string error = clsValidaciones.ValidarCorreoLogin(correo.Trim());
+            if (error != null)
+            {
+                MessageBox.Show(error, "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return clsValidaciones.ValidarLongitudMaxima(correo, 100, "correo");
+        }
+
+        public static string ValidarCorreoLogin(string correo)
+        {
+            correo = correo.Trim();
+            if (string.IsNullOrWhiteSpace(correo)) return "⚠ El correo es obligatorio.";
+            if (correo.Contains(" ")) return "⚠ El correo no puede contener espacios.";
+            if (!correo.Contains("@")) return "⚠ El correo debe contener '@'.";
+
+            string[] partes = correo.Split('@');
+            string usuario = partes[0];
+            string dominio = partes[1];
+            if (usuario.Any(char.IsUpper)) return "⚠ El correo no puede contener letras mayúsculas.";
+            if (dominio.Any(char.IsUpper)) return "⚠ El dominio no puede contener letras mayúsculas.";
+            if (correo.Length > 100) return "⚠ El correo es demasiado largo (máximo 100 caracteres).";
+
+            if (!Regex.IsMatch(correo, @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$"))
+                return "⚠ Ingresa un correo electrónico válido.";
+
+            if (correo.StartsWith(".")) return "⚠ El correo no puede empezar con un punto.";
+            if (correo.Contains("..")) return "⚠ El correo no puede tener puntos consecutivos.";
+
+            string[] dominiosPermitidos = { "@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com" };
+            if (!dominiosPermitidos.Any(d => correo.EndsWith(d)))
+                return "⚠ Dominio no permitido.";
+
+            return null;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // TELÉFONO
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarTelefono(string telefono, int longitudMinima)
+        {
+            if (string.IsNullOrWhiteSpace(telefono) || telefono.Length < longitudMinima)
+            {
+                MessageBox.Show("⚠ Ingrese un teléfono válido (ej: 9999-9999).", "Campo requerido",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool Telefono(string valor, Control campo = null)
+        {
+            string tel = valor.Trim();
+
+            if (!Regex.IsMatch(tel, @"^\d{8}$"))
+            {
+                MessageBox.Show("El teléfono debe contener solo números y tener exactamente 8 dígitos.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!Regex.IsMatch(tel, @"^[2389]"))
+            {
+                MessageBox.Show("El teléfono debe iniciar con 2, 3, 8 o 9.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // PLACA
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarPlaca(string placa)
+        {
+            string p = placa.Trim().ToUpper();
+
+            if (string.IsNullOrWhiteSpace(p))
+            {
+                MessageBox.Show("⚠ La placa es obligatoria.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            if (!Regex.IsMatch(p, @"^[A-Z0-9]+$"))
+            {
+                MessageBox.Show("⚠ La placa solo puede contener letras y números.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            if (p.Length < 6)
+            {
+                MessageBox.Show("⚠ La placa debe tener al menos 6 caracteres.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // AÑO
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarAnio(string texto, out int año)
+        {
+            año = 0;
+            if (!int.TryParse(texto, out año) || año < 1900 || año > DateTime.Now.Year + 1)
+            {
+                MessageBox.Show("⚠ El año ingresado no es válido.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool ValidarAnioFormato(string texto)
+        {
+            if (!Regex.IsMatch(texto.Trim(), @"^\d{4}$"))
+            {
+                MessageBox.Show("⚠ El año debe tener exactamente 4 dígitos.",
+                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // DNI
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarClienteEncontrado(string clienteDNI)
+        {
+            if (string.IsNullOrWhiteSpace(clienteDNI))
+            {
+                MessageBox.Show("⚠ No se encontró ningún cliente con ese DNI.",
+                    "Cliente no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool ValidarFormatoDNI(string dni)
+        {
+            if (!Regex.IsMatch(dni.Trim(), @"^\d{13}$"))
+            {
+                MessageBox.Show("⚠ El DNI debe contener exactamente 13 dígitos numéricos.",
+                    "DNI inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // RANGO DE PRECIOS
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarRangoPrecios(string textoMin, string textoMax, out decimal pMin, out decimal pMax)
+        {
+            pMin = 0;
+            pMax = decimal.MaxValue;
+
+            if (!string.IsNullOrWhiteSpace(textoMin) && !decimal.TryParse(textoMin, out pMin))
+            {
+                MessageBox.Show("⚠ El precio mínimo debe ser un número válido.",
+                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            if (!string.IsNullOrWhiteSpace(textoMax) && !decimal.TryParse(textoMax, out pMax))
+            {
+                MessageBox.Show("⚠ El precio máximo debe ser un número válido.",
+                    "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            pMin = decimal.TryParse(textoMin, out decimal pm) ? pm : 0;
+            pMax = decimal.TryParse(textoMax, out decimal px) ? px : decimal.MaxValue;
+
+            if (pMin > pMax)
+            {
+                MessageBox.Show("⚠ El precio mínimo no puede ser mayor que el precio máximo.",
+                    "Rango inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // LOGIN
+        // ─────────────────────────────────────────────────────────────
+
+        public static string ValidarContrasenaLogin(string contrasena)
+        {
+            if (string.IsNullOrWhiteSpace(contrasena)) return "⚠ La contraseña es obligatoria.";
+            if (contrasena.Contains(" ")) return "⚠ La contraseña no puede contener espacios.";
+            if (contrasena.Length > 50) return "⚠ La contraseña es demasiado larga (máximo 50 caracteres).";
+            return null;
         }
     }
 }

@@ -64,7 +64,6 @@ namespace InterfazInventario
             if (!ObtenerValoresComunes(out decimal precio, out int cantidad))
             {
                 btnAgregar.IsEnabled = true;
-                btnActualizar.IsEnabled = false;
                 return;
             }
 
