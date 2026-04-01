@@ -40,10 +40,8 @@ namespace Contabilidad
 
             txtDNI.IsEnabled = false;
             txtOrdenID.IsEnabled = false;
-            txtPrecio.IsEnabled = false;
 
             BuscarNombre(dni);
-
             VerificarBloqueoEdicion();
         }
 
@@ -144,14 +142,15 @@ namespace Contabilidad
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio.Text = clsValidaciones.FormatearPrecio(txtPrecio.Text);
+            txtPrecio.Text = clsValidacionesContabilidad.FormatearPrecioGasto(txtPrecio.Text);
         }
 
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio.Text = clsValidaciones.LimpiarPrefijoPrecio(txtPrecio.Text);
+            txtPrecio.Text = clsValidacionesContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
+
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
@@ -159,14 +158,14 @@ namespace Contabilidad
 
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
-            string montoStr = txtPrecio.Text.Replace("L", "").Replace(" ", "").Trim();
 
-            if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ El DNI es obligatorio.", MostrarMensaje)) return;
-            if (!clsValidaciones.ValidarSoloDigitos(dni, "⚠ El DNI solo debe contener números.", MostrarMensaje)) return;
+            if (!clsValidacionesContabilidad.ValidarFormularioVacio(
+                  dni, ordenStr, txtPrecio.Text)) return;
+
+            if (!clsValidacionesContabilidad.ValidarDNIPago(dni, MostrarMensaje)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombreCliente.Text, "⚠ Ingresa un DNI válido.", MostrarMensaje)) return;
             if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
-            if (!clsValidaciones.ValidarTextoRequerido(montoStr, "⚠ El monto es obligatorio.", MostrarMensaje)) return;
-            if (!clsValidaciones.ValidarPrecio(montoStr, out decimal monto, MostrarMensaje)) return;
+            if (!clsValidacionesContabilidad.ValidarMontoPago(txtPrecio.Text, out decimal monto)) return;
 
             try
             {

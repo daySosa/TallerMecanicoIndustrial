@@ -85,7 +85,8 @@
                                          Background="#1e2130" Foreground="White"
                                          BorderBrush="#3a3f5c" CaretBrush="White"
                                          Height="40" VerticalContentAlignment="Center"
-                                         Padding="10,0"/>
+                                         Padding="10,0"
+                                         PreviewTextInput="txtAnio_PreviewTextInput" />
                             </StackPanel>
                         </Grid>
 

@@ -63,7 +63,8 @@
                      Background="#252836"
                      BorderBrush="#3a3f5c"
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                     materialDesign:HintAssist.Hint="Ej: Compra de aceite, Pago de luz..."/>
+                     materialDesign:HintAssist.Hint="Ej: Compra de aceite, Pago de luz..."
+                     PreviewTextInput="txtNombreGasto_PreviewTextInput" />
 
                 <TextBlock Text="PRECIO"
                            Foreground="#a0a8c8"

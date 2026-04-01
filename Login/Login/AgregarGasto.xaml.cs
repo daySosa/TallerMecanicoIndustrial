@@ -41,6 +41,11 @@ namespace Contabilidad
             this.Close();
         }
 
+        private void txtNombreGasto_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$");
+        }
+
         /// <summary>
         /// Formatea el valor del precio al perder el foco, aplicando formato de moneda.
         /// </summary>
@@ -64,10 +69,12 @@ namespace Contabilidad
         /// </summary>
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombreGasto.Text, "nombre del gasto")) return;
+            if (!clsValidacionesContabilidad.ValidarFormularioVacio(
+                   txtNombreGasto.Text, txtPrecio.Text)) return;
+
+            if (!clsValidacionesContabilidad.ValidarCategoriaSeleccionada(cmbTipoGasto.SelectedItem)) return;
             if (!clsValidacionesContabilidad.ValidarNombreGasto(txtNombreGasto.Text)) return;
-            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
+            if (!clsValidacionesContabilidad.ValidarPrecioGasto(txtPrecio.Text, out decimal precio)) return;
             if (!clsValidacionesContabilidad.ValidarObservaciones(txtObservaciones.Text)) return;
 
             try

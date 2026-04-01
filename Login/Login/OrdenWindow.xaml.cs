@@ -39,13 +39,8 @@ namespace Órdenes_de_Trabajo
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
 
-            txtBuscar.MaxLength = 13;
-
-            txtBuscar.PreviewTextInput += (s, e) =>
-            {
-                int limite = _buscarPorDNI ? 13 : 7;
-                if (txtBuscar.Text.Length >= limite) e.Handled = true;
-            };
+            txtBuscar.PreviewTextInput += TxtBuscar_PreviewTextInput;
+            DataObject.AddPastingHandler(txtBuscar, TxtBuscar_Pasting);
 
             txtBuscar.TextChanged += (s, e) =>
             {
@@ -80,6 +75,34 @@ namespace Órdenes_de_Trabajo
         }
 
         // ─────────────────────────────────────────────────────────────
+        // FILTRO DE ENTRADA — DNI solo dígitos, Placa solo alfanumérico
+        // ─────────────────────────────────────────────────────────────
+
+        private void TxtBuscar_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (_buscarPorDNI)
+                e.Handled = !clsValidacionesOrden.EsCaracterValidoDNI(e.Text);
+            else
+                e.Handled = !clsValidacionesOrden.EsCaracterValidoPlaca(e.Text);
+        }
+
+        private void TxtBuscar_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!e.DataObject.GetDataPresent(typeof(string)))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            string texto = (string)e.DataObject.GetData(typeof(string));
+
+            if (_buscarPorDNI && !clsValidacionesOrden.EsCaracterValidoDNI(texto))
+                e.CancelCommand();
+            else if (!_buscarPorDNI && !clsValidacionesOrden.EsCaracterValidoPlaca(texto))
+                e.CancelCommand();
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // CARGA PARA EDICIÓN
         // ─────────────────────────────────────────────────────────────
 
@@ -91,7 +114,6 @@ namespace Órdenes_de_Trabajo
                 var orden = _db.ObtenerOrdenParaEditar(ordenID);
                 if (orden == default) return;
 
-                // Bloquear acceso si la orden es de un mes anterior
                 if (!clsValidacionesOrden.ValidarMesActualizacion(orden.fecha))
                 {
                     this.Close();
@@ -167,10 +189,6 @@ namespace Órdenes_de_Trabajo
         // BÚSQUEDA — TABS DNI / PLACA
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Cambia el modo de búsqueda a DNI. Limpia el campo para evitar
-        /// confusión entre formatos distintos.
-        /// </summary>
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
@@ -185,10 +203,6 @@ namespace Órdenes_de_Trabajo
             borderError.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>
-        /// Cambia el modo de búsqueda a Placa. Limpia el campo para evitar
-        /// confusión entre formatos distintos.
-        /// </summary>
         private void TabPlaca_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = false;
@@ -203,10 +217,6 @@ namespace Órdenes_de_Trabajo
             borderError.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>
-        /// Ejecuta la búsqueda. Si falla la validación, el campo no se limpia
-        /// para que el usuario pueda corregir sin reescribir.
-        /// </summary>
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
             string valor = txtBuscar.Text.Trim();
@@ -304,10 +314,16 @@ namespace Órdenes_de_Trabajo
 
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
+            if (!clsValidacionesOrden.ValidarFormularioVacio(
+                _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
+
+            if (!clsValidacionesOrden.ValidarClienteAsignado(_clienteDNI)) return;
+
             if (!clsValidacionesOrden.ValidarFormularioAñadir(
                     _clienteDNI,
                     _vehiculoPlaca,
                     cmbEstado.SelectedItem,
+                    cmbPrioridad.SelectedItem,
                     dpFecha.SelectedDate,
                     dpEntrega.SelectedDate,
                     txtPrecioServicio.Text,
@@ -325,10 +341,9 @@ namespace Órdenes_de_Trabajo
 
                 decimal total = totalRepuestos + precioServicio;
                 string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
-                int productoID = _repuestos.Count > 0 ? _repuestos[0].ProductoID : 0;
 
                 _db.AgregarOrden(
-                    _clienteDNI, _vehiculoPlaca, productoID, estado,
+                    _clienteDNI, _vehiculoPlaca, null, estado,
                     dpFecha.SelectedDate ?? DateTime.Today,
                     dpEntrega.SelectedDate,
                     txtObservaciones.Text.Trim(),
@@ -354,12 +369,20 @@ namespace Órdenes_de_Trabajo
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
+            if (!clsValidacionesOrden.ValidarFormularioVacio(
+                _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
+
             if (!clsValidacionesOrden.ValidarFormularioActualizar(
+                    _clienteDNI,
+                    _vehiculoPlaca,
+                    cmbEstado.SelectedItem,
+                    cmbPrioridad.SelectedItem,
                     dpFecha.SelectedDate,
                     dpEntrega.SelectedDate,
                     txtPrecioServicio.Text,
                     txtObservaciones.Text,
                     _rutaFoto,
+                    _repuestos.Count,
                     out decimal precioServicio))
                 return;
 

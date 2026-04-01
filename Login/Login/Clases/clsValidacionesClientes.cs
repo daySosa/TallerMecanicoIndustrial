@@ -8,6 +8,15 @@ namespace Login.Clases
     public class clsValidacionesClientes
     {
         // ─────────────────────────────────────────────────────────────
+        // FORMULARIO VACÍO
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarFormularioVacio(params string[] campos)
+        {
+            return clsValidaciones.ValidarFormularioVacio(campos);
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // DICCIONARIOS — departamentos y municipios de Honduras
         // ─────────────────────────────────────────────────────────────
 
@@ -149,20 +158,12 @@ namespace Login.Clases
         // DNI
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida formato básico (13 dígitos) y luego delega a DNI()
-        /// para la validación completa incluyendo edad mínima de 18 años.
-        /// </summary>
         public static bool ValidarDNIHondureño(string dni)
         {
             if (!clsValidaciones.ValidarFormatoDNI(dni)) return false;
             return DNI(dni);
         }
 
-        /// <summary>
-        /// Valida el DNI hondureño completo:
-        /// formato, departamento, municipio, año de nacimiento, edad mínima de 18 años y secuencial.
-        /// </summary>
         public static bool DNI(string valor, Control campo = null)
         {
             string dni = valor.Trim();
@@ -196,21 +197,14 @@ namespace Login.Clases
             // ── Año de nacimiento + edad mínima ───────────────────────
             int anioNacimiento = int.Parse(dni.Substring(4, 4));
             int anioActual = DateTime.Now.Year;
+            int anioMinimo = anioActual - 75;
+            int anioMaximo = anioActual - 18;
 
-            if (anioNacimiento < 1900 || anioNacimiento > anioActual)
+            if (anioNacimiento < anioMinimo || anioNacimiento > anioMaximo)
             {
                 MessageBox.Show(
-                    $"⚠ Los dígitos 5 al 8 del DNI deben ser un año válido entre 1900 y {anioActual}.",
+                    "⚠ El cliente debe tener 18 años o más para ser registrado.",
                     "DNI inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (anioActual - anioNacimiento < 18)
-            {
-                MessageBox.Show(
-                    $"⚠ El cliente debe tener al menos 18 años para ser registrado.\n" +
-                    $"Año de nacimiento registrado en DNI: {anioNacimiento}.",
-                    "Edad inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
@@ -225,36 +219,16 @@ namespace Login.Clases
             return true;
         }
 
-        /// <summary>
-        /// Devuelve el nombre del departamento y municipio a partir de los
-        /// primeros 4 dígitos del DNI.
-        /// </summary>
-        public static (string departamento, string municipio) ObtenerUbicacionDNI(string dni)
-        {
-            if (string.IsNullOrWhiteSpace(dni) || dni.Length < 4)
-                return ("Desconocido", "Desconocido");
-
-            if (!int.TryParse(dni.Substring(0, 2), out int depto) ||
-                !int.TryParse(dni.Substring(2, 2), out int muni))
-                return ("Desconocido", "Desconocido");
-
-            if (!_departamentosHN.ContainsKey(depto))
-                return ("Desconocido", "Desconocido");
-
-            string nombreDepto = _departamentosHN[depto].nombre;
-            string nombreMuni = _municipiosHN.ContainsKey(depto) && _municipiosHN[depto].ContainsKey(muni)
-                ? _municipiosHN[depto][muni]
-                : "Desconocido";
-
-            return (nombreDepto, nombreMuni);
-        }
-
         // ─────────────────────────────────────────────────────────────
         // NOMBRE / APELLIDO
         // ─────────────────────────────────────────────────────────────
 
         public static bool ValidarLongitudNombre(string texto, string nombreCampo)
-            => clsValidaciones.ValidarLongitudMaxima(texto, 50, nombreCampo);
+        {
+            return clsValidaciones.ValidarTextoRequerido(texto, nombreCampo)
+                && clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), nombreCampo)
+                && clsValidaciones.ValidarLongitudMaxima(texto.Trim(), 50, nombreCampo);
+        }
 
         // ─────────────────────────────────────────────────────────────
         // CORREO
@@ -282,9 +256,12 @@ namespace Login.Clases
 
         public static bool ValidarDireccion(string direccion)
         {
-            if (!clsValidaciones.ValidarTextoRequerido(direccion, "dirección del cliente")) return false;
-            if (!clsValidaciones.ValidarLongitudMaxima(direccion, 150, "dirección")) return false;
-            return true;
+            return clsValidaciones.ValidarTextoRequerido(direccion, "dirección del cliente")
+                && clsValidaciones.ValidarNoEsSoloNumeros(direccion.Trim(), "dirección")
+                && clsValidaciones.ValidarIniciaConLetra(direccion.Trim(), "dirección")
+                && clsValidaciones.ValidarSinRepeticionExcesiva(direccion.Trim(), "dirección")
+                && clsValidaciones.ValidarTextoConCaracteresPermitidos(direccion.Trim(), "dirección") 
+                && clsValidaciones.ValidarLongitudMaxima(direccion.Trim(), 150, "dirección");
         }
     }
 }

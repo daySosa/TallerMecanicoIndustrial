@@ -3,87 +3,54 @@ using System.Windows;
 
 namespace Login.Clases
 {
-    /// <summary>
-    /// Validaciones específicas para el formulario de Órdenes de Trabajo.
-    /// Complementa a clsValidaciones con reglas propias de este módulo.
-    /// </summary>
     public class clsValidacionesOrden
     {
+        // ─────────────────────────────────────────────────────────────
+        // FORMULARIO VACÍO
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarFormularioVacio(string clienteDNI, string vehiculoPlaca, string precio)
+        {
+            string precioLimpio = precio.Replace("L", "").Replace("0.00", "")
+                                        .Replace(",", "").Replace(" ", "").Trim();
+
+            return clsValidaciones.ValidarFormularioVacio(clienteDNI, vehiculoPlaca, precioLimpio);
+        }
+
         // ─────────────────────────────────────────────────────────────
         // BÚSQUEDA — DNI / PLACA
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que el campo de búsqueda no esté vacío según el criterio elegido.
-        /// </summary>
         public static bool ValidarCampoBusqueda(string valor, bool esDNI)
         {
-            if (string.IsNullOrWhiteSpace(valor))
-            {
-                string campo = esDNI ? "DNI del cliente" : "placa del vehículo";
-                MessageBox.Show($"⚠ Ingresa el {campo} para realizar la búsqueda.",
-                    "Campo vacío", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
+            string campo = esDNI ? "DNI del cliente" : "placa del vehículo";
+            return clsValidaciones.ValidarTextoRequerido(valor,
+                $"⚠ Ingresa el {campo} para realizar la búsqueda.",
+                msg => MessageBox.Show(msg, "Campo vacío", MessageBoxButton.OK, MessageBoxImage.Warning));
         }
 
-        /// <summary>
-        /// Valida que el DNI de búsqueda tenga exactamente 13 dígitos numéricos.
-        /// </summary>
         public static bool ValidarFormatoDNIBusqueda(string dni)
         {
-            if (!Regex.IsMatch(dni.Trim(), @"^\d{13}$"))
-            {
-                MessageBox.Show("⚠ El DNI debe contener exactamente 13 dígitos numéricos.\n" +
-                                "Ejemplo: 0801199900123",
-                    "DNI inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
+            return clsValidaciones.ValidarFormatoDNI(dni);
         }
 
-        /// <summary>
-        /// Valida que la placa de búsqueda tenga un formato hondureño reconocido.
-        /// </summary>
         public static bool ValidarFormatoPlacaBusqueda(string placa)
         {
             string p = placa.Trim().ToUpper();
 
-            if (p.Length < 5 || p.Length > 8)
-            {
-                MessageBox.Show("⚠ La placa debe tener entre 5 y 8 caracteres.\n" +
-                                "Ejemplos válidos: ABC1234 · AB1234 · A1234",
-                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            bool formatoTurismo = Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$");
-            bool formatoMoto = Regex.IsMatch(p, @"^[A-Z]{1,2}\d{4}$");
-            bool formatoCamion = Regex.IsMatch(p, @"^[A-Z]{1,3}\d{3,4}[A-Z]?$");
-
-            if (!formatoTurismo && !formatoMoto && !formatoCamion)
-            {
-                MessageBox.Show(
-                    "⚠ Formato de placa no reconocido.\n\n" +
-                    "Formatos válidos en Honduras:\n" +
-                    "  • Turismo / Pickup / Camioneta:  ABC1234\n" +
-                    "  • Motocicleta / MotoTaxi:        A1234  o  AB1234\n" +
-                    "  • Camiones / especiales:         ABC1234A",
-                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
+            return clsValidacionesVehiculo.ValidarFormatoPlacaSegunTipo(p, string.Empty);
         }
+
+        public static bool EsCaracterValidoDNI(string texto)
+            => texto.All(char.IsDigit);
+
+        public static bool EsCaracterValidoPlaca(string texto)
+            => texto.All(char.IsLetterOrDigit);
 
         // ─────────────────────────────────────────────────────────────
         // CLIENTE Y VEHÍCULO
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que se haya encontrado y asignado un cliente antes de guardar la orden.
-        /// </summary>
         public static bool ValidarClienteAsignado(string clienteDNI)
         {
             if (string.IsNullOrWhiteSpace(clienteDNI))
@@ -96,9 +63,6 @@ namespace Login.Clases
             return true;
         }
 
-        /// <summary>
-        /// Valida que se haya encontrado y asignado un vehículo antes de guardar la orden.
-        /// </summary>
         public static bool ValidarVehiculoAsignado(string vehiculoPlaca)
         {
             if (string.IsNullOrWhiteSpace(vehiculoPlaca))
@@ -115,24 +79,11 @@ namespace Login.Clases
         // ESTADO DE LA ORDEN
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que se haya seleccionado un estado para la orden.
-        /// </summary>
         public static bool ValidarEstadoOrden(object itemSeleccionado)
         {
-            if (itemSeleccionado == null)
-            {
-                MessageBox.Show("⚠ Debes seleccionar el estado de la orden antes de guardar.\n\n" +
-                                "Opciones: Sin Empezar · En Espera · En Proceso · Finalizado",
-                    "Estado requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
+            return clsValidaciones.ValidarComboSeleccionado(itemSeleccionado, "estado de la orden");
         }
 
-        /// <summary>
-        /// Valida que una orden finalizada no vuelva a un estado anterior sin confirmación.
-        /// </summary>
         public static bool ValidarCambioEstadoFinalizado(string estadoAnterior, string estadoNuevo)
         {
             if (estadoAnterior == "Finalizado" && estadoNuevo != "Finalizado")
@@ -149,7 +100,7 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
-        // PRIORIDAD DE LA ORDEN
+        // PRIORIDAD
         // ─────────────────────────────────────────────────────────────
 
         public static bool ValidarPrioridad(object itemSeleccionado)
@@ -161,10 +112,6 @@ namespace Login.Clases
         // FECHAS
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que la fecha de inicio no sea anterior a hoy
-        /// ni mayor a un año en el futuro.
-        /// </summary>
         public static bool ValidarFechaInicio(DateTime? fecha)
         {
             if (!fecha.HasValue)
@@ -174,16 +121,12 @@ namespace Login.Clases
                 return false;
             }
 
-            if (fecha.Value.Date < DateTime.Today)
-            {
-                MessageBox.Show("⚠ La fecha de inicio no puede ser anterior al día de hoy.",
-                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
+            var hoy = DateTime.Today;
 
-            if (fecha.Value.Date > DateTime.Today.AddYears(1))
+            if (fecha.Value.Date != hoy)
             {
-                MessageBox.Show("⚠ La fecha de inicio no puede ser mayor a un año en el futuro.",
+                MessageBox.Show(
+                    $"⚠ La fecha de inicio debe ser el día de hoy ({hoy:dd/MM/yyyy}).",
                     "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -191,10 +134,6 @@ namespace Login.Clases
             return true;
         }
 
-        /// <summary>
-        /// Valida que la fecha de entrega sea obligatoria, no anterior
-        /// a la fecha de inicio y no mayor a 2 años en el futuro.
-        /// </summary>
         public static bool ValidarFechaEntrega(DateTime? fechaInicio, DateTime? fechaEntrega)
         {
             if (!fechaEntrega.HasValue)
@@ -204,14 +143,8 @@ namespace Login.Clases
                 return false;
             }
 
-            if (fechaInicio.HasValue && fechaEntrega.Value.Date < fechaInicio.Value.Date)
-            {
-                MessageBox.Show("⚠ La fecha de entrega no puede ser anterior a la fecha de inicio.\n\n" +
-                                $"Fecha inicio:   {fechaInicio.Value:dd/MM/yyyy}\n" +
-                                $"Fecha entrega:  {fechaEntrega.Value:dd/MM/yyyy}",
-                    "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!clsValidaciones.ValidarFechaEntrega(fechaInicio, fechaEntrega))
                 return false;
-            }
 
             if (fechaEntrega.Value.Date > DateTime.Today.AddYears(2))
             {
@@ -223,35 +156,15 @@ namespace Login.Clases
             return true;
         }
 
-        /// <summary>
-        /// Valida que la orden no sea de un mes anterior (para actualizaciones).
-        /// </summary>
         public static bool ValidarMesActualizacion(DateTime? fecha)
         {
-            if (fecha.HasValue)
-            {
-                var hoy = DateTime.Today;
-                if (fecha.Value.Year < hoy.Year ||
-                   (fecha.Value.Year == hoy.Year && fecha.Value.Month < hoy.Month))
-                {
-                    MessageBox.Show("⚠ No se pueden actualizar órdenes de meses anteriores.\n\n" +
-                                    $"Fecha de la orden: {fecha.Value:MMMM yyyy}\n" +
-                                    $"Mes actual:        {hoy:MMMM yyyy}",
-                        "Operación no permitida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
-            }
-            return true;
+            return clsValidaciones.ValidarMesOrden(fecha);
         }
 
         // ─────────────────────────────────────────────────────────────
         // PRECIO DEL SERVICIO
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida y extrae el precio del servicio desde el TextBox con formato "L 0.00".
-        /// El precio es obligatorio y debe ser mayor a 0.
-        /// </summary>
         public static bool ValidarPrecioServicio(string texto, out decimal precio)
         {
             precio = 0;
@@ -264,7 +177,6 @@ namespace Login.Clases
                 return false;
             }
 
-            // Manejar múltiples puntos (ej: 1.500.00 → 1500.00)
             int conteoPuntos = limpio.Count(f => f == '.');
             if (conteoPuntos > 1)
             {
@@ -298,9 +210,6 @@ namespace Login.Clases
         // REPUESTOS
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Advierte si no se agregó ningún repuesto a la orden (no bloquea, solo avisa).
-        /// </summary>
         public static bool ConfirmarOrdenSinRepuestos(int cantidadRepuestos)
         {
             if (cantidadRepuestos == 0)
@@ -315,9 +224,6 @@ namespace Login.Clases
             return true;
         }
 
-        /// <summary>
-        /// Valida que al menos un repuesto esté marcado como incluido si existen repuestos.
-        /// </summary>
         public static bool ValidarAlMenosUnRepuestoIncluido(
             System.Collections.Generic.IEnumerable<dynamic> repuestos)
         {
@@ -347,23 +253,15 @@ namespace Login.Clases
         // OBSERVACIONES
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que las observaciones no superen el límite de caracteres
-        /// y no contengan caracteres repetidos excesivamente.
-        /// </summary>
         public static bool ValidarObservaciones(string texto)
         {
-            if (string.IsNullOrWhiteSpace(texto)) return true; // Las observaciones son opcionales
+            if (string.IsNullOrWhiteSpace(texto)) return true;
 
+            if (!clsValidaciones.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;    
+            if (!clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false;   
+            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(texto.Trim(), "observaciones")) return false; 
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
-
-            if (texto.Length > 500)
-            {
-                MessageBox.Show("⚠ Las observaciones no pueden superar los 500 caracteres.\n\n" +
-                                $"Caracteres actuales: {texto.Length} / 500",
-                    "Texto demasiado largo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
+            if (!clsValidaciones.ValidarLongitudMaxima(texto, 500, "observaciones")) return false;
 
             return true;
         }
@@ -372,12 +270,9 @@ namespace Login.Clases
         // FOTO
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que el archivo de foto seleccionado exista y tenga extensión permitida.
-        /// </summary>
         public static bool ValidarFoto(string rutaFoto)
         {
-            if (string.IsNullOrEmpty(rutaFoto)) return true; // La foto es opcional
+            if (string.IsNullOrEmpty(rutaFoto)) return true;
 
             if (!System.IO.File.Exists(rutaFoto))
             {
@@ -415,16 +310,14 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
-        // VALIDACIÓN COMPLETA — AÑADIR ORDEN
+        // VALIDACIÓN COMPLETA 
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Ejecuta todas las validaciones necesarias para GUARDAR una nueva orden.
-        /// </summary>
-        public static bool ValidarFormularioAñadir(
+        private static bool ValidarFormulario(
             string clienteDNI,
             string vehiculoPlaca,
             object estadoSeleccionado,
+            object prioridadSeleccionada,
             DateTime? fechaInicio,
             DateTime? fechaEntrega,
             string precioServicioTexto,
@@ -438,6 +331,7 @@ namespace Login.Clases
             if (!ValidarClienteAsignado(clienteDNI)) return false;
             if (!ValidarVehiculoAsignado(vehiculoPlaca)) return false;
             if (!ValidarEstadoOrden(estadoSeleccionado)) return false;
+            if (!ValidarPrioridad(prioridadSeleccionada)) return false;
             if (!ValidarFechaInicio(fechaInicio)) return false;
             if (!ValidarFechaEntrega(fechaInicio, fechaEntrega)) return false;
             if (!ValidarPrecioServicio(precioServicioTexto, out precioServicio)) return false;
@@ -449,29 +343,61 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
-        // VALIDACIÓN COMPLETA — ACTUALIZAR ORDEN
+        // VALIDACIÓN COMPLETA — AÑADIR ORDEN
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Ejecuta todas las validaciones necesarias para ACTUALIZAR una orden existente.
-        /// </summary>
-        public static bool ValidarFormularioActualizar(
+        public static bool ValidarFormularioAñadir(
+            string clienteDNI,
+            string vehiculoPlaca,
+            object estadoSeleccionado,
+            object prioridadSeleccionada,
             DateTime? fechaInicio,
             DateTime? fechaEntrega,
             string precioServicioTexto,
             string observaciones,
             string rutaFoto,
+            int cantidadRepuestos,
             out decimal precioServicio)
         {
-            precioServicio = 0;
+            return ValidarFormulario(
+                clienteDNI, vehiculoPlaca,
+                estadoSeleccionado, prioridadSeleccionada,
+                fechaInicio, fechaEntrega,
+                precioServicioTexto, observaciones,
+                rutaFoto, cantidadRepuestos,
+                out precioServicio);
+        }
 
-            if (!ValidarMesActualizacion(fechaInicio)) return false;
-            if (!ValidarFechaEntrega(fechaInicio, fechaEntrega)) return false;
-            if (!ValidarPrecioServicio(precioServicioTexto, out precioServicio)) return false;
-            if (!ValidarObservaciones(observaciones)) return false;
-            if (!ValidarFoto(rutaFoto)) return false;
+        // ─────────────────────────────────────────────────────────────
+        // VALIDACIÓN COMPLETA — ACTUALIZAR ORDEN
+        // ─────────────────────────────────────────────────────────────
 
-            return true;
+        public static bool ValidarFormularioActualizar(
+            string clienteDNI,
+            string vehiculoPlaca,
+            object estadoSeleccionado,
+            object prioridadSeleccionada,
+            DateTime? fechaInicio,
+            DateTime? fechaEntrega,
+            string precioServicioTexto,
+            string observaciones,
+            string rutaFoto,
+            int cantidadRepuestos,
+            out decimal precioServicio)
+        {
+            if (!ValidarMesActualizacion(fechaInicio))
+            {
+                precioServicio = 0;
+                return false;
+            }
+
+            return ValidarFormulario(
+                clienteDNI, vehiculoPlaca,
+                estadoSeleccionado, prioridadSeleccionada,
+                fechaInicio, fechaEntrega,
+                precioServicioTexto, observaciones,
+                rutaFoto, cantidadRepuestos,
+                out precioServicio);
         }
     }
 }

@@ -262,14 +262,10 @@ namespace Contabilidad
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
 
-            if (_esEdicion)
-            {
-                MessageBox.Show("⚠ No se puede modificar un pago directamente.\nPara cambiar el monto, edita la orden de trabajo correspondiente.",
-                    "Operación no permitida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (!clsValidacionesContabilidad.ValidarFormularioVacio(
+                   dni, ordenStr)) return;
 
-            if (!clsValidacionesContabilidad.ValidarDNIBusqueda(dni)) return;
+            if (!clsValidacionesContabilidad.ValidarClienteBuscado(dni, txtNombre.Text)) return;
             if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "⚠ Busca un cliente válido antes de guardar.", MostrarMensaje)) return;
             if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
 

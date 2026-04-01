@@ -253,23 +253,25 @@ namespace Login.Clases
         }
 
         public bool ActualizarCliente(string dniOriginal, string nombres, string apellidos,
-                               string telefono, string email, string direccion,
-                               bool activo, string nuevoDni = null)
+                string telefono, string email, string direccion,
+                bool activo, string nuevoDni = null)
         {
             string dniAGuardar = string.IsNullOrEmpty(nuevoDni) ? dniOriginal : nuevoDni;
 
             try
             {
+                _conexion.Abrir();
+
                 string sql = @"
-            UPDATE Cliente SET
-                Cliente_DNI               = @NuevoDNI,
-                Cliente_Nombres           = @Nombres,
-                Cliente_Apellidos         = @Apellidos,
-                Cliente_TelefonoPrincipal = @Telefono,
-                Cliente_Email             = @Email,
-                Cliente_Direccion         = @Direccion,
-                Cliente_Activo            = @Activo
-            WHERE Cliente_DNI = @DNIOriginal";
+                    UPDATE Cliente SET
+                        Cliente_DNI               = @NuevoDNI,
+                        Cliente_Nombres           = @Nombres,
+                        Cliente_Apellidos         = @Apellidos,
+                        Cliente_TelefonoPrincipal = @Telefono,
+                        Cliente_Email             = @Email,
+                        Cliente_Direccion         = @Direccion,
+                        Cliente_Activo            = @Activo
+                    WHERE Cliente_DNI = @DNIOriginal";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
@@ -282,9 +284,41 @@ namespace Login.Clases
                 cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(direccion)
                     ? (object)DBNull.Value : direccion.Trim());
                 cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
-
-                _conexion.Abrir();
                 cmd.ExecuteNonQuery();
+
+                if (dniAGuardar != dniOriginal)
+                {
+                    string sqlVehiculos = @"
+                        UPDATE Vehiculo 
+                        SET Cliente_DNI = @NuevoDNI 
+                        WHERE Cliente_DNI = @DNIOriginal";
+
+                    SqlCommand cmdVeh = new SqlCommand(sqlVehiculos, _conexion.SqlC);
+                    cmdVeh.Parameters.AddWithValue("@NuevoDNI", dniAGuardar);
+                    cmdVeh.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
+                    cmdVeh.ExecuteNonQuery();
+
+                    string sqlOrdenes = @"
+                        UPDATE Orden_Trabajo 
+                        SET Cliente_DNI = @NuevoDNI 
+                        WHERE Cliente_DNI = @DNIOriginal";
+
+                    SqlCommand cmdOrd = new SqlCommand(sqlOrdenes, _conexion.SqlC);
+                    cmdOrd.Parameters.AddWithValue("@NuevoDNI", dniAGuardar);
+                    cmdOrd.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
+                    cmdOrd.ExecuteNonQuery();
+
+                    string sqlPagos = @"
+                        UPDATE Contabilidad_Pago 
+                        SET Cliente_DNI = @NuevoDNI 
+                        WHERE Cliente_DNI = @DNIOriginal";
+
+                    SqlCommand cmdPag = new SqlCommand(sqlPagos, _conexion.SqlC);
+                    cmdPag.Parameters.AddWithValue("@NuevoDNI", dniAGuardar);
+                    cmdPag.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
+                    cmdPag.ExecuteNonQuery();
+                }
+
                 return true;
             }
             catch (Exception ex)
@@ -1075,9 +1109,9 @@ namespace Login.Clases
         }
 
         public bool ActualizarOrden(int ordenID, string estado, DateTime fecha,
-                                     DateTime? fechaEntrega, string observaciones,
-                                     decimal precioServicio, decimal total, string foto,
-                                     List<RepuestoOrden> repuestos)
+                              DateTime? fechaEntrega, string observaciones,
+                              decimal precioServicio, decimal total, string foto,
+                              List<RepuestoOrden> repuestos)
         {
             try
             {
@@ -1104,6 +1138,16 @@ namespace Login.Clases
 
                 _conexion.Abrir();
                 cmd.ExecuteNonQuery();
+
+                string sqlPago = @"
+                    UPDATE Contabilidad_Pago
+                    SET Precio_Pago = @Total
+                    WHERE Orden_ID = @OrdenID";
+
+                SqlCommand cmdPago = new SqlCommand(sqlPago, _conexion.SqlC);
+                cmdPago.Parameters.AddWithValue("@Total", total);
+                cmdPago.Parameters.AddWithValue("@OrdenID", ordenID);
+                cmdPago.ExecuteNonQuery();
 
                 SqlCommand cmdDel = new SqlCommand("DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", _conexion.SqlC);
                 cmdDel.Parameters.AddWithValue("@OrdenID", ordenID);

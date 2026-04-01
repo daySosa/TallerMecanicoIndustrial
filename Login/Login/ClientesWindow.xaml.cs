@@ -24,6 +24,22 @@ namespace InterfazClientes
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
+        private void txtNombre_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$");
+        }
+
+        private void txtApellido_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$");
+        }
+
+        private void txtDireccion_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.\(\)\/]+$");
+        }
+
+
         private void txtTelefono_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Regex.IsMatch(e.Text, @"^\d+$"))
@@ -109,19 +125,14 @@ namespace InterfazClientes
 
         private bool ValidarCampos(string dni, string telefonoLimpio)
         {
-            if (!clsValidacionesClientes.ValidarDNIHondureño(dni)) return false;
+            if (!clsValidacionesClientes.ValidarFormularioVacio(
+                dni, txtNombre.Text, txtApellido.Text,
+                telefonoLimpio, txtDireccion.Text)) return false;
 
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del cliente")) return false;
-            if (!clsValidaciones.ValidarTextoRequerido(txtApellido.Text, "apellido del cliente")) return false;
-            if (!clsValidaciones.ValidarSoloLetras(txtNombre.Text, "nombre")) return false;
-            if (!clsValidaciones.ValidarSoloLetras(txtApellido.Text, "apellido")) return false;
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtNombre.Text.Trim(), "nombre")) return false;
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtApellido.Text.Trim(), "apellido")) return false;
-            if (!clsValidaciones.Telefono(telefonoLimpio)) return false;
-            if (!clsValidaciones.ValidarTelefono(telefonoLimpio, 8)) return false;
-            if(!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) return false;
+            if (!clsValidacionesClientes.ValidarDNIHondureño(dni)) return false;
             if (!clsValidacionesClientes.ValidarLongitudNombre(txtNombre.Text, "nombre")) return false;
             if (!clsValidacionesClientes.ValidarLongitudNombre(txtApellido.Text, "apellido")) return false;
+            if (!clsValidaciones.Telefono(telefonoLimpio)) return false;
             if (!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) return false;
             if (!clsValidacionesClientes.ValidarDireccion(txtDireccion.Text)) return false;
 

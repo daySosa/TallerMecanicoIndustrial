@@ -105,7 +105,7 @@ namespace Contabilidad
         /// </summary>
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio.Text = clsValidaciones.FormatearPrecio(txtPrecio.Text);
+            txtPrecio.Text = clsValidacionesContabilidad.FormatearPrecioGasto(txtPrecio.Text);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Contabilidad
         /// </summary>
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio.Text = clsValidaciones.LimpiarPrefijoPrecio(txtPrecio.Text);
+            txtPrecio.Text = clsValidacionesContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
@@ -123,12 +123,13 @@ namespace Contabilidad
         /// </summary>
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidaciones.ValidarComboSeleccionado(cmbTipoGasto.SelectedItem, "tipo de gasto")) return;
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del gasto")) return;
+            if (!clsValidacionesContabilidad.ValidarFormularioVacio(
+                    txtNombre.Text, txtPrecio.Text, txtFecha.Text)) return;
+
+            if (!clsValidacionesContabilidad.ValidarCategoriaSeleccionada(cmbTipoGasto.SelectedItem)) return;
             if (!clsValidacionesContabilidad.ValidarNombreGasto(txtNombre.Text)) return;
-            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out decimal precio)) return;
-            if (!clsValidaciones.ValidarFecha(txtFecha.Text, out DateTime fechaFinal)) return;
-            // Observaciones son opcionales, solo validar longitud si tiene contenido
+            if (!clsValidacionesContabilidad.ValidarPrecioGasto(txtPrecio.Text, out decimal precio)) return;
+            if (!clsValidacionesContabilidad.ValidarFechaGasto(txtFecha.Text, out DateTime fechaFinal)) return;
             if (!clsValidacionesContabilidad.ValidarObservaciones(txtObservaciones.Text)) return;
 
             try

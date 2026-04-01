@@ -6,6 +6,15 @@ namespace Login.Clases
     public class clsValidacionesVehiculo
     {
         // ─────────────────────────────────────────────────────────────
+        // FORMULARIO VACÍO
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarFormularioVacio(params string[] campos)
+        {
+            return clsValidaciones.ValidarFormularioVacio(campos);
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // PLACA
         // ─────────────────────────────────────────────────────────────
 
@@ -16,47 +25,90 @@ namespace Login.Clases
 
         public static bool ValidarPlacaSoloAlfanumerico(string placa)
         {
-            if (!Regex.IsMatch(placa.Trim(), @"^[A-Za-z0-9]+$"))
-            {
-                MessageBox.Show("⚠ La placa solo puede contener letras y números, sin espacios ni caracteres especiales.",
-                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
+            return clsValidaciones.ValidarPlaca(placa);
         }
 
         public static bool ValidarLongitudPlaca(string placa)
         {
-            string p = placa.Trim().ToUpper();
-            if (p.Length < 6 || p.Length > 7)
+            if (!clsValidaciones.ValidarLongitudMaxima(placa.Trim(), 7, "placa"))
+                return false;
+
+            if (placa.Trim().Length < 6)
             {
-                MessageBox.Show("⚠ La placa debe tener entre 6 y 7 caracteres (ej: ABC1234 o AB1234).",
+                MessageBox.Show(
+                    "⚠ La placa debe tener entre 6 y 7 caracteres.\n\n" +
+                    "  • Moto:   6 caracteres (ej: GBA123)\n" +
+                    "  • Carro:  7 caracteres (ej: GHA1234)\n" +
+                    "  • Camión: 7 caracteres (ej: GCA123A)",
                     "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
             return true;
         }
 
-        public static bool ValidarFormatoPlacaHondureña(string placa)
+        public static bool ValidarFormatoPlacaSegunTipo(string placa, string tipo)
         {
             string p = placa.Trim().ToUpper();
 
-            bool formatoTurismo = Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$");
-            bool formatoMoto = Regex.IsMatch(p, @"^[A-Z]{1,2}\d{4}$");
-            bool formatoCamion = Regex.IsMatch(p, @"^[A-Z]{1,3}\d{3,4}[A-Z]$");
+            bool formatoCarro = Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$");
+            bool formatoMoto = Regex.IsMatch(p, @"^[A-Z]{2}\d{4}$");
+            bool formatoCamion = Regex.IsMatch(p, @"^[A-Z]{3}\d{3}[A-Z]$");
 
-            if (!formatoTurismo && !formatoMoto && !formatoCamion)
+            if (string.IsNullOrWhiteSpace(tipo))
             {
-                MessageBox.Show(
-                    "⚠ Formato de placa no reconocido.\n\n" +
-                    "Formatos válidos en Honduras:\n" +
-                    "  • Turismo / Pickup / Camioneta:  ABC1234\n" +
-                    "  • Motocicleta / MotoTaxi:        A1234  o  AB1234\n" +
-                    "  • Camiones / especiales:         ABC1234A",
-                    "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                if (formatoCarro || formatoMoto || formatoCamion) return true;
+
+                string msg = p.Length == 6
+                    ? "⚠ Formato de placa de motocicleta incorrecto.\n\nFormato válido:\n  • 2 letras + 4 dígitos: GBA1234"
+                    : p.Length == 7 && char.IsDigit(p[6])
+                        ? "⚠ Formato de placa de carro incorrecto.\n\nFormato válido:\n  • 3 letras + 4 dígitos: GHA1234"
+                        : p.Length == 7 && char.IsLetter(p[6])
+                            ? "⚠ Formato de placa de camión incorrecto.\n\nFormato válido:\n  • 3 letras + 3 dígitos + 1 letra: GCA123A"
+                            : "⚠ Formato de placa no reconocido.\n\nFormatos válidos en Honduras:\n" +
+                              "  • Carro:  3 letras + 4 dígitos:           GHA1234\n" +
+                              "  • Moto:   2 letras + 4 dígitos:           GBA1234\n" +
+                              "  • Camión: 3 letras + 3 dígitos + 1 letra: GCA123A";
+
+                MessageBox.Show(msg, "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
-            return true;
+
+            switch (tipo)
+            {
+                case "Turismo":
+                case "Pickup":
+                case "Camioneta":
+                    if (formatoCarro) return true;
+                    MessageBox.Show(
+                        $"⚠ Formato de placa incorrecto para {tipo}.\n\nFormato válido:\n  • 3 letras + 4 dígitos: GHA1234",
+                        "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+
+                case "Motocicleta":
+                case "MotoTaxi":
+                    if (formatoMoto) return true;
+                    MessageBox.Show(
+                        $"⚠ Formato de placa incorrecto para {tipo}.\n\nFormato válido:\n  • 2 letras + 4 dígitos: GBA1234",
+                        "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+
+                case "Camión":
+                    if (formatoCamion) return true;
+                    MessageBox.Show(
+                        $"⚠ Formato de placa incorrecto para {tipo}.\n\nFormato válido:\n  • 3 letras + 3 dígitos + 1 letra: GCA123A",
+                        "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+
+                default:
+                    if (formatoCarro || formatoMoto || formatoCamion) return true;
+                    MessageBox.Show(
+                        "⚠ Formato de placa no reconocido.\n\nFormatos válidos en Honduras:\n" +
+                        "  • Carro:  3 letras + 4 dígitos:           GHA1234\n" +
+                        "  • Moto:   2 letras + 4 dígitos:           GBA1234\n" +
+                        "  • Camión: 3 letras + 3 dígitos + 1 letra: GCA123A",
+                        "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+            }
         }
 
         public static bool ValidarPlacaNoReservada(string placa)
@@ -68,7 +120,8 @@ namespace Login.Clases
             {
                 if (p.Contains(r))
                 {
-                    MessageBox.Show($"⚠ La placa '{p}' contiene una combinación reservada o no permitida.",
+                    MessageBox.Show(
+                        $"⚠ La placa '{p}' contiene una combinación reservada o no permitida.",
                         "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
@@ -80,12 +133,14 @@ namespace Login.Clases
         {
             if (existeEnBD(placa.Trim().ToUpper()))
             {
-                MessageBox.Show($"⚠ La placa '{placa.Trim().ToUpper()}' ya está registrada en el sistema.",
+                MessageBox.Show(
+                    $"⚠ La placa '{placa.Trim().ToUpper()}' ya está registrada en el sistema.",
                     "Placa duplicada", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
             return true;
         }
+
 
         // ─────────────────────────────────────────────────────────────
         // MARCA
@@ -93,16 +148,12 @@ namespace Login.Clases
 
         public static bool ValidarMarca(string marca)
         {
-            if (!clsValidaciones.ValidarTextoRequerido(marca, "marca del vehículo"))
-                return false;
-
-            if (!clsValidaciones.ValidarIniciaConLetra(marca.Trim(), "marca"))
-                return false;
-
-            if (!clsValidaciones.ValidarLongitudMaxima(marca.Trim(), 50, "marca"))
-                return false;
-
-            return true;
+            return clsValidaciones.ValidarTextoRequerido(marca, "marca del vehículo")
+                && clsValidaciones.ValidarNoEsSoloNumeros(marca.Trim(), "marca")
+                && clsValidaciones.ValidarIniciaConLetra(marca.Trim(), "marca")
+                && clsValidaciones.ValidarTextoConCaracteresPermitidos(marca.Trim(), "marca") 
+                && clsValidaciones.ValidarSinRepeticionExcesiva(marca.Trim(), "marca")
+                && clsValidaciones.ValidarLongitudMaxima(marca.Trim(), 50, "marca");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -111,22 +162,12 @@ namespace Login.Clases
 
         public static bool ValidarModelo(string modelo)
         {
-            if (!clsValidaciones.ValidarTextoRequerido(modelo, "modelo del vehículo"))
-                return false;
-
-            if (!clsValidaciones.ValidarIniciaConLetra(modelo.Trim(), "modelo"))
-                return false;
-
-            if (!clsValidaciones.ValidarLongitudMaxima(modelo.Trim(), 80, "modelo"))
-                return false;
-
-            if (!Regex.IsMatch(modelo.Trim(), @"^[a-zA-Z0-9\s\-\.\(\)\/]+$"))
-            {
-                MessageBox.Show("⚠ El modelo contiene caracteres no permitidos.",
-                    "Modelo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
+            return clsValidaciones.ValidarTextoRequerido(modelo, "modelo del vehículo")
+                && clsValidaciones.ValidarNoEsSoloNumeros(modelo.Trim(), "modelo")
+                && clsValidaciones.ValidarIniciaConLetra(modelo.Trim(), "modelo")
+                && clsValidaciones.ValidarTextoConCaracteresPermitidos(modelo.Trim(), "modelo") 
+                && clsValidaciones.ValidarSinRepeticionExcesiva(modelo.Trim(), "modelo")
+                && clsValidaciones.ValidarLongitudMaxima(modelo.Trim(), 80, "modelo");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -136,36 +177,9 @@ namespace Login.Clases
         public static bool ValidarAnioVehiculo(string texto, out int año)
         {
             año = 0;
-
-            if (!clsValidaciones.ValidarTextoRequerido(texto, "año del vehículo"))
-                return false;
-
-            if (!clsValidaciones.ValidarAnioFormato(texto))
-                return false;
-
-            if (!int.TryParse(texto.Trim(), out año))
-            {
-                MessageBox.Show("⚠ El año ingresado no es válido.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            int añoActual = DateTime.Now.Year;
-
-            if (año < 1900)
-            {
-                MessageBox.Show("⚠ El año no puede ser anterior a 1900.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (año > añoActual + 1)
-            {
-                MessageBox.Show($"⚠ El año no puede ser mayor a {añoActual + 1}.",
-                    "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
+            return clsValidaciones.ValidarTextoRequerido(texto, "año del vehículo")
+                && clsValidaciones.ValidarAnioFormato(texto)
+                && clsValidaciones.ValidarAnio(texto, out año);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -177,58 +191,30 @@ namespace Login.Clases
             return clsValidaciones.ValidarComboSeleccionado(itemSeleccionado, "tipo de vehículo");
         }
 
-        public static bool ValidarCoherenciaPlacaTipo(string placa, string tipo)
-        {
-            string p = placa.Trim().ToUpper();
-
-            bool esMoto = tipo == "Motocicleta" || tipo == "MotoTaxi";
-
-            if (!esMoto && Regex.IsMatch(p, @"^[A-Z]{1,2}\d{4}$"))
-            {
-                var res = MessageBox.Show(
-                    $"⚠ La placa '{p}' tiene formato de motocicleta (1-2 letras + 4 dígitos)\n" +
-                    $"pero el tipo seleccionado es '{tipo}'.\n\n¿Deseas continuar de todas formas?",
-                    "Advertencia de coherencia", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                return res == MessageBoxResult.Yes;
-            }
-
-            if (esMoto && Regex.IsMatch(p, @"^[A-Z]{3}\d{4}$"))
-            {
-                var res = MessageBox.Show(
-                    $"⚠ La placa '{p}' tiene formato de turismo/pickup (3 letras + 4 dígitos)\n" +
-                    $"pero el tipo seleccionado es '{tipo}'.\n\n¿Deseas continuar de todas formas?",
-                    "Advertencia de coherencia", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                return res == MessageBoxResult.Yes;
-            }
-            return true;
-        }
-
         // ─────────────────────────────────────────────────────────────
         // OBSERVACIONES
         // ─────────────────────────────────────────────────────────────
 
         public static bool ValidarObservaciones(string texto)
         {
-            if (string.IsNullOrEmpty(texto)) return true;
-
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
-            if (!clsValidaciones.ValidarLongitudMaxima(texto, 500, "observaciones")) return false;
-
-            return true;
+            if (string.IsNullOrWhiteSpace(texto)) return true;
+            return clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")
+                && clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")
+                && clsValidaciones.ValidarLongitudMaxima(texto.Trim(), 500, "observaciones");
         }
 
         // ─────────────────────────────────────────────────────────────
         // CLIENTE / DNI
         // ─────────────────────────────────────────────────────────────
 
-        public static bool ValidarClienteDNI(string dni)
+        public static bool ValidarClienteDNI(string textoDNI, string clienteVerificado)
         {
-            return clsValidaciones.ValidarClienteEncontrado(dni);
+            return clsValidaciones.ValidarClienteDNI(textoDNI, clienteVerificado);
         }
 
-        public static bool ValidarPlacaRequerida(string placa)
+        public static bool ValidarFormatoDNICliente(string dni)
         {
-            return clsValidaciones.ValidarTextoRequerido(placa, "placa del vehículo");
+            return clsValidaciones.ValidarFormatoDNI(dni);
         }
     }
 }
