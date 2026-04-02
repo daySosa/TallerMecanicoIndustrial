@@ -170,7 +170,7 @@ namespace InterfazInventario
             txtNombre.Text = producto.Producto_Nombre;
             txtMarca.Text = producto.Producto_Marca;
             txtModelo.Text = producto.Producto_Modelo == "—" ? "" : producto.Producto_Modelo;
-            txtPrecio.Text = producto.Producto_Precio.ToString("N2");
+            txtPrecio.Text = "L " + producto.Producto_Precio.ToString("N2");
 
             txtCantidad.Text = "0";
             txtStockActual.Text = producto.Producto_Cantidad_Actual.ToString();
@@ -211,7 +211,7 @@ namespace InterfazInventario
             if (!clsValidaciones.ValidarIniciaConLetra(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtNombre.Text, "nombre del producto")) // ── NUEVO
+            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtNombre.Text, "nombre del producto")) 
             { txtNombre.Focus(); return false; }
 
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtNombre.Text, "nombre del producto"))
@@ -230,7 +230,7 @@ namespace InterfazInventario
             if (!clsValidaciones.ValidarIniciaConLetra(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtMarca.Text, "marca")) // ── NUEVO
+            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtMarca.Text, "marca")) 
             { txtMarca.Focus(); return false; }
 
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtMarca.Text, "marca"))
@@ -248,7 +248,7 @@ namespace InterfazInventario
                 if (!clsValidaciones.ValidarIniciaConLetra(txtModelo.Text, "modelo"))
                 { txtModelo.Focus(); return false; }
 
-                if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtModelo.Text, "modelo")) // ── NUEVO
+                if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtModelo.Text, "modelo")) 
                 { txtModelo.Focus(); return false; }
 
                 if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtModelo.Text, "modelo"))
@@ -257,6 +257,9 @@ namespace InterfazInventario
                 if (!clsValidaciones.ValidarLongitudMaxima(txtModelo.Text, 80, "modelo"))
                 { txtModelo.Focus(); return false; }
             }
+            // ── PRECIO ────────────────────────────────────────────
+            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out precio))
+            { txtPrecio.Focus(); return false; }
 
             return true;
         }
