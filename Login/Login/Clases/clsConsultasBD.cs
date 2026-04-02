@@ -1109,64 +1109,90 @@ namespace Login.Clases
         }
 
         public bool ActualizarOrden(int ordenID, string estado, DateTime fecha,
-                              DateTime? fechaEntrega, string observaciones,
-                              decimal precioServicio, decimal total, string foto,
-                              List<RepuestoOrden> repuestos)
+              DateTime? fechaEntrega, string observaciones,
+              decimal precioServicio, decimal total, string foto,
+              List<RepuestoOrden> repuestos)
         {
+
+            var productosOriginales = ObtenerRepuestosOrden(ordenID)
+                .Select(r => r.ProductoID)
+                .ToHashSet();
+
             try
             {
+                _conexion.Abrir(); 
+
+
                 string sqlUpdate = @"
-                    UPDATE Orden_Trabajo SET
-                        Estado            = @Estado,
-                        Fecha             = @Fecha,
-                        Fecha_Entrega     = @FechaEntrega,
-                        Observaciones     = @Observaciones,
-                        Servicio_Precio   = @ServicioPrecio,
-                        OrdenPrecio_Total = @Total,
-                        Adjuntos_Fotos    = @Foto
-                    WHERE Orden_ID = @OrdenID";
+            UPDATE Orden_Trabajo SET
+                Estado            = @Estado,
+                Fecha             = @Fecha,
+                Fecha_Entrega     = @FechaEntrega,
+                Observaciones     = @Observaciones,
+                Servicio_Precio   = @ServicioPrecio,
+                OrdenPrecio_Total = @Total,
+                Adjuntos_Fotos    = @Foto
+            WHERE Orden_ID = @OrdenID";
 
                 SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Estado", estado);
                 cmd.Parameters.AddWithValue("@Fecha", fecha);
-                cmd.Parameters.AddWithValue("@FechaEntrega", fechaEntrega.HasValue ? (object)fechaEntrega.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones) ? (object)DBNull.Value : observaciones.Trim());
+                cmd.Parameters.AddWithValue("@FechaEntrega",
+                    fechaEntrega.HasValue ? (object)fechaEntrega.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Observaciones",
+                    string.IsNullOrWhiteSpace(observaciones) ? (object)DBNull.Value : observaciones.Trim());
                 cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
                 cmd.Parameters.AddWithValue("@Total", total);
-                cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(foto) ? (object)DBNull.Value : foto);
+                cmd.Parameters.AddWithValue("@Foto",
+                    string.IsNullOrEmpty(foto) ? (object)DBNull.Value : foto);
                 cmd.Parameters.AddWithValue("@OrdenID", ordenID);
-
-                _conexion.Abrir();
                 cmd.ExecuteNonQuery();
 
+
                 string sqlPago = @"
-                    UPDATE Contabilidad_Pago
-                    SET Precio_Pago = @Total
-                    WHERE Orden_ID = @OrdenID";
+            UPDATE Contabilidad_Pago
+            SET Precio_Pago = @Total
+            WHERE Orden_ID = @OrdenID";
 
                 SqlCommand cmdPago = new SqlCommand(sqlPago, _conexion.SqlC);
                 cmdPago.Parameters.AddWithValue("@Total", total);
                 cmdPago.Parameters.AddWithValue("@OrdenID", ordenID);
                 cmdPago.ExecuteNonQuery();
 
-                SqlCommand cmdDel = new SqlCommand("DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", _conexion.SqlC);
+
+                SqlCommand cmdDel = new SqlCommand(
+                    "DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", _conexion.SqlC);
                 cmdDel.Parameters.AddWithValue("@OrdenID", ordenID);
                 cmdDel.ExecuteNonQuery();
+
 
                 foreach (var rep in repuestos)
                 {
                     if (!rep.Incluido) continue;
-                    SqlCommand cmdRep = new SqlCommand("sp_AgregarRepuestoOrden", _conexion.SqlC);
+
+                    bool estabaAntes = productosOriginales.Contains(rep.ProductoID);
+                    string spNombre = estabaAntes
+                        ? "sp_ReinsertarRepuestoOrden"
+                        : "sp_AgregarRepuestoOrden";
+
+                    SqlCommand cmdRep = new SqlCommand(spNombre, _conexion.SqlC);
                     cmdRep.CommandType = CommandType.StoredProcedure;
                     cmdRep.Parameters.AddWithValue("@OrdenID", ordenID);
                     cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
                     cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
                     cmdRep.ExecuteNonQuery();
                 }
+
                 return true;
             }
-            catch (Exception ex) { throw new Exception("Error al actualizar: " + ex.Message); }
-            finally { _conexion.Cerrar(); }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al actualizar: " + ex.Message);
+            }
+            finally
+            {
+                _conexion.Cerrar();
+            }
         }
 
         public (string nombre, bool existe) VerificarClienteDNI(string dni)
@@ -1290,5 +1316,6 @@ namespace Login.Clases
             }
             finally { _conexion.Cerrar(); }
         }
+
     }
 }
