@@ -17,6 +17,32 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
+        // CAMPOS DUPLICADOS
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarDNINoDuplicado(string dni, string dniActual, clsConsultasBD db)
+        {
+            if (db.ExisteDNIEnOtroCliente(dni, dniActual))
+            {
+                MessageBox.Show("⚠ Este DNI ya está registrado en otro cliente.",
+                    "DNI duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool ValidarTelefonoNoDuplicado(string telefono, string dniActual, clsConsultasBD db)
+        {
+            if (db.ExisteTelefonoEnOtroCliente(telefono, dniActual))
+            {
+                MessageBox.Show("⚠ Este número de teléfono ya está registrado en otro cliente.",
+                    "Teléfono duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // DICCIONARIOS — departamentos y municipios de Honduras
         // ─────────────────────────────────────────────────────────────
 
@@ -260,7 +286,6 @@ namespace Login.Clases
                 && clsValidaciones.ValidarNoEsSoloNumeros(direccion.Trim(), "dirección")
                 && clsValidaciones.ValidarIniciaConLetra(direccion.Trim(), "dirección")
                 && clsValidaciones.ValidarSinRepeticionExcesiva(direccion.Trim(), "dirección")
-                && clsValidaciones.ValidarTextoConCaracteresPermitidos(direccion.Trim(), "dirección") 
                 && clsValidaciones.ValidarLongitudMaxima(direccion.Trim(), 150, "dirección");
         }
     }

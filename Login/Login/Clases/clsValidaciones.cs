@@ -229,17 +229,6 @@ namespace Login.Clases
             return true;
         }
 
-        public static bool ValidarTextoConCaracteresPermitidos(string texto, string nombreCampo)
-        {
-            if (!Regex.IsMatch(texto.Trim(), @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.\(\)\/]+$"))
-            {
-                MessageBox.Show($"⚠ El {nombreCampo} contiene caracteres no permitidos.",
-                    $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-            return true;
-        }
-
         // ─────────────────────────────────────────────────────────────
         // CORREO
         // ─────────────────────────────────────────────────────────────
@@ -290,6 +279,13 @@ namespace Login.Clases
             {
                 MessageBox.Show("El teléfono debe iniciar con 2, 3, 8 o 9.",
                     "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (tel.Distinct().Count() == 1)
+            {
+                MessageBox.Show("⚠ El teléfono no puede tener todos los dígitos iguales.",
+                    "Teléfono inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 

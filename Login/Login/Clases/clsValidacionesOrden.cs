@@ -257,9 +257,8 @@ namespace Login.Clases
         {
             if (string.IsNullOrWhiteSpace(texto)) return true;
 
-            if (!clsValidaciones.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;    
-            if (!clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false;   
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(texto.Trim(), "observaciones")) return false; 
+            if (!clsValidaciones.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;
+            if (!clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false;
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
             if (!clsValidaciones.ValidarLongitudMaxima(texto, 500, "observaciones")) return false;
 
@@ -324,7 +323,8 @@ namespace Login.Clases
             string observaciones,
             string rutaFoto,
             int cantidadRepuestos,
-            out decimal precioServicio)
+            out decimal precioServicio,
+            bool esActualizar = false)         
         {
             precioServicio = 0;
 
@@ -332,7 +332,7 @@ namespace Login.Clases
             if (!ValidarVehiculoAsignado(vehiculoPlaca)) return false;
             if (!ValidarEstadoOrden(estadoSeleccionado)) return false;
             if (!ValidarPrioridad(prioridadSeleccionada)) return false;
-            if (!ValidarFechaInicio(fechaInicio)) return false;
+            if (!esActualizar && !ValidarFechaInicio(fechaInicio)) return false;  
             if (!ValidarFechaEntrega(fechaInicio, fechaEntrega)) return false;
             if (!ValidarPrecioServicio(precioServicioTexto, out precioServicio)) return false;
             if (!ValidarObservaciones(observaciones)) return false;
@@ -397,7 +397,8 @@ namespace Login.Clases
                 fechaInicio, fechaEntrega,
                 precioServicioTexto, observaciones,
                 rutaFoto, cantidadRepuestos,
-                out precioServicio);
+                out precioServicio,
+                esActualizar: true);
         }
     }
 }

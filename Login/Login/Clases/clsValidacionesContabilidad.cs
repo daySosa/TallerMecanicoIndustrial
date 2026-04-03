@@ -34,7 +34,8 @@ namespace Login.Clases
             string limpio = texto.Trim();
 
             if (!clsValidaciones.ValidarTextoRequerido(limpio, "nombre del gasto")) return false;
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(limpio, "nombre del gasto")) return false;
+            if (!clsValidaciones.ValidarNoEsSoloNumeros(limpio, "nombre del gasto")) return false;
+            if (!clsValidaciones.ValidarIniciaConLetra(limpio, "nombre del gasto")) return false;
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(limpio, "nombre del gasto")) return false;
             if (!clsValidaciones.ValidarLongitudMaxima(limpio, 100, "nombre del gasto")) return false;
 
@@ -51,7 +52,6 @@ namespace Login.Clases
 
             if (!clsValidaciones.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;
             if (!clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false; 
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(texto.Trim(), "observaciones")) return false; 
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
             if (!clsValidaciones.ValidarLongitudMaxima(texto.Trim(), 300, "observaciones")) return false;
 

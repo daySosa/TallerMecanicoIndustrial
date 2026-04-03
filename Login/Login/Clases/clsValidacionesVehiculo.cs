@@ -151,7 +151,6 @@ namespace Login.Clases
             return clsValidaciones.ValidarTextoRequerido(marca, "marca del vehículo")
                 && clsValidaciones.ValidarNoEsSoloNumeros(marca.Trim(), "marca")
                 && clsValidaciones.ValidarIniciaConLetra(marca.Trim(), "marca")
-                && clsValidaciones.ValidarTextoConCaracteresPermitidos(marca.Trim(), "marca") 
                 && clsValidaciones.ValidarSinRepeticionExcesiva(marca.Trim(), "marca")
                 && clsValidaciones.ValidarLongitudMaxima(marca.Trim(), 50, "marca");
         }
@@ -165,7 +164,6 @@ namespace Login.Clases
             return clsValidaciones.ValidarTextoRequerido(modelo, "modelo del vehículo")
                 && clsValidaciones.ValidarNoEsSoloNumeros(modelo.Trim(), "modelo")
                 && clsValidaciones.ValidarIniciaConLetra(modelo.Trim(), "modelo")
-                && clsValidaciones.ValidarTextoConCaracteresPermitidos(modelo.Trim(), "modelo") 
                 && clsValidaciones.ValidarSinRepeticionExcesiva(modelo.Trim(), "modelo")
                 && clsValidaciones.ValidarLongitudMaxima(modelo.Trim(), 80, "modelo");
         }

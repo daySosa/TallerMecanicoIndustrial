@@ -327,6 +327,53 @@ namespace Login.Clases
             }
             finally { _conexion.Cerrar(); }
         }
+
+        public bool ExisteTelefonoEnOtroCliente(string telefono, string dniActual)
+        {
+            try
+            {
+                string query = @"
+            SELECT COUNT(1) FROM Cliente 
+            WHERE Cliente_TelefonoPrincipal = @Telefono 
+            AND Cliente_DNI <> @DNI";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Telefono", telefono);
+                cmd.Parameters.AddWithValue("@DNI", dniActual ?? "");
+
+                _conexion.Abrir();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al verificar teléfono: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool ExisteDNIEnOtroCliente(string dni, string dniActual)
+        {
+            try
+            {
+                string query = @"
+            SELECT COUNT(1) FROM Cliente 
+            WHERE Cliente_DNI = @DNI 
+            AND Cliente_DNI <> @DNIActual";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@DNI", dni);
+                cmd.Parameters.AddWithValue("@DNIActual", dniActual ?? "");
+
+                _conexion.Abrir();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al verificar DNI: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
         public DataRow ObtenerComprobantePago(int pagoId)
         {
             try
@@ -780,24 +827,31 @@ namespace Login.Clases
             try
             {
                 string query = @"
-                    SELECT
-                        o.Orden_ID,
-                        o.Cliente_DNI,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                        o.Vehiculo_Placa,
-                        o.Producto_ID,
-                        ISNULL(p.Producto_Nombre,   '—') AS Producto_Nombre,
-                        ISNULL(p.Producto_Categoria,'—') AS Producto_Categoria,
-                        o.Estado,
-                        o.Fecha,
-                        o.Fecha_Entrega,
-                        ISNULL(o.Observaciones, '') AS Observaciones,
-                        o.Servicio_Precio,
-                        o.OrdenPrecio_Total
-                    FROM  Orden_Trabajo o
-                    INNER JOIN Cliente c  ON o.Cliente_DNI = c.Cliente_DNI
-                    LEFT  JOIN Producto p ON o.Producto_ID = p.Producto_ID
-                    ORDER BY o.Orden_ID DESC";
+            SELECT
+                o.Orden_ID,
+                o.Cliente_DNI,
+                c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
+                o.Vehiculo_Placa,
+                ISNULL(
+                    (SELECT STRING_AGG(r.Repuesto_Nombre, ', ')
+                     FROM Orden_Repuesto r
+                     WHERE r.Orden_ID = o.Orden_ID),
+                '—') AS Producto_Nombre,
+                ISNULL(
+                    (SELECT STRING_AGG(p.Producto_Categoria, ', ')
+                     FROM Orden_Repuesto r
+                     INNER JOIN Producto p ON r.Producto_ID = p.Producto_ID
+                     WHERE r.Orden_ID = o.Orden_ID),
+                '—') AS Producto_Categoria,
+                o.Estado,
+                o.Fecha,
+                o.Fecha_Entrega,
+                ISNULL(o.Observaciones, '') AS Observaciones,
+                o.Servicio_Precio,
+                o.OrdenPrecio_Total
+                FROM  Orden_Trabajo o
+                INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
+                ORDER BY o.Orden_ID DESC";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();

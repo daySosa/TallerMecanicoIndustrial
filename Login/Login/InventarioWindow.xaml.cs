@@ -211,9 +211,6 @@ namespace InterfazInventario
             if (!clsValidaciones.ValidarIniciaConLetra(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtNombre.Text, "nombre del producto")) 
-            { txtNombre.Focus(); return false; }
-
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
@@ -230,9 +227,6 @@ namespace InterfazInventario
             if (!clsValidaciones.ValidarIniciaConLetra(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtMarca.Text, "marca")) 
-            { txtMarca.Focus(); return false; }
-
             if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
@@ -246,9 +240,6 @@ namespace InterfazInventario
                 { txtModelo.Focus(); return false; }
 
                 if (!clsValidaciones.ValidarIniciaConLetra(txtModelo.Text, "modelo"))
-                { txtModelo.Focus(); return false; }
-
-                if (!clsValidaciones.ValidarTextoConCaracteresPermitidos(txtModelo.Text, "modelo")) 
                 { txtModelo.Focus(); return false; }
 
                 if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtModelo.Text, "modelo"))

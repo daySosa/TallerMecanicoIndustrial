@@ -123,7 +123,7 @@ namespace InterfazClientes
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
-        private bool ValidarCampos(string dni, string telefonoLimpio)
+        private bool ValidarCampos(string dni, string telefonoLimpio, string dniActual = "")
         {
             if (!clsValidacionesClientes.ValidarFormularioVacio(
                 dni, txtNombre.Text, txtApellido.Text,
@@ -135,6 +135,8 @@ namespace InterfazClientes
             if (!clsValidaciones.Telefono(telefonoLimpio)) return false;
             if (!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) return false;
             if (!clsValidacionesClientes.ValidarDireccion(txtDireccion.Text)) return false;
+            if (!clsValidacionesClientes.ValidarDNINoDuplicado(dni, dniActual, db)) return false;
+            if (!clsValidacionesClientes.ValidarTelefonoNoDuplicado(telefonoLimpio, dniActual, db)) return false;
 
             return true;
         }
@@ -145,7 +147,7 @@ namespace InterfazClientes
 
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
-            if (!ValidarCampos(txtDPI.Text.Trim(), telefonoLimpio))
+            if (!ValidarCampos(txtDPI.Text.Trim(), telefonoLimpio, dniActual: ""))
             {
                 btnAgregar.IsEnabled = true;
                 return;
@@ -207,7 +209,7 @@ namespace InterfazClientes
             string nuevoDni = txtDPI.Text.Trim();
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
-            if (!ValidarCampos(nuevoDni, telefonoLimpio)) return;
+            if (!ValidarCampos(nuevoDni, telefonoLimpio, dniActual: _dniEditando)) return;
 
             try
             {
