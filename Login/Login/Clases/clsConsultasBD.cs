@@ -333,9 +333,9 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT COUNT(1) FROM Cliente 
-            WHERE Cliente_TelefonoPrincipal = @Telefono 
-            AND Cliente_DNI <> @DNI";
+                    SELECT COUNT(1) FROM Cliente 
+                    WHERE Cliente_TelefonoPrincipal = @Telefono 
+                    AND (@DNI = '' OR Cliente_DNI <> @DNI)";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Telefono", telefono);
@@ -356,9 +356,9 @@ namespace Login.Clases
             try
             {
                 string query = @"
-            SELECT COUNT(1) FROM Cliente 
-            WHERE Cliente_DNI = @DNI 
-            AND Cliente_DNI <> @DNIActual";
+                    SELECT COUNT(1) FROM Cliente 
+                    WHERE Cliente_DNI = @DNI 
+                    AND Cliente_DNI <> @DNIActual";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@DNI", dni);
