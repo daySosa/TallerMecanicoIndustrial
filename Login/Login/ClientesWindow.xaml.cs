@@ -6,12 +6,32 @@ using System.Windows.Media;
 
 namespace InterfazClientes
 {
+    /// <summary>
+    /// Ventana encargada del registro y actualización de clientes en el sistema.
+    /// Permite agregar nuevos clientes y editar los existentes con validaciones de formulario.
+    /// </summary>
     public partial class ClientesWindow : Window
     {
+        /// <summary>
+        /// DNI del cliente que se encuentra en edición actualmente.
+        /// Permanece vacío cuando se está registrando un nuevo cliente.
+        /// </summary>
         private string _dniEditando = string.Empty;
+
+        /// <summary>
+        /// Obtiene el cliente resultante luego de una operación exitosa de agregar o actualizar.
+        /// </summary>
         public clsCliente ClienteResultado { get; private set; }
+
+        /// <summary>
+        /// Instancia para consultas a la base de datos.
+        /// </summary>
         clsConsultasBD db = new clsConsultasBD();
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="ClientesWindow"/>.
+        /// Deshabilita el botón de actualizar al inicio, ya que se requiere cargar un cliente primero.
+        /// </summary>
         public ClientesWindow()
         {
             InitializeComponent();
@@ -19,27 +39,55 @@ namespace InterfazClientes
             btnActualizar.Opacity = 0.4;
         }
 
+        /// <summary>
+        /// Restringe el campo de DNI para aceptar únicamente caracteres numéricos.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de entrada de texto.</param>
         private void txtDPI_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
         }
 
+        /// <summary>
+        /// Restringe el campo de nombre para aceptar únicamente letras y espacios,
+        /// incluyendo caracteres especiales del español.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de entrada de texto.</param>
         private void txtNombre_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$");
         }
 
+        /// <summary>
+        /// Restringe el campo de apellido para aceptar únicamente letras y espacios,
+        /// incluyendo caracteres especiales del español.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de entrada de texto.</param>
         private void txtApellido_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$");
         }
 
+        /// <summary>
+        /// Restringe el campo de dirección para aceptar letras, números, espacios
+        /// y caracteres de puntuación comunes como guiones, puntos, comas y paréntesis.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de entrada de texto.</param>
         private void txtDireccion_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.\,\(\)\/]+$");
         }
 
-
+        /// <summary>
+        /// Restringe el campo de teléfono para aceptar únicamente dígitos
+        /// y limita la entrada a un máximo de 8 números.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de entrada de texto.</param>
         private void txtTelefono_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Regex.IsMatch(e.Text, @"^\d+$"))
@@ -53,6 +101,13 @@ namespace InterfazClientes
                 e.Handled = true;
         }
 
+        /// <summary>
+        /// Maneja el evento de cambio de texto en el campo de teléfono.
+        /// Aplica automáticamente el formato hondureño XXXX-XXXX y ajusta
+        /// la posición del cursor tras el formateo.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de cambio de texto.</param>
         private void txtTelefono_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             txtTelefono.TextChanged -= txtTelefono_TextChanged;
@@ -79,6 +134,11 @@ namespace InterfazClientes
             txtTelefono.TextChanged += txtTelefono_TextChanged;
         }
 
+        /// <summary>
+        /// Carga los datos de un cliente existente en el formulario para su edición.
+        /// Deshabilita el botón de agregar y habilita el de actualizar.
+        /// </summary>
+        /// <param name="c">Instancia de <see cref="clsCliente"/> con los datos a cargar.</param>
         public void CargarClienteParaEditar(clsCliente c)
         {
             _dniEditando = c.Cliente_DPI;
@@ -103,6 +163,12 @@ namespace InterfazClientes
             btnActualizar.Opacity = 1;
         }
 
+        /// <summary>
+        /// Maneja el evento de activación del toggle de estado del cliente.
+        /// Actualiza el texto e ícono del indicador visual al estado activo (verde).
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void ToggleActivo_Checked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -112,6 +178,12 @@ namespace InterfazClientes
             iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
         }
 
+        /// <summary>
+        /// Maneja el evento de desactivación del toggle de estado del cliente.
+        /// Actualiza el texto e ícono del indicador visual al estado inactivo (rojo).
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void ToggleActivo_Unchecked(object sender, RoutedEventArgs e)
         {
             if (txtEstadoLabel == null) return;
@@ -121,8 +193,24 @@ namespace InterfazClientes
             iconEstado.Kind = MaterialDesignThemes.Wpf.PackIconKind.CloseCircleOutline;
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón Cancelar.
+        /// Cierra la ventana sin guardar ningún cambio.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
+        /// <summary>
+        /// Ejecuta las validaciones del formulario antes de registrar o actualizar un cliente.
+        /// Verifica campos obligatorios, formatos, longitudes y duplicados en la base de datos.
+        /// </summary>
+        /// <param name="dni">DNI ingresado en el formulario.</param>
+        /// <param name="telefonoLimpio">Teléfono sin guiones ni espacios.</param>
+        /// <param name="dniActual">
+        /// DNI original del cliente en edición. Se envía vacío al registrar un nuevo cliente.
+        /// </param>
+        /// <returns><c>true</c> si todos los campos son válidos; de lo contrario, <c>false</c>.</returns>
         private bool ValidarCampos(string dni, string telefonoLimpio, string dniActual = "")
         {
             if (!clsValidacionesClientes.ValidarFormularioVacio(
@@ -141,6 +229,13 @@ namespace InterfazClientes
             return true;
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón Agregar.
+        /// Valida el formulario e inserta un nuevo cliente en la base de datos.
+        /// Cierra la ventana con <see cref="Window.DialogResult"/> en <c>true</c> si la operación es exitosa.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
             btnAgregar.IsEnabled = false;
@@ -197,6 +292,14 @@ namespace InterfazClientes
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón Actualizar.
+        /// Valida el formulario y actualiza los datos del cliente cargado en la base de datos.
+        /// Actualiza <see cref="_dniEditando"/> si el DNI fue modificado y cierra la ventana con
+        /// <see cref="Window.DialogResult"/> en <c>true</c> si la operación es exitosa.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void BtnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_dniEditando))

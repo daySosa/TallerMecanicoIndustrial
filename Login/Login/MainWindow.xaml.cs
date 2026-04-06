@@ -271,6 +271,9 @@ namespace Login
             }
         }
 
+        /// <summary>
+        /// Evento reservado para futuras validaciones dinámicas del correo.
+        /// </summary>
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
 

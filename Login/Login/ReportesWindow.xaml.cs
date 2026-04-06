@@ -21,7 +21,8 @@ namespace Login
         private string _modulo;
 
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="ReportesWindow"/>.
+        /// Inicializa una nueva instancia de <see cref="ReportesWindow"/>.
+        /// Establece el módulo activo y actualiza el título visible en la interfaz.
         /// </summary>
         /// <param name="modulo">Nombre del módulo (Clientes, Inventario, Vehículos, etc.).</param>
         public ReportesWindow(string modulo)
@@ -29,13 +30,14 @@ namespace Login
             InitializeComponent();
             _modulo = modulo;
             txtModulo.Text = $"Reporte de {modulo}";
-
         }
 
         /// <summary>
-        /// Evento que se ejecuta al hacer clic en el botón para generar el PDF.
-        /// Dependiendo del módulo seleccionado, se llama al método correspondiente.
+        /// Maneja el evento Click del botón Generar PDF.
+        /// Delega la generación al método correspondiente según el módulo activo.
         /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
         {
             switch (_modulo)
@@ -50,10 +52,13 @@ namespace Login
         }
 
         /// <summary>
-        /// Obtiene el logo en formato Base64 para incrustarlo en el HTML del reporte.
-        /// Intenta cargarlo desde recursos embebidos o desde el sistema de archivos.
+        /// Obtiene el logotipo de la empresa en formato Base64 para incrustarlo
+        /// en el HTML del reporte. Intenta cargarlo primero desde recursos embebidos,
+        /// luego desde la carpeta del ejecutable y finalmente recorriendo directorios padre.
         /// </summary>
-        /// <returns>Cadena en Base64 del logo o cadena vacía si no se encuentra.</returns>
+        /// <returns>
+        /// Cadena en Base64 del logo si se encuentra; de lo contrario, cadena vacía.
+        /// </returns>
         private string GetLogoBase64()
         {
             try
@@ -98,10 +103,12 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera los estilos base en CSS utilizados en los reportes PDF.
+        /// Genera la hoja de estilos CSS base utilizada en todos los reportes PDF.
+        /// Define la tipografía, tabla de datos, badges de estado, encabezado,
+        /// barra de título, fila de totales y pie de página.
         /// </summary>
-        /// <param name="accentColor">Color principal del reporte.</param>
-        /// <returns>Cadena con estilos CSS.</returns>
+        /// <param name="accentColor">Color principal del reporte en formato hexadecimal.</param>
+        /// <returns>Bloque HTML con la etiqueta <c>&lt;style&gt;</c> completa.</returns>
         private string GetBaseStyles(string accentColor = "#1e2d5f")
         {
             return $@"
@@ -222,11 +229,13 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera el encabezado del reporte, incluyendo logo, nombre de empresa y metadatos.
+        /// Genera el encabezado HTML del reporte con el logotipo de la empresa,
+        /// nombre, dirección y los metadatos de fecha de emisión y período.
+        /// Si no se indica período, calcula automáticamente el trimestre actual.
         /// </summary>
-        /// <param name="accentColor">Color principal del diseño.</param>
-        /// <param name="periodo">Período del reporte.</param>
-        /// <returns>HTML del encabezado.</returns>
+        /// <param name="accentColor">Color principal del encabezado en formato hexadecimal.</param>
+        /// <param name="periodo">Texto descriptivo del período cubierto por el reporte. Opcional.</param>
+        /// <returns>HTML del bloque de encabezado.</returns>
         private string GetHeader(string accentColor, string periodo = "")
         {
             string periodoTexto = string.IsNullOrEmpty(periodo)
@@ -265,11 +274,12 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera la barra de título del reporte.
+        /// Genera la barra de título HTML del reporte con el texto indicado
+        /// y el color de acento correspondiente al módulo.
         /// </summary>
-        /// <param name="accentColor">Color principal.</param>
-        /// <param name="titulo">Título del reporte.</param>
-        /// <returns>HTML de la barra de título.</returns>
+        /// <param name="accentColor">Color principal en formato hexadecimal.</param>
+        /// <param name="titulo">Texto del título a mostrar en la barra.</param>
+        /// <returns>HTML del bloque de barra de título.</returns>
         private string GetTitleBar(string accentColor, string titulo)
         {
             return $@"
@@ -279,9 +289,10 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera el pie de página del reporte.
+        /// Genera el pie de página HTML del reporte con el nombre de la empresa,
+        /// la fecha y hora de generación y el número de página.
         /// </summary>
-        /// <returns>HTML del footer.</returns>
+        /// <returns>HTML del bloque de pie de página.</returns>
         private string GetFooter()
         {
             return $@"
@@ -293,10 +304,14 @@ namespace Login
         }
 
         /// <summary>
-        /// Devuelve un badge HTML representando el estado de una orden.
+        /// Genera el HTML de un badge visual para representar el estado de una orden.
+        /// Aplica colores diferenciados según el valor del estado recibido.
         /// </summary>
-        /// <param name="estado">Estado de la orden.</param>
-        /// <returns>HTML con estilo del estado.</returns>
+        /// <param name="estado">
+        /// Estado de la orden. Valores reconocidos: Finalizado, En Proceso,
+        /// Pendiente, Cancelado, Sin Empezar.
+        /// </param>
+        /// <returns>HTML con el badge estilizado del estado.</returns>
         private string BadgeEstado(string estado)
         {
             return estado switch
@@ -312,6 +327,8 @@ namespace Login
 
         /// <summary>
         /// Genera el reporte de clientes en formato PDF.
+        /// Consulta DNI, nombres, apellidos, teléfono y correo de todos los clientes
+        /// ordenados por apellido y los exporta a un archivo PDF en orientación vertical.
         /// </summary>
         private void GenerarReporteClientes()
         {
@@ -357,11 +374,15 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera el reporte de inventario en formato PDF, filtrado por período de órdenes.
+        /// Genera el reporte de inventario en formato PDF.
+        /// Solicita al usuario un período mediante <see cref="ObtenerRangoFechas"/>.
+        /// Si se selecciona "Todo", muestra el inventario completo sin filtro de fecha.
+        /// Si se selecciona un período, muestra únicamente los productos utilizados
+        /// en órdenes dentro del rango, con la cantidad usada acumulada.
+        /// Exporta el resultado en orientación horizontal.
         /// </summary>
         private void GenerarReporteInventario()
         {
-            // Pedir período al usuario
             if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
                 return;
 
@@ -374,7 +395,6 @@ namespace Login
 
             if (periodoTexto == "Todo")
             {
-                // Sin filtro de fecha: muestra todo el inventario actual
                 sql = @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
                        Producto_Modelo, Producto_Precio,
                        Producto_Cantidad_Actual, Producto_Stock_Minimo,
@@ -406,7 +426,6 @@ namespace Login
             }
             else
             {
-                // Con filtro: productos usados en órdenes del período seleccionado
                 sql = @"SELECT p.Producto_Nombre, p.Producto_Categoria,
                        p.Producto_Marca,  p.Producto_Modelo,
                        p.Producto_Precio,
@@ -491,13 +510,24 @@ namespace Login
             ExportarPDF(html, $"Reporte_Inventario_{periodoTexto.Replace(" ", "_")}", landscape: true);
         }
 
+        /// <summary>
+        /// Muestra una ventana modal que permite al usuario seleccionar el período
+        /// del reporte mediante un ComboBox con opciones predefinidas.
+        /// Calcula el rango de fechas exacto según la opción elegida.
+        /// </summary>
+        /// <param name="fechaInicio">Fecha de inicio del período seleccionado.</param>
+        /// <param name="fechaFin">Fecha de fin del período seleccionado.</param>
+        /// <param name="periodoTexto">Texto descriptivo del período seleccionado.</param>
+        /// <returns>
+        /// <c>true</c> si el usuario confirmó la selección;
+        /// <c>false</c> si canceló el diálogo.
+        /// </returns>
         private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
         {
             fechaInicio = DateTime.MinValue;
             fechaFin = DateTime.MaxValue;
             periodoTexto = "Todo";
 
-            // Ventana de selección de período
             var ventana = new Window
             {
                 Title = "Seleccionar Período",
@@ -578,7 +608,6 @@ namespace Login
 
             if (!confirmado) return false;
 
-            // Calcular rango según opción elegida
             DateTime hoy = DateTime.Today;
             switch (cmb.SelectedItem?.ToString())
             {
@@ -622,12 +651,13 @@ namespace Login
             }
 
             return true;
-
-
         }
 
-        // <summary>
+        /// <summary>
         /// Genera el reporte de vehículos en formato PDF.
+        /// Consulta placa, marca, modelo, año, tipo, DNI del cliente, estado
+        /// y observaciones de todos los vehículos ordenados por marca,
+        /// mostrando su estado con badges de color. Exporta en orientación horizontal.
         /// </summary>
         private void GenerarReporteVehiculos()
         {
@@ -687,6 +717,9 @@ namespace Login
 
         /// <summary>
         /// Genera el reporte de órdenes de trabajo en formato PDF.
+        /// Consulta todas las órdenes ordenadas por fecha descendente, muestra el estado
+        /// con badges de color mediante <see cref="BadgeEstado"/> e incluye una fila
+        /// de total general al final de la tabla. Exporta en orientación horizontal.
         /// </summary>
         private void GenerarReporteOrdenes()
         {
@@ -757,6 +790,9 @@ namespace Login
 
         /// <summary>
         /// Genera el reporte de egresos (gastos) en formato PDF.
+        /// Consulta tipo, nombre, observaciones, precio y fecha de todos los gastos
+        /// registrados ordenados por fecha descendente, e incluye una fila con el
+        /// total general acumulado. Exporta en orientación vertical.
         /// </summary>
         private void GenerarReporteEgresos()
         {
@@ -814,7 +850,10 @@ namespace Login
         }
 
         /// <summary>
-        /// Genera el reporte de ingresos en formato PDF.
+        /// Genera el reporte de ingresos (pagos) en formato PDF.
+        /// Consulta el ID de pago, nombre completo del cliente, DNI, ID de orden
+        /// y monto de todos los pagos registrados ordenados por ID descendente,
+        /// e incluye una fila con el total general acumulado. Exporta en orientación vertical.
         /// </summary>
         private void GenerarReporteIngresos()
         {
@@ -880,11 +919,16 @@ namespace Login
         }
 
         /// <summary>
-        /// Exporta el contenido HTML a un archivo PDF.
+        /// Exporta el contenido HTML recibido a un archivo PDF mediante un diálogo
+        /// de guardado. Configura la orientación, márgenes y tamaño de página,
+        /// guarda el archivo en la ruta seleccionada y lo abre automáticamente
+        /// con el visor predeterminado del sistema.
         /// </summary>
-        /// <param name="html">Contenido HTML del reporte.</param>
-        /// <param name="nombreArchivo">Nombre base del archivo PDF.</param>
-        /// <param name="landscape">Indica si el PDF será en orientación horizontal.</param>
+        /// <param name="html">Contenido HTML completo del reporte a convertir.</param>
+        /// <param name="nombreArchivo">Nombre base sugerido para el archivo PDF.</param>
+        /// <param name="landscape">
+        /// <c>true</c> para orientación horizontal; <c>false</c> para orientación vertical.
+        /// </param>
         private void ExportarPDF(string html, string nombreArchivo, bool landscape = false)
         {
             var dialog = new SaveFileDialog
@@ -921,4 +965,3 @@ namespace Login
         }
     }
 }
-

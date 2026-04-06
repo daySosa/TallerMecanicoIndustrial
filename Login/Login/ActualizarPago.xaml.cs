@@ -20,11 +20,36 @@ namespace Contabilidad
     /// </summary>
     public partial class ActualizarPago : Window
     {
+        /// <summary>
+        /// Cadena de conexión a la base de datos del sistema.
+        /// </summary>
         private string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+
+        /// <summary>
+        /// Referencia al menú de pagos que invocó esta ventana.
+        /// </summary>
         private MenuDePagos _menuRef;
+
+        /// <summary>
+        /// Identificador único del pago que se está editando.
+        /// </summary>
         private int _pagoId;
+
+        /// <summary>
+        /// Fecha en que fue registrado originalmente el pago.
+        /// </summary>
         private DateTime _fechaRegistro;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de la ventana <see cref="ActualizarPago"/>.
+        /// Carga los datos del pago en los campos del formulario y aplica las validaciones iniciales.
+        /// </summary>
+        /// <param name="menuRef">Referencia al menú de pagos padre.</param>
+        /// <param name="pagoId">Identificador del pago a actualizar.</param>
+        /// <param name="dni">DNI del cliente asociado al pago.</param>
+        /// <param name="ordenId">Identificador de la orden de trabajo vinculada.</param>
+        /// <param name="monto">Monto registrado del pago.</param>
+        /// <param name="fecha">Fecha en que fue registrado el pago.</param>
         public ActualizarPago(MenuDePagos menuRef, int pagoId, string dni, int ordenId, decimal monto, DateTime fecha)
         {
             InitializeComponent();
@@ -45,6 +70,10 @@ namespace Contabilidad
             VerificarBloqueoEdicion();
         }
 
+        /// <summary>
+        /// Verifica si el pago supera el límite de tiempo permitido para edición (1 día).
+        /// En caso afirmativo, deshabilita todos los campos del formulario y muestra un mensaje de advertencia.
+        /// </summary>
         private void VerificarBloqueoEdicion()
         {
             if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
@@ -62,11 +91,22 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Maneja el evento de cambio de texto en el campo DNI.
+        /// Actualiza el nombre del cliente mostrado según el DNI ingresado.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void txtDNI_TextChanged(object sender, TextChangedEventArgs e)
         {
             BuscarNombre(txtDNI.Text.Trim());
         }
 
+        /// <summary>
+        /// Busca en la base de datos el nombre completo del cliente a partir de su DNI
+        /// y lo muestra en el campo correspondiente. Muestra un mensaje de error si no se encuentra.
+        /// </summary>
+        /// <param name="dni">DNI del cliente a buscar.</param>
         private void BuscarNombre(string dni)
         {
             if (string.IsNullOrEmpty(dni))
@@ -104,6 +144,12 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Maneja el evento de cambio de texto en el campo de ID de orden.
+        /// Consulta el monto asociado a la orden ingresada y lo muestra en el campo de precio.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void txtOrdenID_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!int.TryParse(txtOrdenID.Text.Trim(), out int ordenId))
@@ -140,18 +186,36 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Maneja el evento de pérdida de foco del campo de precio.
+        /// Formatea el valor ingresado al formato de moneda establecido.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
         {
             txtPrecio.Text = clsValidacionesContabilidad.FormatearPrecioGasto(txtPrecio.Text);
         }
 
+        /// <summary>
+        /// Maneja el evento de obtención de foco del campo de precio.
+        /// Limpia el formato de moneda para facilitar la edición del valor numérico.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
             txtPrecio.Text = clsValidacionesContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
-
+        /// <summary>
+        /// Maneja el evento Click del botón Guardar.
+        /// Valida los datos del formulario y ejecuta la actualización del pago en la base de datos.
+        /// Recarga el menú de pagos y cierra la ventana si la operación es exitosa.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
             OcultarMensaje();
@@ -199,17 +263,30 @@ namespace Contabilidad
             }
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón Cancelar.
+        /// Cierra la ventana sin guardar ningún cambio.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
+        /// <summary>
+        /// Muestra un mensaje de validación o error en el panel de avisos de la ventana.
+        /// </summary>
+        /// <param name="msg">Texto del mensaje a mostrar.</param>
         private void MostrarMensaje(string msg)
         {
             txtMensajeDNI.Text = msg;
             txtMensajeDNI.Visibility = Visibility.Visible;
         }
 
+        /// <summary>
+        /// Oculta el panel de mensajes de validación o error.
+        /// </summary>
         private void OcultarMensaje()
         {
             txtMensajeDNI.Visibility = Visibility.Collapsed;

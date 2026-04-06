@@ -15,19 +15,53 @@ namespace Órdenes_de_Trabajo
     /// </summary>
     public partial class OrdenWindow : Window
     {
+        /// <summary>
+        /// Instancia para consultas a la base de datos.
+        /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
+
+        /// <summary>
+        /// DNI del cliente asociado a la orden actual.
+        /// </summary>
         private string _clienteDNI = string.Empty;
+
+        /// <summary>
+        /// Placa del vehículo asociado a la orden actual.
+        /// </summary>
         private string _vehiculoPlaca = string.Empty;
+
+        /// <summary>
+        /// Indica si la búsqueda se realiza por DNI (<c>true</c>) o por placa (<c>false</c>).
+        /// </summary>
         private bool _buscarPorDNI = true;
+
+        /// <summary>
+        /// Identificador de la orden que se está editando.
+        /// Permanece en 0 cuando se crea una nueva orden.
+        /// </summary>
         private int _ordenIDEditar = 0;
+
+        /// <summary>
+        /// Ruta local de la fotografía adjunta al vehículo de la orden.
+        /// </summary>
         private string _rutaFoto = string.Empty;
+
+        /// <summary>
+        /// Colección observable de repuestos asociados a la orden actual.
+        /// </summary>
         private ObservableCollection<RepuestoOrden> _repuestos
             = new ObservableCollection<RepuestoOrden>();
 
-        // ─────────────────────────────────────────────────────────────
+       
         // CONSTRUCTOR
-        // ─────────────────────────────────────────────────────────────
+        
 
+        /// <summary>
+        /// Inicializa una nueva instancia de <see cref="OrdenWindow"/>.
+        /// Configura el idioma de los selectores de fecha, enlaza la colección
+        /// de repuestos al grid, registra los manejadores de validación de entrada
+        /// y establece el estado inicial de los botones.
+        /// </summary>
         public OrdenWindow()
         {
             InitializeComponent();
@@ -74,10 +108,13 @@ namespace Órdenes_de_Trabajo
             };
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // FILTRO DE ENTRADA — DNI solo dígitos, Placa solo alfanumérico
-        // ─────────────────────────────────────────────────────────────
-
+       
+        /// <summary>
+        /// Restringe la entrada del campo de búsqueda según el modo activo:
+        /// solo dígitos para DNI o solo caracteres alfanuméricos para placa.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de entrada de texto.</param>
         private void TxtBuscar_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (_buscarPorDNI)
@@ -86,6 +123,12 @@ namespace Órdenes_de_Trabajo
                 e.Handled = !clsValidacionesOrden.EsCaracterValidoPlaca(e.Text);
         }
 
+        /// <summary>
+        /// Cancela el pegado de texto en el campo de búsqueda si el contenido
+        /// no cumple con el formato válido según el modo de búsqueda activo.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de pegado.</param>
         private void TxtBuscar_Pasting(object sender, DataObjectPastingEventArgs e)
         {
             if (!e.DataObject.GetDataPresent(typeof(string)))
@@ -102,10 +145,13 @@ namespace Órdenes_de_Trabajo
                 e.CancelCommand();
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // CARGA PARA EDICIÓN
-        // ─────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Carga los datos de una orden existente en el formulario para su edición.
+        /// Valida que la orden pueda editarse según el mes de registro, rellena todos
+        /// los campos visuales, carga los repuestos asociados y habilita el botón de actualizar.
+        /// Cierra la ventana si la orden no es editable.
+        /// </summary>
+        /// <param name="ordenID">Identificador de la orden a cargar.</param>
         public async Task CargarOrdenParaEditar(int ordenID)
         {
             _ordenIDEditar = ordenID;
@@ -185,10 +231,14 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // BÚSQUEDA — TABS DNI / PLACA
-        // ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Activa el modo de búsqueda por DNI.
+        /// Actualiza el estilo visual de las pestañas, ajusta el límite de caracteres
+        /// del campo de búsqueda y limpia el panel de errores.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de clic.</param>
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
@@ -203,6 +253,13 @@ namespace Órdenes_de_Trabajo
             borderError.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Activa el modo de búsqueda por placa de vehículo.
+        /// Actualiza el estilo visual de las pestañas, ajusta el límite de caracteres
+        /// del campo de búsqueda y limpia el panel de errores.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de clic.</param>
         private void TabPlaca_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = false;
@@ -217,6 +274,13 @@ namespace Órdenes_de_Trabajo
             borderError.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Maneja el evento Click del botón Buscar.
+        /// Valida el campo de búsqueda y delega la consulta al método correspondiente
+        /// según el modo activo (DNI o placa).
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
             string valor = txtBuscar.Text.Trim();
@@ -250,6 +314,12 @@ namespace Órdenes_de_Trabajo
             else BuscarPorPlaca(valor.ToUpper());
         }
 
+        /// <summary>
+        /// Busca un cliente en la base de datos por su DNI y muestra su información
+        /// junto con la del vehículo asociado si existe.
+        /// Muestra un mensaje de error si no se encuentra ningún resultado.
+        /// </summary>
+        /// <param name="dni">DNI del cliente a buscar.</param>
         private void BuscarPorDNI(string dni)
         {
             try
@@ -281,6 +351,12 @@ namespace Órdenes_de_Trabajo
             catch (Exception ex) { MostrarError(ex.Message); }
         }
 
+        /// <summary>
+        /// Busca un vehículo en la base de datos por su placa y muestra su información
+        /// junto con los datos del cliente propietario.
+        /// Muestra un mensaje de error si no se encuentra ningún resultado.
+        /// </summary>
+        /// <param name="placa">Placa del vehículo a buscar (en mayúsculas).</param>
         private void BuscarPorPlaca(string placa)
         {
             try
@@ -308,10 +384,14 @@ namespace Órdenes_de_Trabajo
             catch (Exception ex) { MostrarError(ex.Message); }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // GUARDAR — NUEVA ORDEN
-        // ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Maneja el evento Click del botón Añadir.
+        /// Valida el formulario completo, calcula el total de repuestos y servicio,
+        /// registra la nueva orden en la base de datos, limpia el formulario y cierra la ventana.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidacionesOrden.ValidarFormularioVacio(
@@ -363,10 +443,13 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // ACTUALIZAR — ORDEN EXISTENTE
-        // ─────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Maneja el evento Click del botón Actualizar.
+        /// Valida el formulario completo, calcula el total actualizado de repuestos y servicio,
+        /// y persiste los cambios de la orden existente en la base de datos.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidacionesOrden.ValidarFormularioVacio(
@@ -415,10 +498,14 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // FOTO
-        // ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Maneja el evento de clic sobre el área de foto del vehículo.
+        /// Abre un diálogo de selección de archivo filtrado por imágenes,
+        /// valida el archivo seleccionado y lo muestra en el control de imagen.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento de clic.</param>
         private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -439,10 +526,14 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // REPUESTOS
-        // ─────────────────────────────────────────────────────────────
-
+        /// <summary>
+        /// Maneja el evento Click del botón de agregar repuesto.
+        /// Abre la ventana <see cref="AgregarRepuesto"/> como diálogo modal,
+        /// y si el usuario confirma, añade el repuesto resultante a la colección
+        /// y recalcula los precios totales.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             var ventana = new AgregarRepuesto();
@@ -458,16 +549,21 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // CANCELAR
-        // ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Maneja el evento Click del botón Cancelar.
+        /// Cierra la ventana sin guardar ningún cambio.
+        /// </summary>
+        /// <param name="sender">Origen del evento.</param>
+        /// <param name="e">Datos del evento.</param>
         private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
-        // ─────────────────────────────────────────────────────────────
-        // CÁLCULO DE PRECIOS
-        // ─────────────────────────────────────────────────────────────
-
+      
+        /// <summary>
+        /// Recalcula y actualiza los campos de precio en pantalla.
+        /// Suma el total de los repuestos incluidos y lo combina con el precio
+        /// del servicio para obtener el costo total de la orden.
+        /// </summary>
         private void RecalcularPrecios()
         {
             decimal totalRepuestos = 0;
@@ -486,16 +582,21 @@ namespace Órdenes_de_Trabajo
             txtCostoTotal.Text = $"L {(totalRepuestos + servicio):N2}";
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // HELPERS DE INTERFAZ
-        // ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Muestra el panel de error con el mensaje indicado.
+        /// </summary>
+        /// <param name="mensaje">Texto del error a mostrar al usuario.</param>
         private void MostrarError(string mensaje)
         {
             borderError.Visibility = Visibility.Visible;
             txtError.Text = mensaje;
         }
 
+        /// <summary>
+        /// Oculta los paneles de información de cliente y vehículo,
+        /// limpia el panel de errores y restablece los campos de DNI y placa.
+        /// </summary>
         private void LimpiarResultados()
         {
             borderClienteInfo.Visibility = Visibility.Collapsed;
@@ -505,6 +606,11 @@ namespace Órdenes_de_Trabajo
             _vehiculoPlaca = string.Empty;
         }
 
+        /// <summary>
+        /// Restablece todos los campos del formulario a su estado inicial.
+        /// Invoca <see cref="LimpiarResultados"/> y limpia adicionalmente los campos
+        /// de repuestos, precios, fechas, observaciones, foto, estado y prioridad.
+        /// </summary>
         private void LimpiarFormulario()
         {
             LimpiarResultados();
