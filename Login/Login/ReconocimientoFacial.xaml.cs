@@ -272,9 +272,6 @@ namespace Login
                     if (valido)
                     {
                         string nombre = _personas[label].Nombre;
-                        Dispatcher.Invoke(() =>
-                            txtNombreReconocido.Text =
-                                $"✔ Identificado: {nombre}  (dist: {distance:F1})");
                         FinalizarAcceso(nombre);
                     }
                     else
@@ -326,7 +323,7 @@ namespace Login
 
             Dispatcher.Invoke(() =>
             {
-                txtNombreReconocido.Text = $"✔ ¡Bienvenido, {nombre}!";
+                txtNombreReconocido.Text = $"✔ ¡Bienvenido, acceso concedido!";
                 MostrarEstado("Acceso concedido. Entrando en 5 segundos...");
                 elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(46, 204, 113));
             });
