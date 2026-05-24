@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -437,5 +436,26 @@ namespace Login.Clases
             if (contrasena.Length > 50) return "⚠ La contraseña es demasiado larga (máximo 50 caracteres).";
             return null;
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // MÉTODOS REQUERIDOS POR clsValidacionLogin y clsValidacionCodigo2FA
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool EsRequerido(string valor)
+            => !string.IsNullOrWhiteSpace(valor);
+
+        public static bool EsCorreoValido(string correo)
+            => !string.IsNullOrWhiteSpace(correo) &&
+               System.Text.RegularExpressions.Regex.IsMatch(
+                   correo.Trim(), @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$");
+
+        public static bool EsSoloNumeros(string valor)
+            => !string.IsNullOrEmpty(valor) && valor.All(char.IsDigit);
+
+        public static bool TieneLongitudExacta(string valor, int longitud)
+            => (valor?.Length ?? 0) == longitud;
+
+        public static bool TieneLongitudMinima(string valor, int minimo)
+            => (valor?.Length ?? 0) >= minimo;
     }
 }
