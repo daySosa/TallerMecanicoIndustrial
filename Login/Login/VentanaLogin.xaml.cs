@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace Login
 {
-    public partial class Login : Window
+    public partial class VentanaLogin : Window
     {
         private bool _contrasenaVisible = false;
         private clsConsultasBD _db = new clsConsultasBD();
@@ -16,7 +16,7 @@ namespace Login
             Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
 
-        public Login()
+        public VentanaLogin()
         {
             InitializeComponent();
             CargarCredencialesRecordadas();

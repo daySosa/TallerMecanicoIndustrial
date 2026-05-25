@@ -153,7 +153,17 @@ namespace InterfazInventario
             {
                 var productos = _db.ObtenerProductos();
                 foreach (var p in productos)
-                    _listaRepuestos.Add(p);
+                    _listaRepuestos.Add(new Repuesto
+                    {
+                        Producto_ID = p.Producto_ID,
+                        Producto_Nombre = p.Producto_Nombre,
+                        Producto_Categoria = p.Producto_Categoria,
+                        Producto_Marca = p.Producto_Marca,
+                        Producto_Modelo = p.Producto_Modelo,
+                        Producto_Cantidad_Minima = p.Producto_Cantidad_Minima,
+                        Producto_Precio = p.Producto_Precio,
+                        Producto_Cantidad_Actual = p.Producto_Cantidad_Actual
+                    });
 
                 var categorias = _listaRepuestos
                     .Select(r => r.Producto_Categoria)
@@ -511,7 +521,7 @@ namespace InterfazInventario
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                new Login.MainWindow().Show();
+                new VentanaLogin().Show();
                 this.Close();
             }
         }
