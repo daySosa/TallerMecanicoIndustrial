@@ -70,6 +70,9 @@ namespace Órdenes_de_Trabajo
             dpFecha.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
             dpEntrega.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
 
+            dpFecha.SelectedDate = DateTime.Today;
+            dpFecha.IsEnabled = false;
+
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
 
