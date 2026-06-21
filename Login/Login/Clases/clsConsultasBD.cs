@@ -1029,14 +1029,15 @@ namespace Login.Clases
         }
 
         public (string nombreCompleto, string telefono, string email,
-                string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca)
+                string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca,
+                bool activo, bool vehiculoActivo)
                 BuscarClientePorDNI(string dni)
         {
             try
             {
                 string sqlCliente = @"
                     SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
-                           Cliente_TelefonoPrincipal, Cliente_Email
+                           Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Activo
                     FROM   Cliente WHERE Cliente_DNI = @DNI";
 
                 SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC);
@@ -1048,13 +1049,14 @@ namespace Login.Clases
                 string nombre = rd["NombreCompleto"].ToString();
                 string telefono = rd["Cliente_TelefonoPrincipal"].ToString();
                 string email = rd["Cliente_Email"].ToString();
+                bool activo = rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"];
                 rd.Close();
 
                 string sqlVehiculo = @"
                     SELECT TOP 1
                            Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
                            Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           Vehiculo_Placa
+                           Vehiculo_Placa, Vehiculo_Activo
                     FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
 
                 SqlCommand cmd2 = new SqlCommand(sqlVehiculo, _conexion.SqlC);
@@ -1062,29 +1064,33 @@ namespace Login.Clases
                 using SqlDataReader rd2 = cmd2.ExecuteReader();
                 if (rd2.Read())
                 {
+                    bool vehiculoActivo = rd2["Vehiculo_Activo"] != DBNull.Value && (bool)rd2["Vehiculo_Activo"];
                     return (nombre, telefono, email,
                             rd2["NombreVehiculo"].ToString(),
                             rd2["TipoAño"].ToString(),
-                            rd2["Vehiculo_Placa"].ToString());
+                            rd2["Vehiculo_Placa"].ToString(),
+                            activo, vehiculoActivo);
                 }
-                return (nombre, telefono, email, "", "", "");
+                return (nombre, telefono, email, "", "", "", activo, true);
             }
             catch (Exception ex) { throw new Exception("Error: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
         public (string vehiculoNombre, string vehiculoTipo, string clienteDNI,
-                string nombreCompleto, string telefono, string email)
-                BuscarVehiculoPorPlaca(string placa)
+        string nombreCompleto, string telefono, string email,
+        bool activo, bool vehiculoActivo)
+        BuscarVehiculoPorPlaca(string placa)
         {
             try
             {
                 string sql = @"
                     SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
                            v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
+                           v.Vehiculo_Activo,
                            c.Cliente_DNI,
                            c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email
+                           c.Cliente_TelefonoPrincipal, c.Cliente_Email, c.Cliente_Activo
                     FROM   Vehiculo v
                     INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
                     WHERE  v.Vehiculo_Placa = @Placa";
@@ -1100,7 +1106,9 @@ namespace Login.Clases
                             rd["Cliente_DNI"].ToString(),
                             rd["NombreCompleto"].ToString(),
                             rd["Cliente_TelefonoPrincipal"].ToString(),
-                            rd["Cliente_Email"].ToString());
+                            rd["Cliente_Email"].ToString(),
+                            rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"],
+                            rd["Vehiculo_Activo"] != DBNull.Value && (bool)rd["Vehiculo_Activo"]);
                 }
                 return default;
             }

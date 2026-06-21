@@ -76,6 +76,37 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
+        // ESTADO DEL CLIENTE Y VEHÍCULO
+        // ─────────────────────────────────────────────────────────────
+
+        public static bool ValidarClienteActivo(bool clienteActivo, string nombreCliente)
+        {
+            if (!clienteActivo)
+            {
+                MessageBox.Show(
+                    $"⚠ El cliente \"{nombreCliente}\" se encuentra inactivo.\n\n" +
+                    "No es posible crear órdenes para clientes dados de baja.\n" +
+                    "Actívalo desde el módulo de Clientes si deseas continuar.",
+                    "Cliente inactivo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+        public static bool ValidarVehiculoActivo(bool vehiculoActivo, string nombreVehiculo)
+        {
+            if (!vehiculoActivo)
+            {
+                MessageBox.Show(
+                    $"⚠ El vehículo \"{nombreVehiculo}\" está fuera de servicio (inactivo).\n\n" +
+                    "No es posible crear órdenes para vehículos dados de baja.\n" +
+                    "Actívalo desde el módulo de Vehículos si deseas continuar.",
+                    "Vehículo inactivo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // ESTADO DE LA ORDEN
         // ─────────────────────────────────────────────────────────────
 

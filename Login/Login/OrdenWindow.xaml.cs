@@ -334,6 +334,13 @@ namespace Órdenes_de_Trabajo
                     return;
                 }
 
+                if (!clsValidacionesOrden.ValidarClienteActivo(resultado.activo, resultado.nombreCompleto))
+                    return;
+
+                if (!string.IsNullOrEmpty(resultado.vehiculoPlaca)
+                    && !clsValidacionesOrden.ValidarVehiculoActivo(resultado.vehiculoActivo, resultado.vehiculoNombre))
+                    return;
+
                 _clienteDNI = dni;
                 txtClienteNombre.Text = resultado.nombreCompleto;
                 txtClienteTelefono.Text = resultado.telefono;
@@ -370,6 +377,12 @@ namespace Órdenes_de_Trabajo
                     MostrarError($"No existe vehículo con placa '{placa}'.");
                     return;
                 }
+
+                if (!clsValidacionesOrden.ValidarClienteActivo(resultado.activo, resultado.nombreCompleto))
+                    return;
+
+                if (!clsValidacionesOrden.ValidarVehiculoActivo(resultado.vehiculoActivo, resultado.vehiculoNombre))
+                    return;
 
                 _vehiculoPlaca = placa;
                 _clienteDNI = resultado.clienteDNI;
