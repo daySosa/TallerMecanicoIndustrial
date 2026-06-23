@@ -522,6 +522,49 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
+        public List<InterfazInventario.Repuesto> ObtenerProductos()
+        {
+            var lista = new List<InterfazInventario.Repuesto>();
+            try
+            {
+                string query = @"
+            SELECT Producto_ID,
+                   Producto_Nombre,
+                   Producto_Categoria,
+                   ISNULL(Producto_Marca,  '—') AS Producto_Marca,
+                   ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
+                   Producto_Cantidad_Actual,
+                   Producto_Stock_Minimo,
+                   Producto_Precio
+            FROM   Producto
+            ORDER  BY Producto_Nombre";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                _conexion.Abrir();
+                using SqlDataReader rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new InterfazInventario.Repuesto
+                    {
+                        Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
+                        Producto_Nombre = rd["Producto_Nombre"].ToString(),
+                        Producto_Categoria = rd["Producto_Categoria"].ToString(),
+                        Producto_Marca = rd["Producto_Marca"].ToString(),
+                        Producto_Modelo = rd["Producto_Modelo"].ToString(),
+                        Producto_Cantidad_Actual = rd.GetInt32(rd.GetOrdinal("Producto_Cantidad_Actual")),
+                        Producto_Cantidad_Minima = rd.GetInt32(rd.GetOrdinal("Producto_Stock_Minimo")),
+                        Producto_Precio = rd.GetDecimal(rd.GetOrdinal("Producto_Precio"))
+                    });
+                }
+                return lista;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al cargar productos: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
         public bool ActualizarProducto(int productoId, string nombre, string categoria,
                                         string marca, string modelo, decimal precio, int cantidad)
         {
@@ -778,48 +821,7 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        public List<Repuesto> ObtenerProductos()
-        {
-            var lista = new List<Repuesto>();
-            try
-            {
-                string query = @"
-                    SELECT Producto_ID,
-                           Producto_Nombre,
-                           Producto_Categoria,
-                           ISNULL(Producto_Marca,  '—') AS Producto_Marca,
-                           ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
-                           Producto_Cantidad_Actual,
-                           Producto_Stock_Minimo,
-                           Producto_Precio
-                    FROM   Producto
-                    ORDER  BY Producto_Nombre";
-
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                _conexion.Abrir();
-                using SqlDataReader rd = cmd.ExecuteReader();
-                while (rd.Read())
-                {
-                    lista.Add(new Repuesto
-                    {
-                        Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
-                        Producto_Nombre = rd["Producto_Nombre"].ToString(),
-                        Producto_Categoria = rd["Producto_Categoria"].ToString(),
-                        Producto_Marca = rd["Producto_Marca"].ToString(),
-                        Producto_Modelo = rd["Producto_Modelo"].ToString(),
-                        Producto_Cantidad_Actual = rd.GetInt32(rd.GetOrdinal("Producto_Cantidad_Actual")),
-                        Producto_Cantidad_Minima = rd.GetInt32(rd.GetOrdinal("Producto_Stock_Minimo")),
-                        Producto_Precio = rd.GetDecimal(rd.GetOrdinal("Producto_Precio"))
-                    });
-                }
-                return lista;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al cargar productos: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
+        
 
         public List<OrdenTrabajo> ObtenerOrdenes()
         {
