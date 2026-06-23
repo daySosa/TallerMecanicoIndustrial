@@ -605,19 +605,22 @@ namespace Login.Clases
         {
             try
             {
-                string query = @"SELECT * FROM LOGIN
-                                WHERE Usuario_Email = @correo
-                                AND Usuario_Contraseña COLLATE Latin1_General_CS_AS = @contrasena";
-
+                string query = "SELECT Usuario_Contraseña FROM LOGIN WHERE Usuario_Email = @correo";
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@correo", correo);
-                cmd.Parameters.AddWithValue("@contrasena", contrasena);
 
                 _conexion.Abrir();
                 SqlDataReader lector = cmd.ExecuteReader();
-                bool encontrado = lector.Read();
+
+                if (lector.Read())
+                {
+                    string hashGuardado = lector["Usuario_Contraseña"].ToString();
+                    lector.Close();
+                    return BCrypt.Net.BCrypt.Verify(contrasena, hashGuardado);
+                }
+
                 lector.Close();
-                return encontrado;
+                return false;
             }
             catch (Exception ex)
             {
