@@ -6,17 +6,38 @@ using Drawing = System.Drawing;
 
 namespace Login.Clases
 {
+    /// <summary>
+    /// Encapsula el ciclo de vida del reconocedor LBPH:
+    /// entrenamiento con aumento de datos, predicción y preparación de rostros.
+    /// </summary>
     public class clsServicioReconocimiento : IDisposable
     {
+        // ── Hiperparámetros LBPH ──────────────────────────────────────────────────
+
         private const int LbphRadius = 2;
         private const int LbphNeighbors = 8;
         private const int LbphGridX = 8;
         private const int LbphGridY = 8;
+
+        /// <summary>Tamaño (px) al que se normaliza cada rostro.</summary>
         public const int TamanoRostro = 100;
 
+        // ── Estado interno ────────────────────────────────────────────────────────
+
         private LBPHFaceRecognizer? _reconocedor;
+
+        /// <summary>
+        /// Indica si el modelo ha sido entrenado con al menos una persona.
+        /// </summary>
         public bool Entrenado { get; private set; }
 
+        // ── Entrenamiento ─────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Entrena el modelo LBPH con las personas registradas.
+        /// Aplica aumento de datos (espejo y variaciones de brillo) y muestras
+        /// de ruido sintético para reducir falsos positivos.
+        /// </summary>
         public void Entrenar(IReadOnlyList<(int Id, string Nombre, Drawing.Bitmap Foto)> personas)
         {
             if (personas.Count == 0) return;
@@ -38,9 +59,15 @@ namespace Login.Clases
             Entrenado = true;
         }
 
+        /// <summary>
+        /// Genera cuatro variantes de la foto para enriquecer el entrenamiento:
+        /// original, espejo horizontal, brillo alto (+20) y brillo bajo (-20).
+        /// </summary>
         private static void AgregarMuestraConAumentacion(
-            Drawing.Bitmap foto, int etiqueta,
-            VectorOfMat mats, VectorOfInt etiquetas)
+            Drawing.Bitmap foto,
+            int etiqueta,
+            VectorOfMat mats,
+            VectorOfInt etiquetas)
         {
             using var imgColor = foto.ToImage<Bgr, byte>();
             using var imgGris = PrepararRostro(imgColor.ToBitmap());
@@ -54,19 +81,25 @@ namespace Login.Clases
             mats.Push(espejo.Mat);
             etiquetas.Push(new[] { etiqueta });
 
-            // Brillo +20
+            // Brillo alto
             using var brilloAlto = imgGris.Add(new Gray(20));
             mats.Push(brilloAlto.Mat);
             etiquetas.Push(new[] { etiqueta });
 
-            // Brillo -20
+            // Brillo bajo
             using var brilloBajo = imgGris.Sub(new Gray(20));
             mats.Push(brilloBajo.Mat);
             etiquetas.Push(new[] { etiqueta });
         }
 
-        private static void AgregarRuidoSintetico(int etiquetaRuido,
-            VectorOfMat mats, VectorOfInt etiquetas)
+        /// <summary>
+        /// Agrega cuatro imágenes de ruido aleatorio para reducir falsos positivos.
+        /// Se etiquetan con un índice fuera del rango de personas reales.
+        /// </summary>
+        private static void AgregarRuidoSintetico(
+            int etiquetaRuido,
+            VectorOfMat mats,
+            VectorOfInt etiquetas)
         {
             var rng = new Random(42);
             for (int k = 0; k < 4; k++)
@@ -81,6 +114,12 @@ namespace Login.Clases
             }
         }
 
+        // ── Predicción ────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Predice la identidad del rostro proporcionado.
+        /// Devuelve (-1, double.MaxValue) si el modelo no está entrenado.
+        /// </summary>
         public (int Label, double Distance) Predecir(Image<Gray, byte> rostroGris)
         {
             if (!Entrenado || _reconocedor == null)
@@ -91,6 +130,12 @@ namespace Login.Clases
             return (resultado.Label, resultado.Distance);
         }
 
+        // ── Utilidades ────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Convierte un Bitmap a escala de grises, lo redimensiona y aplica
+        /// ecualización de histograma para normalizar la iluminación.
+        /// </summary>
         public static Image<Gray, byte> PrepararRostro(Drawing.Bitmap bitmap)
         {
             using var img = bitmap.ToImage<Bgr, byte>();
@@ -102,10 +147,14 @@ namespace Login.Clases
             return ecualizado;
         }
 
+        // ── IDisposable ───────────────────────────────────────────────────────────
+
+        /// <summary>Libera el reconocedor LBPH.</summary>
         public void Dispose()
         {
             _reconocedor?.Dispose();
             _reconocedor = null;
+            Entrenado = false;
         }
     }
 }
