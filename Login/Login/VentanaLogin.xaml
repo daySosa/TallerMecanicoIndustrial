@@ -22,7 +22,7 @@
                     VerticalAlignment="Center"
                     CornerRadius="20"
                     Padding="40,36"
-                    BorderThickness="1">
+                    BorderThickness="1" Height="533">
                 <Border.Background>
                     <SolidColorBrush Color="#1E2A3A" Opacity="0.82"/>
                 </Border.Background>
@@ -191,7 +191,36 @@
                             <TextBlock Text="Iniciar Sesión"
                                        FontSize="14" FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
+
                         </StackPanel>
+                    </Button>
+
+                    <Button Content="¿Olvidó su contraseña?"
+                    Click="BtnOlvidoContrasena_Click"
+                    Height="32" Margin="0,8,0,0"
+                    Cursor="Hand"
+                     HorizontalAlignment="Center">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <TextBlock Text="¿Olvidó su contraseña?"
+                                   Foreground="#94a3b8"
+                                   FontSize="11.5"
+                                   TextDecorations="Underline"
+                                   Cursor="Hand"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#2563EB"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
                     </Button>
 
                 </StackPanel>

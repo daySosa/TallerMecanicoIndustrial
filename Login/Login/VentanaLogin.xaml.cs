@@ -11,6 +11,7 @@ namespace Login
     {
         private bool _contrasenaVisible = false;
         private clsConsultasBD _db = new clsConsultasBD();
+        private RecuperarContrasenia _recuperar;
 
         private readonly string _archivoRecordar =
             Path.Combine(Environment.GetFolderPath(
@@ -20,6 +21,7 @@ namespace Login
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
+            _recuperar = new RecuperarContrasenia(this);
         }
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
@@ -104,8 +106,10 @@ namespace Login
                 txtCorreo.Text = datos.GetProperty("Correo").GetString() ?? "";
                 txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
                 chkRecordar.IsChecked = true;
+
             }
             catch { }
+
         }
 
         private void txtCorreo_TextChanged(object sender,
@@ -225,5 +229,12 @@ namespace Login
             border.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
             border.BorderThickness = new Thickness(1.5);
         }
+
+        private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
+        {
+            _recuperar.IniciarFlujo();
+        }
+
+       
     }
 }
