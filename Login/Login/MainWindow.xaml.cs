@@ -39,12 +39,20 @@ namespace Login
         /// <summary>
         /// Inicializa una nueva instancia de la ventana <see cref="MainWindow"/>
         /// y carga las credenciales guardadas si existen.
-        /// </summary>
+        /// </summary> 
+
+        private RecuperarContrasenia _recuperar;
         public MainWindow()
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
+            _recuperar = new RecuperarContrasenia(this);
         }
+
+        // Al inicio de la clase MainWindow
+
+
+
 
         /// <summary>
         /// Permite mover la ventana arrastrándola con el mouse.
@@ -183,7 +191,7 @@ namespace Login
             /// Valida el correo electrónico ingresado utilizando la clase de validaciones.
             /// </summary>
             string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
-            
+
 
             if (errorCorreo != null)
             {
@@ -204,7 +212,7 @@ namespace Login
             /// </summary>
             string contrasena = ObtenerContrasena();
             string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
-            
+
 
             if (errorContrasena != null)
             {
@@ -366,6 +374,11 @@ namespace Login
             border.BorderBrush = new SolidColorBrush(
                 (Color)ColorConverter.ConvertFromString("#f44336"));
             border.BorderThickness = new Thickness(1.5);
+        }
+
+        private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
+        {
+            _recuperar.IniciarFlujo();
         }
     }
 }

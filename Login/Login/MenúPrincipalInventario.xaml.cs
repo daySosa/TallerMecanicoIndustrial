@@ -521,7 +521,7 @@ namespace InterfazInventario
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                new VentanaLogin().Show();
+                //new VentanaLogin().Show();
                 this.Close();
             }
         }
