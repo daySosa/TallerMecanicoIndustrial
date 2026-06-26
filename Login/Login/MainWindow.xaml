@@ -185,6 +185,39 @@
                         </Button.Style>
                         <TextBlock Text="Iniciar Sesión" FontSize="14" FontWeight="SemiBold"/>
                     </Button>
+                    <Button Content="¿Olvidó su contraseña?" 
+                        Click="BtnOlvidoContrasena_Click" 
+                        Height="32" 
+                        Margin="0,16,0,0" 
+                        Cursor="Hand"
+                        HorizontalAlignment="Center">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <TextBlock x:Name="TextoBoton"
+                                   Text="¿Olvidó su contraseña?"
+                                   Foreground="#94a3b8"
+                                   FontSize="14"
+                                   TextDecorations="Underline"
+                                   Cursor="Hand"
+                                   Background="Transparent"/>
+
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="TextoBoton" Property="Foreground" Value="#2563EB"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
                 </StackPanel>
             </Border>
         </Grid>

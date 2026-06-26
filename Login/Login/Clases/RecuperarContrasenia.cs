@@ -1,212 +1,400 @@
 using Login.Clases;
 using System.Data.SqlClient;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Login.Clases
 {
-    /// <summary>
-    /// Maneja el flujo completo de recuperación de contraseña desde VentanaLogin.
-    /// No necesita ventana propia — guía al usuario paso a paso con diálogos.
-    /// </summary>
     internal class RecuperarContrasenia
     {
         private clsAutenticacion _auth = new clsAutenticacion();
         private clsConexion _conexion = new clsConexion();
         private string _correoRecuperacion = string.Empty;
-        private VentanaLogin ventanaLogin;
+        private MainWindow _mainWindow;
 
-        public RecuperarContrasenia(VentanaLogin ventanaLogin)
+        private Grid _overlayGrid;
+        private Border _panelCentral;
+        private StackPanel _contenidoPanel;
+
+        public RecuperarContrasenia(MainWindow mainWindow)
         {
-            this.ventanaLogin = ventanaLogin;
+            _mainWindow = mainWindow;
         }
 
-  
-        // Metodo principal: llama desde el boton de olvidar contrasenia
-        
         public void IniciarFlujo()
         {
-            // PASO 1: Pedir correo al usuario
-            string correo = MostrarInputDialog(
-                "Ingresa tu correo",
-                "Escribe el correo electrónico con el que te registraste:");
+            ConstruirOverlay();
+            MostrarPasoCorreo();
+        }
 
-            if (string.IsNullOrWhiteSpace(correo)) return; // Usuario cancelo
-
-            if (!correo.Contains("@") || !correo.Contains("."))
+        private void ConstruirOverlay()
+        {
+            _overlayGrid = new Grid
             {
-                MessageBox.Show("⚠ El formato del correo no es valido.",
-                    "Correo invalido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+                Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0)),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
 
-            if (!CorreoExisteEnBD(correo))
+            _panelCentral = new Border
             {
-                MessageBox.Show("⚠ No encontramos una cuenta registrada con ese correo.",
-                    "Correo no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+                Width = 420,
+                Background = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString("#1E2A3A")),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(30),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
 
-            // Generar y enviar OTP
-            string codigo = _auth.GenerarCodigo(correo);
-            bool enviado = _auth.EnviarCorreo(correo, codigo);
+            _contenidoPanel = new StackPanel();
+            _panelCentral.Child = _contenidoPanel;
+            _overlayGrid.Children.Add(_panelCentral);
 
-            if (!enviado)
+            // Funciona si el root es un Grid 
+            if (_mainWindow.Content is Grid rootGrid)
             {
-                MessageBox.Show("⚠ No se pudo enviar el correo. Intenta nuevamente.",
-                    "Error de envio", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            _correoRecuperacion = correo;
-            MessageBox.Show($"✅ Codigo enviado a {correo}.\n\nRevisa tu bandeja. El codigo expira en 5 minutos.",
-                "Codigo enviado", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            // PASO 2: Pedir OTP
-            string otp = MostrarInputDialog(
-                "Ingresa el codigo",
-                "Escribe el codigo de 6 digitos que recibiste en tu correo:");
-
-            if (string.IsNullOrWhiteSpace(otp)) return; // Usuario canceló
-
-            if (otp.Length != 6)
-            {
-                MessageBox.Show("⚠ El codigo debe tener exactamente 6 digitos.",
-                    "Codigo invalido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            bool otpValido = _auth.ValidarCodigo(_correoRecuperacion, otp);
-
-            if (!otpValido)
-            {
-                MessageBox.Show("⚠ Codigo incorrecto, expirado o superaste los 3 intentos.\n\nInicia el proceso de nuevo.",
-                    "Codigo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // PASO 3: Nueva contraseña
-            string nueva = MostrarInputDialog(
-                "Nueva contraseña",
-                "Escribe tu nueva contraseña (Al menos 6 caracteres)");
-
-            if (string.IsNullOrWhiteSpace(nueva)) return; // Usuario cancelo
-
-            if (nueva.Length < 6)
-            {
-                MessageBox.Show("⚠ La contraseña debe tener al menos 6 caracteres.",
-                    "Contraseña muy corta", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string confirmar = MostrarInputDialog(
-                "Paso 3 de 3 — Confirma tu contraseña",
-                "Escribe nuevamente tu nueva contraseña:");
-
-            if (string.IsNullOrWhiteSpace(confirmar)) return;
-
-            if (nueva != confirmar)
-            {
-                MessageBox.Show("⚠ Las contraseñas no coinciden. Intenta de nuevo.",
-                    "No coinciden", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            bool actualizado = ActualizarContrasenaEnBD(_correoRecuperacion, nueva);
-
-            if (actualizado)
-            {
-                MessageBox.Show("✅ ¡Contraseña actualizada correctamente!\n\nYa puedes iniciar sesion.",
-                    "Exito", MessageBoxButton.OK, MessageBoxImage.Information);
-                _correoRecuperacion = string.Empty;
+                rootGrid.Children.Add(_overlayGrid);
             }
             else
             {
-                MessageBox.Show("⚠ Error al guardar la contraseña. Intenta nuevamente.",
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Si no es Grid, envolvemos el contenido actual en uno
+                var contenidoActual = _mainWindow.Content as UIElement;
+                var nuevoGrid = new Grid();
+                _mainWindow.Content = null;
+                if (contenidoActual != null)
+                    nuevoGrid.Children.Add(contenidoActual);
+                nuevoGrid.Children.Add(_overlayGrid);
+                _mainWindow.Content = nuevoGrid;
             }
         }
-        
-        private string MostrarInputDialog(string titulo, string mensaje)
+
+        private void CerrarOverlay()
         {
-            var dialog = new System.Windows.Window
-            {
-                Title = titulo,
-                Width = 420,
-                Height = 200,
-                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
-                ResizeMode = System.Windows.ResizeMode.NoResize,
-                Background = new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E2A3A")),
-                WindowStyle = System.Windows.WindowStyle.ToolWindow
-            };
-
-            var panel = new System.Windows.Controls.StackPanel { Margin = new System.Windows.Thickness(20) };
-
-            var lbl = new System.Windows.Controls.TextBlock
-            {
-                Text = mensaje,
-                Foreground = System.Windows.Media.Brushes.White,
-                FontSize = 13,
-                TextWrapping = System.Windows.TextWrapping.Wrap,
-                Margin = new System.Windows.Thickness(0, 0, 0, 12)
-            };
-
-            var txt = new System.Windows.Controls.TextBox
-            {
-                Height = 36,
-                FontSize = 13,
-                Padding = new System.Windows.Thickness(8, 0, 8, 0),
-                VerticalContentAlignment = System.Windows.VerticalAlignment.Center,
-                Margin = new System.Windows.Thickness(0, 0, 0, 16)
-            };
-
-            var btnPanel = new System.Windows.Controls.StackPanel
-            {
-                Orientation = System.Windows.Controls.Orientation.Horizontal,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
-            };
-
-            var btnCancelar = new System.Windows.Controls.Button
-            {
-                Content = "Cancelar",
-                Width = 90,
-                Height = 34,
-                Margin = new System.Windows.Thickness(0, 0, 8, 0),
-                Background = System.Windows.Media.Brushes.Gray,
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderThickness = new System.Windows.Thickness(0)
-            };
-
-            var btnAceptar = new System.Windows.Controls.Button
-            {
-                Content = "Aceptar",
-                Width = 90,
-                Height = 34,
-                Background = new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2563EB")),
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderThickness = new System.Windows.Thickness(0)
-            };
-
-            string resultado = string.Empty;
-
-            btnAceptar.Click += (s, e) => { resultado = txt.Text.Trim(); dialog.Close(); };
-            btnCancelar.Click += (s, e) => { dialog.Close(); };
-
-            btnPanel.Children.Add(btnCancelar);
-            btnPanel.Children.Add(btnAceptar);
-            panel.Children.Add(lbl);
-            panel.Children.Add(txt);
-            panel.Children.Add(btnPanel);
-            dialog.Content = panel;
-
-            txt.Focus();
-            dialog.ShowDialog();
-
-            return resultado;
+            if (_mainWindow.Content is Grid rootGrid)
+                rootGrid.Children.Remove(_overlayGrid);
         }
 
-     
+        private TextBlock CrearTitulo(string texto)
+        {
+            return new TextBlock
+            {
+                Text = texto,
+                Foreground = Brushes.White,
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 6),
+                TextWrapping = TextWrapping.Wrap
+            };
+        }
+
+        private TextBlock CrearMensaje(string texto)
+        {
+            return new TextBlock
+            {
+                Text = texto,
+                Foreground = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString("#94A3B8")),
+                FontSize = 13,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 16)
+            };
+        }
+
+        private TextBox CrearCampoTexto(bool esPassword = false)
+        {
+            return new TextBox
+            {
+                Height = 38,
+                FontSize = 13,
+                Padding = new Thickness(10, 0, 10, 0),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 16),
+                Background = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString("#0F172A")),
+                Foreground = Brushes.White,
+                BorderBrush = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString("#334155")),
+                CaretBrush = Brushes.White
+            };
+        }
+
+        private Button CrearBoton(string texto, string colorHex, double width = 120)
+        {
+            return new Button
+            {
+                Content = texto,
+                Width = width,
+                Height = 36,
+                Background = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString(colorHex)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                FontSize = 13,
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+        }
+
+        private TextBlock CrearMensajeError(string texto)
+        {
+            return new TextBlock
+            {
+                Text = texto,
+                Foreground = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString("#F87171")),
+                FontSize = 12,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, -10, 0, 12),
+                Visibility = Visibility.Collapsed
+            };
+        }
+
+        //  PASO 1: Correo 
+        private void MostrarPasoCorreo()
+        {
+            _contenidoPanel.Children.Clear();
+
+            var txtCorreo = CrearCampoTexto();
+            var lblError = CrearMensajeError("⚠ Correo inválido o no encontrado.");
+
+            var btnRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var btnCancelar = CrearBoton("Cancelar", "#475569", 100);
+            var btnSiguiente = CrearBoton("Siguiente", "#2563EB", 110);
+
+            btnCancelar.Click += (s, e) => CerrarOverlay();
+
+            btnSiguiente.Click += (s, e) =>
+            {
+                string correo = txtCorreo.Text.Trim();
+                lblError.Visibility = Visibility.Collapsed;
+
+                if (!correo.Contains("@") || !correo.Contains("."))
+                {
+                    lblError.Text = "⚠ El formato del correo no es válido.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (!CorreoExisteEnBD(correo))
+                {
+                    lblError.Text = "⚠ No encontramos una cuenta con ese correo.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                string codigo = _auth.GenerarCodigo(correo);
+                bool enviado = _auth.EnviarCorreo(correo, codigo);
+
+                if (!enviado)
+                {
+                    lblError.Text = "⚠ No se pudo enviar el correo. Intenta nuevamente.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                _correoRecuperacion = correo;
+                MostrarPasoOTP();
+            };
+
+            btnRow.Children.Add(btnCancelar);
+            btnRow.Children.Add(new UIElement());
+            var spacer = new Border { Width = 8 };
+            btnRow.Children.Add(spacer);
+            btnRow.Children.Add(btnSiguiente);
+
+            _contenidoPanel.Children.Add(CrearTitulo("Recuperar contraseña"));
+            _contenidoPanel.Children.Add(CrearMensaje("Ingresa el correo con el que te registraste y te enviaremos un código de verificación."));
+            _contenidoPanel.Children.Add(txtCorreo);
+            _contenidoPanel.Children.Add(lblError);
+            _contenidoPanel.Children.Add(btnRow);
+
+            txtCorreo.Focus();
+        }
+
+        // PASO 2: OTP 
+        private void MostrarPasoOTP()
+        {
+            _contenidoPanel.Children.Clear();
+
+            var txtOTP = CrearCampoTexto();
+            txtOTP.MaxLength = 6;
+            var lblError = CrearMensajeError("");
+
+            var btnRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var btnAtras = CrearBoton("← Atrás", "#475569", 100);
+            var btnSiguiente = CrearBoton("Verificar", "#2563EB", 110);
+
+            btnAtras.Click += (s, e) => MostrarPasoCorreo();
+
+            btnSiguiente.Click += (s, e) =>
+            {
+                string otp = txtOTP.Text.Trim();
+                lblError.Visibility = Visibility.Collapsed;
+
+                if (otp.Length != 6)
+                {
+                    lblError.Text = "⚠ El código debe tener exactamente 6 dígitos.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (!_auth.ValidarCodigo(_correoRecuperacion, otp))
+                {
+                    lblError.Text = "⚠ Código incorrecto, expirado o superaste los 3 intentos.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                MostrarPasoNuevaContrasena();
+            };
+
+            var spacer = new Border { Width = 8 };
+            btnRow.Children.Add(btnAtras);
+            btnRow.Children.Add(spacer);
+            btnRow.Children.Add(btnSiguiente);
+
+            _contenidoPanel.Children.Add(CrearTitulo("Código de verificación"));
+            _contenidoPanel.Children.Add(CrearMensaje($"Ingresa el código de 6 dígitos enviado a {_correoRecuperacion}.\nExpira en 5 minutos."));
+            _contenidoPanel.Children.Add(txtOTP);
+            _contenidoPanel.Children.Add(lblError);
+            _contenidoPanel.Children.Add(btnRow);
+
+            txtOTP.Focus();
+        }
+
+        //PASO 3: Nueva contraseña 
+        private void MostrarPasoNuevaContrasena()
+        {
+            _contenidoPanel.Children.Clear();
+
+            var txtNueva = CrearCampoTexto();
+            var txtConfirmar = CrearCampoTexto();
+            var lblError = CrearMensajeError("");
+
+
+            AgregarPlaceholder(txtNueva, "Nueva contraseña (mín. 6 caracteres)");
+            AgregarPlaceholder(txtConfirmar, "Confirmar contraseña");
+
+            var btnRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var btnAtras = CrearBoton("← Atrás", "#475569", 100);
+            var btnGuardar = CrearBoton("Guardar", "#16A34A", 110);
+
+            btnAtras.Click += (s, e) => MostrarPasoOTP();
+
+            btnGuardar.Click += (s, e) =>
+            {
+                string nueva = txtNueva.Text.Trim();
+                string confirmar = txtConfirmar.Text.Trim();
+                lblError.Visibility = Visibility.Collapsed;
+
+                if (nueva.Length < 6)
+                {
+                    lblError.Text = "⚠ La contraseña debe tener al menos 6 caracteres.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (nueva != confirmar)
+                {
+                    lblError.Text = "⚠ Las contraseñas no coinciden.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (!ActualizarContrasenaEnBD(_correoRecuperacion, nueva))
+                {
+                    lblError.Text = "⚠ Error al guardar. Intenta nuevamente.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                MostrarExito();
+            };
+
+            var spacer = new Border { Width = 8 };
+            btnRow.Children.Add(btnAtras);
+            btnRow.Children.Add(spacer);
+            btnRow.Children.Add(btnGuardar);
+
+            _contenidoPanel.Children.Add(CrearTitulo("Nueva contraseña"));
+            _contenidoPanel.Children.Add(CrearMensaje("Elige una contraseña segura para tu cuenta."));
+            _contenidoPanel.Children.Add(txtNueva);
+            _contenidoPanel.Children.Add(txtConfirmar);
+            _contenidoPanel.Children.Add(lblError);
+            _contenidoPanel.Children.Add(btnRow);
+
+            txtNueva.Focus();
+        }
+
+        private void MostrarExito()
+        {
+            _contenidoPanel.Children.Clear();
+
+            var icono = new TextBlock
+            {
+                Text = "✅",
+                FontSize = 40,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 12)
+            };
+
+            var btnCerrar = CrearBoton("Listo", "#2563EB", 120);
+            btnCerrar.HorizontalAlignment = HorizontalAlignment.Center;
+            btnCerrar.Margin = new Thickness(0, 16, 0, 0);
+            btnCerrar.Click += (s, e) =>
+            {
+                _correoRecuperacion = string.Empty;
+                CerrarOverlay();
+            };
+
+            _contenidoPanel.Children.Add(icono);
+            _contenidoPanel.Children.Add(CrearTitulo("¡Contraseña actualizada!"));
+            _contenidoPanel.Children.Add(CrearMensaje("Ya puedes iniciar sesión con tu nueva contraseña."));
+            _contenidoPanel.Children.Add(btnCerrar);
+        }
+
+        private void AgregarPlaceholder(TextBox txt, string placeholder)
+        {
+            txt.Text = placeholder;
+            txt.Foreground = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#64748B"));
+
+            txt.GotFocus += (s, e) =>
+            {
+                if (txt.Text == placeholder)
+                {
+                    txt.Text = string.Empty;
+                    txt.Foreground = Brushes.White;
+                }
+            };
+
+            txt.LostFocus += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(txt.Text))
+                {
+                    txt.Text = placeholder;
+                    txt.Foreground = new SolidColorBrush(
+                        (Color)ColorConverter.ConvertFromString("#64748B"));
+                }
+            };
+        }
+
         private bool CorreoExisteEnBD(string correo)
         {
             try
