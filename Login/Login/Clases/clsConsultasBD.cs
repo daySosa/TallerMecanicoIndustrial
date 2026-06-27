@@ -605,22 +605,24 @@ namespace Login.Clases
         {
             try
             {
-                string query = "SELECT Usuario_Contraseña FROM LOGIN WHERE Usuario_Email = @correo";
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                cmd.Parameters.AddWithValue("@correo", correo);
-
-                _conexion.Abrir();
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                if (lector.Read())
+                // Hashear la contraseña ingresada con SHA512
+                string inputHash;
+                using (var sha = System.Security.Cryptography.SHA512.Create())
                 {
-                    string hashGuardado = lector["Usuario_Contraseña"].ToString();
-                    lector.Close();
-                    return BCrypt.Net.BCrypt.Verify(contrasena, hashGuardado);
+                    byte[] bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(contrasena));
+                    inputHash = BitConverter.ToString(bytes).Replace("-", "");
                 }
 
-                lector.Close();
-                return false;
+                string query = @"SELECT COUNT(1) FROM LOGIN 
+                         WHERE Usuario_Email = @correo 
+                         AND Usuario_Contraseña = @hash";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@correo", correo);
+                cmd.Parameters.AddWithValue("@hash", inputHash);
+
+                _conexion.Abrir();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
             }
             catch (Exception ex)
             {
