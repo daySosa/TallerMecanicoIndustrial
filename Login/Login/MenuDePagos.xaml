@@ -1,116 +1,358 @@
 ﻿<Window x:Class="Contabilidad.MenuDePagos"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Contabilidad"
-        mc:Ignorable="d"
         Title="MenuDePagos" Height="850" Width="1200"
-        Background="#1F2128"
-        WindowStartupLocation="CenterScreen">
+        Background="#1F2128" WindowStartupLocation="CenterScreen">
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="5*"/>
-            <ColumnDefinition Width="20*"/>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <materialDesign:ColorZone Grid.Column="0" CornerRadius="15 0 0 15"
-                                  Background="#242731" VerticalAlignment="Stretch">
-            <StackPanel Margin="15,0,15,0">
+        <Border Grid.Column="0" Background="#242731">
+            <DockPanel LastChildFill="False">
 
-                <WrapPanel Margin="0,10,5,60" HorizontalAlignment="Center" Height="184" Width="185">
+                <Border DockPanel.Dock="Top" Padding="20,20,20,10">
                     <Image RenderOptions.BitmapScalingMode="HighQuality"
-                           Source="/Imagenes/OSM_LOGO.png" Height="184"/>
-                </WrapPanel>
+                           Source="/Imagenes/OSM_LOGO.png" Height="120"/>
+                </Border>
 
-                <Button x:Name="btnPantallaPrincipal" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,-40,0,15" Click="btnPantallaPrincipal_Click">
-                    <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="Home" VerticalAlignment="Center" Foreground="White" Height="25" Width="38"/>
-                        <TextBlock Foreground="White" FontSize="15">Pantalla Principal</TextBlock>
-                    </WrapPanel>
-                </Button>
+                <Rectangle DockPanel.Dock="Top" Height="1" Fill="#2e3250" Margin="16,0,16,10"/>
 
-                <Button x:Name="btnInventario" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnInventario_Click">
-                    <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="PackageVariant" VerticalAlignment="Center" Foreground="White" Height="26" Width="38"/>
-                        <TextBlock Foreground="White" FontSize="15">Inventario</TextBlock>
-                    </WrapPanel>
-                </Button>
+                <StackPanel DockPanel.Dock="Top" Margin="10,0">
 
-                <Button x:Name="btnVehículos" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnVehículos_Click">
-                    <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" VerticalAlignment="Center" Foreground="White" Width="39" Height="25"/>
-                        <TextBlock Foreground="White" FontSize="15">Vehículos</TextBlock>
-                    </WrapPanel>
-                </Button>
-
-                <Button x:Name="btnClientes" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnClientes_Click">
-                    <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="People" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
-                        <TextBlock Foreground="White" FontSize="15">Clientes</TextBlock>
-                    </WrapPanel>
-                </Button>
-
-                <Expander Background="#242731" Foreground="White" FontFamily="Segoe UI" FontSize="13"
-                          BorderThickness="0" Width="Auto" Margin="0,0,0,15">
-                    <Expander.Header>
-                        <StackPanel Orientation="Horizontal" Width="250">
-                            <materialDesign:PackIcon Kind="BookOpenPageVariant" VerticalAlignment="Center"
-                                                     Margin="5,0,10,0" Foreground="White" Height="18" Width="35"/>
-                            <TextBlock Foreground="White" FontSize="15">Contabilidad</TextBlock>
+                    <Button x:Name="btnPantallaPrincipal" Height="40" Margin="0,5"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalContentAlignment="Left" Cursor="Hand"
+                            Click="btnPantallaPrincipal_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="#2e3250" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="Transparent" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Home" Foreground="#8890b5"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Pantalla Principal" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
-                    </Expander.Header>
-                    <StackPanel Background="#242731">
-                        <Button Background="#242731" BorderThickness="0" Foreground="White"
-                                FontSize="15" HorizontalContentAlignment="Left" Click="btnEgresos_Click">
-                            <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CurrencyUsd" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
-                                <TextBlock Text="Egresos" VerticalAlignment="Center"/>
+                    </Button>
+
+                    <Button x:Name="btnInventario" Height="40" Margin="0,10"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalContentAlignment="Left" Cursor="Hand"
+                            Click="btnInventario_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="#2e3250" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="Transparent" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PackageVariant" Foreground="#8890b5"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Inventario" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="btnVehículos" Height="40" Margin="0,10"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalContentAlignment="Left" Cursor="Hand"
+                            Click="btnVehículos_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="#2e3250" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="Transparent" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" Foreground="#8890b5"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Vehículos" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="btnClientes" Height="40" Margin="0,10"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalContentAlignment="Left" Cursor="Hand"
+                            Click="btnClientes_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="#2e3250" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="Transparent" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="People" Foreground="#8890b5"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Clientes" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="btnÓrdenes" Height="40" Margin="0,10"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalContentAlignment="Left" Cursor="Hand"
+                            Click="btnÓrdenes_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="#2e3250" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="Transparent" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="OrderBoolAscending" Foreground="#8890b5"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Órdenes" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="btnUsuario" Height="40" Margin="0,10"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalContentAlignment="Left" Cursor="Hand"
+                            Click="btnUsuario_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="#2e3250" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetName="bg"
+                                                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                        To="Transparent" Duration="0:0:0.15"/>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountCog" Foreground="#8890b5"
+                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Usuarios" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Expander Background="Transparent" Foreground="#8890b5"
+                              BorderThickness="0" Margin="-8,5,0,2">
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Margin="-4,0,0,0">
+                                <materialDesign:PackIcon Kind="BookOpenPageVariant" Foreground="#8890b5"
+                                                         Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Contabilidad" Foreground="#8890b5" FontSize="13" VerticalAlignment="Center"/>
                             </StackPanel>
-                        </Button>
-                        <Button Background="#3D7EFF" BorderThickness="0" Foreground="White"
-                                FontSize="15" HorizontalContentAlignment="Left">
-                            <StackPanel Orientation="Horizontal" Width="250">
-                                <materialDesign:PackIcon Kind="CreditCard" VerticalAlignment="Center" Margin="15,0,20,0" Foreground="White"/>
-                                <TextBlock Text="Ingresos" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                        </Expander.Header>
+                        <StackPanel Margin="28,4,0,4">
+                            <Button Height="36" Background="Transparent" BorderThickness="0"
+                                    HorizontalContentAlignment="Left" Cursor="Hand"
+                                    Click="btnEgresos_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CurrencyUsd" Foreground="#8890b5"
+                                                             Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Egresos" Foreground="#8890b5" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border  CornerRadius="8" Padding="10,8" Margin="0,2">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CreditCard" Foreground="#8890b5"
+                                                             Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Ingresos" Foreground="#8890b5" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Expander>
+
+                </StackPanel>
+
+                <Rectangle DockPanel.Dock="Bottom" Height="1" Fill="#2e3250" Margin="16,0,16,0"/>
+
+
+                <Button DockPanel.Dock="Bottom" Height="40" Margin="10,4,10,8"
+                        Background="Transparent" BorderThickness="0"
+                        HorizontalContentAlignment="Left" Cursor="Hand"
+                        Click="btnCerrarSesion_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="10,0">
+                                <ContentPresenter VerticalAlignment="Center"/>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="MouseOver">
+                                            <Storyboard>
+                                                <ColorAnimation Storyboard.TargetName="bg"
+                                                    Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                    To="#3d1b1b" Duration="0:0:0.15"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Normal">
+                                            <Storyboard>
+                                                <ColorAnimation Storyboard.TargetName="bg"
+                                                    Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                    To="Transparent" Duration="0:0:0.15"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="LogoutVariant" Foreground="#E74C3C"
+                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Cerrar Sesión" Foreground="#E74C3C" FontSize="13" VerticalAlignment="Center"/>
                     </StackPanel>
-                </Expander>
-
-                <Button x:Name="btnÓrdenes" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White" Margin="0,0,0,15" Click="btnÓrdenes_Click">
-                    <WrapPanel Width="250">
-                        <materialDesign:PackIcon Kind="OrderBoolAscending" VerticalAlignment="Center" Foreground="White" Height="25" Width="39"/>
-                        <TextBlock Foreground="White" FontSize="15">Órdenes</TextBlock>
-                    </WrapPanel>
                 </Button>
 
-                <Button x:Name="btnCerrarSesión" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#242731"
-                        materialDesign:ButtonAssist.CornerRadius="6" Width="Auto"
-                        Height="35" materialDesign:RippleAssist.Feedback="White"
-                        VerticalAlignment="Bottom" Margin="0,70,0,15" Click="btnCerrarSesion_Click">
-                    <WrapPanel Width="175">
-                        <materialDesign:PackIcon Kind="LogoutVariant" VerticalAlignment="Center" Foreground="White" Width="39" Height="21"/>
-                        <TextBlock Foreground="White" FontSize="15">Cerrar Sesión</TextBlock>
-                    </WrapPanel>
-                </Button>
+                <Rectangle DockPanel.Dock="Bottom" Height="1" Fill="#2e3250" Margin="16,0,16,0"/>
 
-            </StackPanel>
-        </materialDesign:ColorZone>
+                <Border DockPanel.Dock="Bottom" Margin="12,8,12,12"
+                        Background="#1e2130" CornerRadius="10"
+                        BorderBrush="#2e3250" BorderThickness="1"
+                        Padding="12,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                                Background="#2e3250" Margin="0,0,10,0">
+                            <TextBlock x:Name="txtIniciales" Text="OS"
+                                       Foreground="#4f6ef7" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="txtNombreUsuario" Text="Oscar Sosa"
+                                       Foreground="White" FontSize="12" FontWeight="Medium"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="txtRolUsuario" Text="Propietario"
+                                       Foreground="#4f6ef7" FontSize="10"/>
+                        </StackPanel>
+
+                        <Ellipse Grid.Column="2" Width="8" Height="8"
+                                 Fill="#4CAF50" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+            </DockPanel>
+        </Border>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
@@ -119,43 +361,40 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="#1A1D2E" Height="80">
+            <Border Grid.Row="0" Background="#1A1D2E" Height="70">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="1"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="25,0,20,0">
-                        <TextBlock Text="Contabilidad - Ingresos" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Gestiona los pagos recibidos" Foreground="#6B7280" FontSize="12"/>
+                        <TextBlock Text="Contabilidad — Ingresos" Foreground="White" FontSize="17" FontWeight="Bold"/>
+                        <TextBlock Text="Gestiona los pagos recibidos" Foreground="#6B7280" FontSize="11"/>
                     </StackPanel>
 
-                    <Border Grid.Column="1" Background="#252836" CornerRadius="5"
-                            VerticalAlignment="Center" Height="40" MaxWidth="400"
-                            HorizontalAlignment="Left" Margin="20,0,0,0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
+                    <Border Background="#252836" CornerRadius="8"
+                            VerticalAlignment="Center" Height="38" MaxWidth="340"
+                            HorizontalAlignment="Left" Margin="290,0,0,0" Grid.ColumnSpan="2" Width="490">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
                             <materialDesign:PackIcon Kind="Magnify" Foreground="#6B7280"
-                                                     Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                     Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBox x:Name="txtBuscar"
-                                     Background="Transparent" Foreground="#6B7280"
+                                     Background="Transparent" Foreground="White"
                                      BorderThickness="0" VerticalAlignment="Center"
                                      FontSize="13" Width="200" CaretBrush="White"
+                                     materialDesign:HintAssist.Hint="Buscar pago..."
+                                     materialDesign:HintAssist.Foreground="#6B7280"
                                      TextChanged="txtBuscar_TextChanged">
                                 <TextBox.Style>
-                                    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Buscar pago..."/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#6B7280"/>
-                                    </Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}"/>
                                 </TextBox.Style>
                             </TextBox>
                         </StackPanel>
                     </Border>
 
-                    <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
+                    <Grid Grid.Column="2" VerticalAlignment="Center" Margin="16,0,20,0">
                         <Button x:Name="btnNotificaciones"
                                 Style="{StaticResource MaterialDesignIconButton}"
                                 Foreground="#6B7280" Width="38" Height="38"
@@ -175,8 +414,7 @@
                                AllowsTransparency="True" PopupAnimation="Fade">
                             <Border Background="#252836" CornerRadius="10"
                                     BorderBrush="#2A3A4D" BorderThickness="1"
-                                    Width="360" MaxHeight="480"
-                                    Effect="{DynamicResource MaterialDesignShadowDepth3}">
+                                    Width="360" MaxHeight="480">
                                 <Grid Margin="16">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -227,22 +465,10 @@
                             </Border>
                         </Popup>
                     </Grid>
-
-                    <Rectangle Grid.Column="3" Fill="#3D4458" Margin="0,20"/>
-
-                    <StackPanel Grid.Column="4" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="16,0,20,0">
-                        <Border Width="38" Height="38" CornerRadius="18" ClipToBounds="True"
-                                Margin="0,0,10,0" BorderBrush="#3D7EFF" BorderThickness="2"/>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Oscar Sosa" Foreground="#3D7EFF" FontSize="13" FontWeight="SemiBold"/>
-                            <TextBlock Text="Propietario" Foreground="#6B7280" FontSize="11"/>
-                        </StackPanel>
-                    </StackPanel>
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="1" Margin="20,15,20,10">
+            <Grid Grid.Row="1" Margin="20,14,20,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
@@ -260,7 +486,7 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Agregar Pago" VerticalAlignment="Center" FontSize="14"/>
+                        <TextBlock Text="Agregar Pago" VerticalAlignment="Center" FontSize="13"/>
                     </StackPanel>
                 </Button>
 
@@ -268,12 +494,13 @@
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="#2E7D32" Foreground="White"
                         materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="38" Padding="16,0" Margin="10,0,20,0"
+                        materialDesign:ElevationAssist.Elevation="Dp0"
+                        Height="38" Padding="16,0" Margin="0,0,10,0"
                         Click="btnReportes_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="14"/>
+                        <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="13"/>
                     </StackPanel>
                 </Button>
 
@@ -286,26 +513,23 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18"
                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Mostrar Comprobante" VerticalAlignment="Center" FontSize="14"/>
+                        <TextBlock Text="Ver Comprobante" VerticalAlignment="Center" FontSize="13"/>
                     </StackPanel>
                 </Button>
             </Grid>
 
-            <materialDesign:Card Grid.Row="2"
-                                 Background="#1E2A3A"
+            <materialDesign:Card Grid.Row="2" Background="#1E2A3A"
                                  materialDesign:ElevationAssist.Elevation="Dp4"
-                                 UniformCornerRadius="10"
-                                 Margin="20,0,20,20">
+                                 UniformCornerRadius="10" Margin="20,0,20,20">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Padding="20,16"
+                    <Border Grid.Row="0" Padding="20,14"
                             BorderBrush="#2A3A4D" BorderThickness="0,0,0,1">
-                        <TextBlock Text="Registro de Pagos"
-                                   Foreground="White" FontSize="15" FontWeight="Medium"/>
+                        <TextBlock Text="Registro de Pagos" Foreground="White" FontSize="14" FontWeight="Medium"/>
                     </Border>
 
                     <DataGrid Grid.Row="1" x:Name="dgPagos"
@@ -320,12 +544,13 @@
                               Background="Transparent" Foreground="White"
                               BorderThickness="0" RowBackground="Transparent"
                               AlternatingRowBackground="#162030"
-                              ColumnHeaderHeight="40" RowHeight="55"
+                              ColumnHeaderHeight="40" RowHeight="52"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              EnableRowVirtualization="True"
                               MouseDoubleClick="dgPagos_MouseDoubleClick"
                               HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch"
-                              materialDesign:DataGridAssist.CellPadding="0"
-                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
+                              VerticalAlignment="Stretch">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -374,7 +599,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding Pago_ID}" Width="60">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
+                                    <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Padding" Value="12,0"/>
@@ -386,10 +611,10 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                                            <Border Width="34" Height="34" CornerRadius="17"
+                                            <Border Width="32" Height="32" CornerRadius="16"
                                                     Background="#2A3A4D" Margin="0,0,10,0">
                                                 <materialDesign:PackIcon Kind="Account" Foreground="#8B9BB4"
-                                                                         Width="18" Height="18"
+                                                                         Width="16" Height="16"
                                                                          HorizontalAlignment="Center"
                                                                          VerticalAlignment="Center"/>
                                             </Border>
@@ -406,7 +631,7 @@
 
                             <DataGridTextColumn Header="Orden ID" Binding="{Binding Orden_ID}" Width="90">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
+                                    <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#8B9BB4"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Padding" Value="12,0"/>
@@ -415,25 +640,24 @@
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Monto"
-                    Binding="{Binding Precio_Pago, StringFormat='L {0:N2}'}"
-                    Width="110">
+                                                Binding="{Binding Precio_Pago, StringFormat='L {0:N2}'}"
+                                                Width="110">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
+                                    <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#4CAF50"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="HorizontalAlignment" Value="Left"/>
                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                         <Setter Property="Padding" Value="12,0,0,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="Fecha" Width="150">
+                            <DataGridTemplateColumn Header="Fecha" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Fecha_Pago, StringFormat='dd/MM/yyyy'}"
-                                           Foreground="White" FontSize="12"
-                                           VerticalAlignment="Center" Margin="12,0"/>
+                                                   Foreground="White" FontSize="12"
+                                                   VerticalAlignment="Center" Margin="12,0"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
