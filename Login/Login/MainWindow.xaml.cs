@@ -1,4 +1,5 @@
 ﻿using Login.Clases;
+using Serilog;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -14,83 +15,72 @@ namespace Login
     /// </summary>
     public partial class MainWindow : Window
     {
-        /// <summary>
-        /// Indica si la contraseña se muestra en texto visible o en modo oculto.
-        /// </summary>
         private bool _contrasenaVisible = false;
+        private bool _procesandoLogin = false;
 
-        /// <summary>
-        /// Instancia utilizada para validar credenciales en la base de datos.
-        /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
+        private readonly clsConsultasBD _db = new clsConsultasBD();
 
-        /// <summary>
-        /// Ruta del archivo donde se almacenan las credenciales recordadas del usuario.
-        /// </summary>
         private readonly string _archivoRecordar =
             Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
 
-        /// <summary>
-        /// Inicializa una nueva instancia de la ventana <see cref="MainWindow"/>
-        /// y carga las credenciales guardadas si existen.
-        /// </summary>
+        private static readonly SolidColorBrush BrushFocus = CrearBrush("#2563EB");
+        private static readonly SolidColorBrush BrushError = CrearBrush("#f44336");
+        private static readonly SolidColorBrush BrushNormal = CrearBrush("#FFFFFF", 0.12);
+        private static readonly SolidColorBrush BrushTransparente = CrearBrushTransparente();
+
+        private static SolidColorBrush CrearBrush(string hex, double? opacidad = null)
+        {
+            var color = (Color)ColorConverter.ConvertFromString(hex);
+            var brush = new SolidColorBrush(color);
+            if (opacidad.HasValue) brush.Opacity = opacidad.Value;
+            brush.Freeze();
+            return brush;
+        }
+
+        private static SolidColorBrush CrearBrushTransparente()
+        {
+            var brush = new SolidColorBrush(Colors.Transparent);
+            brush.Freeze();
+            return brush;
+        }
+
         public MainWindow()
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
         }
 
-        /// <summary>
-        /// Permite mover la ventana arrastrándola con el mouse.
-        /// </summary>
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 this.DragMove();
         }
 
-        /// <summary>
-        /// Aplica estilo visual al campo de correo cuando recibe el foco.
-        /// </summary>
         private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
         {
-            borderCorreo.BorderBrush =
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2563EB"));
+            borderCorreo.BorderBrush = BrushFocus;
             borderCorreo.BorderThickness = new Thickness(2);
         }
 
-        /// <summary>
-        /// Restaura el estilo visual del campo de correo al perder el foco.
-        /// </summary>
         private void TxtCorreo_LostFocus(object sender, RoutedEventArgs e)
         {
-            borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
+            borderCorreo.BorderBrush = BrushTransparente;
             borderCorreo.BorderThickness = new Thickness(1.5);
         }
 
-        /// <summary>
-        /// Aplica estilo visual al campo de contraseña cuando recibe el foco.
-        /// </summary>
         private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e)
         {
-            borderContrasena.BorderBrush =
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2563EB"));
+            borderContrasena.BorderBrush = BrushFocus;
             borderContrasena.BorderThickness = new Thickness(2);
         }
 
-        /// <summary>
-        /// Restaura el estilo visual del campo de contraseña al perder el foco.
-        /// </summary>
         private void TxtContrasena_LostFocus(object sender, RoutedEventArgs e)
         {
-            borderContrasena.BorderBrush = new SolidColorBrush(Colors.Transparent);
+            borderContrasena.BorderBrush = BrushTransparente;
             borderContrasena.BorderThickness = new Thickness(1.5);
         }
 
-        /// <summary>
-        /// Alterna la visibilidad de la contraseña entre texto oculto y visible.
-        /// </summary>
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
             _contrasenaVisible = !_contrasenaVisible;
@@ -114,11 +104,6 @@ namespace Login
             }
         }
 
-
-        /// <summary>
-        /// Obtiene la contraseña ingresada por el usuario según el modo de visualización.
-        /// </summary>
-        /// <returns>Contraseña ingresada.</returns>
         private string ObtenerContrasena()
         {
             return _contrasenaVisible
@@ -126,29 +111,38 @@ namespace Login
                 : txtContrasena.Password;
         }
 
+        private void BtnCerrar_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
 
-        /// <summary>
-        /// Guarda las credenciales del usuario en un archivo local en formato JSON.
-        /// </summary>
         private void GuardarCredenciales(string correo, string contrasena)
         {
-            var datos = new { Correo = correo, Contrasena = contrasena };
-            string json = JsonSerializer.Serialize(datos);
-            File.WriteAllText(_archivoRecordar, json);
+            try
+            {
+                var datos = new { Correo = correo, Contrasena = contrasena };
+                string json = JsonSerializer.Serialize(datos);
+                File.WriteAllText(_archivoRecordar, json);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "No se pudieron guardar las credenciales recordadas.");
+            }
         }
 
-        /// <summary>
-        /// Elimina las credenciales almacenadas localmente.
-        /// </summary>
         private void EliminarCredenciales()
         {
-            if (File.Exists(_archivoRecordar))
-                File.Delete(_archivoRecordar);
+            try
+            {
+                if (File.Exists(_archivoRecordar))
+                    File.Delete(_archivoRecordar);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "No se pudieron eliminar las credenciales recordadas.");
+            }
         }
 
-        //// <summary>
-        /// Carga las credenciales almacenadas previamente y las muestra en la interfaz.
-        /// </summary>
         private void CargarCredencialesRecordadas()
         {
             try
@@ -162,119 +156,135 @@ namespace Login
                 txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
                 chkRecordar.IsChecked = true;
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Warning(ex, "No se pudieron cargar las credenciales recordadas.");
             }
         }
 
         /// <summary>
-        /// Valida los datos ingresados y ejecuta el proceso de inicio de sesión.
+        /// Valida los datos ingresados y ejecuta el proceso de inicio de sesión de forma asíncrona,
+        /// evitando que la UI se congele mientras se consulta la base de datos o se envía el correo 2FA.
         /// </summary>
-        private void BtnLogin_Click(object sender, RoutedEventArgs e)
+        private async void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
+            if (_procesandoLogin) return; // evita doble clic / doble validación
+
             bool hayError = false;
 
-            /// <summary>
-            /// Valida el correo electrónico ingresado utilizando la clase de validaciones.
-            /// </summary>
             string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
-
-
             if (errorCorreo != null)
             {
                 txtErrorCorreo.Text = errorCorreo;
                 txtErrorCorreo.Visibility = Visibility.Visible;
-                borderCorreo.BorderBrush =
-                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                borderCorreo.BorderBrush = BrushError;
                 hayError = true;
             }
             else
             {
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
-                borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
+                borderCorreo.BorderBrush = BrushTransparente;
             }
 
-            /// <summary>
-            /// Valida la contraseña ingresada utilizando la clase de validaciones.
-            /// </summary>
             string contrasena = ObtenerContrasena();
             string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
-
-
             if (errorContrasena != null)
             {
                 txtErrorContrasena.Text = errorContrasena;
                 txtErrorContrasena.Visibility = Visibility.Visible;
-                borderContrasena.BorderBrush =
-                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                borderContrasena.BorderBrush = BrushError;
                 hayError = true;
             }
             else
             {
                 txtErrorContrasena.Visibility = Visibility.Collapsed;
-                borderContrasena.BorderBrush = new SolidColorBrush(Colors.Transparent);
+                borderContrasena.BorderBrush = BrushTransparente;
             }
 
             if (hayError) return;
 
-            if (chkRecordar.IsChecked == true)
-                GuardarCredenciales(txtCorreo.Text.Trim(), contrasena);
-            else
-                EliminarCredenciales();
+            string correo = txtCorreo.Text.Trim();
 
-            IniciarSesion(txtCorreo.Text.Trim(), contrasena);
+            _procesandoLogin = true;
+            SetCargando(true, sender as System.Windows.Controls.Button);
+
+            try
+            {
+                if (chkRecordar.IsChecked == true)
+                    GuardarCredenciales(correo, contrasena);
+                else
+                    EliminarCredenciales();
+
+                await IniciarSesionAsync(correo, contrasena);
+            }
+            finally
+            {
+                _procesandoLogin = false;
+                SetCargando(false, sender as System.Windows.Controls.Button);
+            }
         }
 
         /// <summary>
-        /// Verifica las credenciales del usuario y ejecuta la autenticación en dos factores (2FA).
+        /// Habilita/deshabilita el botón de login y cambia su texto mientras se procesa la autenticación.
         /// </summary>
-        private void IniciarSesion(string correo, string contrasena)
+        private void SetCargando(bool cargando, System.Windows.Controls.Button boton)
+        {
+            if (boton == null) return;
+            boton.IsEnabled = !cargando;
+            boton.Content = cargando ? "Verificando..." : "Iniciar Sesión";
+        }
+
+        /// <summary>
+        /// Verifica las credenciales del usuario y ejecuta la autenticación en dos factores (2FA),
+        /// corriendo la consulta a la base de datos y el envío de correo en un hilo de fondo
+        /// para no bloquear la interfaz.
+        /// </summary>
+        private async System.Threading.Tasks.Task IniciarSesionAsync(string correo, string contrasena)
         {
             try
             {
-                bool valido = _db.ValidarLogin(correo, contrasena);
+                bool valido = await System.Threading.Tasks.Task.Run(
+                    () => _db.ValidarLogin(correo, contrasena));
 
-                if (valido)
-                {
-                    clsAutenticacion autenticacion = new clsAutenticacion();
-                    string codigo2FA = autenticacion.GenerarCodigo(correo);
-                    bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
-
-                    if (enviado)
-                    {
-                        OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
-                        ventanaVerificacion.Show();
-                        this.Close();
-                    }
-                    else
-                    {
-                        MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
-                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-                else
+                if (!valido)
                 {
                     txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
                     txtErrorCorreo.Visibility = Visibility.Visible;
-                    borderCorreo.BorderBrush =
-                        new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
-                    borderContrasena.BorderBrush =
-                        new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                    borderCorreo.BorderBrush = BrushError;
+                    borderContrasena.BorderBrush = BrushError;
+                    return;
+                }
+
+                clsAutenticacion autenticacion = new clsAutenticacion();
+
+                string codigo2FA = await System.Threading.Tasks.Task.Run(
+                    () => autenticacion.GenerarCodigo(correo));
+
+                bool enviado = await System.Threading.Tasks.Task.Run(
+                    () => autenticacion.EnviarCorreo(correo, codigo2FA));
+
+                if (enviado)
+                {
+                    OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
+                    ventanaVerificacion.Show();
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "Error durante el proceso de inicio de sesión para {Correo}", correo);
                 MessageBox.Show("Error al conectar: " + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        /// <summary>
-        /// Evento reservado para futuras validaciones dinámicas del correo.
-        /// </summary>
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-
         }
     }
 }

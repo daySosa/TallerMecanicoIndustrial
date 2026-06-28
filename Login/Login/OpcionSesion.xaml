@@ -1,95 +1,236 @@
-﻿<Window
+﻿<Window x:Class="Login.OpcionSesion"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        x:Class="Login.OpcionSesion"
-        Title="Opción de Inicio de Sesión"
-        Height="680" Width="950"
+        Title="Opción de Inicio de Sesión" Height="420" Width="540"
+        Background="#0f1117"
         WindowStartupLocation="CenterScreen"
-        Background="Transparent"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="NoResize"
         MouseDown="Window_Drag">
 
-    <Border CornerRadius="16" ClipToBounds="True">
-        <Grid>
+    <Window.Resources>
+        <DropShadowEffect x:Key="WinShadow" Color="#000000"
+                          BlurRadius="48" ShadowDepth="0" Opacity="0.7"/>
+    </Window.Resources>
 
-            <Image Source="/Imagenes/fondo_login.png"
-                   Stretch="UniformToFill"
-                   RenderOptions.BitmapScalingMode="HighQuality"/>
+    <Border CornerRadius="16" Effect="{StaticResource WinShadow}">
+        <Border CornerRadius="16" ClipToBounds="True" Background="#0f1117">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <Border Width="360"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    CornerRadius="18"
-                    Padding="36,30"
-                    BorderThickness="1">
-                <Border.Background>
-                    <SolidColorBrush Color="#7A8BA0" Opacity="0.55"/>
-                </Border.Background>
-                <Border.Effect>
-                    <DropShadowEffect Color="#000000" Opacity="0.5"
-                                      BlurRadius="40" ShadowDepth="0"/>
-                </Border.Effect>
-                <Border.BorderBrush>
-                    <SolidColorBrush Color="#ffffff" Opacity="0.15"/>
-                </Border.BorderBrush>
+                <Border Grid.Row="0" Background="#13161f"
+                        BorderBrush="#1e2235" BorderThickness="0,0,0,1"
+                        Padding="26,18">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="40" Height="40" CornerRadius="11" Margin="0,0,14,0">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#2a3580" Offset="0"/>
+                                        <GradientStop Color="#1c2455" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <materialDesign:PackIcon Kind="ShieldLockOutline"
+                                                         Foreground="#7986f7"
+                                                         Width="20" Height="20"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Verificación de identidad"
+                                           Foreground="White" FontSize="15"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="Elige cómo deseas continuar"
+                                           Foreground="#505880" FontSize="11"
+                                           Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Button Grid.Column="1" Width="30" Height="30"
+                                BorderThickness="0" Background="Transparent"
+                                Cursor="Hand" Click="BtnCerrar_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="cb" CornerRadius="7"
+                                            Background="Transparent"
+                                            Width="30" Height="30">
+                                        <materialDesign:PackIcon Kind="Close"
+                                                                 Foreground="#404568"
+                                                                 Width="14" Height="14"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="cb" Property="Background" Value="#1e2235"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Border>
 
-                <StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Margin="26,0">
 
-                    <Image Source="/Imagenes/OSM_Logo_AR.png"
-                           Height="90" Width="90"
-                           HorizontalAlignment="Center"
-                           RenderOptions.BitmapScalingMode="HighQuality"
-                           Margin="0,0,0,2"/>
-
-                    <TextBlock Text="Opción de Inicio de Sesión"
-                               Foreground="White" FontSize="22" FontWeight="Bold"
-                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-
-                    <TextBlock Text="Seleccione una opción para poder iniciar sesión"
-                               Foreground="#dce3f0" FontSize="11"
-                               TextWrapping="Wrap" TextAlignment="Center"
-                               HorizontalAlignment="Center" Margin="0,0,0,22"/>
-
- 
-                    <Button Height="44"
-                            FontSize="14" FontWeight="SemiBold"
-                            Cursor="Hand"
-                            Click="BtnCodigoVerificacion_Click"
-                            materialDesign:ButtonAssist.CornerRadius="8"
-                            materialDesign:ElevationAssist.Elevation="Dp0"
-                            Margin="0,0,0,16">
-                        <Button.Style>
-                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                <Setter Property="Background"  Value="#2563EB"/>
-                                <Setter Property="Foreground"  Value="White"/>
-                                <Setter Property="BorderBrush" Value="#2563EB"/>
-                            </Style>
-                        </Button.Style>
-                        <TextBlock Text="Código de Verificación" FontSize="14" FontWeight="SemiBold"/>
+                    <Button x:Name="btnCodigoVerificacion"
+                            Width="210" Height="200"
+                            Cursor="Hand" Click="BtnCodigoVerificacion_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="card"
+                                        Width="210" Height="200"
+                                        CornerRadius="14"
+                                        BorderBrush="#252840"
+                                        BorderThickness="1.5"
+                                        Background="#13161f">
+                                    <StackPanel VerticalAlignment="Center"
+                                                HorizontalAlignment="Center">
+                                        <Border Width="56" Height="56" CornerRadius="14"
+                                                Background="#1a1d35"
+                                                HorizontalAlignment="Center"
+                                                Margin="0,0,0,16">
+                                            <materialDesign:PackIcon Kind="EmailOutline"
+                                                                     Foreground="#4f6ef7"
+                                                                     Width="26" Height="26"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Código de verificación"
+                                                   Foreground="White"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Width="150"
+                                                   Margin="0,0,0,8"/>
+                                        <TextBlock Text="Vía correo electrónico"
+                                                   Foreground="#404568"
+                                                   FontSize="11"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="card" Property="BorderBrush" Value="#4f6ef7"/>
+                                        <Setter TargetName="card" Property="Background" Value="#191c30"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="card" Property="Opacity" Value="0.7"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                     </Button>
 
-                    <Button Height="44"
-                            FontSize="14" FontWeight="SemiBold"
-                            Cursor="Hand"
-                            Click="BtnReconocimientoFacial_Click"
-                            materialDesign:ButtonAssist.CornerRadius="8"
-                            materialDesign:ElevationAssist.Elevation="Dp0">
-                        <Button.Style>
-                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                <Setter Property="Background"  Value="#2563EB"/>
-                                <Setter Property="Foreground"  Value="White"/>
-                                <Setter Property="BorderBrush" Value="#2563EB"/>
-                            </Style>
-                        </Button.Style>
-                        <TextBlock Text="Reconocimiento Facial" FontSize="14" FontWeight="SemiBold"/>
+                    <StackPanel Width="40" VerticalAlignment="Center"
+                                HorizontalAlignment="Center">
+                        <Rectangle Width="1" Height="55"
+                                   Fill="#1e2235"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="o" Foreground="#2d3255"
+                                   FontSize="11"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,8"/>
+                        <Rectangle Width="1" Height="55"
+                                   Fill="#1e2235"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <Button x:Name="btnReconocimientoFacial"
+                            Width="210" Height="200"
+                            Cursor="Hand" Click="BtnReconocimientoFacial_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="card"
+                                        Width="210" Height="200"
+                                        CornerRadius="14"
+                                        BorderBrush="#252840"
+                                        BorderThickness="1.5"
+                                        Background="#13161f">
+                                    <StackPanel VerticalAlignment="Center"
+                                                HorizontalAlignment="Center">
+                                        <Border Width="56" Height="56" CornerRadius="14"
+                                                Background="#1a1d35"
+                                                HorizontalAlignment="Center"
+                                                Margin="0,0,0,16">
+                                            <materialDesign:PackIcon Kind="FaceRecognition"
+                                                                     Foreground="#4f6ef7"
+                                                                     Width="26" Height="26"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Reconocimiento facial"
+                                                   Foreground="White"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Width="150"
+                                                   Margin="0,0,0,8"/>
+                                        <TextBlock Text="Vía cámara web"
+                                                   Foreground="#404568"
+                                                   FontSize="11"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="card" Property="BorderBrush" Value="#4f6ef7"/>
+                                        <Setter TargetName="card" Property="Background" Value="#191c30"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="card" Property="Opacity" Value="0.7"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                     </Button>
 
                 </StackPanel>
-            </Border>
 
-        </Grid>
+                <Border Grid.Row="2" Background="#0c0e17"
+                        BorderBrush="#1a1e30" BorderThickness="0,1,0,0"
+                        Padding="26,14">
+                    <Button x:Name="btnCerrar" HorizontalAlignment="Right"
+                            Width="115" Height="36"
+                            Cursor="Hand" Click="BtnCerrar_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="Transparent"
+                                        BorderBrush="#2e3350" BorderThickness="1"
+                                        CornerRadius="9" Padding="16,0">
+                                    <TextBlock Text="Cancelar" Foreground="#7880a4"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#1c2035"/>
+                                        <Setter TargetName="bd" Property="BorderBrush" Value="#3d4470"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Border>
+
+            </Grid>
+        </Border>
     </Border>
 </Window>
