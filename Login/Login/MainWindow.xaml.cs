@@ -1,11 +1,9 @@
 ﻿using Login.Clases;
-using System.Data.SqlClient;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Login
 {
@@ -26,9 +24,6 @@ namespace Login
         /// </summary>
         private clsConsultasBD _db = new clsConsultasBD();
 
-        private System.Windows.Threading.DispatcherTimer _timerBloqueo;
-        private DateTime _fechaDesbloqueo;
-
         /// <summary>
         /// Ruta del archivo donde se almacenan las credenciales recordadas del usuario.
         /// </summary>
@@ -39,20 +34,12 @@ namespace Login
         /// <summary>
         /// Inicializa una nueva instancia de la ventana <see cref="MainWindow"/>
         /// y carga las credenciales guardadas si existen.
-        /// </summary> 
-
-        private RecuperarContrasenia _recuperar;
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
-            _recuperar = new RecuperarContrasenia(this);
         }
-
-        // Al inicio de la clase MainWindow
-
-
-
 
         /// <summary>
         /// Permite mover la ventana arrastrándola con el mouse.
@@ -245,25 +232,10 @@ namespace Login
         {
             try
             {
-                DateTime? fechaBloqueo = _db.ObtenerFechaBloqueo(correo);
-
-                if (fechaBloqueo.HasValue && fechaBloqueo.Value > DateTime.Now)
-                {
-                    _fechaDesbloqueo = fechaBloqueo.Value;
-                    IniciarCuentaRegresiva();
-                    return;
-                }
-                else if (fechaBloqueo.HasValue)
-                {
-                    _db.ActualizarBloqueo(correo, 0, null);
-                }
-
                 bool valido = _db.ValidarLogin(correo, contrasena);
 
                 if (valido)
                 {
-                    _db.ActualizarBloqueo(correo, 0, null);
-
                     clsAutenticacion autenticacion = new clsAutenticacion();
                     string codigo2FA = autenticacion.GenerarCodigo(correo);
                     bool enviado = autenticacion.EnviarCorreo(correo, codigo2FA);
@@ -282,26 +254,12 @@ namespace Login
                 }
                 else
                 {
-                    int intentos = _db.ObtenerIntentosFallidos(correo) + 1;
-
-                    if (intentos >= 3)
-                    {
-                        DateTime bloqueoHasta = DateTime.Now.AddMinutes(15);
-                        _db.ActualizarBloqueo(correo, intentos, bloqueoHasta);
-                        _fechaDesbloqueo = bloqueoHasta;
-                        IniciarCuentaRegresiva();
-                    }
-                    else
-                    {
-                        int restantes = 3 - intentos;
-                        _db.ActualizarBloqueo(correo, intentos, null);
-                        txtErrorCorreo.Foreground = new SolidColorBrush(
-                            (Color)ColorConverter.ConvertFromString("#f44336"));
-                        txtErrorCorreo.Text = $"⚠ Correo o contraseña incorrectos. Intentos restantes: {restantes}";
-                        txtErrorCorreo.Visibility = Visibility.Visible;
-                        MostrarBordeError(borderContrasena);
-                        MostrarBordeError(borderCorreo);
-                    }
+                    txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
+                    txtErrorCorreo.Visibility = Visibility.Visible;
+                    borderCorreo.BorderBrush =
+                        new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
+                    borderContrasena.BorderBrush =
+                        new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"));
                 }
             }
             catch (Exception ex)
@@ -311,74 +269,12 @@ namespace Login
             }
         }
 
-        private void IniciarCuentaRegresiva()
-        {
-            DetenerCuentaRegresiva();
-
-            ActualizarMensajeBloqueo();
-            MostrarBordeError(borderCorreo);
-
-            _timerBloqueo = new System.Windows.Threading.DispatcherTimer();
-            _timerBloqueo.Interval = TimeSpan.FromSeconds(1);
-            _timerBloqueo.Tick += (s, e) =>
-            {
-                TimeSpan restante = _fechaDesbloqueo - DateTime.Now;
-
-                if (restante.TotalSeconds <= 0)
-                {
-                    DetenerCuentaRegresiva();
-                    txtErrorCorreo.Text = "✅ Ya puedes intentar iniciar sesión nuevamente.";
-                    txtErrorCorreo.Foreground = new SolidColorBrush(
-                        (Color)ColorConverter.ConvertFromString("#4CAF50"));
-                    borderCorreo.BorderBrush = new SolidColorBrush(Colors.Transparent);
-                }
-                else
-                {
-                    ActualizarMensajeBloqueo();
-                }
-            };
-            _timerBloqueo.Start();
-        }
-
-        private void ActualizarMensajeBloqueo()
-        {
-            TimeSpan restante = _fechaDesbloqueo - DateTime.Now;
-            int minutos = (int)restante.TotalMinutes;
-            int segundos = restante.Seconds;
-
-            txtErrorCorreo.Text = $"⛔ Cuenta bloqueada. Espere {minutos}:{segundos:D2} min.";
-            txtErrorCorreo.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#f44336"));
-            txtErrorCorreo.Visibility = Visibility.Visible;
-        }
-
-        private void DetenerCuentaRegresiva()
-        {
-            if (_timerBloqueo != null)
-            {
-                _timerBloqueo.Stop();
-                _timerBloqueo = null;
-            }
-        }
-
         /// <summary>
         /// Evento reservado para futuras validaciones dinámicas del correo.
         /// </summary>
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
 
-        }
-
-        private void MostrarBordeError(System.Windows.Controls.Border border)
-        {
-            border.BorderBrush = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#f44336"));
-            border.BorderThickness = new Thickness(1.5);
-        }
-
-        private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
-        {
-            _recuperar.IniciarFlujo();
         }
     }
 }

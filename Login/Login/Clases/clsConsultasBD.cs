@@ -1,14 +1,8 @@
 ﻿using Dasboard_Prueba;
-using InterfazClientes;
-using InterfazInventario;
-using Login.Clases;
+using Microsoft.Data.SqlClient;
 using Órdenes_de_Trabajo;
-using Vehículos;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.Text;
+using Vehículos;
 
 namespace Login.Clases
 {
@@ -522,49 +516,6 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        public List<InterfazInventario.Repuesto> ObtenerProductos()
-        {
-            var lista = new List<InterfazInventario.Repuesto>();
-            try
-            {
-                string query = @"
-            SELECT Producto_ID,
-                   Producto_Nombre,
-                   Producto_Categoria,
-                   ISNULL(Producto_Marca,  '—') AS Producto_Marca,
-                   ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
-                   Producto_Cantidad_Actual,
-                   Producto_Stock_Minimo,
-                   Producto_Precio
-            FROM   Producto
-            ORDER  BY Producto_Nombre";
-
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                _conexion.Abrir();
-                using SqlDataReader rd = cmd.ExecuteReader();
-                while (rd.Read())
-                {
-                    lista.Add(new InterfazInventario.Repuesto
-                    {
-                        Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
-                        Producto_Nombre = rd["Producto_Nombre"].ToString(),
-                        Producto_Categoria = rd["Producto_Categoria"].ToString(),
-                        Producto_Marca = rd["Producto_Marca"].ToString(),
-                        Producto_Modelo = rd["Producto_Modelo"].ToString(),
-                        Producto_Cantidad_Actual = rd.GetInt32(rd.GetOrdinal("Producto_Cantidad_Actual")),
-                        Producto_Cantidad_Minima = rd.GetInt32(rd.GetOrdinal("Producto_Stock_Minimo")),
-                        Producto_Precio = rd.GetDecimal(rd.GetOrdinal("Producto_Precio"))
-                    });
-                }
-                return lista;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al cargar productos: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
-
         public bool ActualizarProducto(int productoId, string nombre, string categoria,
                                         string marca, string modelo, decimal precio, int cantidad)
         {
@@ -605,24 +556,19 @@ namespace Login.Clases
         {
             try
             {
-                // Hashear la contraseña ingresada con SHA512
-                string inputHash;
-                using (var sha = System.Security.Cryptography.SHA512.Create())
-                {
-                    byte[] bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(contrasena));
-                    inputHash = BitConverter.ToString(bytes).Replace("-", "");
-                }
-
-                string query = @"SELECT COUNT(1) FROM LOGIN 
-                         WHERE Usuario_Email = @correo 
-                         AND Usuario_Contraseña = @hash";
+                string query = @"SELECT * FROM LOGIN
+                                WHERE Usuario_Email = @correo
+                                AND Usuario_Contraseña COLLATE Latin1_General_CS_AS = @contrasena";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@correo", correo);
-                cmd.Parameters.AddWithValue("@hash", inputHash);
+                cmd.Parameters.AddWithValue("@contrasena", contrasena);
 
                 _conexion.Abrir();
-                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+                SqlDataReader lector = cmd.ExecuteReader();
+                bool encontrado = lector.Read();
+                lector.Close();
+                return encontrado;
             }
             catch (Exception ex)
             {
@@ -826,7 +772,48 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        
+        public List<Repuesto> ObtenerProductos()
+        {
+            var lista = new List<Repuesto>();
+            try
+            {
+                string query = @"
+                    SELECT Producto_ID,
+                           Producto_Nombre,
+                           Producto_Categoria,
+                           ISNULL(Producto_Marca,  '—') AS Producto_Marca,
+                           ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
+                           Producto_Cantidad_Actual,
+                           Producto_Stock_Minimo,
+                           Producto_Precio
+                    FROM   Producto
+                    ORDER  BY Producto_Nombre";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                _conexion.Abrir();
+                using SqlDataReader rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new Repuesto
+                    {
+                        Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
+                        Producto_Nombre = rd["Producto_Nombre"].ToString(),
+                        Producto_Categoria = rd["Producto_Categoria"].ToString(),
+                        Producto_Marca = rd["Producto_Marca"].ToString(),
+                        Producto_Modelo = rd["Producto_Modelo"].ToString(),
+                        Producto_Cantidad_Actual = rd.GetInt32(rd.GetOrdinal("Producto_Cantidad_Actual")),
+                        Producto_Cantidad_Minima = rd.GetInt32(rd.GetOrdinal("Producto_Stock_Minimo")),
+                        Producto_Precio = rd.GetDecimal(rd.GetOrdinal("Producto_Precio"))
+                    });
+                }
+                return lista;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al cargar productos: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
 
         public List<OrdenTrabajo> ObtenerOrdenes()
         {
@@ -1036,15 +1023,14 @@ namespace Login.Clases
         }
 
         public (string nombreCompleto, string telefono, string email,
-                string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca,
-                bool activo, bool vehiculoActivo)
+                string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca)
                 BuscarClientePorDNI(string dni)
         {
             try
             {
                 string sqlCliente = @"
                     SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
-                           Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Activo
+                           Cliente_TelefonoPrincipal, Cliente_Email
                     FROM   Cliente WHERE Cliente_DNI = @DNI";
 
                 SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC);
@@ -1056,14 +1042,13 @@ namespace Login.Clases
                 string nombre = rd["NombreCompleto"].ToString();
                 string telefono = rd["Cliente_TelefonoPrincipal"].ToString();
                 string email = rd["Cliente_Email"].ToString();
-                bool activo = rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"];
                 rd.Close();
 
                 string sqlVehiculo = @"
                     SELECT TOP 1
                            Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
                            Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           Vehiculo_Placa, Vehiculo_Activo
+                           Vehiculo_Placa
                     FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
 
                 SqlCommand cmd2 = new SqlCommand(sqlVehiculo, _conexion.SqlC);
@@ -1071,33 +1056,29 @@ namespace Login.Clases
                 using SqlDataReader rd2 = cmd2.ExecuteReader();
                 if (rd2.Read())
                 {
-                    bool vehiculoActivo = rd2["Vehiculo_Activo"] != DBNull.Value && (bool)rd2["Vehiculo_Activo"];
                     return (nombre, telefono, email,
                             rd2["NombreVehiculo"].ToString(),
                             rd2["TipoAño"].ToString(),
-                            rd2["Vehiculo_Placa"].ToString(),
-                            activo, vehiculoActivo);
+                            rd2["Vehiculo_Placa"].ToString());
                 }
-                return (nombre, telefono, email, "", "", "", activo, true);
+                return (nombre, telefono, email, "", "", "");
             }
             catch (Exception ex) { throw new Exception("Error: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
         public (string vehiculoNombre, string vehiculoTipo, string clienteDNI,
-        string nombreCompleto, string telefono, string email,
-        bool activo, bool vehiculoActivo)
-        BuscarVehiculoPorPlaca(string placa)
+                string nombreCompleto, string telefono, string email)
+                BuscarVehiculoPorPlaca(string placa)
         {
             try
             {
                 string sql = @"
                     SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
                            v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           v.Vehiculo_Activo,
                            c.Cliente_DNI,
                            c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email, c.Cliente_Activo
+                           c.Cliente_TelefonoPrincipal, c.Cliente_Email
                     FROM   Vehiculo v
                     INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
                     WHERE  v.Vehiculo_Placa = @Placa";
@@ -1113,9 +1094,7 @@ namespace Login.Clases
                             rd["Cliente_DNI"].ToString(),
                             rd["NombreCompleto"].ToString(),
                             rd["Cliente_TelefonoPrincipal"].ToString(),
-                            rd["Cliente_Email"].ToString(),
-                            rd["Cliente_Activo"] != DBNull.Value && (bool)rd["Cliente_Activo"],
-                            rd["Vehiculo_Activo"] != DBNull.Value && (bool)rd["Vehiculo_Activo"]);
+                            rd["Cliente_Email"].ToString());
                 }
                 return default;
             }
@@ -1189,7 +1168,7 @@ namespace Login.Clases
 
             try
             {
-                _conexion.Abrir(); 
+                _conexion.Abrir();
 
 
                 string sqlUpdate = @"
@@ -1386,65 +1365,5 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
-        public int ObtenerIntentosFallidos(string correo)
-        {
-            try
-            {
-                string query = "SELECT IntentosFallidos FROM LOGIN WHERE Usuario_Email = @correo";
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                cmd.Parameters.AddWithValue("@correo", correo);
-                _conexion.Abrir();
-                object resultado = cmd.ExecuteScalar();
-                return resultado != null ? Convert.ToInt32(resultado) : 0;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener intentos: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
-
-        public DateTime? ObtenerFechaBloqueo(string correo)
-        {
-            try
-            {
-                string query = "SELECT FechaBloqueo FROM LOGIN WHERE Usuario_Email = @correo";
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                cmd.Parameters.AddWithValue("@correo", correo);
-                _conexion.Abrir();
-                object resultado = cmd.ExecuteScalar();
-                return (resultado != null && resultado != DBNull.Value)
-                    ? Convert.ToDateTime(resultado)
-                    : (DateTime?)null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener fecha de bloqueo: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
-
-        public void ActualizarBloqueo(string correo, int intentos, DateTime? fechaBloqueo)
-        {
-            try
-            {
-                string query = @"UPDATE LOGIN 
-                         SET IntentosFallidos = @intentos,
-                             FechaBloqueo = @fechaBloqueo
-                         WHERE Usuario_Email = @correo";
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                cmd.Parameters.AddWithValue("@intentos", intentos);
-                cmd.Parameters.AddWithValue("@fechaBloqueo",
-                    fechaBloqueo.HasValue ? (object)fechaBloqueo.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@correo", correo);
-                _conexion.Abrir();
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al actualizar bloqueo: " + ex.Message);
-            }
-            finally { _conexion.Cerrar(); }
-        }
     }
 }

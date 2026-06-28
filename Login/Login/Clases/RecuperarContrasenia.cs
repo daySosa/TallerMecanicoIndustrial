@@ -1,5 +1,4 @@
-using Login.Clases;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;

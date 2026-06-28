@@ -17,20 +17,18 @@
 
 	<ItemGroup>
 		<PackageReference Include="AForge.Video.DirectShow" Version="2.2.5" />
-		<PackageReference Include="BCrypt.Net-Next.StrongName" Version="4.2.0" />
-		<PackageReference Include="Emgu.CV" Version="4.12.0.5764" />
-		<PackageReference Include="Emgu.CV.Bitmap" Version="4.12.0.5764" />
-		<PackageReference Include="Emgu.CV.Models" Version="4.12.0.5764" />
-		<PackageReference Include="Emgu.CV.runtime.windows" Version="4.12.0.5764" />
+		<PackageReference Include="Emgu.CV" Version="4.13.0.5924" />
+		<PackageReference Include="Emgu.CV.Bitmap" Version="4.13.0.5924" />
+		<PackageReference Include="Emgu.CV.Models" Version="4.13.0.5924" />
+		<PackageReference Include="Emgu.CV.runtime.windows" Version="4.13.0.5924" />
 		<PackageReference Include="HandyControl" Version="3.5.1" />
 		<PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
-		<PackageReference Include="MailKit" Version="4.15.0" />
-		<PackageReference Include="MaterialDesignColors" Version="5.3.0" />
-		<PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
-		<PackageReference Include="Select.HtmlToPdf" Version="25.2.0" />
-		<PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
+		<PackageReference Include="MailKit" Version="4.17.0" />
+		<PackageReference Include="MaterialDesignColors" Version="5.3.2" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.3.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+		<PackageReference Include="Select.HtmlToPdf" Version="26.3.0" />
+		<PackageReference Include="Select.Pdf" Version="26.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>

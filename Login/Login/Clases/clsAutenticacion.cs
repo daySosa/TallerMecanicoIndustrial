@@ -1,6 +1,6 @@
 ﻿using MailKit.Net.Smtp;
+using Microsoft.Data.SqlClient;
 using MimeKit;
-using System.Data.SqlClient;
 using System.Windows;
 
 namespace Login.Clases
