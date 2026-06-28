@@ -184,6 +184,26 @@
                                     </StackPanel>
                                 </Button>
 
+
+                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="#8890b5"
+                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Usuarios" Foreground="#8890b5"
+                                                   FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
+                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Bitácora" Foreground="#8890b5"
+                                                   FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+
                                 <Expander Background="Transparent" Foreground="#8890b5"
                                           BorderThickness="0" Margin="-8,2,0,2">
                                     <Expander.Header>
@@ -215,25 +235,7 @@
                                         </Button>
                                     </StackPanel>
                                 </Expander>
-
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="#8890b5"
-                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Usuarios" Foreground="#8890b5"
-                                                   FontSize="13" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
-                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Bitácora" Foreground="#8890b5"
-                                                   FontSize="13" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
+                                
                             </StackPanel>
 
                             <Rectangle DockPanel.Dock="Bottom" Height="1" Fill="#1e2235" Margin="16,0,16,0"/>
