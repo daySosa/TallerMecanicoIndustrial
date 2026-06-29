@@ -1028,15 +1028,16 @@ namespace Login.Clases
         }
 
         public (string nombreCompleto, string telefono, string email,
-                string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca)
-                BuscarClientePorDNI(string dni)
+        string vehiculoNombre, string vehiculoTipo, string vehiculoPlaca,
+        bool activo, bool vehiculoActivo)
+        BuscarClientePorDNI(string dni)
         {
             try
             {
                 string sqlCliente = @"
-                    SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
-                           Cliente_TelefonoPrincipal, Cliente_Email
-                    FROM   Cliente WHERE Cliente_DNI = @DNI";
+            SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
+                   Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Activo
+            FROM   Cliente WHERE Cliente_DNI = @DNI";
 
                 SqlCommand cmd = new SqlCommand(sqlCliente, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@DNI", dni);
@@ -1044,49 +1045,55 @@ namespace Login.Clases
                 using SqlDataReader rd = cmd.ExecuteReader();
                 if (!rd.Read()) return default;
 
-                string nombre = rd["NombreCompleto"].ToString();
-                string telefono = rd["Cliente_TelefonoPrincipal"].ToString();
-                string email = rd["Cliente_Email"].ToString();
+                string nombre = rd["NombreCompleto"].ToString()!;
+                string telefono = rd["Cliente_TelefonoPrincipal"].ToString()!;
+                string email = rd["Cliente_Email"].ToString()!;
+                bool activo = rd["Cliente_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Cliente_Activo"]);
                 rd.Close();
 
                 string sqlVehiculo = @"
-                    SELECT TOP 1
-                           Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
-                           Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           Vehiculo_Placa
-                    FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
+            SELECT TOP 1
+                   Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
+                   Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
+                   Vehiculo_Placa, Vehiculo_Activo
+            FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
 
                 SqlCommand cmd2 = new SqlCommand(sqlVehiculo, _conexion.SqlC);
                 cmd2.Parameters.AddWithValue("@DNI", dni);
                 using SqlDataReader rd2 = cmd2.ExecuteReader();
                 if (rd2.Read())
                 {
+                    bool vActivo = rd2["Vehiculo_Activo"] != DBNull.Value
+                                   && Convert.ToBoolean(rd2["Vehiculo_Activo"]);
                     return (nombre, telefono, email,
-                            rd2["NombreVehiculo"].ToString(),
-                            rd2["TipoAño"].ToString(),
-                            rd2["Vehiculo_Placa"].ToString());
+                            rd2["NombreVehiculo"].ToString()!,
+                            rd2["TipoAño"].ToString()!,
+                            rd2["Vehiculo_Placa"].ToString()!,
+                            activo, vActivo);
                 }
-                return (nombre, telefono, email, "", "", "");
+                return (nombre, telefono, email, "", "", "", activo, true);
             }
             catch (Exception ex) { throw new Exception("Error: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
         public (string vehiculoNombre, string vehiculoTipo, string clienteDNI,
-                string nombreCompleto, string telefono, string email)
+                string nombreCompleto, string telefono, string email,
+                bool activo, bool vehiculoActivo)
                 BuscarVehiculoPorPlaca(string placa)
         {
             try
             {
                 string sql = @"
-                    SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           c.Cliente_DNI,
-                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email
-                    FROM   Vehiculo v
-                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-                    WHERE  v.Vehiculo_Placa = @Placa";
+            SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
+                   v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
+                   v.Vehiculo_Activo,
+                   c.Cliente_DNI,
+                   c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                   c.Cliente_TelefonoPrincipal, c.Cliente_Email, c.Cliente_Activo
+            FROM   Vehiculo v
+            INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
+            WHERE  v.Vehiculo_Placa = @Placa";
 
                 SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Placa", placa);
@@ -1094,12 +1101,15 @@ namespace Login.Clases
                 using SqlDataReader rd = cmd.ExecuteReader();
                 if (rd.Read())
                 {
-                    return (rd["NombreVehiculo"].ToString(),
-                            rd["TipoAño"].ToString(),
-                            rd["Cliente_DNI"].ToString(),
-                            rd["NombreCompleto"].ToString(),
-                            rd["Cliente_TelefonoPrincipal"].ToString(),
-                            rd["Cliente_Email"].ToString());
+                    bool cActivo = rd["Cliente_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Cliente_Activo"]);
+                    bool vActivo = rd["Vehiculo_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Vehiculo_Activo"]);
+                    return (rd["NombreVehiculo"].ToString()!,
+                            rd["TipoAño"].ToString()!,
+                            rd["Cliente_DNI"].ToString()!,
+                            rd["NombreCompleto"].ToString()!,
+                            rd["Cliente_TelefonoPrincipal"].ToString()!,
+                            rd["Cliente_Email"].ToString()!,
+                            cActivo, vActivo);
                 }
                 return default;
             }
@@ -1232,43 +1242,29 @@ namespace Login.Clases
                 {
                     if (!rep.Incluido) continue;
 
-                    bool estabaAntes = productosOriginales.Contains(rep.ProductoID);
+                    // Siempre reinsertamos en Orden_Repuesto (ya borramos todos arriba)
+                    string sqlReinsertar = @"
+                            INSERT INTO Orden_Repuesto
+                                (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
+                            SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
+                            FROM   Producto p WHERE p.Producto_ID = @ProductoID";
 
-                    if (estabaAntes)
+                    SqlCommand cmdR = new SqlCommand(sqlReinsertar, _conexion.SqlC);
+                    cmdR.Parameters.AddWithValue("@OrdenID", ordenID);
+                    cmdR.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
+                    cmdR.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
+                    cmdR.ExecuteNonQuery();
+
+                    // Solo descontar stock si es un repuesto NUEVO (no estaba antes)
+                    if (!productosOriginales.Contains(rep.ProductoID))
                     {
-                        string sqlReinsertar = @"
-                                INSERT INTO Orden_Repuesto
-                                    (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
-                                SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
-                                FROM   Producto p WHERE p.Producto_ID = @ProductoID;
-
-                                UPDATE Producto
-                                SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
-                                WHERE  Producto_ID = @ProductoID";
-
-                        SqlCommand cmdR = new SqlCommand(sqlReinsertar, _conexion.SqlC);
-                        cmdR.Parameters.AddWithValue("@OrdenID", ordenID);
-                        cmdR.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                        cmdR.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                        cmdR.ExecuteNonQuery();
-                    }
-                    else
-                    {
-                        string sqlNuevo = @"
-                                INSERT INTO Orden_Repuesto
-                                    (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
-                                SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
-                                FROM   Producto p WHERE p.Producto_ID = @ProductoID;
-
-                                UPDATE Producto
-                                SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
-                                WHERE  Producto_ID = @ProductoID";
-
-                        SqlCommand cmdN = new SqlCommand(sqlNuevo, _conexion.SqlC);
-                        cmdN.Parameters.AddWithValue("@OrdenID", ordenID);
-                        cmdN.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                        cmdN.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                        cmdN.ExecuteNonQuery();
+                        SqlCommand cmdStock = new SqlCommand(@"
+                                    UPDATE Producto
+                                    SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
+                                    WHERE  Producto_ID = @ProductoID", _conexion.SqlC);
+                        cmdStock.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
+                        cmdStock.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
+                        cmdStock.ExecuteNonQuery();
                     }
                 }
 

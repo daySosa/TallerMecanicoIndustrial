@@ -4,157 +4,109 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace Órdenes_de_Trabajo
 {
-    /// <summary>
-    /// Ventana principal para la gestión de órdenes de trabajo.
-    /// Permite crear, editar y consultar órdenes, así como asociar clientes,
-    /// vehículos y repuestos.
-    /// </summary>
     public partial class OrdenWindow : Window
     {
-        /// <summary>
-        /// Instancia para consultas a la base de datos.
-        /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
-
-        /// <summary>
-        /// DNI del cliente asociado a la orden actual.
-        /// </summary>
+        private readonly clsConsultasBD _db = new();
         private string _clienteDNI = string.Empty;
-
-        /// <summary>
-        /// Placa del vehículo asociado a la orden actual.
-        /// </summary>
         private string _vehiculoPlaca = string.Empty;
-
-        /// <summary>
-        /// Indica si la búsqueda se realiza por DNI (<c>true</c>) o por placa (<c>false</c>).
-        /// </summary>
         private bool _buscarPorDNI = true;
-
-        /// <summary>
-        /// Identificador de la orden que se está editando.
-        /// Permanece en 0 cuando se crea una nueva orden.
-        /// </summary>
         private int _ordenIDEditar = 0;
+        private readonly ObservableCollection<RepuestoOrden> _repuestos = new();
 
-        /// <summary>
-        /// Ruta local de la fotografía adjunta al vehículo de la orden.
-        /// </summary>
-        private string _rutaFoto = string.Empty;
+        // Colores reutilizables
+        private static readonly SolidColorBrush BrushActivo =
+            new(Color.FromRgb(0x4f, 0x6e, 0xf7));
+        private static readonly SolidColorBrush BrushInactivo =
+            new(Color.FromRgb(0x1e, 0x22, 0x35));
+        private static readonly SolidColorBrush BrushTextoInactivo =
+            new(Color.FromRgb(0x50, 0x58, 0x80));
+        private static readonly SolidColorBrush BrushZonaDañada =
+            new(Color.FromArgb(0x22, 0x4f, 0x6e, 0xf7));
 
-        /// <summary>
-        /// Colección observable de repuestos asociados a la orden actual.
-        /// </summary>
-        private ObservableCollection<RepuestoOrden> _repuestos
-            = new ObservableCollection<RepuestoOrden>();
-
-       
-        // CONSTRUCTOR
-        
-
-        /// <summary>
-        /// Inicializa una nueva instancia de <see cref="OrdenWindow"/>.
-        /// Configura el idioma de los selectores de fecha, enlaza la colección
-        /// de repuestos al grid, registra los manejadores de validación de entrada
-        /// y establece el estado inicial de los botones.
-        /// </summary>
         public OrdenWindow()
         {
             InitializeComponent();
             dgRepuestos.ItemsSource = _repuestos;
 
-            dpFecha.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
-            dpEntrega.Language = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
+            // Idioma fechas
+            var lang = System.Windows.Markup.XmlLanguage.GetLanguage("es-HN");
+            dpFecha.Language = lang;
+            dpEntrega.Language = lang;
 
             dpFecha.SelectedDate = DateTime.Today;
             dpFecha.IsEnabled = false;
 
-            btnActualizar.IsEnabled = false;
-            btnActualizar.Opacity = 0.4;
+            // Botones modo "nuevo": Añadir habilitado, Actualizar deshabilitado
+            SetModoNuevo();
 
+            // Validación de entrada en tiempo real
             txtBuscar.PreviewTextInput += TxtBuscar_PreviewTextInput;
             DataObject.AddPastingHandler(txtBuscar, TxtBuscar_Pasting);
 
-            txtBuscar.TextChanged += (s, e) =>
-            {
-                int limite = _buscarPorDNI ? 13 : 7;
-                if (txtBuscar.Text.Length > limite)
-                    txtBuscar.Text = txtBuscar.Text.Substring(0, limite);
-                txtContador.Text = $"{txtBuscar.Text.Length} / {limite}";
-            };
-
+            // Precio servicio: recalcular al cambiar
             txtPrecioServicio.TextChanged += (s, e) => RecalcularPrecios();
 
             txtPrecioServicio.LostFocus += (s, e) =>
             {
-                string texto = txtPrecioServicio.Text
-                    .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-                if (decimal.TryParse(texto,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        out decimal valor))
-                    txtPrecioServicio.Text = $"L {valor:N2}";
+                if (ParsePrecio(txtPrecioServicio.Text, out decimal v))
+                    txtPrecioServicio.Text = $"L {v:N2}";
                 else
                     txtPrecioServicio.Text = "L 0.00";
             };
 
             txtPrecioServicio.GotFocus += (s, e) =>
             {
-                string texto = txtPrecioServicio.Text
+                string limpio = txtPrecioServicio.Text
                     .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-                txtPrecioServicio.Text = texto == "0.00" ? "0" : texto;
+                txtPrecioServicio.Text = limpio == "0.00" ? "0" : limpio;
                 txtPrecioServicio.SelectAll();
             };
         }
 
-       
-        /// <summary>
-        /// Restringe la entrada del campo de búsqueda según el modo activo:
-        /// solo dígitos para DNI o solo caracteres alfanuméricos para placa.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento de entrada de texto.</param>
+        // ── HELPERS DE MODO ─────────────────────────────────────────
+
+        private void SetModoNuevo()
+        {
+            btnAñadir.IsEnabled = true;
+            btnAñadir.Opacity = 1;
+            btnActualizar.IsEnabled = false;
+            btnActualizar.Opacity = 0.4;
+            txtTituloVentana.Text = "Nueva Orden de Trabajo";
+        }
+
+        private void SetModoEditar()
+        {
+            btnAñadir.IsEnabled = false;
+            btnAñadir.Opacity = 0.4;
+            btnActualizar.IsEnabled = true;
+            btnActualizar.Opacity = 1;
+            txtTituloVentana.Text = "Editar Orden de Trabajo";
+        }
+
+        // ── VALIDACIÓN DE ENTRADA ────────────────────────────────────
+
         private void TxtBuscar_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (_buscarPorDNI)
-                e.Handled = !clsValidacionesOrden.EsCaracterValidoDNI(e.Text);
-            else
-                e.Handled = !clsValidacionesOrden.EsCaracterValidoPlaca(e.Text);
+            e.Handled = _buscarPorDNI
+                ? !clsValidacionesOrden.EsCaracterValidoDNI(e.Text)
+                : !clsValidacionesOrden.EsCaracterValidoPlaca(e.Text);
         }
 
-        /// <summary>
-        /// Cancela el pegado de texto en el campo de búsqueda si el contenido
-        /// no cumple con el formato válido según el modo de búsqueda activo.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento de pegado.</param>
         private void TxtBuscar_Pasting(object sender, DataObjectPastingEventArgs e)
         {
-            if (!e.DataObject.GetDataPresent(typeof(string)))
-            {
-                e.CancelCommand();
-                return;
-            }
-
+            if (!e.DataObject.GetDataPresent(typeof(string))) { e.CancelCommand(); return; }
             string texto = (string)e.DataObject.GetData(typeof(string));
-
-            if (_buscarPorDNI && !clsValidacionesOrden.EsCaracterValidoDNI(texto))
-                e.CancelCommand();
-            else if (!_buscarPorDNI && !clsValidacionesOrden.EsCaracterValidoPlaca(texto))
-                e.CancelCommand();
+            bool valido = _buscarPorDNI
+                ? clsValidacionesOrden.EsCaracterValidoDNI(texto)
+                : clsValidacionesOrden.EsCaracterValidoPlaca(texto);
+            if (!valido) e.CancelCommand();
         }
 
-        /// <summary>
-        /// Carga los datos de una orden existente en el formulario para su edición.
-        /// Valida que la orden pueda editarse según el mes de registro, rellena todos
-        /// los campos visuales, carga los repuestos asociados y habilita el botón de actualizar.
-        /// Cierra la ventana si la orden no es editable.
-        /// </summary>
-        /// <param name="ordenID">Identificador de la orden a cargar.</param>
+        // ── CARGAR ORDEN PARA EDITAR ─────────────────────────────────
+
         public async Task CargarOrdenParaEditar(int ordenID)
         {
             _ordenIDEditar = ordenID;
@@ -165,67 +117,46 @@ namespace Órdenes_de_Trabajo
 
                 if (!clsValidacionesOrden.ValidarMesActualizacion(orden.fecha))
                 {
-                    this.Close();
+                    Close();
                     return;
                 }
 
                 _clienteDNI = orden.clienteDNI;
                 _vehiculoPlaca = orden.vehiculoPlaca;
 
+                // Info cliente
                 txtClienteNombre.Text = orden.nombreCompleto;
                 txtClienteTelefono.Text = orden.telefono;
                 txtClienteEmail.Text = orden.email;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
+                // Info vehículo
                 txtVehiculoNombre.Text = orden.vehiculoNombre;
                 txtVehiculoTipo.Text = orden.vehiculoTipo;
-                txtVehiculoPropietario.Text = orden.nombreCompleto;
+                txtVehiculoPropietario.Text = orden.vehiculoPlaca;
                 borderVehiculoInfo.Visibility = Visibility.Visible;
 
+                // Campos de la orden
                 dpFecha.SelectedDate = orden.fecha;
                 dpEntrega.SelectedDate = orden.fechaEntrega;
                 txtObservaciones.Text = orden.observaciones;
                 txtPrecioServicio.Text = $"L {orden.servicioPrecio:N2}";
 
-                if (!string.IsNullOrEmpty(orden.foto) && System.IO.File.Exists(orden.foto))
-                {
-                    _rutaFoto = orden.foto;
-                    imgFoto.Source = new BitmapImage(new Uri(orden.foto));
-                    imgFoto.Visibility = Visibility.Visible;
-                    txtFotoPlaceholder.Visibility = Visibility.Collapsed;
-                }
+                // Estado
+                SeleccionarComboBoxPorContenido(cmbEstado, orden.estado);
 
-                foreach (ComboBoxItem item in cmbEstado.Items)
-                {
-                    if (item.Content.ToString() == orden.estado)
-                    {
-                        cmbEstado.SelectedItem = item;
-                        break;
-                    }
-                }
+                // Prioridad — la BD no guarda prioridad actualmente, se deja en "Normal"
+                SeleccionarComboBoxPorContenido(cmbPrioridad, "Normal");
 
-                var repuestos = _db.ObtenerRepuestosOrden(ordenID);
-                foreach (var rep in repuestos)
+                // Repuestos
+                foreach (var rep in _db.ObtenerRepuestosOrden(ordenID))
                 {
                     rep.PropertyChanged += (s, e) => RecalcularPrecios();
                     _repuestos.Add(rep);
                 }
 
-                foreach (ComboBoxItem item in cmbPrioridad.Items)
-                {
-                    if (item.Content.ToString() == "Normal")
-                    {
-                        cmbPrioridad.SelectedItem = item;
-                        break;
-                    }
-                }
-
-                btnAñadir.IsEnabled = false;
-                btnAñadir.Opacity = 0.4;
-                btnActualizar.IsEnabled = true;
-                btnActualizar.Opacity = 1;
-
-                this.UpdateLayout();
+                SetModoEditar();
+                UpdateLayout();
                 RecalcularPrecios();
             }
             catch (Exception ex)
@@ -234,82 +165,61 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        /// <summary>Selecciona un ComboBoxItem cuyo Content coincida con <paramref name="valor"/>.</summary>
+        private static void SeleccionarComboBoxPorContenido(ComboBox combo, string valor)
+        {
+            foreach (ComboBoxItem item in combo.Items)
+            {
+                if (item.Content?.ToString() == valor)
+                {
+                    combo.SelectedItem = item;
+                    return;
+                }
+            }
+        }
 
-        /// <summary>
-        /// Activa el modo de búsqueda por DNI.
-        /// Actualiza el estilo visual de las pestañas, ajusta el límite de caracteres
-        /// del campo de búsqueda y limpia el panel de errores.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento de clic.</param>
+        // ── PESTAÑAS DE BÚSQUEDA ─────────────────────────────────────
+
         private void TabDNI_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = true;
             txtBuscar.MaxLength = 13;
             txtContador.Text = "0 / 13";
-            tabDNI.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6ef7"));
-            tabPlaca.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e2130"));
-            if (tabPlaca.Child is TextBlock tb)
-                tb.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6c7293"));
+            tabDNI.Background = BrushActivo;
+            tabPlaca.Background = BrushInactivo;
+            if (tabPlaca.Child is TextBlock tb) tb.Foreground = BrushTextoInactivo;
             lblBuscar.Text = "DNI del Cliente";
-            txtBuscar.Text = string.Empty;
+            txtBuscar.Clear();
             borderError.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>
-        /// Activa el modo de búsqueda por placa de vehículo.
-        /// Actualiza el estilo visual de las pestañas, ajusta el límite de caracteres
-        /// del campo de búsqueda y limpia el panel de errores.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento de clic.</param>
         private void TabPlaca_Click(object sender, MouseButtonEventArgs e)
         {
             _buscarPorDNI = false;
             txtBuscar.MaxLength = 7;
             txtContador.Text = "0 / 7";
-            tabPlaca.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6ef7"));
-            tabDNI.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e2130"));
-            if (tabPlaca.Child is TextBlock tb)
-                tb.Foreground = new SolidColorBrush(Colors.White);
+            tabPlaca.Background = BrushActivo;
+            tabDNI.Background = BrushInactivo;
+            if (tabPlaca.Child is TextBlock tb) tb.Foreground = Brushes.White;
             lblBuscar.Text = "Placa del Vehículo";
-            txtBuscar.Text = string.Empty;
+            txtBuscar.Clear();
             borderError.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>
-        /// Maneja el evento Click del botón Buscar.
-        /// Valida el campo de búsqueda y delega la consulta al método correspondiente
-        /// según el modo activo (DNI o placa).
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento.</param>
+        // ── BUSCAR ───────────────────────────────────────────────────
+
         private void BtnBuscar_Click(object sender, RoutedEventArgs e)
         {
             string valor = txtBuscar.Text.Trim();
 
             if (!clsValidacionesOrden.ValidarCampoBusqueda(valor, _buscarPorDNI))
-            {
-                txtBuscar.Focus();
-                return;
-            }
+            { txtBuscar.Focus(); return; }
 
-            if (_buscarPorDNI)
-            {
-                if (!clsValidacionesOrden.ValidarFormatoDNIBusqueda(valor))
-                {
-                    txtBuscar.Focus();
-                    return;
-                }
-            }
-            else
-            {
-                if (!clsValidacionesOrden.ValidarFormatoPlacaBusqueda(valor))
-                {
-                    txtBuscar.Focus();
-                    return;
-                }
-            }
+            if (_buscarPorDNI && !clsValidacionesOrden.ValidarFormatoDNIBusqueda(valor))
+            { txtBuscar.Focus(); return; }
+
+            if (!_buscarPorDNI && !clsValidacionesOrden.ValidarFormatoPlacaBusqueda(valor))
+            { txtBuscar.Focus(); return; }
 
             LimpiarResultados();
 
@@ -317,140 +227,111 @@ namespace Órdenes_de_Trabajo
             else BuscarPorPlaca(valor.ToUpper());
         }
 
-        /// <summary>
-        /// Busca un cliente en la base de datos por su DNI y muestra su información
-        /// junto con la del vehículo asociado si existe.
-        /// Muestra un mensaje de error si no se encuentra ningún resultado.
-        /// </summary>
-        /// <param name="dni">DNI del cliente a buscar.</param>
         private void BuscarPorDNI(string dni)
         {
             try
             {
-                var resultado = _db.BuscarClientePorDNI(dni);
-                if (resultado == default)
+                var r = _db.BuscarClientePorDNI(dni);
+                if (r == default)
                 {
                     MostrarError($"No existe cliente con DNI '{dni}'.");
                     return;
                 }
 
-                if (!clsValidacionesOrden.ValidarClienteActivo(resultado.activo, resultado.nombreCompleto))
-                    return;
+                if (!clsValidacionesOrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
 
-                if (!string.IsNullOrEmpty(resultado.vehiculoPlaca)
-                    && !clsValidacionesOrden.ValidarVehiculoActivo(resultado.vehiculoActivo, resultado.vehiculoNombre))
+                if (!string.IsNullOrEmpty(r.vehiculoPlaca)
+                    && !clsValidacionesOrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre))
                     return;
 
                 _clienteDNI = dni;
-                txtClienteNombre.Text = resultado.nombreCompleto;
-                txtClienteTelefono.Text = resultado.telefono;
-                txtClienteEmail.Text = resultado.email;
+                txtClienteNombre.Text = r.nombreCompleto;
+                txtClienteTelefono.Text = r.telefono;
+                txtClienteEmail.Text = r.email;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
-                if (!string.IsNullOrEmpty(resultado.vehiculoPlaca))
+                if (!string.IsNullOrEmpty(r.vehiculoPlaca))
                 {
-                    _vehiculoPlaca = resultado.vehiculoPlaca;
-                    txtVehiculoNombre.Text = resultado.vehiculoNombre;
-                    txtVehiculoTipo.Text = resultado.vehiculoTipo;
-                    txtVehiculoPropietario.Text = resultado.nombreCompleto;
+                    _vehiculoPlaca = r.vehiculoPlaca;
+                    txtVehiculoNombre.Text = r.vehiculoNombre;
+                    txtVehiculoTipo.Text = r.vehiculoTipo;
+                    txtVehiculoPropietario.Text = r.vehiculoPlaca;
                     borderVehiculoInfo.Visibility = Visibility.Visible;
                 }
 
-                this.UpdateLayout();
+                UpdateLayout();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
         }
 
-        /// <summary>
-        /// Busca un vehículo en la base de datos por su placa y muestra su información
-        /// junto con los datos del cliente propietario.
-        /// Muestra un mensaje de error si no se encuentra ningún resultado.
-        /// </summary>
-        /// <param name="placa">Placa del vehículo a buscar (en mayúsculas).</param>
         private void BuscarPorPlaca(string placa)
         {
             try
             {
-                var resultado = _db.BuscarVehiculoPorPlaca(placa);
-                if (resultado == default)
+                var r = _db.BuscarVehiculoPorPlaca(placa);
+                if (r == default)
                 {
                     MostrarError($"No existe vehículo con placa '{placa}'.");
                     return;
                 }
 
-                if (!clsValidacionesOrden.ValidarClienteActivo(resultado.activo, resultado.nombreCompleto))
-                    return;
-
-                if (!clsValidacionesOrden.ValidarVehiculoActivo(resultado.vehiculoActivo, resultado.vehiculoNombre))
-                    return;
+                if (!clsValidacionesOrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
+                if (!clsValidacionesOrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre)) return;
 
                 _vehiculoPlaca = placa;
-                _clienteDNI = resultado.clienteDNI;
-                txtVehiculoNombre.Text = resultado.vehiculoNombre;
-                txtVehiculoTipo.Text = resultado.vehiculoTipo;
-                txtVehiculoPropietario.Text = resultado.nombreCompleto;
-                txtClienteNombre.Text = resultado.nombreCompleto;
-                txtClienteTelefono.Text = resultado.telefono;
-                txtClienteEmail.Text = resultado.email;
+                _clienteDNI = r.clienteDNI;
+
+                txtVehiculoNombre.Text = r.vehiculoNombre;
+                txtVehiculoTipo.Text = r.vehiculoTipo;
+                txtVehiculoPropietario.Text = placa;
+                txtClienteNombre.Text = r.nombreCompleto;
+                txtClienteTelefono.Text = r.telefono;
+                txtClienteEmail.Text = r.email;
+
                 borderVehiculoInfo.Visibility = Visibility.Visible;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
-                this.UpdateLayout();
+                UpdateLayout();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
         }
 
+        // ── GUARDAR ──────────────────────────────────────────────────
 
-        /// <summary>
-        /// Maneja el evento Click del botón Añadir.
-        /// Valida el formulario completo, calcula el total de repuestos y servicio,
-        /// registra la nueva orden en la base de datos, limpia el formulario y cierra la ventana.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento.</param>
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidacionesOrden.ValidarFormularioVacio(
-                _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
+                    _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
 
             if (!clsValidacionesOrden.ValidarClienteAsignado(_clienteDNI)) return;
 
             if (!clsValidacionesOrden.ValidarFormularioAñadir(
-                    _clienteDNI,
-                    _vehiculoPlaca,
-                    cmbEstado.SelectedItem,
-                    cmbPrioridad.SelectedItem,
-                    dpFecha.SelectedDate,
-                    dpEntrega.SelectedDate,
-                    txtPrecioServicio.Text,
-                    txtObservaciones.Text,
-                    _rutaFoto,
-                    _repuestos.Count,
+                    _clienteDNI, _vehiculoPlaca,
+                    cmbEstado.SelectedItem, cmbPrioridad.SelectedItem,
+                    dpFecha.SelectedDate, dpEntrega.SelectedDate,
+                    txtPrecioServicio.Text, txtObservaciones.Text,
+                    string.Empty, _repuestos.Count,
                     out decimal precioServicio))
                 return;
 
             try
             {
-                decimal totalRepuestos = 0;
-                foreach (var r in _repuestos)
-                    if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
-
+                decimal totalRepuestos = _repuestos.Where(r => r.Incluido).Sum(r => r.Precio * r.Cantidad);
                 decimal total = totalRepuestos + precioServicio;
-                string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
+                string estado = ObtenerContenidoCombo(cmbEstado) ?? "Sin Empezar";
 
                 _db.AgregarOrden(
                     _clienteDNI, _vehiculoPlaca, null, estado,
                     dpFecha.SelectedDate ?? DateTime.Today,
                     dpEntrega.SelectedDate,
                     txtObservaciones.Text.Trim(),
-                    precioServicio, total, _rutaFoto,
-                    _repuestos.ToList()
-                );
+                    precioServicio, total, string.Empty,
+                    _repuestos.ToList());
 
                 MessageBox.Show("✅ Orden guardada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 LimpiarFormulario();
-                this.Close();
+                Close();
             }
             catch (Exception ex)
             {
@@ -459,53 +340,37 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        /// <summary>
-        /// Maneja el evento Click del botón Actualizar.
-        /// Valida el formulario completo, calcula el total actualizado de repuestos y servicio,
-        /// y persiste los cambios de la orden existente en la base de datos.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento.</param>
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidacionesOrden.ValidarFormularioVacio(
-                _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
+                    _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
 
             if (!clsValidacionesOrden.ValidarFormularioActualizar(
-                    _clienteDNI,
-                    _vehiculoPlaca,
-                    cmbEstado.SelectedItem,
-                    cmbPrioridad.SelectedItem,
-                    dpFecha.SelectedDate,
-                    dpEntrega.SelectedDate,
-                    txtPrecioServicio.Text,
-                    txtObservaciones.Text,
-                    _rutaFoto,
-                    _repuestos.Count,
+                    _clienteDNI, _vehiculoPlaca,
+                    cmbEstado.SelectedItem, cmbPrioridad.SelectedItem,
+                    dpFecha.SelectedDate, dpEntrega.SelectedDate,
+                    txtPrecioServicio.Text, txtObservaciones.Text,
+                    string.Empty, _repuestos.Count,
                     out decimal precioServicio))
                 return;
 
             try
             {
-                decimal totalRepuestos = 0;
-                foreach (var r in _repuestos)
-                    if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
-
+                decimal totalRepuestos = _repuestos.Where(r => r.Incluido).Sum(r => r.Precio * r.Cantidad);
                 decimal total = totalRepuestos + precioServicio;
-                string estado = (cmbEstado.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Sin Empezar";
+                string estado = ObtenerContenidoCombo(cmbEstado) ?? "Sin Empezar";
 
                 _db.ActualizarOrden(
                     _ordenIDEditar, estado,
                     dpFecha.SelectedDate ?? DateTime.Today,
                     dpEntrega.SelectedDate,
                     txtObservaciones.Text.Trim(),
-                    precioServicio, total, _rutaFoto,
-                    _repuestos.ToList()
-                );
+                    precioServicio, total, string.Empty,
+                    _repuestos.ToList());
 
                 MessageBox.Show("✅ Orden actualizada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                this.Close();
+                Close();
             }
             catch (Exception ex)
             {
@@ -514,46 +379,11 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        // ── REPUESTOS ────────────────────────────────────────────────
 
-        /// <summary>
-        /// Maneja el evento de clic sobre el área de foto del vehículo.
-        /// Abre un diálogo de selección de archivo filtrado por imágenes,
-        /// valida el archivo seleccionado y lo muestra en el control de imagen.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento de clic.</param>
-        private void AdjuntarFoto_Click(object sender, MouseButtonEventArgs e)
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "Imágenes|*.jpg;*.jpeg;*.png;*.bmp",
-                Title = "Seleccionar foto del vehículo"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                if (!clsValidacionesOrden.ValidarFoto(dialog.FileName))
-                    return;
-
-                _rutaFoto = dialog.FileName;
-                imgFoto.Source = new BitmapImage(new Uri(_rutaFoto));
-                imgFoto.Visibility = Visibility.Visible;
-                txtFotoPlaceholder.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        /// <summary>
-        /// Maneja el evento Click del botón de agregar repuesto.
-        /// Abre la ventana <see cref="AgregarRepuesto"/> como diálogo modal,
-        /// y si el usuario confirma, añade el repuesto resultante a la colección
-        /// y recalcula los precios totales.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento.</param>
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            var ventana = new AgregarRepuesto();
-            ventana.Owner = this;
+            var ventana = new AgregarRepuesto { Owner = this };
             ventana.ShowDialog();
 
             if (ventana.RepuestoResultado != null)
@@ -565,54 +395,144 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        // ── CANCELAR ─────────────────────────────────────────────────
 
-        /// <summary>
-        /// Maneja el evento Click del botón Cancelar.
-        /// Cierra la ventana sin guardar ningún cambio.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento.</param>
-        private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
+        private void btnCancelar_Click(object sender, RoutedEventArgs e) => Close();
 
-      
-        /// <summary>
-        /// Recalcula y actualiza los campos de precio en pantalla.
-        /// Suma el total de los repuestos incluidos y lo combina con el precio
-        /// del servicio para obtener el costo total de la orden.
-        /// </summary>
+        // ── CÁLCULO DE PRECIOS ───────────────────────────────────────
+
         private void RecalcularPrecios()
         {
-            decimal totalRepuestos = 0;
-            foreach (var r in _repuestos)
-                if (r.Incluido) totalRepuestos += r.Precio * r.Cantidad;
-
+            decimal totalRepuestos = _repuestos.Where(r => r.Incluido).Sum(r => r.Precio * r.Cantidad);
             txtPrecioRepuesto.Text = $"L {totalRepuestos:N2}";
 
-            string precioTexto = txtPrecioServicio.Text
-                .Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
-            decimal.TryParse(precioTexto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal servicio);
-
+            ParsePrecio(txtPrecioServicio.Text, out decimal servicio);
             txtCostoTotal.Text = $"L {(totalRepuestos + servicio):N2}";
         }
 
+        // ── DIAGNÓSTICO VISUAL ───────────────────────────────────────
 
-        /// <summary>
-        /// Muestra el panel de error con el mensaje indicado.
-        /// </summary>
-        /// <param name="mensaje">Texto del error a mostrar al usuario.</param>
+        private void Zona_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not System.Windows.Shapes.Rectangle rect) return;
+            string zona = rect.Tag as string ?? string.Empty;
+            if (string.IsNullOrEmpty(zona)) return;
+
+            bool seleccionada = rect.Fill is SolidColorBrush b && b.Color == BrushZonaDañada.Color;
+
+            if (seleccionada)
+            {
+                rect.Fill = Brushes.Transparent;
+                var bloque = panelZonasDañadas.Children
+                    .OfType<TextBlock>()
+                    .FirstOrDefault(tb => tb.Tag as string == zona);
+                if (bloque != null) panelZonasDañadas.Children.Remove(bloque);
+            }
+            else
+            {
+                rect.Fill = BrushZonaDañada;
+                panelZonasDañadas.Children.Add(new TextBlock
+                {
+                    Text = $"• {zona}",
+                    Tag = zona,           // para poder quitarlo por nombre
+                    Foreground = Brushes.White,
+                    FontSize = 11,
+                    Margin = new Thickness(0, 2, 0, 2)
+                });
+            }
+
+            txtSinZonas.Visibility = panelZonasDañadas.Children.Count == 0
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void LimpiarDiagnostico_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var rect in canvasVehiculo.Children.OfType<System.Windows.Shapes.Rectangle>())
+                rect.Fill = Brushes.Transparent;
+            panelZonasDañadas.Children.Clear();
+            txtSinZonas.Visibility = Visibility.Visible;
+        }
+
+        // ── TIPO DE VEHÍCULO ─────────────────────────────────────────
+
+        private Border? _tipoSeleccionado;
+
+        private void TipoVehiculo_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not Border border) return;
+
+            // Deseleccionar anterior
+            if (_tipoSeleccionado != null)
+                _tipoSeleccionado.Background = BrushInactivo;
+
+            // Seleccionar nuevo
+            border.Background = BrushActivo;
+            _tipoSeleccionado = border;
+        }
+
+        // ── AUTOCOMPLETADO ───────────────────────────────────────────
+
+        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            int limite = _buscarPorDNI ? 13 : 7;
+            // Truncar si excede
+            if (txtBuscar.Text.Length > limite)
+            {
+                txtBuscar.Text = txtBuscar.Text[..limite];
+                txtBuscar.CaretIndex = limite;
+            }
+            txtContador.Text = $"{txtBuscar.Text.Length} / {limite}";
+
+            // Autocompletado solo en modo DNI
+            if (!_buscarPorDNI || txtBuscar.Text.Length < 2)
+            {
+                borderAutocompletado.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            try
+            {
+                var sugerencias = _db.BuscarClientesPorDNI(txtBuscar.Text.Trim());
+                if (sugerencias.Count == 0)
+                {
+                    borderAutocompletado.Visibility = Visibility.Collapsed;
+                    return;
+                }
+                lstAutocompletado.ItemsSource = sugerencias
+                    .Select(s => s.DNI + " — " + s.NombreCompleto)
+                    .ToList();
+                // Guardamos la lista completa para recuperar el DNI al seleccionar
+                lstAutocompletado.Tag = sugerencias;
+                borderAutocompletado.Visibility = Visibility.Visible;
+            }
+            catch
+            {
+                borderAutocompletado.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void lstAutocompletado_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (lstAutocompletado.SelectedIndex < 0) return;
+            if (lstAutocompletado.Tag is not List<clsConsultasBD.ClienteSugerencia> lista) return;
+
+            var seleccionado = lista[lstAutocompletado.SelectedIndex];
+            txtBuscar.Text = seleccionado.DNI;
+            borderAutocompletado.Visibility = Visibility.Collapsed;
+            lstAutocompletado.SelectedIndex = -1;
+            BuscarPorDNI(seleccionado.DNI);
+        }
+
+        private void lstVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
+
+        // ── HELPERS ──────────────────────────────────────────────────
+
         private void MostrarError(string mensaje)
         {
             borderError.Visibility = Visibility.Visible;
             txtError.Text = mensaje;
         }
 
-        /// <summary>
-        /// Oculta los paneles de información de cliente y vehículo,
-        /// limpia el panel de errores y restablece los campos de DNI y placa.
-        /// </summary>
         private void LimpiarResultados()
         {
             borderClienteInfo.Visibility = Visibility.Collapsed;
@@ -622,34 +542,43 @@ namespace Órdenes_de_Trabajo
             _vehiculoPlaca = string.Empty;
         }
 
-        /// <summary>
-        /// Restablece todos los campos del formulario a su estado inicial.
-        /// Invoca <see cref="LimpiarResultados"/> y limpia adicionalmente los campos
-        /// de repuestos, precios, fechas, observaciones, foto, estado y prioridad.
-        /// </summary>
         private void LimpiarFormulario()
         {
             LimpiarResultados();
             txtBuscar.Clear();
             _repuestos.Clear();
             _ordenIDEditar = 0;
-            _rutaFoto = string.Empty;
             txtPrecioRepuesto.Text = "L 0.00";
             txtPrecioServicio.Text = "L 0.00";
             txtCostoTotal.Text = "L 0.00";
-            dpFecha.SelectedDate = null;
+            dpFecha.SelectedDate = DateTime.Today;
             dpEntrega.SelectedDate = null;
-            txtObservaciones?.Clear();
+            txtObservaciones.Clear();
             cmbEstado.SelectedIndex = -1;
             cmbPrioridad.SelectedIndex = -1;
-            imgFoto.Source = null;
-            imgFoto.Visibility = Visibility.Collapsed;
-            txtFotoPlaceholder.Visibility = Visibility.Visible;
-            btnAñadir.IsEnabled = true;
-            btnAñadir.Opacity = 1;
-            btnActualizar.IsEnabled = false;
-            btnActualizar.Opacity = 0.4;
+            LimpiarDiagnostico_Click(this, new RoutedEventArgs());
+            SetModoNuevo();
             txtContador.Text = "0 / 13";
+        }
+
+        private static bool ParsePrecio(string texto, out decimal valor)
+        {
+            string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
+            return decimal.TryParse(limpio,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out valor);
+        }
+
+        private static string? ObtenerContenidoCombo(ComboBox combo)
+            => (combo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+        // ── ARRASTRE DE VENTANA ──────────────────────────────────────
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                DragMove();
         }
     }
 }

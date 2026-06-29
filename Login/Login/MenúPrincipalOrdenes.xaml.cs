@@ -11,113 +11,31 @@ using System.Windows.Media;
 
 namespace Órdenes_de_Trabajo
 {
-    /// <summary>
-    /// Representa una orden de trabajo dentro del sistema.
-    /// Contiene información del cliente, vehículo, productos asociados,
-    /// estado, fechas y costos.
-    /// </summary>
     public class OrdenTrabajo
     {
-        /// <summary>
-        /// Identificador único de la orden.
-        /// </summary>
         public int Orden_ID { get; set; }
-
-        /// <summary>
-        /// DNI del cliente asociado a la orden.
-        /// </summary>
         public string Cliente_DNI { get; set; }
-
-        /// <summary>
-        /// Nombre completo del cliente.
-        /// </summary>
         public string? Cliente_NombreCompleto { get; set; }
-
-        /// <summary>
-        /// Placa del vehículo asociado a la orden.
-        /// </summary>
         public string? Vehiculo_Placa { get; set; }
-
-        /// <summary>
-        /// Identificador del producto asociado.
-        /// </summary>
         public int? Producto_ID { get; set; }
-
-        /// <summary>
-        /// Nombre del producto asociado.
-        /// </summary>
         public string? Producto_Nombre { get; set; }
-
-        /// <summary>
-        /// Categoría del producto.
-        /// </summary>
         public string? Producto_Categoria { get; set; }
-
-        /// <summary>
-        /// Estado actual de la orden (Pendiente, En proceso, Finalizado, etc.).
-        /// </summary>
         public string? Estado { get; set; }
-
-        /// <summary>
-        /// Fecha de creación de la orden.
-        /// </summary>
         public DateTime Fecha { get; set; }
-
-        /// <summary>
-        /// Fecha estimada o real de entrega.
-        /// </summary>
         public DateTime? Fecha_Entrega { get; set; }
-
-        /// <summary>
-        /// Observaciones adicionales de la orden.
-        /// </summary>
         public string? Observaciones { get; set; }
-
-        /// <summary>
-        /// Observaciones adicionales de la orden.
-        /// </summary>
         public decimal Servicio_Precio { get; set; }
-
-        /// <summary>
-        /// Precio total de la orden (servicio + productos).
-        /// </summary>
         public decimal OrdenPrecio_Total { get; set; }
     }
 
-    /// <summary>
-    /// Ventana principal del módulo de órdenes de trabajo.
-    /// Permite visualizar, filtrar, crear, editar órdenes y gestionar notificaciones.
-    /// </summary>
     public partial class MenúPrincipalOrdenes : Window
     {
-        /// <summary>
-        /// Acceso a la capa de datos (base de datos).
-        /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
-
-        /// <summary>
-        /// Lista observable de órdenes cargadas desde la base de datos.
-        /// </summary>
-        private ObservableCollection<OrdenTrabajo> _listaOrdenes = new ObservableCollection<OrdenTrabajo>();
-
-        /// <summary>
-        /// Vista filtrable de las órdenes para la UI.
-        /// </summary>
+        private readonly clsConsultasBD _db = new();
+        private readonly ObservableCollection<OrdenTrabajo> _listaOrdenes = new();
         private ICollectionView? _vistaOrdenes;
-
-        /// <summary>
-        /// Filtro por nombre de cliente.
-        /// </summary>
         private string _filtroCliente = "";
-
-        /// <summary>
-        /// Filtro por estado de la orden.
-        /// </summary>
         private string _filtroEstado = "Todos";
 
-        /// <summary>
-        /// Inicializa una nueva instancia de la ventana principal de órdenes.
-        /// </summary>
         public MenúPrincipalOrdenes()
         {
             InitializeComponent();
@@ -125,97 +43,70 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-        /// <summary>
-        /// Navega a la pantalla principal.
-        /// </summary>
+        // ── NAVEGACIÓN ───────────────────────────────────────────────
+
+        private void Navegar<T>(Func<T> crear) where T : Window
+        {
+            crear().Show();
+            this.Close();
+        }
+
         private void btnHome_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new MenuPrincipal();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new MenuPrincipal());
 
-        /// <summary>
-        /// Navega al módulo de inventario.
-        /// </summary>
         private void btnInventario_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new InterfazInventario.MenúPrincipalInventario();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new InterfazInventario.MenúPrincipalInventario());
 
-        /// <summary>
-        /// Navega al módulo de vehículos.
-        /// </summary>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Vehículos.MenúPrincipalVehículos();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Vehículos.MenúPrincipalVehículos());
 
-        /// <summary>
-        /// Navega al módulo de clientes.
-        /// </summary>
         private void btnClientes_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new InterfazClientes.MenúPrincipalClientes();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new InterfazClientes.MenúPrincipalClientes());
 
-        /// <summary>
-        /// Navega al módulo de egresos (contabilidad).
-        /// </summary>
+        private void btnOrdenes_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new MenúPrincipalOrdenes());
+
+        private void btnUsuarios_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new InterfazClientes.MenúPrincipalUsuarios());
+
+        private void btnBitacora_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new MenúPrincipalBitacora());
+
+        // ── CORRECCIÓN: usar los nombres reales de tus ventanas de contabilidad ──
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Contabilidad.ContaWindow();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Contabilidad.MenúPrincipalEgresos());
 
-        /// <summary>
-        /// Navega al módulo de ingresos (pagos).
-        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Contabilidad.MenuDePagos();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Contabilidad.MenúPrincipalIngresos());
 
-        /// <summary>
-        /// Cierra la sesión del usuario actual.
-        /// </summary>
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
-            var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-            if (resultado == MessageBoxResult.Yes)
-            {
-                var login = new Login.MainWindow();
-                login.Show();
-                this.Close();
-            }
+            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                Navegar(() => new Login.MainWindow());
         }
 
-        /// <summary>
-        /// Carga las órdenes desde la base de datos.
-        /// </summary>
+        // ── DATOS ────────────────────────────────────────────────────
+
         private void CargarDatosDesdeDB()
         {
             _listaOrdenes.Clear();
             try
             {
-                var ordenes = _db.ObtenerOrdenes();
-                foreach (var o in ordenes)
+                foreach (var o in _db.ObtenerOrdenes())
                     _listaOrdenes.Add(o);
 
-                _vistaOrdenes = CollectionViewSource.GetDefaultView(_listaOrdenes);
-                _vistaOrdenes.Filter = AplicarFiltros;
-                dgOrdenes.ItemsSource = _vistaOrdenes;
+                if (_vistaOrdenes == null)
+                {
+                    _vistaOrdenes = CollectionViewSource.GetDefaultView(_listaOrdenes);
+                    _vistaOrdenes.Filter = AplicarFiltros;
+                    dgOrdenes.ItemsSource = _vistaOrdenes;
+                }
+                else
+                {
+                    _vistaOrdenes.Refresh();
+                }
+
                 ActualizarContador();
             }
             catch (Exception ex)
@@ -225,9 +116,6 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        /// <summary>
-        /// Aplica los filtros configurados sobre la lista de órdenes.
-        /// </summary>
         private bool AplicarFiltros(object item)
         {
             if (item is not OrdenTrabajo o) return false;
@@ -246,79 +134,58 @@ namespace Órdenes_de_Trabajo
                 if (!coincide) return false;
             }
 
-            if (!string.IsNullOrEmpty(_filtroCliente))
-                if (!(o.Cliente_NombreCompleto ?? "").ToLower().Contains(_filtroCliente))
-                    return false;
+            if (!string.IsNullOrEmpty(_filtroCliente) &&
+                !(o.Cliente_NombreCompleto ?? "").ToLower().Contains(_filtroCliente))
+                return false;
 
-            if (_filtroEstado != "Todos")
-                if (o.Estado != _filtroEstado) return false;
+            if (_filtroEstado != "Todos" && o.Estado != _filtroEstado)
+                return false;
 
             return true;
         }
 
-        /// <summary>
-        /// Actualiza la vista cuando cambia el texto de búsqueda.
-        /// </summary>
+        private void ActualizarContador()
+        {
+            int total = _vistaOrdenes?.Cast<object>().Count() ?? 0;
+            tbTotalOrdenes.Text = $"{total} orden{(total != 1 ? "es" : "")}";
+        }
+
+        // ── BÚSQUEDA Y FILTROS ───────────────────────────────────────
+
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             _vistaOrdenes?.Refresh();
             ActualizarContador();
         }
 
-        /// <summary>
-        /// Muestra u oculta el panel de filtros.
-        /// </summary>
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
-        {
-            popupFiltros.IsOpen = !popupFiltros.IsOpen;
-        }
+            => popupFiltros.IsOpen = !popupFiltros.IsOpen;
 
-        /// <summary>
-        /// Aplica los filtros seleccionados por el usuario.
-        /// </summary>
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
             _filtroCliente = txtFiltroCliente.Text?.Trim().ToLower() ?? "";
             _filtroEstado = (cmbFiltroEstado.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Todos";
-
             popupFiltros.IsOpen = false;
             _vistaOrdenes?.Refresh();
             ActualizarContador();
         }
 
-        /// <summary>
-        /// Limpia todos los filtros aplicados.
-        /// </summary>
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
             txtFiltroCliente.Clear();
             cmbFiltroEstado.SelectedIndex = 0;
             _filtroCliente = "";
             _filtroEstado = "Todos";
-
             popupFiltros.IsOpen = false;
             _vistaOrdenes?.Refresh();
             ActualizarContador();
         }
 
-        /// <summary>
-        /// Actualiza el contador de órdenes visibles.
-        /// </summary>
-        private void ActualizarContador()
-        {
-            int total = 0;
-            if (_vistaOrdenes != null)
-                foreach (var _ in _vistaOrdenes) total++;
-            tbTotalOrdenes.Text = $"{total} orden{(total != 1 ? "es" : "")}";
-        }
+        // ── DATAGRID ─────────────────────────────────────────────────
 
-        /// <summary>
-        /// Maneja la selección de una orden para edición.
-        /// </summary>
         private async void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgOrdenes.SelectedItem is not OrdenTrabajo seleccionada) return;
-
             dgOrdenes.SelectedItem = null;
 
             var ventana = new OrdenWindow();
@@ -327,14 +194,10 @@ namespace Órdenes_de_Trabajo
                 CargarDatosDesdeDB();
                 CargarNotificaciones();
             };
-
             ventana.Show();
             await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
         }
 
-        /// <summary>
-        /// Abre una nueva ventana para crear una orden.
-        /// </summary>
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new OrdenWindow();
@@ -343,9 +206,11 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-        /// <summary>
-        /// Abre o cierra el popup de notificaciones.
-        /// </summary>
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+            => new ReportesWindow("Ordenes").ShowDialog();
+
+        // ── NOTIFICACIONES ───────────────────────────────────────────
+
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -353,26 +218,17 @@ namespace Órdenes_de_Trabajo
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
-        /// <summary>
-        /// Carga el contador de notificaciones pendientes.
-        /// </summary>
         public void CargarNotificaciones()
         {
             try
             {
                 int cantidad = _db.ContarNotificacionesPendientes();
                 badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                txtContadorNotificaciones.Text = cantidad.ToString();
+                txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
-            }
+            catch { }
         }
 
-        /// <summary>
-        /// Carga las notificaciones dentro del popup.
-        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -382,16 +238,35 @@ namespace Órdenes_de_Trabajo
 
                 if (dt.Rows.Count == 0)
                 {
-                    var vacio = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 20) };
-                    vacio.Children.Add(new Label { Content = "🎉", FontSize = 32, HorizontalAlignment = HorizontalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.White), Padding = new Thickness(0) });
-                    vacio.Children.Add(new TextBlock { Text = "Sin notificaciones pendientes", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 0) });
+                    var vacio = new StackPanel
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 20, 0, 20)
+                    };
+                    vacio.Children.Add(new Label
+                    {
+                        Content = "🎉",
+                        FontSize = 32,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        HorizontalContentAlignment = HorizontalAlignment.Center,
+                        Foreground = new SolidColorBrush(Colors.White),
+                        Padding = new Thickness(0)
+                    });
+                    vacio.Children.Add(new TextBlock
+                    {
+                        Text = "Sin notificaciones pendientes",
+                        Foreground = Pincel("#6B7280"),
+                        FontSize = 12,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 8, 0, 0)
+                    });
                     panelNotificaciones.Children.Add(vacio);
                     badgeContadorPopup.Visibility = Visibility.Collapsed;
                     btnMarcarTodas.Visibility = Visibility.Collapsed;
                     return;
                 }
 
-                txtContadorPopup.Text = dt.Rows.Count.ToString();
+                txtContadorPopup.Text = dt.Rows.Count > 99 ? "99+" : dt.Rows.Count.ToString();
                 badgeContadorPopup.Visibility = Visibility.Visible;
                 btnMarcarTodas.Visibility = Visibility.Visible;
 
@@ -409,52 +284,44 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        /// <summary>
-        /// Crea una tarjeta visual para representar una notificación.
-        /// </summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
             string colorBorde = esStock ? "#F0A500" : "#3D7EFF";
             string colorFondo = esStock ? "#1A1500" : "#0D1A2E";
-            string colorIcono = esStock ? "#F0A500" : "#3D7EFF";
             string labelTipo = esStock ? "Stock Bajo" : "Orden Finalizada";
 
-            Border card = new Border
+            var contenido = new StackPanel();
+            var badge = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorFondo)),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde)),
-                BorderThickness = new Thickness(0, 0, 0, 3),
-                CornerRadius = new CornerRadius(8),
-                Margin = new Thickness(0, 0, 0, 8),
-                Padding = new Thickness(12, 10, 12, 10)
-            };
-
-            Grid grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            StackPanel contenido = new StackPanel();
-            Border badgeTipo = new Border
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde + "33")),
+                Background = Pincel(colorBorde + "33"),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(6, 2, 6, 2),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            badgeTipo.Child = new TextBlock { Text = labelTipo, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorIcono)), FontSize = 10, FontWeight = FontWeights.SemiBold };
-            contenido.Children.Add(badgeTipo);
-            contenido.Children.Add(new TextBlock { Text = mensaje, Foreground = new SolidColorBrush(Colors.White), FontSize = 11, TextWrapping = TextWrapping.Wrap, LineHeight = 17 });
+            badge.Child = new TextBlock
+            {
+                Text = labelTipo,
+                Foreground = Pincel(colorBorde),
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold
+            };
+            contenido.Children.Add(badge);
+            contenido.Children.Add(new TextBlock
+            {
+                Text = mensaje,
+                Foreground = new SolidColorBrush(Colors.White),
+                FontSize = 11,
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 17
+            });
 
-            Grid.SetColumn(contenido, 0);
-            grid.Children.Add(contenido);
-
-            Button btnLeida = new Button
+            var btnLeida = new Button
             {
                 Content = "✓",
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
-                Background = Brushes.Transparent,
+                Foreground = Pincel("#6B7280"),
+                Background = System.Windows.Media.Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 FontSize = 15,
                 VerticalAlignment = VerticalAlignment.Top,
@@ -462,21 +329,33 @@ namespace Órdenes_de_Trabajo
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
-            btnLeida.Click += (s, e) =>
+            btnLeida.Click += (s, _) =>
             {
                 _db.MarcarNotificacionLeida((int)((Button)s).Tag);
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(contenido, 0);
             Grid.SetColumn(btnLeida, 1);
+            grid.Children.Add(contenido);
             grid.Children.Add(btnLeida);
-            card.Child = grid;
-            return card;
+
+            return new Border
+            {
+                Background = Pincel(colorFondo),
+                BorderBrush = Pincel(colorBorde),
+                BorderThickness = new Thickness(0, 0, 0, 3),
+                CornerRadius = new CornerRadius(8),
+                Margin = new Thickness(0, 0, 0, 8),
+                Padding = new Thickness(12, 10, 12, 10),
+                Child = grid
+            };
         }
 
-        /// <summary>
-        /// Marca todas las notificaciones como leídas.
-        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -484,29 +363,7 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
-        /// <summary>
-        /// Marca una notificación específica como leída.
-        /// </summary>
-        /// <param name="id">Identificador de la notificación.</param>
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                _db.MarcarNotificacionLeida(id);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Abre la ventana de reportes del módulo de órdenes.
-        /// </summary>
-        private void btnReportes_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new ReportesWindow("Ordenes");
-            ventana.ShowDialog();
-        }
+        private static SolidColorBrush Pincel(string hex) =>
+            new((Color)ColorConverter.ConvertFromString(hex));
     }
 }

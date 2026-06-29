@@ -18,13 +18,13 @@
     <Grid>
         <Border CornerRadius="14" Effect="{StaticResource WinShadow}">
             <Border CornerRadius="14" ClipToBounds="True" Background="#0f1117">
-
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
+                    <!-- HEADER -->
                     <Border Grid.Row="0" Background="#13161f" Height="58"
                             BorderBrush="#1e2235" BorderThickness="0,0,0,1">
                         <Grid Margin="20,0">
@@ -33,14 +33,14 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Nueva Orden de Trabajo" Foreground="White"
-                                           FontSize="15" FontWeight="Bold"/>
+                                <TextBlock x:Name="txtTituloVentana"
+                                           Text="Nueva Orden de Trabajo"
+                                           Foreground="White" FontSize="15" FontWeight="Bold"/>
                                 <TextBlock Text="Completa los datos para registrar la orden"
                                            Foreground="#505880" FontSize="11"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button x:Name="btnCancelar"
-                                        Style="{StaticResource MaterialDesignIconButton}"
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
                                         Foreground="#505880" Width="34" Height="34"
                                         Click="btnCancelar_Click">
                                     <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
@@ -49,6 +49,7 @@
                         </Grid>
                     </Border>
 
+                    <!-- BODY -->
                     <Grid Grid.Row="1" Margin="18,16,18,16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="260"/>
@@ -56,14 +57,18 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
+                        <!-- ═══ COLUMNA IZQUIERDA ═══ -->
                         <DockPanel Grid.Column="0" LastChildFill="True">
 
+                            <!-- ACCIONES (anclado abajo) -->
                             <Border DockPanel.Dock="Bottom" Background="#13161f" CornerRadius="12"
                                     BorderBrush="#1e2235" BorderThickness="1" Padding="14" Margin="0,12,0,0">
                                 <StackPanel>
                                     <TextBlock Text="ACCIONES" Foreground="#353a58"
                                                FontSize="9" FontWeight="Bold" Margin="0,0,0,10"/>
-                                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+
+                                    <Button x:Name="btnAñadir"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
                                             Background="#4f6ef7" Foreground="White"
                                             BorderBrush="#4f6ef7"
                                             materialDesign:ButtonAssist.CornerRadius="8"
@@ -76,7 +81,9 @@
                                             <TextBlock Text="Añadir Orden" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+
+                                    <Button x:Name="btnActualizar"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
                                             BorderBrush="#F0A500" Foreground="#F0A500"
                                             materialDesign:ButtonAssist.CornerRadius="8"
                                             Height="38" Margin="0,0,0,8"
@@ -87,6 +94,7 @@
                                             <TextBlock Text="Actualizar" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
+
                                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                                             BorderBrush="#1e2235" Foreground="#505880"
                                             materialDesign:ButtonAssist.CornerRadius="8"
@@ -101,15 +109,19 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- SCROLL con buscar + tipo vehículo -->
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
 
+                                    <!-- BUSCAR CLIENTE / VEHÍCULO -->
                                     <Border Background="#13161f" CornerRadius="12"
                                             BorderBrush="#1e2235" BorderThickness="1" Padding="14">
                                         <StackPanel>
                                             <TextBlock Text="BUSCAR CLIENTE / VEHÍCULO"
                                                        Foreground="#353a58" FontSize="9" FontWeight="Bold"
                                                        Margin="0,0,0,10"/>
+
+                                            <!-- Tabs DNI / Placa -->
                                             <Grid Margin="0,0,0,10">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
@@ -133,8 +145,21 @@
                                                 </Border>
                                             </Grid>
 
-                                            <TextBlock x:Name="lblBuscar" Text="DNI del Cliente"
-                                                       Foreground="#505880" FontSize="11" Margin="0,0,0,4"/>
+                                            <!-- Label + contador -->
+                                            <Grid Margin="0,0,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="lblBuscar" Text="DNI del Cliente"
+                                                           Foreground="#505880" FontSize="11"
+                                                           VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="txtContador" Grid.Column="1"
+                                                           Text="0 / 13" Foreground="#353a58"
+                                                           FontSize="10" VerticalAlignment="Center"/>
+                                            </Grid>
+
+                                            <!-- Campo búsqueda + botón -->
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
@@ -146,8 +171,8 @@
                                                         <ColumnDefinition Width="6"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <Border Grid.Column="0" Background="#1e2235" CornerRadius="7"
-                                                            BorderBrush="#252840" BorderThickness="1">
+                                                    <Border Grid.Column="0" Background="#1e2235"
+                                                            CornerRadius="7" BorderBrush="#252840" BorderThickness="1">
                                                         <TextBox x:Name="txtBuscar"
                                                                  Background="Transparent" Foreground="White"
                                                                  CaretBrush="White" BorderThickness="0"
@@ -156,9 +181,12 @@
                                                                  FontSize="12" MaxLength="13"
                                                                  TextChanged="txtBuscar_TextChanged">
                                                             <TextBox.Style>
-                                                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
-                                                                    <Setter Property="materialDesign:HintAssist.Hint" Value="Ingresa DNI..."/>
-                                                                    <Setter Property="materialDesign:HintAssist.Foreground" Value="#505880"/>
+                                                                <Style TargetType="TextBox"
+                                                                       BasedOn="{StaticResource MaterialDesignTextBox}">
+                                                                    <Setter Property="materialDesign:HintAssist.Hint"
+                                                                            Value="Ingresa DNI..."/>
+                                                                    <Setter Property="materialDesign:HintAssist.Foreground"
+                                                                            Value="#505880"/>
                                                                 </Style>
                                                             </TextBox.Style>
                                                         </TextBox>
@@ -169,7 +197,8 @@
                                                             materialDesign:ButtonAssist.CornerRadius="7"
                                                             materialDesign:ElevationAssist.Elevation="Dp0">
                                                         <Button.Style>
-                                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                                                 <Setter Property="Background" Value="#4f6ef7"/>
                                                                 <Setter Property="Foreground" Value="White"/>
                                                                 <Setter Property="BorderBrush" Value="#4f6ef7"/>
@@ -178,6 +207,8 @@
                                                         </Button.Style>
                                                     </Button>
                                                 </Grid>
+
+                                                <!-- Autocompletado -->
                                                 <Border Grid.Row="1" x:Name="borderAutocompletado"
                                                         Background="#1e2235" CornerRadius="0,0,7,7"
                                                         BorderBrush="#252840" BorderThickness="1,0,1,1"
@@ -203,6 +234,7 @@
                                                 </Border>
                                             </Grid>
 
+                                            <!-- Info Cliente -->
                                             <Border x:Name="borderClienteInfo" Background="#0f1117"
                                                     CornerRadius="8" Padding="10"
                                                     Visibility="Collapsed" Margin="0,10,0,0"
@@ -210,10 +242,13 @@
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                                         <materialDesign:PackIcon Kind="AccountCheck"
-                                                                                 Foreground="#4CAF50" Width="14" Height="14"
-                                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                                 Foreground="#4CAF50"
+                                                                                 Width="14" Height="14"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Margin="0,0,6,0"/>
                                                         <TextBlock Text="CLIENTE" Foreground="#4CAF50"
-                                                                   FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                   FontSize="9" FontWeight="Bold"
+                                                                   VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                     <TextBlock x:Name="txtClienteNombre" Foreground="White"
                                                                FontSize="12" FontWeight="Medium"
@@ -224,18 +259,23 @@
                                                             <ColumnDefinition Width="*"/>
                                                         </Grid.ColumnDefinitions>
                                                         <StackPanel Grid.Column="0">
-                                                            <TextBlock Text="Teléfono" Foreground="#505880" FontSize="9" Margin="0,0,0,2"/>
-                                                            <TextBlock x:Name="txtClienteTelefono" Foreground="White" FontSize="11"/>
+                                                            <TextBlock Text="Teléfono" Foreground="#505880"
+                                                                       FontSize="9" Margin="0,0,0,2"/>
+                                                            <TextBlock x:Name="txtClienteTelefono"
+                                                                       Foreground="White" FontSize="11"/>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="1">
-                                                            <TextBlock Text="Email" Foreground="#505880" FontSize="9" Margin="0,0,0,2"/>
-                                                            <TextBlock x:Name="txtClienteEmail" Foreground="White"
-                                                                       FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="Email" Foreground="#505880"
+                                                                       FontSize="9" Margin="0,0,0,2"/>
+                                                            <TextBlock x:Name="txtClienteEmail"
+                                                                       Foreground="White" FontSize="11"
+                                                                       TextTrimming="CharacterEllipsis"/>
                                                         </StackPanel>
                                                     </Grid>
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- Selector vehículos (cuando hay varios) -->
                                             <Border x:Name="borderSelectorVehiculo" Background="#0f1117"
                                                     CornerRadius="8" Padding="10"
                                                     Visibility="Collapsed" Margin="0,8,0,0"
@@ -243,8 +283,10 @@
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                                         <materialDesign:PackIcon Kind="Car"
-                                                                                 Foreground="#4f6ef7" Width="14" Height="14"
-                                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                                 Foreground="#4f6ef7"
+                                                                                 Width="14" Height="14"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Margin="0,0,6,0"/>
                                                         <TextBlock Text="SELECCIONAR VEHÍCULO"
                                                                    Foreground="#4f6ef7" FontSize="9"
                                                                    FontWeight="Bold" VerticalAlignment="Center"/>
@@ -287,6 +329,7 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- Info Vehículo -->
                                             <Border x:Name="borderVehiculoInfo" Background="#0f1117"
                                                     CornerRadius="8" Padding="10"
                                                     Visibility="Collapsed" Margin="0,8,0,0"
@@ -294,10 +337,13 @@
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                                         <materialDesign:PackIcon Kind="Car"
-                                                                                 Foreground="#4f6ef7" Width="14" Height="14"
-                                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                                 Foreground="#4f6ef7"
+                                                                                 Width="14" Height="14"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Margin="0,0,6,0"/>
                                                         <TextBlock Text="VEHÍCULO" Foreground="#4f6ef7"
-                                                                   FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                   FontSize="9" FontWeight="Bold"
+                                                                   VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                     <TextBlock x:Name="txtVehiculoNombre" Foreground="White"
                                                                FontSize="12" FontWeight="Medium"
@@ -308,28 +354,36 @@
                                                             <ColumnDefinition Width="*"/>
                                                         </Grid.ColumnDefinitions>
                                                         <StackPanel Grid.Column="0">
-                                                            <TextBlock Text="Tipo · Año" Foreground="#505880" FontSize="9" Margin="0,0,0,2"/>
-                                                            <TextBlock x:Name="txtVehiculoTipo" Foreground="White" FontSize="11"/>
+                                                            <TextBlock Text="Tipo · Año" Foreground="#505880"
+                                                                       FontSize="9" Margin="0,0,0,2"/>
+                                                            <TextBlock x:Name="txtVehiculoTipo"
+                                                                       Foreground="White" FontSize="11"/>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="1">
-                                                            <TextBlock Text="Placa" Foreground="#505880" FontSize="9" Margin="0,0,0,2"/>
-                                                            <TextBlock x:Name="txtVehiculoPropietario" Foreground="White"
-                                                                       FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="Placa" Foreground="#505880"
+                                                                       FontSize="9" Margin="0,0,0,2"/>
+                                                            <TextBlock x:Name="txtVehiculoPropietario"
+                                                                       Foreground="White" FontSize="11"
+                                                                       TextTrimming="CharacterEllipsis"/>
                                                         </StackPanel>
                                                     </Grid>
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- Error -->
                                             <Border x:Name="borderError" Background="#2a0d0d"
                                                     CornerRadius="8" Padding="10,7"
                                                     Visibility="Collapsed" Margin="0,8,0,0"
                                                     BorderBrush="#3a1a1a" BorderThickness="1">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Kind="AlertCircle" Foreground="#f44336"
+                                                    <materialDesign:PackIcon Kind="AlertCircle"
+                                                                             Foreground="#f44336"
                                                                              Width="14" Height="14"
-                                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                             VerticalAlignment="Center"
+                                                                             Margin="0,0,6,0"/>
                                                     <TextBlock x:Name="txtError" Foreground="#f44336"
-                                                               FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                               FontSize="11" VerticalAlignment="Center"
+                                                               TextWrapping="Wrap"/>
                                                 </StackPanel>
                                             </Border>
                                         </StackPanel>
@@ -337,13 +391,15 @@
 
                                     <Border Height="12" Background="Transparent"/>
 
+                                    <!-- TIPO DE VEHÍCULO -->
                                     <Border Background="#13161f" CornerRadius="12"
                                             BorderBrush="#1e2235" BorderThickness="1" Padding="14">
                                         <StackPanel>
                                             <TextBlock Text="TIPO DE VEHÍCULO"
                                                        Foreground="#353a58" FontSize="9" FontWeight="Bold"
                                                        Margin="0,0,0,10"/>
-                                            <TextBlock Text="Autos" Foreground="#505880" FontSize="9" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Autos" Foreground="#505880"
+                                                       FontSize="9" Margin="0,0,0,6"/>
                                             <Grid Margin="0,0,0,12">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
@@ -364,7 +420,8 @@
                                                             <Ellipse Canvas.Left="28" Canvas.Top="16" Width="8" Height="8" Fill="#1e2235" Stroke="#505880" StrokeThickness="1.2"/>
                                                             <Path Fill="#0f1117" Opacity="0.6" Data="M14,8.5 L15,2.5 L25,2.5 L26,8.5 Z"/>
                                                         </Canvas>
-                                                        <TextBlock Text="Sedán" Foreground="#8890b5" FontSize="9" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Sedán" Foreground="#8890b5"
+                                                                   FontSize="9" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="btnTipoSUV" Grid.Column="2"
@@ -379,7 +436,8 @@
                                                             <Ellipse Canvas.Left="27" Canvas.Top="16" Width="10" Height="10" Fill="#1e2235" Stroke="#505880" StrokeThickness="1.2"/>
                                                             <Path Fill="#0f1117" Opacity="0.6" Data="M11,6.5 L12,1.5 L28,1.5 L29,6.5 Z"/>
                                                         </Canvas>
-                                                        <TextBlock Text="SUV" Foreground="#8890b5" FontSize="9" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="SUV" Foreground="#8890b5"
+                                                                   FontSize="9" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="btnTipoPickup" Grid.Column="4"
@@ -395,12 +453,14 @@
                                                             <Ellipse Canvas.Left="28" Canvas.Top="16" Width="9" Height="9" Fill="#1e2235" Stroke="#505880" StrokeThickness="1.2"/>
                                                             <Path Fill="#0f1117" Opacity="0.6" Data="M5,6.5 L6.5,1.5 L16,1.5 L17.5,6.5 Z"/>
                                                         </Canvas>
-                                                        <TextBlock Text="Pickup" Foreground="#8890b5" FontSize="9" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Pickup" Foreground="#8890b5"
+                                                                   FontSize="9" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                             </Grid>
 
-                                            <TextBlock Text="Motos" Foreground="#505880" FontSize="9" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Motos" Foreground="#505880"
+                                                       FontSize="9" Margin="0,0,0,6"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
@@ -421,7 +481,8 @@
                                                             <Path Fill="#4f6ef7" Data="M14,15 L18,5 L28,5 L32,15 Z"/>
                                                             <Line X1="27" Y1="5" X2="35" Y2="2" Stroke="#6c8fff" StrokeThickness="1.5"/>
                                                         </Canvas>
-                                                        <TextBlock Text="Moto" Foreground="#8890b5" FontSize="9" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Moto" Foreground="#8890b5"
+                                                                   FontSize="9" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border x:Name="btnTipoMototaxi" Grid.Column="2"
@@ -436,7 +497,8 @@
                                                             <Rectangle Canvas.Left="12" Canvas.Top="4" Width="27" Height="10" Fill="#3a4dbf" RadiusX="3" RadiusY="3"/>
                                                             <Line X1="6" Y1="14" X2="20" Y2="10" Stroke="#4f6ef7" StrokeThickness="1.5"/>
                                                         </Canvas>
-                                                        <TextBlock Text="Mototaxi" Foreground="#8890b5" FontSize="9" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Mototaxi" Foreground="#8890b5"
+                                                                   FontSize="9" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <Border Grid.Column="4" Background="Transparent" CornerRadius="8"/>
@@ -448,6 +510,7 @@
                             </ScrollViewer>
                         </DockPanel>
 
+                        <!-- ═══ COLUMNA DERECHA ═══ -->
                         <Grid Grid.Column="2">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -457,6 +520,7 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
+                            <!-- DETALLE DE LA ORDEN -->
                             <Border Grid.Row="0" Background="#13161f" CornerRadius="12"
                                     BorderBrush="#1e2235" BorderThickness="1" Padding="16">
                                 <StackPanel>
@@ -465,8 +529,11 @@
                                                                  Foreground="#4f6ef7" Width="16" Height="16"
                                                                  VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <TextBlock Text="Detalle de la Orden" Foreground="White"
-                                                   FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"/>
                                     </StackPanel>
+
+                                    <!-- Estado / Fecha / F.Entrega -->
                                     <Grid Margin="0,0,0,10">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -476,7 +543,8 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Estado" Foreground="#505880" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Estado" Foreground="#505880"
+                                                       FontSize="11" Margin="0,0,0,4"/>
                                             <Border Background="#1e2235" CornerRadius="7"
                                                     BorderBrush="#252840" BorderThickness="1" Height="36">
                                                 <ComboBox x:Name="cmbEstado"
@@ -504,7 +572,8 @@
                                             </Border>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Fecha" Foreground="#505880" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Fecha" Foreground="#505880"
+                                                       FontSize="11" Margin="0,0,0,4"/>
                                             <Border Background="#1e2235" BorderBrush="#252840"
                                                     BorderThickness="1" CornerRadius="7" Height="36">
                                                 <DatePicker x:Name="dpFecha"
@@ -525,7 +594,8 @@
                                             </Border>
                                         </StackPanel>
                                         <StackPanel Grid.Column="4">
-                                            <TextBlock Text="F. Entrega" Foreground="#505880" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="F. Entrega" Foreground="#505880"
+                                                       FontSize="11" Margin="0,0,0,4"/>
                                             <Border Background="#1e2235" BorderBrush="#252840"
                                                     BorderThickness="1" CornerRadius="7" Height="36">
                                                 <DatePicker x:Name="dpEntrega"
@@ -546,6 +616,8 @@
                                             </Border>
                                         </StackPanel>
                                     </Grid>
+
+                                    <!-- Prioridad / Observaciones -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="160"/>
@@ -553,7 +625,8 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Prioridad" Foreground="#505880" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Prioridad" Foreground="#505880"
+                                                       FontSize="11" Margin="0,0,0,4"/>
                                             <Border Background="#1e2235" CornerRadius="7"
                                                     BorderBrush="#252840" BorderThickness="1" Height="36">
                                                 <ComboBox x:Name="cmbPrioridad"
@@ -580,7 +653,8 @@
                                             </Border>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Observaciones" Foreground="#505880" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Observaciones" Foreground="#505880"
+                                                       FontSize="11" Margin="0,0,0,4"/>
                                             <Border Background="#1e2235" CornerRadius="7"
                                                     BorderBrush="#252840" BorderThickness="1">
                                                 <TextBox x:Name="txtObservaciones"
@@ -596,6 +670,7 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- DIAGNÓSTICO VISUAL -->
                             <Border Grid.Row="2" Background="#13161f" CornerRadius="12"
                                     BorderBrush="#1e2235" BorderThickness="1" Padding="16">
                                 <Grid>
@@ -647,10 +722,18 @@
                                                                Fill="#13161f" RadiusX="4" RadiusY="4"/>
                                                     <Path Fill="#13161f" Opacity="0.9"
                                                           Data="M107,207 L193,207 L205,230 L95,230 Z"/>
-                                                    <Rectangle Canvas.Left="42" Canvas.Top="60" Width="28" Height="46" Fill="#0a0c14" RadiusX="5" RadiusY="5" Stroke="#252840" StrokeThickness="1"/>
-                                                    <Rectangle Canvas.Left="230" Canvas.Top="60" Width="28" Height="46" Fill="#0a0c14" RadiusX="5" RadiusY="5" Stroke="#252840" StrokeThickness="1"/>
-                                                    <Rectangle Canvas.Left="42" Canvas.Top="194" Width="28" Height="46" Fill="#0a0c14" RadiusX="5" RadiusY="5" Stroke="#252840" StrokeThickness="1"/>
-                                                    <Rectangle Canvas.Left="230" Canvas.Top="194" Width="28" Height="46" Fill="#0a0c14" RadiusX="5" RadiusY="5" Stroke="#252840" StrokeThickness="1"/>
+                                                    <Rectangle Canvas.Left="42" Canvas.Top="60" Width="28" Height="46"
+                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                               Stroke="#252840" StrokeThickness="1"/>
+                                                    <Rectangle Canvas.Left="230" Canvas.Top="60" Width="28" Height="46"
+                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                               Stroke="#252840" StrokeThickness="1"/>
+                                                    <Rectangle Canvas.Left="42" Canvas.Top="194" Width="28" Height="46"
+                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                               Stroke="#252840" StrokeThickness="1"/>
+                                                    <Rectangle Canvas.Left="230" Canvas.Top="194" Width="28" Height="46"
+                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                               Stroke="#252840" StrokeThickness="1"/>
 
                                                     <Rectangle x:Name="zonaMotor" Canvas.Left="78" Canvas.Top="37"
                                                                Width="144" Height="52"
@@ -673,42 +756,49 @@
                                                                IsHitTestVisible="False"/>
 
                                                     <Rectangle x:Name="zonaFrenoDI" Canvas.Left="40" Canvas.Top="58"
-                                                               Width="32" Height="50" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Freno Del. Izq."/>
+                                                               Width="32" Height="50" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Izq."/>
                                                     <Rectangle x:Name="zonaFrenoDD" Canvas.Left="228" Canvas.Top="58"
-                                                               Width="32" Height="50" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Freno Del. Der."/>
+                                                               Width="32" Height="50" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Der."/>
                                                     <Rectangle x:Name="zonaFrenoTI" Canvas.Left="40" Canvas.Top="192"
-                                                               Width="32" Height="50" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Freno Tras. Izq."/>
+                                                               Width="32" Height="50" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Izq."/>
                                                     <Rectangle x:Name="zonaFrenoTD" Canvas.Left="228" Canvas.Top="192"
-                                                               Width="32" Height="50" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Freno Tras. Der."/>
+                                                               Width="32" Height="50" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Der."/>
 
                                                     <Rectangle x:Name="zonaSuspD" Canvas.Left="70" Canvas.Top="100"
-                                                               Width="34" Height="42" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Suspensión Del."/>
+                                                               Width="34" Height="42" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Suspensión Del."/>
                                                     <Rectangle x:Name="zonaSuspT" Canvas.Left="70" Canvas.Top="158"
-                                                               Width="34" Height="42" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Suspensión Tras."/>
+                                                               Width="34" Height="42" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Suspensión Tras."/>
 
                                                     <Rectangle x:Name="zonaEscape" Canvas.Left="196" Canvas.Top="100"
-                                                               Width="34" Height="100" Fill="Transparent" RadiusX="4" RadiusY="4"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8" MouseLeftButtonDown="Zona_Click"
-                                                               Tag="Sistema de Escape"/>
+                                                               Width="34" Height="100" Fill="Transparent"
+                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                               Cursor="Hand" Opacity="0.8"
+                                                               MouseLeftButtonDown="Zona_Click" Tag="Sistema de Escape"/>
 
                                                     <Rectangle x:Name="zonaCajuela" Canvas.Left="78" Canvas.Top="232"
                                                                Width="144" Height="30"
@@ -755,8 +845,9 @@
                                 </Grid>
                             </Border>
 
-                            <Border Grid.Row="3" Background="#13161f" CornerRadius="12"
-                                    BorderBrush="#1e2235" BorderThickness="1" Padding="16" Margin="0,10,0,0" Grid.RowSpan="2">
+                            <!-- DETALLE DEL TRABAJO -->
+                            <Border Grid.Row="4" Background="#13161f" CornerRadius="12"
+                                    BorderBrush="#1e2235" BorderThickness="1" Padding="16">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -833,6 +924,7 @@
                                         </DataGrid.Columns>
                                     </DataGrid>
 
+                                    <!-- Totales -->
                                     <Grid Grid.Row="3">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
