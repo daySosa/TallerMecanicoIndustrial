@@ -1,59 +1,32 @@
 ﻿using Login.Clases;
-using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Órdenes_de_Trabajo
 {
-    /// <summary>
-    /// Ventana encargada de agregar un repuesto desde el inventario a una orden de trabajo.
-    /// Permite seleccionar un producto, visualizar su información y calcular el subtotal según la cantidad.
-    /// </summary>
     public partial class AgregarRepuesto : Window
     {
-        //// <summary>
-        /// Instancia utilizada para realizar consultas a la base de datos.
-        /// </summary>
-        clsConsultasBD db = new clsConsultasBD();
+        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private clsProductoInventario _productoSeleccionado;
 
-        /// <summary>
-        /// Objeto que almacena el repuesto seleccionado con sus datos,
-        /// el cual será devuelto a la orden de trabajo.
-        /// </summary>
-        public RepuestoOrden RepuestoResultado { get; private set; } = null;
+        public RepuestoOrden RepuestoResultado { get; private set; }
 
-        // <summary>
-        /// Producto seleccionado del inventario.
-        /// </summary>
-        private clsProductoInventario _productoSeleccionado = null;
-
-        /// <summary>
-        /// Inicializa una nueva instancia de la ventana <see cref="AgregarRepuesto"/>
-        /// y carga los productos disponibles del inventario.
-        /// </summary>
         public AgregarRepuesto()
         {
             InitializeComponent();
             CargarProductos();
         }
 
-        /// <summary>
-        /// Carga la lista de productos disponibles en el inventario
-        /// y los muestra en el ComboBox para su selección.
-        /// </summary>
+        // ════════════════════════════════════════════════════════════
+        // CARGA
+        // ════════════════════════════════════════════════════════════
+
         private void CargarProductos()
         {
             try
             {
-                var lista = db.ObtenerProductosInventario();
-                cmbProducto.ItemsSource = lista;
+                cmbProducto.ItemsSource = _db.ObtenerProductosInventario();
                 cmbProducto.DisplayMemberPath = "Producto_Nombre";
             }
             catch (Exception ex)
@@ -63,56 +36,48 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        /// <summary>
-        /// Evento que se ejecuta al seleccionar un producto del inventario.
-        /// Muestra su información (categoría, precio y stock) y recalcula el subtotal.
-        /// </summary>
+        // ════════════════════════════════════════════════════════════
+        // EVENTOS UI
+        // ════════════════════════════════════════════════════════════
+
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _productoSeleccionado = cmbProducto.SelectedItem as clsProductoInventario; 
-
+            _productoSeleccionado = cmbProducto.SelectedItem as clsProductoInventario;
             if (_productoSeleccionado == null) return;
 
             txtCategoria.Text = _productoSeleccionado.Producto_Categoria;
             txtPrecioUnitario.Text = $"L {_productoSeleccionado.Producto_Precio:N2}";
             txtStock.Text = _productoSeleccionado.Producto_Cantidad_Actual.ToString();
 
-            borderStock.BorderBrush = _productoSeleccionado.Producto_Cantidad_Actual <= 5
+            bool stockBajo = _productoSeleccionado.Producto_Cantidad_Actual <= 5;
+            borderStock.BorderBrush = stockBajo
                 ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44336"))
                 : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3a3f5c"));
 
             CalcularSubtotal();
         }
 
-        /// <summary>
-        /// Evento que se ejecuta al modificar la cantidad.
-        /// Recalcula automáticamente el subtotal.
-        /// </summary>
         private void txtCantidad_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            CalcularSubtotal();
-        }
+            => CalcularSubtotal();
 
-        /// <summary>
-        /// Calcula el subtotal del repuesto en función del precio unitario y la cantidad ingresada.
-        /// </summary>
+        // ════════════════════════════════════════════════════════════
+        // LÓGICA
+        // ════════════════════════════════════════════════════════════
+
         private void CalcularSubtotal()
         {
             if (_productoSeleccionado == null) return;
 
-            if (!int.TryParse(txtCantidad.Text.Trim(), out int cantidad) || cantidad <= 0)
-            {
-                txtSubtotal.Text = "L 0.00";
-                return;
-            }
-
-            txtSubtotal.Text = $"L {_productoSeleccionado.Producto_Precio * cantidad:N2}";
+            bool valido = int.TryParse(txtCantidad.Text.Trim(), out int cantidad) && cantidad > 0;
+            txtSubtotal.Text = valido
+                ? $"L {_productoSeleccionado.Producto_Precio * cantidad:N2}"
+                : "L 0.00";
         }
 
-        /// <summary>
-        /// Valida los datos ingresados y crea el objeto del repuesto seleccionado
-        /// para ser agregado a la orden de trabajo.
-        /// </summary>
+        // ════════════════════════════════════════════════════════════
+        // ACCIONES
+        // ════════════════════════════════════════════════════════════
+
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
             if (!clsValidaciones.ValidarComboSeleccionado(_productoSeleccionado, "producto del inventario")) return;
@@ -131,9 +96,6 @@ namespace Órdenes_de_Trabajo
             this.Close();
         }
 
-        /// <summary>
-        /// Cancela la operación y cierra la ventana sin seleccionar ningún repuesto.
-        /// </summary>
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {
             RepuestoResultado = null;
