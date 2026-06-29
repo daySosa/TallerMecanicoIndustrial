@@ -62,7 +62,6 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- PANEL IZQUIERDO -->
                     <Border Grid.Column="0" Background="#13161f"
                             BorderBrush="#1e2235" BorderThickness="0,0,1,0">
                         <StackPanel Margin="0,50,0,0">
@@ -111,7 +110,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- PANEL DERECHO -->
                     <Grid Grid.Column="1" Background="#0f1117">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -119,7 +117,6 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Mini header -->
                         <Border Grid.Row="0" Background="#13161f" Height="56"
                                 BorderBrush="#1e2235" BorderThickness="0,0,0,1">
                             <StackPanel VerticalAlignment="Center" Margin="28,0">
@@ -130,7 +127,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Formulario -->
                         <ScrollViewer Grid.Row="1" Margin="28,20,28,0"
                                       VerticalScrollBarVisibility="Auto">
                             <StackPanel>
@@ -268,7 +264,6 @@
                             </StackPanel>
                         </ScrollViewer>
 
-                        <!-- Botones -->
                         <Border Grid.Row="2" BorderBrush="#1e2235" BorderThickness="0,1,0,0">
                             <Grid Margin="28,16,28,20">
                                 <Grid.ColumnDefinitions>

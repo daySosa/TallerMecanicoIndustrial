@@ -20,7 +20,6 @@
             <Border CornerRadius="14" ClipToBounds="True">
                 <DockPanel LastChildFill="True" Background="#0f1117">
 
-                    <!-- HEADER -->
                     <Border DockPanel.Dock="Top" Background="#13161f" Height="68"
                             BorderBrush="#1e2235" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0">
@@ -40,7 +39,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- FOOTER -->
                     <Border DockPanel.Dock="Bottom" Background="#13161f"
                             BorderBrush="#1e2235" BorderThickness="0,1,0,0" Padding="20,12">
                         <Grid>
@@ -99,7 +97,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- BODY -->
                     <Grid Margin="20,18,20,18">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2.5*"/>
@@ -107,7 +104,6 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- VISOR CÁMARA -->
                         <Border Grid.Column="0" CornerRadius="12"
                                 BorderBrush="#1e2235" BorderThickness="1"
                                 Background="#0d1020" ClipToBounds="True">
@@ -148,7 +144,6 @@
                             </Grid>
                         </Border>
 
-                        <!-- PANEL DERECHO -->
                         <StackPanel Grid.Column="2" VerticalAlignment="Top">
 
                             <TextBlock Text="Seleccione el usuario" Foreground="#505880"
@@ -181,7 +176,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Activar Cámara -->
                             <Button x:Name="btnIniciarCamara"
                                     Height="36" Margin="0,0,0,8"
                                     HorizontalAlignment="Stretch" Cursor="Hand"
@@ -208,7 +202,6 @@
                                 </Button.Template>
                             </Button>
 
-                            <!-- Capturar Rostro -->
                             <Button x:Name="btnCapturar"
                                     Height="36" Margin="0,0,0,18"
                                     HorizontalAlignment="Stretch"
@@ -238,7 +231,6 @@
 
                             <Rectangle Height="1" Fill="#1e2235" Margin="0,0,0,18"/>
 
-                            <!-- Última captura -->
                             <Border Background="#1a1d35" CornerRadius="10"
                                     BorderBrush="#1e2235" BorderThickness="1"
                                     Padding="12,12">
@@ -264,7 +256,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Eliminar -->
                             <Button x:Name="btnEliminarBiometria"
                                     Height="32" Margin="0,10,0,0"
                                     HorizontalAlignment="Stretch"
