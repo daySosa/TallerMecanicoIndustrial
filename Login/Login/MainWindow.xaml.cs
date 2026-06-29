@@ -7,11 +7,6 @@ using System.Windows.Media;
 
 namespace Login
 {
-    /// <summary>
-    /// Ventana principal de inicio de sesión.
-    /// Permite autenticación de usuarios, validación de credenciales
-    /// y manejo de autenticación en dos factores (2FA).
-    /// </summary>
     public partial class MainWindow : Window
     {
         private bool _contrasenaVisible = false;
@@ -23,26 +18,30 @@ namespace Login
             Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
 
-        private static readonly SolidColorBrush BrushFocus = CrearBrush("#2563EB");
-        private static readonly SolidColorBrush BrushError = CrearBrush("#f44336");
-        private static readonly SolidColorBrush BrushNormal = CrearBrush("#FFFFFF", 0.12);
-        private static readonly SolidColorBrush BrushTransparente = CrearBrushTransparente();
+        // ── Brushes estáticos (Freeze evita re-renders innecesarios) ─
+        private static readonly SolidColorBrush BrushFocus = Pincel("#2563EB");
+        private static readonly SolidColorBrush BrushError = Pincel("#f44336");
+        private static readonly SolidColorBrush BrushNormal = Pincel("#FFFFFF", 0.12);
+        private static readonly SolidColorBrush BrushVacio = PincelTransparente();
 
-        private static SolidColorBrush CrearBrush(string hex, double? opacidad = null)
+        private static SolidColorBrush Pincel(string hex, double? opacidad = null)
         {
-            var color = (Color)ColorConverter.ConvertFromString(hex);
-            var brush = new SolidColorBrush(color);
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
             if (opacidad.HasValue) brush.Opacity = opacidad.Value;
             brush.Freeze();
             return brush;
         }
 
-        private static SolidColorBrush CrearBrushTransparente()
+        private static SolidColorBrush PincelTransparente()
         {
             var brush = new SolidColorBrush(Colors.Transparent);
             brush.Freeze();
             return brush;
         }
+
+        // ════════════════════════════════════════════════════════════
+        // CONSTRUCTOR
+        // ════════════════════════════════════════════════════════════
 
         public MainWindow()
         {
@@ -50,35 +49,37 @@ namespace Login
             CargarCredencialesRecordadas();
         }
 
+        // ════════════════════════════════════════════════════════════
+        // DRAG & FOCUS
+        // ════════════════════════════════════════════════════════════
+
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
-                this.DragMove();
+                DragMove();
         }
 
         private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
-        {
-            borderCorreo.BorderBrush = BrushFocus;
-            borderCorreo.BorderThickness = new Thickness(2);
-        }
+            => SetBorderFocus(borderCorreo, true);
 
         private void TxtCorreo_LostFocus(object sender, RoutedEventArgs e)
-        {
-            borderCorreo.BorderBrush = BrushTransparente;
-            borderCorreo.BorderThickness = new Thickness(1.5);
-        }
+            => SetBorderFocus(borderCorreo, false);
 
         private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e)
-        {
-            borderContrasena.BorderBrush = BrushFocus;
-            borderContrasena.BorderThickness = new Thickness(2);
-        }
+            => SetBorderFocus(borderContrasena, true);
 
         private void TxtContrasena_LostFocus(object sender, RoutedEventArgs e)
+            => SetBorderFocus(borderContrasena, false);
+
+        private static void SetBorderFocus(System.Windows.Controls.Border border, bool enfocado)
         {
-            borderContrasena.BorderBrush = BrushTransparente;
-            borderContrasena.BorderThickness = new Thickness(1.5);
+            border.BorderBrush = enfocado ? BrushFocus : BrushVacio;
+            border.BorderThickness = new Thickness(enfocado ? 2 : 1.5);
         }
+
+        // ════════════════════════════════════════════════════════════
+        // VER / OCULTAR CONTRASEÑA
+        // ════════════════════════════════════════════════════════════
 
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
@@ -103,41 +104,27 @@ namespace Login
             }
         }
 
-        private string ObtenerContrasena()
-        {
-            return _contrasenaVisible
-                ? txtContrasenaVisible.Text
-                : txtContrasena.Password;
-        }
+        private string ObtenerContrasena() =>
+            _contrasenaVisible ? txtContrasenaVisible.Text : txtContrasena.Password;
 
-        private void BtnCerrar_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
+        // ════════════════════════════════════════════════════════════
+        // RECORDAR CREDENCIALES
+        // ════════════════════════════════════════════════════════════
 
         private void GuardarCredenciales(string correo, string contrasena)
         {
             try
             {
-                var datos = new { Correo = correo, Contrasena = contrasena };
-                string json = JsonSerializer.Serialize(datos);
-                File.WriteAllText(_archivoRecordar, json);
+                File.WriteAllText(_archivoRecordar,
+                    JsonSerializer.Serialize(new { Correo = correo, Contrasena = contrasena }));
             }
-            catch (Exception ex)
-            {
-            }
+            catch { /* fallo silencioso: no crítico */ }
         }
 
         private void EliminarCredenciales()
         {
-            try
-            {
-                if (File.Exists(_archivoRecordar))
-                    File.Delete(_archivoRecordar);
-            }
-            catch (Exception ex)
-            {
-            }
+            try { if (File.Exists(_archivoRecordar)) File.Delete(_archivoRecordar); }
+            catch { }
         }
 
         private void CargarCredencialesRecordadas()
@@ -146,83 +133,76 @@ namespace Login
             {
                 if (!File.Exists(_archivoRecordar)) return;
 
-                string json = File.ReadAllText(_archivoRecordar);
-                var datos = JsonSerializer.Deserialize<JsonElement>(json);
+                var datos = JsonSerializer.Deserialize<JsonElement>(
+                    File.ReadAllText(_archivoRecordar));
 
                 txtCorreo.Text = datos.GetProperty("Correo").GetString() ?? "";
                 txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
                 chkRecordar.IsChecked = true;
             }
-            catch (Exception ex)
-            {
-            }
+            catch { }
         }
 
-        /// <summary>
-        /// Valida los datos ingresados y ejecuta el proceso de inicio de sesión de forma asíncrona,
-        /// evitando que la UI se congele mientras se consulta la base de datos o se envía el correo 2FA.
-        /// </summary>
+        // ════════════════════════════════════════════════════════════
+        // LOGIN
+        // ════════════════════════════════════════════════════════════
+
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
-            if (_procesandoLogin) return; // evita doble clic / doble validación
+            if (_procesandoLogin) return;
 
+            // — Validaciones —
             bool hayError = false;
 
             string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
-            if (errorCorreo != null)
-            {
-                txtErrorCorreo.Text = errorCorreo;
-                txtErrorCorreo.Visibility = Visibility.Visible;
-                borderCorreo.BorderBrush = BrushError;
-                hayError = true;
-            }
-            else
-            {
-                txtErrorCorreo.Visibility = Visibility.Collapsed;
-                borderCorreo.BorderBrush = BrushTransparente;
-            }
+            MostrarError(txtErrorCorreo, borderCorreo, errorCorreo, ref hayError);
 
             string contrasena = ObtenerContrasena();
             string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
-            if (errorContrasena != null)
-            {
-                txtErrorContrasena.Text = errorContrasena;
-                txtErrorContrasena.Visibility = Visibility.Visible;
-                borderContrasena.BorderBrush = BrushError;
-                hayError = true;
-            }
-            else
-            {
-                txtErrorContrasena.Visibility = Visibility.Collapsed;
-                borderContrasena.BorderBrush = BrushTransparente;
-            }
+            MostrarError(txtErrorContrasena, borderContrasena, errorContrasena, ref hayError);
 
             if (hayError) return;
 
             string correo = txtCorreo.Text.Trim();
+            var btnLogin = sender as System.Windows.Controls.Button;
 
             _procesandoLogin = true;
-            SetCargando(true, sender as System.Windows.Controls.Button);
+            SetCargando(true, btnLogin);
 
             try
             {
-                if (chkRecordar.IsChecked == true)
-                    GuardarCredenciales(correo, contrasena);
-                else
-                    EliminarCredenciales();
+                if (chkRecordar.IsChecked == true) GuardarCredenciales(correo, contrasena);
+                else EliminarCredenciales();
 
                 await IniciarSesionAsync(correo, contrasena);
             }
             finally
             {
                 _procesandoLogin = false;
-                SetCargando(false, sender as System.Windows.Controls.Button);
+                SetCargando(false, btnLogin);
             }
         }
 
-        /// <summary>
-        /// Habilita/deshabilita el botón de login y cambia su texto mientras se procesa la autenticación.
-        /// </summary>
+        private void MostrarError(
+            System.Windows.Controls.TextBlock txtError,
+            System.Windows.Controls.Border border,
+            string mensaje,
+            ref bool hayError)
+        {
+            if (mensaje != null)
+            {
+                txtError.Text = mensaje;
+                txtError.Visibility = Visibility.Visible;
+                border.BorderBrush = BrushError;
+                hayError = true;
+            }
+            else
+            {
+                txtError.Visibility = Visibility.Collapsed;
+                border.BorderBrush = BrushVacio;
+            }
+        }
+
         private void SetCargando(bool cargando, System.Windows.Controls.Button boton)
         {
             if (boton == null) return;
@@ -230,11 +210,6 @@ namespace Login
             boton.Content = cargando ? "Verificando..." : "Iniciar Sesión";
         }
 
-        /// <summary>
-        /// Verifica las credenciales del usuario y ejecuta la autenticación en dos factores (2FA),
-        /// corriendo la consulta a la base de datos y el envío de correo en un hilo de fondo
-        /// para no bloquear la interfaz.
-        /// </summary>
         private async System.Threading.Tasks.Task IniciarSesionAsync(string correo, string contrasena)
         {
             try
@@ -244,25 +219,24 @@ namespace Login
 
                 if (!valido)
                 {
-                    txtErrorCorreo.Text = "⚠ Correo o contraseña incorrectos.";
-                    txtErrorCorreo.Visibility = Visibility.Visible;
-                    borderCorreo.BorderBrush = BrushError;
+                    bool dummy = false;
+                    MostrarError(txtErrorCorreo, borderCorreo, "⚠ Correo o contraseña incorrectos.", ref dummy);
+                    MostrarError(txtErrorContrasena, borderContrasena, null, ref dummy);
                     borderContrasena.BorderBrush = BrushError;
                     return;
                 }
 
-                clsAutenticacion autenticacion = new clsAutenticacion();
+                clsAutenticacion auth = new clsAutenticacion();
 
                 string codigo2FA = await System.Threading.Tasks.Task.Run(
-                    () => autenticacion.GenerarCodigo(correo));
+                    () => auth.GenerarCodigo(correo));
 
                 bool enviado = await System.Threading.Tasks.Task.Run(
-                    () => autenticacion.EnviarCorreo(correo, codigo2FA));
+                    () => auth.EnviarCorreo(correo, codigo2FA));
 
                 if (enviado)
                 {
-                    OpcionSesion ventanaVerificacion = new OpcionSesion(correo);
-                    ventanaVerificacion.Show();
+                    new OpcionSesion(correo).Show();
                     this.Close();
                 }
                 else
@@ -273,12 +247,25 @@ namespace Login
             }
             catch (Exception ex)
             {
-
+                MessageBox.Show("⚠ Error inesperado: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // OTROS
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
+        {
+            // Implementar recuperación de contraseña
         }
 
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
+            //Limpiar error en tiempo real si lo deseas:
+            if (txtErrorCorreo.Visibility == Visibility.Visible)
+                txtErrorCorreo.Visibility = Visibility.Collapsed;
         }
     }
 }
