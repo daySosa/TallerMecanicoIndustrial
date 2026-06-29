@@ -4,43 +4,57 @@ using Login.Clases;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Vehículos;
 
 namespace Contabilidad
 {
-    /// <summary>
-    /// Ventana principal del módulo de contabilidad.
-    /// Permite gestionar egresos, visualizar comprobantes, acceder a otros módulos
-    /// y administrar notificaciones del sistema.
-    /// </summary>
     public partial class MenúPrincipalEgresos : Window
     {
-        /// <summary>
-        /// Instancia utilizada para realizar consultas y operaciones en la base de datos.
-        /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
+        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private DataTable _gastosCache;
+        private readonly DispatcherTimer _debounceBusqueda;
 
-        /// <summary>
-        /// Inicializa una nueva instancia de la ventana <see cref="ContaWindow"/>
-        /// y carga los datos iniciales del módulo.
-        /// </summary>
         public MenúPrincipalEgresos()
         {
             InitializeComponent();
-            CargarEgreso();
-            CargarNotificaciones();
+
+            _debounceBusqueda = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(250)
+            };
+            _debounceBusqueda.Tick += (s, e) =>
+            {
+                _debounceBusqueda.Stop();
+                AplicarFiltro(txtBuscar.Text.Trim());
+            };
+
+            Loaded += async (s, e) =>
+            {
+                await CargarEgresoAsync();
+                CargarNotificaciones();
+            };
         }
 
-        /// <summary>
-        /// Carga la lista de gastos en el DataGrid, aplicando un filtro opcional de búsqueda.
-        /// </summary>
-        /// <param name="busqueda">Texto de búsqueda para filtrar los gastos.</param>
-        public void CargarEgreso(string busqueda = null)
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                DragMove();
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // GASTOS
+        // ════════════════════════════════════════════════════════════
+
+        private async Task CargarEgresoAsync()
         {
             try
             {
-                dgGastos.ItemsSource = _db.ObtenerGastos(busqueda).DefaultView;
+                _gastosCache = await Task.Run(() => _db.ObtenerGastos(null));
+                dgGastos.ItemsSource = _gastosCache.DefaultView;
+                ActualizarContador(_gastosCache.Rows.Count);
             }
             catch (Exception ex)
             {
@@ -49,192 +63,107 @@ namespace Contabilidad
             }
         }
 
-        /// <summary>
-        /// Filtra los gastos en tiempo real según el texto ingresado en el campo de búsqueda.
-        /// </summary>
-        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
+        public async void CargarEgreso(string busqueda = null)
         {
-            string texto = txtBuscar.Text.Trim();
-            CargarEgreso(string.IsNullOrEmpty(texto) ? null : texto);
+            await CargarEgresoAsync();
+            if (!string.IsNullOrWhiteSpace(busqueda))
+                AplicarFiltro(busqueda);
         }
 
-        /// <summary>
-        /// Abre la ventana para registrar un nuevo gasto.
-        /// </summary>
-        private void btnAgregar_Click(object sender, RoutedEventArgs e)
+        private void AplicarFiltro(string texto)
         {
-            var ventana = new AgregarGasto();
-            ventana.Owner = this;
-            if (ventana.ShowDialog() == true)
-                CargarEgreso();
-        }
-
-        //// <summary>
-        /// Evento reservado para futuras funcionalidades de actualización manual.
-        /// </summary>
-        private void btnActualizar_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        /// <summary>
-        /// Abre la ventana de edición de un gasto al hacer doble clic sobre un registro.
-        /// </summary>
-        private void dgGastos_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (dgGastos.SelectedItem is DataRowView fila)
+            if (_gastosCache == null) return;
+            try
             {
-                var ventana = new ActualizarGasto(
-                    gastoId: Convert.ToInt32(fila["Gasto_ID"]),
-                    tipo: fila["Tipo_Gasto"].ToString(),
-                    nombre: fila["Nombre_Gasto"].ToString(),
-                    precio: Convert.ToDecimal(fila["Precio_Gasto"]),
-                    fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
-                    observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto") && fila["Observaciones_Gasto"] != DBNull.Value
-                                   ? fila["Observaciones_Gasto"].ToString()
-                                   : ""
-                );
-                ventana.Owner = this;
-                ventana.ShowDialog();
-                dgGastos.SelectedItem = null;
-                CargarEgreso();
+                _gastosCache.DefaultView.RowFilter = string.IsNullOrWhiteSpace(texto)
+                    ? string.Empty
+                    : $"Nombre_Gasto LIKE '%{texto.Replace("'", "''")}%' OR Tipo_Gasto LIKE '%{texto.Replace("'", "''")}%'";
+
+                ActualizarContador(_gastosCache.DefaultView.Count);
+            }
+            catch
+            {
+                _gastosCache.DefaultView.RowFilter = string.Empty;
             }
         }
 
-        /// <summary>
-        /// Muestra el comprobante del gasto seleccionado.
-        /// </summary>
+        private void ActualizarContador(int cantidad)
+        {
+            tbTotalGastos.Text = cantidad == 1 ? "1 registro" : $"{cantidad} registros";
+        }
+
+        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _debounceBusqueda.Stop();
+            _debounceBusqueda.Start();
+        }
+
+        // ── Botón Agregar ────────────────────────────────────────────
+        private void btnAgregar_Click(object sender, RoutedEventArgs e)
+        {
+            new GestiónEgresos(this).ShowDialog();
+        }
+
+        // ── Doble clic DataGrid ──────────────────────────────────────
+        private void dgGastos_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (dgGastos.SelectedItem is not DataRowView fila) return;
+
+            new GestiónEgresos(
+                this,
+                gastoId: Convert.ToInt32(fila["Gasto_ID"]),
+                tipo: fila["Tipo_Gasto"].ToString(),
+                nombre: fila["Nombre_Gasto"].ToString(),
+                precio: Convert.ToDecimal(fila["Precio_Gasto"]),
+                fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
+                observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto")
+                               && fila["Observaciones_Gasto"] != DBNull.Value
+                               ? fila["Observaciones_Gasto"].ToString() : ""
+            ).ShowDialog();
+
+            dgGastos.SelectedItem = null;
+            CargarEgreso();
+        }
+
         private void btnMostrarComprobante_Click(object sender, RoutedEventArgs e)
         {
-            if (dgGastos.SelectedItem == null)
+            if (dgGastos.SelectedItem is not DataRowView fila)
             {
                 MessageBox.Show("Selecciona un gasto para ver el comprobante.", "Aviso",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var fila = (DataRowView)dgGastos.SelectedItem;
-
-            var ventana = new MostrarComprobante(
+            new ComprobanteEgresos(
                 id: Convert.ToInt32(fila["Gasto_ID"]),
                 tipo: fila["Tipo_Gasto"].ToString(),
                 nombre: fila["Nombre_Gasto"].ToString(),
                 precio: Convert.ToDecimal(fila["Precio_Gasto"]),
                 fecha: Convert.ToDateTime(fila["Fecha_Gasto"]),
-                observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto") && fila["Observaciones_Gasto"] != DBNull.Value
-                               ? fila["Observaciones_Gasto"].ToString()
-                               : ""
-            );
-
-            ventana.Owner = this;
-            ventana.ShowDialog();
+                observaciones: fila.Row.Table.Columns.Contains("Observaciones_Gasto")
+                               && fila["Observaciones_Gasto"] != DBNull.Value
+                               ? fila["Observaciones_Gasto"].ToString() : ""
+            )
+            { Owner = this }.ShowDialog();
         }
 
-        /// <summary>
-        /// Recarga la lista de egresos.
-        /// </summary>
-        private void btnEgresos_Click(object sender, RoutedEventArgs e)
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
         {
-            CargarEgreso();
+            new ReportesWindow("Egresos").ShowDialog();
         }
 
-        /// <summary>
-        /// Navega al módulo de ingresos (pagos).
-        /// </summary>
-        private void btnIngresos_Click(object sender, RoutedEventArgs e)
-        {
-            MenuDePagos ventana = new MenuDePagos();
-            ventana.Show();
-            this.Close();
-        }
+        // ════════════════════════════════════════════════════════════
+        // NOTIFICACIONES
+        // ════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// Navega al menú principal del sistema.
-        /// </summary>
-        private void btnPantallaPrincipal_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new MenuPrincipal();
-            ventana.Show();
-            this.Close();
-        }
-
-        /// <summary>
-        /// Navega al módulo de inventario.
-        /// </summary>
-        private void btnInventario_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new InterfazInventario.MenúPrincipalInventario();
-            ventana.Show();
-            this.Close();
-        }
-
-        /// <summary>
-        /// Navega al módulo de vehículos.
-        /// </summary>
-        private void btnVehiculos_Click(object sender, RoutedEventArgs e)
-        {
-            MenúPrincipalVehículos ventana = new MenúPrincipalVehículos();
-            ventana.Show();
-            this.Close();
-        }
-
-        /// <summary>
-        /// Navega al módulo de clientes.
-        /// </summary>
-        private void btnClientes_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new InterfazClientes.MenúPrincipalClientes();
-            ventana.Show();
-            this.Close();
-        }
-
-        /// <summary>
-        /// Navega al módulo de órdenes de trabajo.
-        /// </summary>
-        private void btnOrdenes_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
-            ventana.Show();
-            this.Close();
-        }
-
-        /// <summary>
-        /// Cierra la sesión del usuario actual y regresa a la pantalla de inicio de sesión.
-        /// </summary>
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (resultado == MessageBoxResult.Yes)
-            {
-                var login = new Login.MainWindow();
-                login.Show();
-                this.Close();
-            }
-        }
-
-        /// <summary>
-        /// Muestra u oculta el panel de notificaciones.
-        /// </summary>
-        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
-        {
-            if (!popupNotificaciones.IsOpen)
-                CargarNotificacionesEnPopup();
-            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
-        }
-
-        /// <summary>
-        /// Carga el número de notificaciones pendientes y actualiza el indicador visual.
-        /// </summary>
         public void CargarNotificaciones()
         {
             try
             {
                 int cantidad = _db.ContarNotificacionesPendientes();
                 badgeNotificaciones.Visibility = cantidad > 0
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-                txtContadorNotificaciones.Text = cantidad.ToString();
+                    ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
             catch (Exception ex)
             {
@@ -242,25 +171,27 @@ namespace Contabilidad
             }
         }
 
-        /// <summary>
-        /// Carga las notificaciones pendientes dentro del panel emergente (popup).
-        /// </summary>
+        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
+        {
+            if (!popupNotificaciones.IsOpen)
+                CargarNotificacionesEnPopup();
+            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+        }
+
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
-
             try
             {
                 DataTable dt = _db.ObtenerNotificacionesPendientes();
 
                 if (dt.Rows.Count == 0)
                 {
-                    StackPanel vacio = new StackPanel
+                    var vacio = new StackPanel
                     {
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Margin = new Thickness(0, 20, 0, 20)
                     };
-
                     vacio.Children.Add(new Label
                     {
                         Content = "🎉",
@@ -270,7 +201,6 @@ namespace Contabilidad
                         Foreground = new SolidColorBrush(Colors.White),
                         Padding = new Thickness(0)
                     });
-
                     vacio.Children.Add(new TextBlock
                     {
                         Text = "Sin notificaciones pendientes",
@@ -279,24 +209,21 @@ namespace Contabilidad
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Margin = new Thickness(0, 8, 0, 0)
                     });
-
                     panelNotificaciones.Children.Add(vacio);
                     badgeContadorPopup.Visibility = Visibility.Collapsed;
                     btnMarcarTodas.Visibility = Visibility.Collapsed;
                     return;
                 }
 
-                txtContadorPopup.Text = dt.Rows.Count.ToString();
+                txtContadorPopup.Text = dt.Rows.Count > 99 ? "99+" : dt.Rows.Count.ToString();
                 badgeContadorPopup.Visibility = Visibility.Visible;
                 btnMarcarTodas.Visibility = Visibility.Visible;
 
                 foreach (DataRow row in dt.Rows)
-                {
-                    int id = Convert.ToInt32(row["Notificacion_ID"]);
-                    string tipo = row["Tipo_Notificacion"].ToString();
-                    string msg = row["Mensaje"].ToString();
-                    panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
-                }
+                    panelNotificaciones.Children.Add(CrearTarjeta(
+                        Convert.ToInt32(row["Notificacion_ID"]),
+                        row["Tipo_Notificacion"].ToString(),
+                        row["Mensaje"].ToString()));
             }
             catch (Exception ex)
             {
@@ -304,9 +231,6 @@ namespace Contabilidad
             }
         }
 
-        /// <summary>
-        /// Crea una tarjeta visual para mostrar una notificación en el panel.
-        /// </summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -315,7 +239,7 @@ namespace Contabilidad
             string colorIcono = esStock ? "#F0A500" : "#3D7EFF";
             string labelTipo = esStock ? "Stock Bajo" : "Orden Finalizada";
 
-            Border card = new Border
+            var card = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorFondo)),
                 BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde)),
@@ -325,13 +249,12 @@ namespace Contabilidad
                 Padding = new Thickness(12, 10, 12, 10)
             };
 
-            Grid grid = new Grid();
+            var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            StackPanel contenido = new StackPanel();
-
-            Border badgeTipo = new Border
+            var contenido = new StackPanel();
+            var badgeTipo = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde + "33")),
                 CornerRadius = new CornerRadius(4),
@@ -359,7 +282,7 @@ namespace Contabilidad
             Grid.SetColumn(contenido, 0);
             grid.Children.Add(contenido);
 
-            Button btnLeida = new Button
+            var btnLeida = new Button
             {
                 Content = "✓",
                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
@@ -367,7 +290,7 @@ namespace Contabilidad
                 BorderThickness = new Thickness(0),
                 FontSize = 15,
                 VerticalAlignment = VerticalAlignment.Top,
-                Cursor = System.Windows.Input.Cursors.Hand,
+                Cursor = Cursors.Hand,
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
@@ -384,9 +307,6 @@ namespace Contabilidad
             return card;
         }
 
-        /// <summary>
-        /// Marca todas las notificaciones como leídas.
-        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -394,14 +314,45 @@ namespace Contabilidad
             CargarNotificaciones();
         }
 
+        // ════════════════════════════════════════════════════════════
+        // NAVEGACIÓN
+        // ════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// Abre la ventana de reportes del módulo de egresos.
-        /// </summary>
-        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        private void Navegar<T>(Func<T> crear) where T : Window
         {
-            var ventana = new ReportesWindow("Egresos");
-            ventana.ShowDialog();
+            crear().Show();
+            this.Close();
+        }
+
+        private void btnHome_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new MenuPrincipal());
+
+        private void btnInventario_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new InterfazInventario.MenúPrincipalInventario());
+
+        private void btnVehiculos_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new MenúPrincipalVehículos());
+
+        private void btnClientes_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new InterfazClientes.MenúPrincipalClientes());
+
+        private void btnOrdenes_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new Órdenes_de_Trabajo.MenúPrincipalOrdenes());
+
+        private void btnUsuarios_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new InterfazClientes.MenúPrincipalUsuarios());
+
+        private void btnBitacora_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new Órdenes_de_Trabajo.MenúPrincipalBitacora());
+
+        private void btnIngresos_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new Contabilidad.MenúPrincipalIngresos());
+
+        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                Navegar(() => new Login.MainWindow());
         }
     }
 }

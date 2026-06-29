@@ -1,24 +1,29 @@
 ﻿using System.Windows;
+using System.Windows.Media;
 
 namespace Contabilidad
 {
-
     /// <summary>
-    /// Ventana encargada de mostrar un comprobante de ingreso o gasto.
-    /// Presenta la información básica como ID, nombre, precio, fecha y tipo de transacción.
+    /// Ventana encargada de mostrar un comprobante de gasto (egreso).
+    /// Presenta la información básica como ID, nombre, precio, fecha, tipo y observaciones.
     /// </summary>
     public partial class ComprobanteEgresos : Window
     {
+        // Pinceles cacheados como estáticos para no crear instancias nuevas en cada apertura de ventana.
+        private static readonly SolidColorBrush BrushRepuesto = new(Color.FromRgb(59, 130, 246));
+        private static readonly SolidColorBrush BrushAdicional = new(Color.FromRgb(245, 158, 11));
+
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="MostrarComprobante"/>.
+        /// Inicializa una nueva instancia de <see cref="ComprobanteEgresos"/> y carga los datos del gasto.
         /// </summary>
-        /// <param name="id">Identificador del comprobante.</param>
-        /// <param name="tipo">Tipo de comprobante (por ejemplo: ingreso o gasto).</param>
-        /// <param name="nombre">Nombre o descripción del comprobante.</param>
-        /// <param name="precio">Monto asociado al comprobante.</param>
-        /// <param name="fecha">Fecha y hora del comprobante.</param>
-        /// <param name="observaciones">Observaciones adicionales del comprobante.</param>
-        public ComprobanteEgresos(int id, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
+        /// <param name="id">Identificador del gasto.</param>
+        /// <param name="tipo">Tipo de gasto ("Gasto en Repuesto" o "Gasto Adicional").</param>
+        /// <param name="nombre">Nombre o descripción del gasto.</param>
+        /// <param name="precio">Monto del gasto.</param>
+        /// <param name="fecha">Fecha y hora del registro.</param>
+        /// <param name="observaciones">Observaciones adicionales del gasto.</param>
+        public ComprobanteEgresos(int id, string tipo, string nombre, decimal precio,
+                                   DateTime fecha, string observaciones)
         {
             InitializeComponent();
             CargarDatos(id, tipo, nombre, precio, fecha, observaciones);
@@ -27,52 +32,30 @@ namespace Contabilidad
         /// <summary>
         /// Carga y muestra los datos del comprobante en la interfaz gráfica.
         /// </summary>
-        /// <param name="id">Identificador del comprobante.</param>
-        /// <param name="tipo">Tipo de comprobante.</param>
-        /// <param name="nombre">Nombre o descripción.</param>
-        /// <param name="precio">Monto del comprobante.</param>
-        /// <param name="fecha">Fecha del comprobante.</param>
-        /// <param name="observaciones">Observaciones adicionales (no se muestran actualmente).</param>
-        private void CargarDatos(int id, string tipo, string nombre, decimal precio, DateTime fecha, string observaciones)
+        private void CargarDatos(int id, string tipo, string nombre, decimal precio,
+                                  DateTime fecha, string observaciones)
         {
-            // Asigna el ID formateado
-            lblID.Text = "#" + id.ToString();
-            // Asigna el nombre o descripción
+            lblID.Text = "#" + id;
             lblNombre.Text = nombre;
-            // Asigna el precio con formato monetario
-            lblPrecio.Text = "- L " + precio.ToString("F2");
-            // Asigna la fecha en formato día/mes/año hora:minutos
-            lblFecha.Text = fecha.ToString("dd/MM/yyyy HH:mm");
-
-            // Asigna el tipo de comprobante
+            lblPrecio.Text = "- L " + precio.ToString("N2");
+            lblFecha.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
+                                            new System.Globalization.CultureInfo("es-ES"));
             lblTipo.Text = tipo;
-            // Cambia el estilo visual según el tipo de comprobante
-            if (tipo == "Gasto en Repuesto")
-            {
-                borderTipo.Background = new System.Windows.Media.SolidColorBrush(
-                    System.Windows.Media.Color.FromRgb(59, 130, 246));
-                lblTipo.Foreground = System.Windows.Media.Brushes.White;
-            }
-            else
-            {
-                borderTipo.Background = new System.Windows.Media.SolidColorBrush(
-                    System.Windows.Media.Color.FromRgb(245, 158, 11));
-                lblTipo.Foreground = System.Windows.Media.Brushes.White;
-            }
+            lblObservaciones.Text = string.IsNullOrWhiteSpace(observaciones)
+                ? "Sin observaciones registradas."
+                : observaciones;
 
-
+            borderTipo.Background = tipo switch
+            {
+                "Gasto en Repuesto" => BrushRepuesto,
+                _ => BrushAdicional
+            };
+            lblTipo.Foreground = Brushes.White;
         }
 
         /// <summary>
-        /// Evento click del botón cerrar.
-        /// Cierra la ventana actual del comprobante.
+        /// Cierra la ventana del comprobante.
         /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Información del evento de clic.</param>
-        private void btnCerrar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void btnCerrar_Click(object sender, RoutedEventArgs e) => this.Close();
     }
 }
-
