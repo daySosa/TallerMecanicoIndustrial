@@ -6,14 +6,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Vehículos
+namespace VehículosWindow
 {
     /// <summary>
     /// Representa un vehículo registrado en el sistema.
     /// Implementa <see cref="INotifyPropertyChanged"/> para soportar
     /// enlace de datos reactivo en la interfaz.
     /// </summary>
-    public class Vehiculo : INotifyPropertyChanged
+    public class Vehiculos : INotifyPropertyChanged
     {
         /// <summary>Obtiene o establece la placa del vehículo.</summary>
         public string? Vehiculo_Placa { get; set; }
