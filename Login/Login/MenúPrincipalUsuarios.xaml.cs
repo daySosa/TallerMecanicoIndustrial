@@ -1,7 +1,6 @@
 ﻿using Contabilidad;
 using Dasboard_Prueba;
 using InterfazInventario;
-using Login;
 using Login.Clases;
 using Órdenes_de_Trabajo;
 using System.Data;
@@ -82,7 +81,7 @@ namespace InterfazClientes
 
         private void btnAgregarUsuario_Click(object sender, RoutedEventArgs e)
         {
-            new UsuarioWindow().ShowDialog();
+            new VentanaUsuario().ShowDialog();
             CargarUsuarios();
         }
 

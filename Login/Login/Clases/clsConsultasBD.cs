@@ -1474,5 +1474,79 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
+        public bool AgregarUsuario(string nombre, string apellido, string correo,
+                            string telefono, string rol, string hashContrasena)
+        {
+            try
+            {
+                string query = @"
+            INSERT INTO LOGIN
+                (Usuario_Nombre, Usuario_Apellido, Usuario_Correo,
+                 Usuario_Telefono, Usuario_Rol, Usuario_Contraseña, Usuario_Activo)
+            VALUES
+                (@Nombre, @Apellido, @Correo,
+                 @Telefono, @Rol, @Hash, 1)";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Nombre", nombre);
+                cmd.Parameters.AddWithValue("@Apellido", apellido);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@Telefono", string.IsNullOrWhiteSpace(telefono)
+                                                          ? (object)DBNull.Value : telefono);
+                cmd.Parameters.AddWithValue("@Rol", rol);
+                cmd.Parameters.AddWithValue("@Hash", hashContrasena);
+                _conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (Exception ex) { throw new Exception("Error al agregar usuario: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool ActualizarUsuario(int usuarioId, string nombre, string apellido,
+                                       string correo, string telefono, string rol,
+                                       bool activo, string? hashContrasena = null)
+        {
+            try
+            {
+                string query = hashContrasena != null
+                    ? @"UPDATE LOGIN SET
+                    Usuario_Nombre     = @Nombre,
+                    Usuario_Apellido   = @Apellido,
+                    Usuario_Correo     = @Correo,
+                    Usuario_Telefono   = @Telefono,
+                    Usuario_Rol        = @Rol,
+                    Usuario_Activo     = @Activo,
+                    Usuario_Contraseña = @Hash
+                WHERE Usuario_ID = @ID"
+                    : @"UPDATE LOGIN SET
+                    Usuario_Nombre   = @Nombre,
+                    Usuario_Apellido = @Apellido,
+                    Usuario_Correo   = @Correo,
+                    Usuario_Telefono = @Telefono,
+                    Usuario_Rol      = @Rol,
+                    Usuario_Activo   = @Activo
+                WHERE Usuario_ID = @ID";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Nombre", nombre);
+                cmd.Parameters.AddWithValue("@Apellido", apellido);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@Telefono", string.IsNullOrWhiteSpace(telefono)
+                                                         ? (object)DBNull.Value : telefono);
+                cmd.Parameters.AddWithValue("@Rol", rol);
+                cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
+                cmd.Parameters.AddWithValue("@ID", usuarioId);
+                if (hashContrasena != null)
+                    cmd.Parameters.AddWithValue("@Hash", hashContrasena);
+
+                _conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (Exception ex) { throw new Exception("Error al actualizar usuario: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
     }
 }
