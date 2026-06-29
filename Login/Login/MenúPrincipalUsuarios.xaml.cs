@@ -88,7 +88,7 @@ namespace InterfazClientes
 
         private void btnBiometria_Click(object sender, RoutedEventArgs e)
         {
-            new BiometriaWindow().ShowDialog();
+            new VentanaBiometria().ShowDialog();
             CargarUsuarios();
         }
 
