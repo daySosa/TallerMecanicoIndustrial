@@ -201,9 +201,9 @@
                                 <Button Style="{StaticResource SidebarButton}" Margin="0,2">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="AccountGroupOutline" Foreground="#8890b5"
-                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                         <TextBlock Text="Clientes" Foreground="#8890b5"
-                                                    FontSize="13" VerticalAlignment="Center"/>
+                                                   FontSize="13" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
@@ -217,7 +217,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
+                                <Button Style="{StaticResource SidebarButton}" Margin="0,2"
+                                        Click="btnUsuarios_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="#8890b5"
                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -226,7 +227,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
+                                <Button Style="{StaticResource SidebarButton}" Margin="0,2"
+                                        Click="btnBitacora_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -517,7 +519,7 @@
                                             </StackPanel>
                                             <Border Grid.Column="1" Background="#1a1d35" CornerRadius="6"
                                                     Padding="10,4" VerticalAlignment="Center">
-                                                <TextBlock x:Name="tbTotalClientes" Text="0 clientes"
+                                                <TextBlock x:Name="tbTotalItems" Text="0 clientes"
                                                            Foreground="#4f6ef7" FontSize="11"/>
                                             </Border>
                                         </Grid>
@@ -528,7 +530,7 @@
                                               CanUserDeleteRows="False" CanUserResizeRows="False"
                                               CanUserReorderColumns="False" CanUserResizeColumns="False"
                                               IsReadOnly="True" SelectionMode="Single"
-                                              SelectionChanged="dgClientes_SelectionChanged"
+                                              MouseDoubleClick="dgClientes_MouseDoubleClick"
                                               GridLinesVisibility="Horizontal"
                                               HorizontalGridLinesBrush="#1e2235"
                                               Background="Transparent" Foreground="White"
@@ -732,28 +734,11 @@
                     <TextBlock Text="Filtrar Clientes" Foreground="White"
                                FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                    <TextBlock Text="Nombre" Foreground="#505880" FontSize="11" Margin="0,0,0,6"/>
-                    <TextBox x:Name="txtFiltroNombre" Style="{StaticResource FilterTextBox}"
-                             Margin="0,0,0,14"/>
-
-                    <TextBlock Text="Teléfono" Foreground="#505880" FontSize="11" Margin="0,0,0,6"/>
-                    <TextBox x:Name="txtFiltroTelefono" Style="{StaticResource FilterTextBox}"
-                             Margin="0,0,0,14"/>
-
-                    <TextBlock Text="Estado" Foreground="#505880" FontSize="11" Margin="0,0,0,6"/>
-                    <Border Background="#1e2235" CornerRadius="6"
-                            BorderBrush="#252840" BorderThickness="1"
-                            Height="38" Margin="0,0,0,20">
-                        <ComboBox x:Name="cmbFiltroEstado"
-                                  Background="Transparent" Foreground="White"
-                                  BorderThickness="0" FontSize="13"
-                                  Padding="10,0" VerticalContentAlignment="Center"
-                                  Style="{StaticResource MaterialDesignComboBox}">
-                            <ComboBoxItem Content="Todos" IsSelected="True"/>
-                            <ComboBoxItem Content="Activo"/>
-                            <ComboBoxItem Content="Inactivo"/>
-                        </ComboBox>
-                    </Border>
+                    <CheckBox x:Name="chkSoloActivos"
+                              Content="Solo mostrar clientes activos"
+                              Foreground="White" FontSize="13"
+                              Margin="0,0,0,20"
+                              Style="{StaticResource MaterialDesignCheckBox}"/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>

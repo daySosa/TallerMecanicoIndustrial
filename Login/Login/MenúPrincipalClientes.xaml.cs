@@ -1,306 +1,190 @@
 ﻿using Dasboard_Prueba;
 using Login;
 using Login.Clases;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
-
 
 namespace InterfazClientes
 {
-    /// <summary>
-    /// Ventana principal para la gestión de clientes.
-    /// </summary>
     public partial class MenúPrincipalClientes : Window
     {
-        /// <summary>
-        /// Lista completa de clientes.
-        /// </summary>
-        private List<clsCliente> _listaClientes = new List<clsCliente>();
+        private readonly clsConsultasBD _db = new();
+        private readonly ObservableCollection<clsCliente> _listaClientes = new();
+        private ICollectionView? _vistaClientes;
 
-        /// <summary>
-        /// Lista de clientes filtrados.
-        /// </summary>
-        private List<clsCliente> _listaFiltrada = new List<clsCliente>();
+        private bool _filtroSoloActivos = false;
 
-        /// <summary>
-        /// Instancia para consultas a la base de datos.
-        /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
-
-        /// <summary>
-        /// Filtro por nombre o apellido del cliente.
-        /// </summary>
-        private string _filtroNombre = "";
-
-        /// <summary>
-        /// Filtro por número de teléfono.
-        /// </summary>
-        private string _filtroTelefono = "";
-
-        /// <summary>
-        /// Filtro por estado del cliente (Activo, Inactivo o Todos).
-        /// </summary>
-        private string _filtroEstado = "Todos";
-
-        /// <summary>
-        /// Indica si se está editando un cliente.
-        /// </summary>
-        private bool _editando = false;
-
-        /// <summary>
-        /// Inicializa una nueva instancia de la ventana de clientes.
-        /// </summary>
         public MenúPrincipalClientes()
         {
             InitializeComponent();
-            CargarClientes();
+            CargarDatos();
             CargarNotificaciones();
         }
 
-        /// <summary>
-        /// Maneja el evento Click del botón de inicio.
-        /// Navega al menú principal.
-        /// </summary>
+        // ── MOVER VENTANA ────────────────────────────────────────────
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                DragMove();
+        }
+
+        // ── NAVEGACIÓN ───────────────────────────────────────────────
+
+        private void Navegar<T>(Func<T> crear) where T : Window
+        {
+            crear().Show();
+            this.Close();
+        }
+
         private void btnHome_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new MenuPrincipal();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new MenuPrincipal());
 
-        /// <summary>
-        /// Maneja el evento Click del botón de inventario.
-        /// Abre la ventana de inventario.
-        /// </summary>
-        private void btnInventario_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new InterfazInventario.MenúPrincipalInventario();
-            ventana.Show();
-            this.Close();
-        }
+        private void btnClientes_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new MenúPrincipalClientes());
 
-        /// <summary>
-        /// Maneja el evento Click del botón de vehículos.
-        /// Abre la ventana de vehículos.
-        /// </summary>
         private void btnVehiculos_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Vehículos.MenúPrincipalVehículos();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Vehículos.MenúPrincipalVehículos());
 
-        /// <summary>
-        /// Maneja el evento Click del botón de órdenes.
-        /// Abre la ventana de órdenes de trabajo.
-        /// </summary>
         private void btnOrdenes_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Órdenes_de_Trabajo.MenúPrincipalOrdenes();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Órdenes_de_Trabajo.MenúPrincipalOrdenes());
 
-        /// <summary>
-        /// Maneja el evento Click del botón de egresos.
-        /// Abre la ventana de contabilidad.
-        /// </summary>
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Contabilidad.ContaWindow();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Contabilidad.MenúPrincipalEgresos());
 
-        /// <summary>
-        /// Maneja el evento Click del botón de ingresos.
-        /// Abre la ventana de pagos.
-        /// </summary>
         private void btnIngresos_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new Contabilidad.MenuDePagos();
-            ventana.Show();
-            this.Close();
-        }
+            => Navegar(() => new Contabilidad.MenúPrincipalIngresos());
 
-        /// <summary>
-        /// Maneja el evento Click del botón de cerrar sesión.
-        /// Cierra la sesión del usuario actual.
-        /// </summary>
+        private void btnUsuarios_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new InterfazClientes.MenúPrincipalUsuarios());
+
+        private void btnBitacora_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new Órdenes_de_Trabajo.MenúPrincipalBitacora());
+
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
-            var resultado = MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (resultado == MessageBoxResult.Yes)
-            {
-                var login = new Login.MainWindow();
-                login.Show();
-                this.Close();
-            }
+            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                Navegar(() => new Login.MainWindow());
         }
 
-        /// <summary>
-        /// Formatea un número de teléfono al formato ####-####.
-        /// </summary>
-        /// <param name="telefono">Número de teléfono sin formato.</param>
-        /// <returns>Número de teléfono formateado.</returns>
-        private string FormatearTelefono(string telefono)
-        {
-            if (string.IsNullOrWhiteSpace(telefono)) return telefono;
-            string soloNumeros = System.Text.RegularExpressions.Regex.Replace(telefono, @"\D", "");
-            if (soloNumeros.Length == 8)
-                return soloNumeros.Substring(0, 4) + "-" + soloNumeros.Substring(4);
-            return telefono;
-        }
+        // ── DATOS ────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Carga la lista de clientes desde la base de datos.
-        /// </summary>
-        public void CargarClientes()
+        public void CargarDatos()
         {
             _listaClientes.Clear();
             try
             {
-                var clientes = _db.ObtenerClientes();
-                foreach (var c in clientes)
-                {
-                    c.Cliente_Telefono = FormatearTelefono(c.Cliente_Telefono);
+                foreach (var c in _db.ObtenerClientes())
                     _listaClientes.Add(c);
+
+                if (_vistaClientes == null)
+                {
+                    _vistaClientes = System.Windows.Data.CollectionViewSource
+                        .GetDefaultView(_listaClientes);
+                    _vistaClientes.Filter = AplicarFiltros;
+                    dgClientes.ItemsSource = _vistaClientes;
                 }
+                else
+                {
+                    _vistaClientes.Refresh();
+                }
+
+                ActualizarContador();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar: " + ex.Message);
+                MessageBox.Show("Error al cargar clientes:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool AplicarFiltros(object item)
+        {
+            if (item is not clsCliente c) return false;
+
+            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+            if (!string.IsNullOrEmpty(texto))
+            {
+                bool coincide =
+                    (c.Cliente_DPI ?? "").ToLower().Contains(texto) ||
+                    (c.Cliente_Nombre ?? "").ToLower().Contains(texto) ||
+                    (c.Cliente_Apellido ?? "").ToLower().Contains(texto) ||
+                    (c.Cliente_Telefono ?? "").ToLower().Contains(texto) ||
+                    (c.Cliente_Correo ?? "").ToLower().Contains(texto);
+                if (!coincide) return false;
             }
 
-            AplicarFiltros();
+            if (_filtroSoloActivos && !c.Cliente_Activo) return false;
+
+            return true;
         }
 
-        /// <summary>
-        /// Aplica los filtros de búsqueda a la lista de clientes.
-        /// </summary>
-        private void AplicarFiltros()
+        private void ActualizarContador()
         {
-            string busqueda = txtBuscar.Text?.Trim().ToLower() ?? "";
-
-            _listaFiltrada = _listaClientes.FindAll(c =>
-            {
-                if (!string.IsNullOrEmpty(busqueda))
-                {
-                    bool coincide =
-                        (c.Cliente_Nombre ?? "").ToLower().Contains(busqueda) ||
-                        (c.Cliente_Apellido ?? "").ToLower().Contains(busqueda) ||
-                        (c.Cliente_DPI ?? "").ToLower().Contains(busqueda) ||
-                        (c.Cliente_Telefono ?? "").ToLower().Contains(busqueda);
-                    if (!coincide) return false;
-                }
-
-                if (!string.IsNullOrEmpty(_filtroNombre))
-                    if (!(c.Cliente_Nombre ?? "").ToLower().Contains(_filtroNombre) &&
-                        !(c.Cliente_Apellido ?? "").ToLower().Contains(_filtroNombre))
-                        return false;
-
-                if (!string.IsNullOrEmpty(_filtroTelefono))
-                    if (!(c.Cliente_Telefono ?? "").ToLower().Contains(_filtroTelefono))
-                        return false;
-
-                if (_filtroEstado == "Activo" && !c.Cliente_Activo) return false;
-                if (_filtroEstado == "Inactivo" && c.Cliente_Activo) return false;
-
-                return true;
-            });
-
-            dgClientes.ItemsSource = null;
-            dgClientes.ItemsSource = _listaFiltrada;
-            tbTotalClientes.Text = $"{_listaFiltrada.Count} cliente{(_listaFiltrada.Count != 1 ? "s" : "")}";
+            int total = _vistaClientes?.Cast<object>().Count() ?? 0;
+            tbTotalItems.Text = $"{total} cliente{(total != 1 ? "s" : "")}";
         }
 
-        /// <summary>
-        /// Maneja el evento de cambio de texto en el buscador.
-        /// </summary>
+        // ── BÚSQUEDA Y FILTROS ───────────────────────────────────────
+
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
-            AplicarFiltros();
+            _vistaClientes?.Refresh();
+            ActualizarContador();
         }
 
-        /// <summary>
-        /// Maneja el evento Click del botón de filtros.
-        /// Muestra u oculta el panel de filtros.
-        /// </summary>
         private void btnFiltrar_Click(object sender, RoutedEventArgs e)
-        {
-            popupFiltros.IsOpen = !popupFiltros.IsOpen;
-        }
+            => popupFiltros.IsOpen = !popupFiltros.IsOpen;
 
-        /// <summary>
-        /// Aplica los filtros seleccionados por el usuario.
-        /// </summary>
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
-            _filtroNombre = txtFiltroNombre.Text?.Trim().ToLower() ?? "";
-            _filtroTelefono = txtFiltroTelefono.Text?.Trim().ToLower() ?? "";
-            _filtroEstado = (cmbFiltroEstado.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Todos";
-
+            _filtroSoloActivos = chkSoloActivos.IsChecked == true;
             popupFiltros.IsOpen = false;
-            AplicarFiltros();
+            _vistaClientes?.Refresh();
+            ActualizarContador();
         }
 
-        /// <summary>
-        /// Limpia todos los filtros aplicados.
-        /// </summary>
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
-            txtFiltroNombre.Clear();
-            txtFiltroTelefono.Clear();
-            cmbFiltroEstado.SelectedIndex = 0;
-            _filtroNombre = "";
-            _filtroTelefono = "";
-            _filtroEstado = "Todos";
-
+            chkSoloActivos.IsChecked = false;
+            _filtroSoloActivos = false;
             popupFiltros.IsOpen = false;
-            AplicarFiltros();
+            _vistaClientes?.Refresh();
+            ActualizarContador();
         }
 
-        /// <summary>
-        /// Maneja el evento Click para agregar un nuevo cliente.
-        /// </summary>
-        private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
-        {
-            var formulario = new ClientesWindow();
-            bool? resultado = formulario.ShowDialog();
+        // ── DATAGRID ─────────────────────────────────────────────────
 
-            if (resultado == true && formulario.ClienteResultado != null)
-            {
-                CargarClientes();
-            }
-        }
-
-        /// <summary>
-        /// Maneja la selección de un cliente en la tabla.
-        /// Permite editar el cliente seleccionado.
-        /// </summary>
-        private void dgClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void dgClientes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (_editando) return;
             if (dgClientes.SelectedItem is clsCliente seleccionado)
             {
-                _editando = true;
-                var formulario = new ClientesWindow();
-                formulario.CargarClienteParaEditar(seleccionado);
-                formulario.ShowDialog();
-
+                var ventana = new ClientesWindow();
+                ventana.CargarClienteParaEditar(seleccionado);
+                if (ventana.ShowDialog() == true)
+                    CargarDatos();
                 dgClientes.SelectedItem = null;
-                _editando = false;
-                CargarClientes();
             }
         }
 
-        /// <summary>
-        /// Maneja el evento Click del botón de notificaciones.
-        /// Muestra u oculta el panel de notificaciones.
-        /// </summary>
+        private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new ClientesWindow();
+            if (ventana.ShowDialog() == true)
+                CargarDatos();
+        }
+
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+            => new ReportesWindow("Clientes").ShowDialog();
+
+        // ── NOTIFICACIONES ───────────────────────────────────────────
+
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
@@ -308,26 +192,17 @@ namespace InterfazClientes
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
-        /// <summary>
-        /// Carga la cantidad de notificaciones pendientes.
-        /// </summary>
         public void CargarNotificaciones()
         {
             try
             {
                 int cantidad = _db.ContarNotificacionesPendientes();
                 badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                txtContadorNotificaciones.Text = cantidad.ToString();
+                txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
-            }
+            catch { }
         }
 
-        /// <summary>
-        /// Carga las notificaciones dentro del panel emergente.
-        /// </summary>
         private void CargarNotificacionesEnPopup()
         {
             panelNotificaciones.Children.Clear();
@@ -337,16 +212,35 @@ namespace InterfazClientes
 
                 if (dt.Rows.Count == 0)
                 {
-                    var vacio = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 20) };
-                    vacio.Children.Add(new Label { Content = "🎉", FontSize = 32, HorizontalAlignment = HorizontalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.White), Padding = new Thickness(0) });
-                    vacio.Children.Add(new TextBlock { Text = "Sin notificaciones pendientes", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 0) });
+                    var vacio = new StackPanel
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 20, 0, 20)
+                    };
+                    vacio.Children.Add(new Label
+                    {
+                        Content = "🎉",
+                        FontSize = 32,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        HorizontalContentAlignment = HorizontalAlignment.Center,
+                        Foreground = Brushes.White,
+                        Padding = new Thickness(0)
+                    });
+                    vacio.Children.Add(new TextBlock
+                    {
+                        Text = "Sin notificaciones pendientes",
+                        Foreground = Pincel("#6B7280"),
+                        FontSize = 12,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 8, 0, 0)
+                    });
                     panelNotificaciones.Children.Add(vacio);
                     badgeContadorPopup.Visibility = Visibility.Collapsed;
                     btnMarcarTodas.Visibility = Visibility.Collapsed;
                     return;
                 }
 
-                txtContadorPopup.Text = dt.Rows.Count.ToString();
+                txtContadorPopup.Text = dt.Rows.Count > 99 ? "99+" : dt.Rows.Count.ToString();
                 badgeContadorPopup.Visibility = Visibility.Visible;
                 btnMarcarTodas.Visibility = Visibility.Visible;
 
@@ -364,91 +258,79 @@ namespace InterfazClientes
             }
         }
 
-        /// <summary>
-        /// Crea una tarjeta visual para una notificación.
-        /// </summary>
-        /// <param name="id">Identificador de la notificación.</param>
-        /// <param name="tipo">Tipo de notificación.</param>
-        /// <param name="mensaje">Mensaje de la notificación.</param>
-        /// <returns>Elemento visual tipo Border con la notificación.</returns>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
             string colorBorde = esStock ? "#F0A500" : "#3D7EFF";
             string colorFondo = esStock ? "#1A1500" : "#0D1A2E";
-            string colorIcono = esStock ? "#F0A500" : "#3D7EFF";
             string labelTipo = esStock ? "Stock Bajo" : "Orden Finalizada";
 
-            Border card = new Border
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorFondo)),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde)),
-                BorderThickness = new Thickness(0, 0, 0, 3),
-                CornerRadius = new CornerRadius(8),
-                Margin = new Thickness(0, 0, 0, 8),
-                Padding = new Thickness(12, 10, 12, 10)
-            };
+            var contenido = new StackPanel();
 
-            Grid grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            StackPanel contenido = new StackPanel();
-            Border badgeTipo = new Border
+            var badge = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorBorde + "33")),
+                Background = Pincel(colorBorde + "33"),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(6, 2, 6, 2),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            badgeTipo.Child = new TextBlock
+            badge.Child = new TextBlock
             {
                 Text = labelTipo,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorIcono)),
+                Foreground = Pincel(colorBorde),
                 FontSize = 10,
                 FontWeight = FontWeights.SemiBold
             };
-            contenido.Children.Add(badgeTipo);
+            contenido.Children.Add(badge);
             contenido.Children.Add(new TextBlock
             {
                 Text = mensaje,
-                Foreground = new SolidColorBrush(Colors.White),
+                Foreground = Brushes.White,
                 FontSize = 11,
                 TextWrapping = TextWrapping.Wrap,
                 LineHeight = 17
             });
 
-            Grid.SetColumn(contenido, 0);
-            grid.Children.Add(contenido);
-
-            Button btnLeida = new Button
+            var btnLeida = new Button
             {
                 Content = "✓",
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
+                Foreground = Pincel("#6B7280"),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 FontSize = 15,
                 VerticalAlignment = VerticalAlignment.Top,
-                Cursor = System.Windows.Input.Cursors.Hand,
+                Cursor = Cursors.Hand,
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
-            btnLeida.Click += (s, e) =>
+            btnLeida.Click += (s, _) =>
             {
                 _db.MarcarNotificacionLeida((int)((Button)s).Tag);
                 CargarNotificacionesEnPopup();
                 CargarNotificaciones();
             };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(contenido, 0);
             Grid.SetColumn(btnLeida, 1);
+            grid.Children.Add(contenido);
             grid.Children.Add(btnLeida);
-            card.Child = grid;
-            return card;
+
+            return new Border
+            {
+                Background = Pincel(colorFondo),
+                BorderBrush = Pincel(colorBorde),
+                BorderThickness = new Thickness(0, 0, 0, 3),
+                CornerRadius = new CornerRadius(8),
+                Margin = new Thickness(0, 0, 0, 8),
+                Padding = new Thickness(12, 10, 12, 10),
+                Child = grid
+            };
         }
 
-        /// <summary>
-        /// Marca todas las notificaciones como leídas.
-        /// </summary>
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
             _db.MarcarNotificacionLeida(null);
@@ -456,30 +338,9 @@ namespace InterfazClientes
             CargarNotificaciones();
         }
 
-        /// <summary>
-        /// Marca una notificación como leída.
-        /// </summary>
-        /// <param name="id">Identificador de la notificación (puede ser nulo para todas).</param>
-        private void MarcarLeida(int? id)
-        {
-            try
-            {
-                _db.MarcarNotificacionLeida(id);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.Message);
-            }
-        }
+        // ── HELPER ───────────────────────────────────────────────────
 
-        /// <summary>
-        /// Maneja el evento Click del botón de reportes.
-        /// Abre la ventana de reportes de clientes.
-        /// </summary>
-        private void btnReportes_Click(object sender, RoutedEventArgs e)
-        {
-            var ventana = new ReportesWindow("Clientes");
-            ventana.ShowDialog();
-        }
+        private static SolidColorBrush Pincel(string hex) =>
+            new((Color)ColorConverter.ConvertFromString(hex));
     }
 }

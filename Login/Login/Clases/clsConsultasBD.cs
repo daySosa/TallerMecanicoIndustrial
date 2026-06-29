@@ -153,8 +153,11 @@ namespace Login.Clases
         {
             try
             {
-                SqlCommand cmd = new SqlCommand("sp_RegistrarPago", _conexion.SqlC);
-                cmd.CommandType = CommandType.StoredProcedure;
+                string sql = @"
+            INSERT INTO Contabilidad_Pago (Cliente_DNI, Orden_ID, Precio_Pago, Fecha_Pago)
+            VALUES (@ClienteDNI, @OrdenID, @Monto, GETDATE())";
+
+                SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@ClienteDNI", clienteDni);
                 cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                 cmd.Parameters.AddWithValue("@Monto", monto);
@@ -163,14 +166,8 @@ namespace Login.Clases
                 cmd.ExecuteNonQuery();
                 return true;
             }
-            catch (SqlException sqlEx)
-            {
-                throw new Exception(sqlEx.Message);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al registrar el pago: " + ex.Message);
-            }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
+            catch (Exception ex) { throw new Exception("Error al registrar el pago: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
@@ -470,17 +467,18 @@ namespace Login.Clases
         {
             try
             {
-                SqlCommand cmd = new SqlCommand("sp_MarcarNotificacionLeida", _conexion.SqlC);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@NotificacionID",
-                    id.HasValue ? (object)id.Value : DBNull.Value);
+                string sql = id.HasValue
+                    ? "UPDATE Notificaciones SET Leida = 1 WHERE Notificacion_ID = @ID"
+                    : "UPDATE Notificaciones SET Leida = 1 WHERE Leida = 0";
+
+                SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
+                if (id.HasValue)
+                    cmd.Parameters.AddWithValue("@ID", id.Value);
+
                 _conexion.Abrir();
                 cmd.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al marcar notificación: " + ex.Message);
-            }
+            catch (Exception ex) { throw new Exception("Error al marcar notificación: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
@@ -1149,8 +1147,18 @@ namespace Login.Clases
                 foreach (var rep in repuestos)
                 {
                     if (!rep.Incluido) continue;
-                    SqlCommand cmdRep = new SqlCommand("sp_AgregarRepuestoOrden", _conexion.SqlC);
-                    cmdRep.CommandType = CommandType.StoredProcedure;
+
+                    string sqlRep = @"
+                        INSERT INTO Orden_Repuesto
+                            (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
+                        SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
+                        FROM   Producto p WHERE p.Producto_ID = @ProductoID;
+
+                        UPDATE Producto
+                        SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
+                        WHERE  Producto_ID = @ProductoID";
+
+                    SqlCommand cmdRep = new SqlCommand(sqlRep, _conexion.SqlC);
                     cmdRep.Parameters.AddWithValue("@OrdenID", ordenID);
                     cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
                     cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
@@ -1179,7 +1187,7 @@ namespace Login.Clases
 
 
                 string sqlUpdate = @"
-            UPDATE Orden_Trabajo SET
+                 UPDATE Orden_Trabajo SET
                 Estado            = @Estado,
                 Fecha             = @Fecha,
                 Fecha_Entrega     = @FechaEntrega,
@@ -1187,7 +1195,7 @@ namespace Login.Clases
                 Servicio_Precio   = @ServicioPrecio,
                 OrdenPrecio_Total = @Total,
                 Adjuntos_Fotos    = @Foto
-            WHERE Orden_ID = @OrdenID";
+                WHERE Orden_ID = @OrdenID";
 
                 SqlCommand cmd = new SqlCommand(sqlUpdate, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Estado", estado);
@@ -1205,9 +1213,9 @@ namespace Login.Clases
 
 
                 string sqlPago = @"
-            UPDATE Contabilidad_Pago
-            SET Precio_Pago = @Total
-            WHERE Orden_ID = @OrdenID";
+                        UPDATE Contabilidad_Pago
+                        SET Precio_Pago = @Total
+                        WHERE Orden_ID = @OrdenID";
 
                 SqlCommand cmdPago = new SqlCommand(sqlPago, _conexion.SqlC);
                 cmdPago.Parameters.AddWithValue("@Total", total);
@@ -1220,22 +1228,48 @@ namespace Login.Clases
                 cmdDel.Parameters.AddWithValue("@OrdenID", ordenID);
                 cmdDel.ExecuteNonQuery();
 
-
                 foreach (var rep in repuestos)
                 {
                     if (!rep.Incluido) continue;
 
                     bool estabaAntes = productosOriginales.Contains(rep.ProductoID);
-                    string spNombre = estabaAntes
-                        ? "sp_ReinsertarRepuestoOrden"
-                        : "sp_AgregarRepuestoOrden";
 
-                    SqlCommand cmdRep = new SqlCommand(spNombre, _conexion.SqlC);
-                    cmdRep.CommandType = CommandType.StoredProcedure;
-                    cmdRep.Parameters.AddWithValue("@OrdenID", ordenID);
-                    cmdRep.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                    cmdRep.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                    cmdRep.ExecuteNonQuery();
+                    if (estabaAntes)
+                    {
+                        string sqlReinsertar = @"
+                                INSERT INTO Orden_Repuesto
+                                    (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
+                                SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
+                                FROM   Producto p WHERE p.Producto_ID = @ProductoID;
+
+                                UPDATE Producto
+                                SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
+                                WHERE  Producto_ID = @ProductoID";
+
+                        SqlCommand cmdR = new SqlCommand(sqlReinsertar, _conexion.SqlC);
+                        cmdR.Parameters.AddWithValue("@OrdenID", ordenID);
+                        cmdR.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
+                        cmdR.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
+                        cmdR.ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        string sqlNuevo = @"
+                                INSERT INTO Orden_Repuesto
+                                    (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
+                                SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
+                                FROM   Producto p WHERE p.Producto_ID = @ProductoID;
+
+                                UPDATE Producto
+                                SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
+                                WHERE  Producto_ID = @ProductoID";
+
+                        SqlCommand cmdN = new SqlCommand(sqlNuevo, _conexion.SqlC);
+                        cmdN.Parameters.AddWithValue("@OrdenID", ordenID);
+                        cmdN.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
+                        cmdN.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
+                        cmdN.ExecuteNonQuery();
+                    }
                 }
 
                 return true;
@@ -1278,44 +1312,50 @@ namespace Login.Clases
             try
             {
                 _conexion.Abrir();
-                SqlCommand cmd;
+                string sql;
 
                 if (esNuevo)
                 {
-                    cmd = new SqlCommand("sp_RegistrarVehiculo", _conexion.SqlC);
-                    cmd.CommandType = CommandType.StoredProcedure;
+                    sql = @"INSERT INTO Vehiculo
+                        (Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo,
+                         Vehiculo_Año, Vehiculo_Tipo, Vehiculo_Observaciones,
+                         Vehiculo_Activo, Cliente_DNI)
+                    VALUES
+                        (@Placa, @Marca, @Modelo, @Anio, @Tipo, @Obs, 1, @DNI)";
                 }
                 else
                 {
-                    string query = @"UPDATE Vehiculo SET 
-                                    Vehiculo_Placa = @Placa, 
-                                    Vehiculo_Marca = @Marca, 
-                                    Vehiculo_Modelo = @Modelo, 
-                                    Vehiculo_Año = @Anio, 
-                                    Vehiculo_Tipo = @Tipo, 
-                                    Vehiculo_Observaciones = @Obs, 
-                                    Vehiculo_Activo = @Activo, 
-                                    Cliente_DNI = @DNI 
-                                    WHERE Vehiculo_Placa = @PlacaOriginal";
-                    cmd = new SqlCommand(query, _conexion.SqlC);
-                    cmd.Parameters.AddWithValue("@PlacaOriginal", placaOriginal);
-                    cmd.Parameters.AddWithValue("@Activo", v.Activo ? 1 : 0);
+                    sql = @"UPDATE Vehiculo SET
+                        Vehiculo_Placa         = @Placa,
+                        Vehiculo_Marca         = @Marca,
+                        Vehiculo_Modelo        = @Modelo,
+                        Vehiculo_Año           = @Anio,
+                        Vehiculo_Tipo          = @Tipo,
+                        Vehiculo_Observaciones = @Obs,
+                        Vehiculo_Activo        = @Activo,
+                        Cliente_DNI            = @DNI
+                    WHERE Vehiculo_Placa = @PlacaOriginal";
                 }
 
+                SqlCommand cmd = new SqlCommand(sql, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@Placa", v.Placa);
                 cmd.Parameters.AddWithValue("@Marca", v.Marca);
                 cmd.Parameters.AddWithValue("@Modelo", v.Modelo);
                 cmd.Parameters.AddWithValue("@Anio", v.Anio);
                 cmd.Parameters.AddWithValue("@Tipo", v.Tipo);
                 cmd.Parameters.AddWithValue("@DNI", v.DNI);
-                cmd.Parameters.AddWithValue("@Obs", v.Obs ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Obs",
+                    (object?)v.Obs ?? DBNull.Value);
+
+                if (!esNuevo)
+                {
+                    cmd.Parameters.AddWithValue("@PlacaOriginal", placaOriginal);
+                    cmd.Parameters.AddWithValue("@Activo", v.Activo ? 1 : 0);
+                }
 
                 cmd.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al procesar el vehículo: " + ex.Message);
-            }
+            catch (Exception ex) { throw new Exception("Error al procesar el vehículo: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
