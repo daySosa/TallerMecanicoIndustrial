@@ -1,12 +1,11 @@
 ﻿using Dasboard_Prueba;
 using Login;
-using Microsoft.Data.SqlClient;
+using Login.Clases;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Vehículos;
-using Login.Clases;
 
 namespace Contabilidad
 {
@@ -15,7 +14,7 @@ namespace Contabilidad
     /// Permite gestionar egresos, visualizar comprobantes, acceder a otros módulos
     /// y administrar notificaciones del sistema.
     /// </summary>
-    public partial class ContaWindow : Window
+    public partial class MenúPrincipalEgresos : Window
     {
         /// <summary>
         /// Instancia utilizada para realizar consultas y operaciones en la base de datos.
@@ -26,7 +25,7 @@ namespace Contabilidad
         /// Inicializa una nueva instancia de la ventana <see cref="ContaWindow"/>
         /// y carga los datos iniciales del módulo.
         /// </summary>
-        public ContaWindow()
+        public MenúPrincipalEgresos()
         {
             InitializeComponent();
             CargarEgreso();
