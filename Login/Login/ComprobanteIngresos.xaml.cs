@@ -4,31 +4,18 @@ using System.Windows;
 namespace Contabilidad
 {
     /// <summary>
-    /// Ventana encargada de mostrar el comprobante de un pago realizado,
-    /// incluyendo información del cliente, monto y fecha.
+    /// Ventana que muestra el comprobante de un pago registrado.
     /// </summary>
-    public partial class ComprobanteIngresos : Window
+    public partial class ComprobantePago : Window
     {
-        /// <summary>
-        /// Instancia utilizada para consultar la información del comprobante en la base de datos.
-        /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
+        private readonly clsConsultasBD _db = new clsConsultasBD();
 
-        /// <summary>
-        /// Inicializa una nueva instancia de la ventana <see cref="ComprobanteDePago"/>
-        /// y carga los datos del pago correspondiente.
-        /// </summary>
-        /// <param name="pagoId">Identificador del pago.</param>
-        public ComprobanteIngresos(int pagoId)
+        public ComprobantePago(int pagoId)
         {
             InitializeComponent();
             CargarComprobante(pagoId);
         }
 
-        /// <summary>
-        /// Obtiene y muestra la información del comprobante de pago desde la base de datos.
-        /// </summary>
-        /// <param name="pagoId">Identificador del pago.</param>
         private void CargarComprobante(int pagoId)
         {
             try
@@ -37,20 +24,21 @@ namespace Contabilidad
 
                 if (row != null)
                 {
-                    lblPagoID.Text = "#" + row["Pago_ID"].ToString();
+                    lblPagoID.Text = "#" + row["Pago_ID"];
+                    lblDNI.Text = row["Cliente_DNI"].ToString();
+                    lblOrdenID.Text = "#" + row["Orden_ID"];
+
                     string nombres = row["Cliente_Nombres"].ToString();
                     string apellidos = row["Cliente_Apellidos"].ToString();
                     string inicial = apellidos.Length > 0 ? apellidos[0] + "." : "";
-                    lblNombre.Text = nombres + " " + inicial;
-                    lblDNI.Text = row["Cliente_DNI"].ToString();
-                    lblOrdenID.Text = "#" + row["Orden_ID"].ToString();
+                    lblNombre.Text = $"{nombres} {inicial}";
 
                     decimal monto = Convert.ToDecimal(row["Precio_Pago"]);
                     lblMonto.Text = "L " + monto.ToString("N2");
 
                     DateTime fecha = Convert.ToDateTime(row["Fecha_Pago"]);
                     lblFecha.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
-                                    new System.Globalization.CultureInfo("es-ES"));
+                                        new System.Globalization.CultureInfo("es-ES"));
                 }
                 else
                 {
@@ -67,12 +55,6 @@ namespace Contabilidad
             }
         }
 
-        /// <summary>
-        /// Cierra la ventana del comprobante.
-        /// </summary>
-        private void btnCerrar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void btnCerrar_Click(object sender, RoutedEventArgs e) => this.Close();
     }
 }
