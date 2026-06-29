@@ -556,19 +556,24 @@ namespace Login.Clases
         {
             try
             {
-                string query = @"SELECT * FROM LOGIN
-                                WHERE Usuario_Email = @correo
-                                AND Usuario_Contraseña COLLATE Latin1_General_CS_AS = @contrasena";
+                // Hashear la contraseña ingresada con SHA512
+                string inputHash;
+                using (var sha = System.Security.Cryptography.SHA512.Create())
+                {
+                    byte[] bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(contrasena));
+                    inputHash = BitConverter.ToString(bytes).Replace("-", "");
+                }
+
+                string query = @"SELECT COUNT(1) FROM LOGIN 
+                         WHERE Usuario_Email = @correo 
+                         AND Usuario_Contraseña = @hash";
 
                 SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 cmd.Parameters.AddWithValue("@correo", correo);
-                cmd.Parameters.AddWithValue("@contrasena", contrasena);
+                cmd.Parameters.AddWithValue("@hash", inputHash);
 
                 _conexion.Abrir();
-                SqlDataReader lector = cmd.ExecuteReader();
-                bool encontrado = lector.Read();
-                lector.Close();
-                return encontrado;
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
             }
             catch (Exception ex)
             {
