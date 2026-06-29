@@ -1443,5 +1443,36 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
+
+        public DataTable ObtenerUsuarios()
+        {
+            try
+            {
+                string query = @"
+            SELECT 
+                Usuario_ID,
+                Usuario_Nombre,
+                Usuario_Apellido,
+                Usuario_NombreUsuario,
+                Usuario_Correo,
+                Usuario_Rol,
+                Usuario_Activo
+            FROM LOGIN
+            ORDER BY Usuario_Nombre";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                _conexion.Abrir();
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                return dt;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener usuarios: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
     }
 }
