@@ -1,14 +1,13 @@
-﻿    using Dasboard_Prueba;
+﻿using Dasboard_Prueba;
+using InterfazClientes;
+using InterfazInventario;
 using Login;
-using Microsoft.Data.SqlClient;
+using Login.Clases;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Vehículos;
-using InterfazInventario;
-using InterfazClientes;
-using Login.Clases;
 
 namespace Contabilidad
 {
@@ -17,7 +16,7 @@ namespace Contabilidad
     /// Permite gestionar ingresos, visualizar comprobantes,
     /// editar registros y administrar notificaciones del sistema.
     /// </summary>
-    public partial class MenuDePagos : Window
+    public partial class MenúPrincipalIngresos : Window
     {
         /// <summary>
         /// Instancia utilizada para realizar consultas y operaciones en la base de datos.
@@ -27,7 +26,7 @@ namespace Contabilidad
         /// <summary>
         /// Inicializa la ventana y carga los pagos junto con las notificaciones pendientes.
         /// </summary>
-        public MenuDePagos()
+        public MenúPrincipalIngresos()
         {
             InitializeComponent();
             CargarPago();
