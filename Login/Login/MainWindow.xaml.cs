@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using Serilog;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -126,7 +125,6 @@ namespace Login
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "No se pudieron guardar las credenciales recordadas.");
             }
         }
 
@@ -139,7 +137,6 @@ namespace Login
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "No se pudieron eliminar las credenciales recordadas.");
             }
         }
 
@@ -158,7 +155,6 @@ namespace Login
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "No se pudieron cargar las credenciales recordadas.");
             }
         }
 
@@ -277,9 +273,7 @@ namespace Login
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error durante el proceso de inicio de sesión para {Correo}", correo);
-                MessageBox.Show("Error al conectar: " + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
             }
         }
 

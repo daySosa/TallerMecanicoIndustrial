@@ -22,7 +22,7 @@
             <Setter Property="BorderThickness"          Value="1"/>
             <Setter Property="Height"                   Value="38"/>
             <Setter Property="Padding"                  Value="10,0"/>
-            <Setter Property="FontSize"                 Value="13"/>
+            <Setter Property="FontSize"                 Value="13"/> 
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>

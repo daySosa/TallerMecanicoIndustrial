@@ -27,8 +27,8 @@
 		<PackageReference Include="MaterialDesignColors" Version="5.3.2" />
 		<PackageReference Include="MaterialDesignThemes" Version="5.3.2" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
-		<PackageReference Include="Select.HtmlToPdf" Version="26.3.0" />
-		<PackageReference Include="Select.Pdf" Version="26.3.0" />
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -4,6 +4,8 @@ using Órdenes_de_Trabajo;
 using System.Data;
 using Vehículos;
 
+
+
 namespace Login.Clases
 {
     public class clsConsultasBD
@@ -1367,6 +1369,41 @@ namespace Login.Clases
             {
                 throw new Exception("Error al verificar placa: " + ex.Message);
             }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public class ClienteSugerencia
+        {
+            public string DNI { get; set; } = string.Empty;
+            public string NombreCompleto { get; set; } = string.Empty;
+        }
+
+        public List<ClienteSugerencia> BuscarClientesPorDNI(string texto)
+        {
+            var lista = new List<ClienteSugerencia>();
+            try
+            {
+                string query = @"
+            SELECT TOP 8 Cliente_DNI,
+                   Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto
+            FROM   Cliente
+            WHERE  Cliente_DNI LIKE @Texto + '%'
+               OR  Cliente_Nombres + ' ' + Cliente_Apellidos LIKE '%' + @Texto + '%'
+            ORDER  BY Cliente_DNI";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Texto", texto);
+                _conexion.Abrir();
+                using SqlDataReader rd = cmd.ExecuteReader();
+                while (rd.Read())
+                    lista.Add(new ClienteSugerencia
+                    {
+                        DNI = rd["Cliente_DNI"].ToString()!,
+                        NombreCompleto = rd["NombreCompleto"].ToString()!
+                    });
+                return lista;
+            }
+            catch (Exception ex) { throw new Exception("Error al buscar clientes: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 

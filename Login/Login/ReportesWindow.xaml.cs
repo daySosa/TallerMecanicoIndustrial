@@ -1,30 +1,18 @@
 ﻿using Login.Clases;
+using Microsoft.Data.SqlClient;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
-using SelectPdf;
-using System;
-using System.Data.SqlClient;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 
 namespace Login
 {
-    /// <summary>
-    /// Ventana encargada de generar reportes en formato PDF
-    /// según el módulo seleccionado (Clientes, Inventario, Vehículos, etc.).
-    /// </summary>
     public partial class ReportesWindow : Window
     {
-        /// <summary>
-        /// Módulo seleccionado para generar el reporte.
-        /// </summary>
         private string _modulo;
 
-        /// <summary>
-        /// Inicializa una nueva instancia de <see cref="ReportesWindow"/>.
-        /// Establece el módulo activo y actualiza el título visible en la interfaz.
-        /// </summary>
-        /// <param name="modulo">Nombre del módulo (Clientes, Inventario, Vehículos, etc.).</param>
         public ReportesWindow(string modulo)
         {
             InitializeComponent();
@@ -32,46 +20,33 @@ namespace Login
             txtModulo.Text = $"Reporte de {modulo}";
         }
 
-        /// <summary>
-        /// Maneja el evento Click del botón Generar PDF.
-        /// Delega la generación al método correspondiente según el módulo activo.
-        /// </summary>
-        /// <param name="sender">Origen del evento.</param>
-        /// <param name="e">Datos del evento.</param>
-        private void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
+        private async void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
         {
             switch (_modulo)
             {
-                case "Clientes": GenerarReporteClientes(); break;
-                case "Inventario": GenerarReporteInventario(); break;
-                case "Vehiculos": GenerarReporteVehiculos(); break;
-                case "Ordenes": GenerarReporteOrdenes(); break;
-                case "Egresos": GenerarReporteEgresos(); break;
-                case "Ingresos": GenerarReporteIngresos(); break;
+                case "Clientes": await GenerarReporteClientes(); break;
+                case "Inventario": await GenerarReporteInventario(); break;
+                case "Vehiculos": await GenerarReporteVehiculos(); break;
+                case "Ordenes": await GenerarReporteOrdenes(); break;
+                case "Egresos": await GenerarReporteEgresos(); break;
+                case "Ingresos": await GenerarReporteIngresos(); break;
             }
         }
 
-        /// <summary>
-        /// Obtiene el logotipo de la empresa en formato Base64 para incrustarlo
-        /// en el HTML del reporte. Intenta cargarlo primero desde recursos embebidos,
-        /// luego desde la carpeta del ejecutable y finalmente recorriendo directorios padre.
-        /// </summary>
-        /// <returns>
-        /// Cadena en Base64 del logo si se encuentra; de lo contrario, cadena vacía.
-        /// </returns>
+        // ─────────────────────────────────────────────
+        //  LOGO
+        // ─────────────────────────────────────────────
         private string GetLogoBase64()
         {
             try
             {
                 var uri = new Uri("pack://application:,,,/Imagenes/OSM_LOGO.png", UriKind.Absolute);
-                var streamInfo = System.Windows.Application.GetResourceStream(uri);
-                if (streamInfo != null)
+                var si = System.Windows.Application.GetResourceStream(uri);
+                if (si != null)
                 {
-                    using (var ms = new MemoryStream())
-                    {
-                        streamInfo.Stream.CopyTo(ms);
-                        return Convert.ToBase64String(ms.ToArray());
-                    }
+                    using var ms = new MemoryStream();
+                    si.Stream.CopyTo(ms);
+                    return Convert.ToBase64String(ms.ToArray());
                 }
             }
             catch { }
@@ -80,8 +55,7 @@ namespace Login
             {
                 string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string path = Path.Combine(exeDir, "Imagenes", "OSM_LOGO.png");
-                if (File.Exists(path))
-                    return Convert.ToBase64String(File.ReadAllBytes(path));
+                if (File.Exists(path)) return Convert.ToBase64String(File.ReadAllBytes(path));
             }
             catch { }
 
@@ -91,8 +65,7 @@ namespace Login
                 for (int i = 0; i < 5; i++)
                 {
                     string candidate = Path.Combine(dir, "Imagenes", "OSM_LOGO.png");
-                    if (File.Exists(candidate))
-                        return Convert.ToBase64String(File.ReadAllBytes(candidate));
+                    if (File.Exists(candidate)) return Convert.ToBase64String(File.ReadAllBytes(candidate));
                     dir = Path.GetDirectoryName(dir);
                     if (dir == null) break;
                 }
@@ -102,140 +75,157 @@ namespace Login
             return string.Empty;
         }
 
-        /// <summary>
-        /// Genera la hoja de estilos CSS base utilizada en todos los reportes PDF.
-        /// Define la tipografía, tabla de datos, badges de estado, encabezado,
-        /// barra de título, fila de totales y pie de página.
-        /// </summary>
-        /// <param name="accentColor">Color principal del reporte en formato hexadecimal.</param>
-        /// <returns>Bloque HTML con la etiqueta <c>&lt;style&gt;</c> completa.</returns>
+        // ─────────────────────────────────────────────
+        //  ESTILOS BASE — diseño profesional renovado
+        // ─────────────────────────────────────────────
         private string GetBaseStyles(string accentColor = "#1e2d5f")
         {
             return $@"
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
                 * {{ margin:0; padding:0; box-sizing:border-box; }}
-                body {{ font-family: Arial, sans-serif; font-size:11px; color:#222; background:#fff; }}
+                body {{ font-family: Arial, sans-serif; font-size:11px; color:#1a1a2e; background:#fff; }}
 
+                /* ── HEADER ── */
                 .header {{
-                    background:{accentColor};
-                    color:white;
-                    padding:16px 24px;
+                    background: linear-gradient(135deg, {accentColor} 0%, {AdjustColor(accentColor)} 100%);
+                    color: white;
+                    padding: 20px 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }}
+                .header-left {{ display:flex; align-items:center; gap:18px; }}
+                .logo-wrap {{
+                    width:72px; height:72px; border-radius:50%;
+                    background:rgba(255,255,255,0.15);
+                    border:2px solid rgba(255,255,255,0.4);
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:20px; font-weight:700; letter-spacing:1px;
+                    overflow:hidden; flex-shrink:0;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+                }}
+                .logo-wrap img {{ width:72px; height:72px; border-radius:50%; object-fit:cover; }}
+                .company-name {{ font-size:20px; font-weight:700; letter-spacing:0.3px; }}
+                .company-sub  {{ font-size:10px; opacity:0.80; margin-top:3px; letter-spacing:0.2px; }}
+                .divider-v {{ width:1px; background:rgba(255,255,255,0.25); margin:0 6px; align-self:stretch; }}
+                .header-right {{ display:flex; align-items:center; gap:0; }}
+                .header-meta {{
+                    padding: 6px 18px;
+                    text-align:center;
+                    border-left:1px solid rgba(255,255,255,0.2);
+                }}
+                .meta-label {{ font-size:8px; text-transform:uppercase; opacity:0.70; letter-spacing:1.2px; }}
+                .meta-value {{ font-size:13px; font-weight:700; margin-top:3px; }}
+
+                /* ── TITLE BAR ── */
+                .title-bar {{
+                    background:#f4f6fb;
+                    padding:10px 28px;
                     display:flex;
                     align-items:center;
                     justify-content:space-between;
+                    border-bottom:3px solid {accentColor};
                 }}
-                .header-left {{ display:flex; align-items:center; gap:20px; }}
-                .logo-circle {{
-                    width:120px; height:120px; border-radius:50%;
-                    background:rgba(255,255,255,0.15);
-                    display:flex; align-items:center; justify-content:center;
-                    font-size:28px; font-weight:bold; letter-spacing:1px;
-                    overflow:hidden;
-                    flex-shrink:0;
-                }}
-                .logo-circle img {{
-                    width:120px; height:120px;
-                    border-radius:50%;
-                    object-fit:cover;
-                }}
-                .company-name {{ font-size:22px; font-weight:bold; }}
-                .company-sub  {{ font-size:11px; opacity:0.85; margin-top:4px; }}
-                .header-right {{
-                    display:flex; gap:0;
-                    border-left:1px solid rgba(255,255,255,0.3);
-                }}
-                .header-meta {{
-                    padding:0 20px;
-                    border-right:1px solid rgba(255,255,255,0.3);
-                    text-align:center;
-                }}
-                .header-meta:last-child {{ border-right:none; }}
-                .meta-label {{ font-size:9px; text-transform:uppercase; opacity:0.75; letter-spacing:1px; }}
-                .meta-value {{ font-size:13px; font-weight:bold; margin-top:4px; }}
+                .report-title {{ font-size:14px; font-weight:700; color:{accentColor}; letter-spacing:0.3px; }}
+                .report-subtitle {{ font-size:10px; color:#888; }}
 
-                .title-bar {{
-                    background:#f0f2f5;
-                    padding:10px 24px;
-                    display:flex;
-                    align-items:center;
-                    gap:10px;
-                    border-bottom:2px solid {accentColor};
-                }}
-                .report-title {{ font-size:15px; font-weight:bold; color:{accentColor}; }}
-
-                .content {{ padding:16px 24px; }}
+                /* ── TABLA ── */
+                .content {{ padding:18px 28px; }}
                 table {{
-                    width:100%;
-                    border-collapse:collapse;
-                    margin-top:8px;
-                    font-size:11px;
+                    width:100%; border-collapse:collapse;
+                    margin-top:10px; font-size:10.5px;
                     table-layout:fixed;
+                    border-radius:6px;
+                    overflow:hidden;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
                 }}
                 thead tr {{ background:{accentColor}; color:white; }}
                 thead th {{
-                    padding:9px 8px;
+                    padding:10px 9px;
                     text-align:center;
-                    font-weight:600;
-                    font-size:10px;
+                    font-weight:700;
+                    font-size:9.5px;
                     text-transform:uppercase;
-                    letter-spacing:0.5px;
+                    letter-spacing:0.7px;
                     white-space:nowrap;
                     overflow:hidden;
                 }}
-                tbody tr {{ border-bottom:1px solid #e8eaf0; }}
-                tbody tr:nth-child(even) {{ background:#f7f8fc; }}
+                tbody tr {{ border-bottom:1px solid #eceef5; transition:background 0.1s; }}
+                tbody tr:nth-child(even) {{ background:#f8f9fd; }}
+                tbody tr:hover {{ background:#eef1fa; }}
                 tbody td {{
-                    padding:7px 8px;
+                    padding:8px 9px;
                     text-align:center;
                     white-space:nowrap;
                     overflow:hidden;
                     text-overflow:ellipsis;
+                    color:#2c2c3e;
                 }}
                 tbody td.left {{ text-align:left; }}
-                tbody td.obs {{
-                    text-align:left;
-                    white-space:normal;
-                    word-break:break-word;
+                tbody td.obs {{ text-align:left; white-space:normal; word-break:break-word; color:#555; }}
+
+                /* ── BADGES ── */
+                .badge {{
+                    padding:2px 9px; border-radius:20px;
+                    font-size:9.5px; font-weight:700;
+                    white-space:nowrap; display:inline-block;
+                    letter-spacing:0.3px;
                 }}
+                .badge-pagado    {{ background:#d1fae5; color:#065f46; }}
+                .badge-pendiente {{ background:#fef3c7; color:#92400e; }}
+                .badge-proceso   {{ background:#dbeafe; color:#1e40af; }}
+                .badge-cancelado {{ background:#fee2e2; color:#991b1b; }}
+                .badge-sinempezar{{ background:#ede9fe; color:#5b21b6; }}
+                .badge-activo    {{ background:#d1fae5; color:#065f46; }}
+                .badge-inactivo  {{ background:#fee2e2; color:#991b1b; }}
 
-                .badge-pagado    {{ background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-                .badge-pendiente {{ background:#fff8e1; color:#f57f17; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-                .badge-proceso   {{ background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-                .badge-cancelado {{ background:#fce4ec; color:#c62828; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-                .badge-sinempezar{{ background:#f3e5f5; color:#6a1b9a; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-                .badge-activo    {{ background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-                .badge-inactivo  {{ background:#fce4ec; color:#c62828; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; white-space:nowrap; display:inline-block; }}
-
+                /* ── TOTAL ROW ── */
                 .total-row td {{
                     background:{accentColor};
                     color:white;
-                    font-weight:bold;
-                    padding:10px 8px;
-                    font-size:12px;
-                    white-space:nowrap;
+                    font-weight:700;
+                    padding:10px 9px;
+                    font-size:11px;
                     text-align:center;
+                    letter-spacing:0.3px;
                 }}
 
+                /* ── FOOTER ── */
                 .footer {{
-                    margin-top:24px;
-                    padding:10px 24px;
-                    border-top:1px solid #ddd;
+                    margin-top:20px;
+                    padding:10px 28px;
+                    border-top:1px solid #e0e3ef;
                     display:flex;
                     justify-content:space-between;
-                    font-size:10px;
-                    color:#888;
+                    align-items:center;
+                    font-size:9px;
+                    color:#aaa;
                 }}
+                .footer-brand {{ font-weight:700; color:#999; font-size:9.5px; }}
             </style>";
         }
 
-        /// <summary>
-        /// Genera el encabezado HTML del reporte con el logotipo de la empresa,
-        /// nombre, dirección y los metadatos de fecha de emisión y período.
-        /// Si no se indica período, calcula automáticamente el trimestre actual.
-        /// </summary>
-        /// <param name="accentColor">Color principal del encabezado en formato hexadecimal.</param>
-        /// <param name="periodo">Texto descriptivo del período cubierto por el reporte. Opcional.</param>
-        /// <returns>HTML del bloque de encabezado.</returns>
+        // Genera un tono ligeramente más claro/oscuro para el gradiente
+        private string AdjustColor(string hex)
+        {
+            try
+            {
+                hex = hex.TrimStart('#');
+                int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+                int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+                int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+                r = Math.Min(255, r + 40);
+                g = Math.Min(255, g + 40);
+                b = Math.Min(255, b + 40);
+                return $"#{r:X2}{g:X2}{b:X2}";
+            }
+            catch { return hex; }
+        }
+
+        // ─────────────────────────────────────────────
+        //  HEADER
+        // ─────────────────────────────────────────────
         private string GetHeader(string accentColor, string periodo = "")
         {
             string periodoTexto = string.IsNullOrEmpty(periodo)
@@ -250,7 +240,7 @@ namespace Login
             return $@"
             <div class='header'>
                 <div class='header-left'>
-                    <div class='logo-circle'>{logoHtml}</div>
+                    <div class='logo-wrap'>{logoHtml}</div>
                     <div>
                         <div class='company-name'>Taller Mecánico AutoExpress</div>
                         <div class='company-sub'>Tegucigalpa, Honduras &nbsp;·&nbsp; Tel: +504 2230-0000</div>
@@ -266,79 +256,140 @@ namespace Login
                         <div class='meta-value'>{periodoTexto}</div>
                     </div>
                     <div class='header-meta'>
-                        <div class='meta-label'>Fuente</div>
-                        <div class='meta-value'>TallerDB</div>
+                        <div class='meta-label'>Hora</div>
+                        <div class='meta-value'>{DateTime.Now:hh:mm tt}</div>
                     </div>
                 </div>
             </div>";
         }
 
-        /// <summary>
-        /// Genera la barra de título HTML del reporte con el texto indicado
-        /// y el color de acento correspondiente al módulo.
-        /// </summary>
-        /// <param name="accentColor">Color principal en formato hexadecimal.</param>
-        /// <param name="titulo">Texto del título a mostrar en la barra.</param>
-        /// <returns>HTML del bloque de barra de título.</returns>
-        private string GetTitleBar(string accentColor, string titulo)
+        // ─────────────────────────────────────────────
+        //  TITLE BAR
+        // ─────────────────────────────────────────────
+        private string GetTitleBar(string accentColor, string titulo, string subtitulo = "")
         {
+            string sub = string.IsNullOrEmpty(subtitulo)
+                ? $"Generado el {DateTime.Now:dddd, dd 'de' MMMM 'de' yyyy}"
+                : subtitulo;
+
             return $@"
             <div class='title-bar'>
                 <span class='report-title'>{titulo}</span>
+                <span class='report-subtitle'>{sub}</span>
             </div>";
         }
 
-        /// <summary>
-        /// Genera el pie de página HTML del reporte con el nombre de la empresa,
-        /// la fecha y hora de generación y el número de página.
-        /// </summary>
-        /// <returns>HTML del bloque de pie de página.</returns>
+        // ─────────────────────────────────────────────
+        //  FOOTER
+        // ─────────────────────────────────────────────
         private string GetFooter()
         {
             return $@"
             <div class='footer'>
-                <span>Taller Mecánico AutoExpress &nbsp;·&nbsp; Documento confidencial</span>
-                <span>Generado automáticamente: {DateTime.Now:dd/MM/yyyy} — {DateTime.Now:hh:mm tt}</span>
-                <span>Página 1 de 1</span>
+                <span class='footer-brand'>Taller Mecánico AutoExpress</span>
+                <span>Documento confidencial · Uso interno</span>
+                <span>Generado: {DateTime.Now:dd/MM/yyyy} {DateTime.Now:hh:mm tt}</span>
             </div>";
         }
 
-        /// <summary>
-        /// Genera el HTML de un badge visual para representar el estado de una orden.
-        /// Aplica colores diferenciados según el valor del estado recibido.
-        /// </summary>
-        /// <param name="estado">
-        /// Estado de la orden. Valores reconocidos: Finalizado, En Proceso,
-        /// Pendiente, Cancelado, Sin Empezar.
-        /// </param>
-        /// <returns>HTML con el badge estilizado del estado.</returns>
+        // ─────────────────────────────────────────────
+        //  BADGES DE ESTADO
+        // ─────────────────────────────────────────────
         private string BadgeEstado(string estado)
         {
             return estado switch
             {
-                "Finalizado" => $"<span class='badge-pagado'>{estado}</span>",
-                "En Proceso" => $"<span class='badge-proceso'>{estado}</span>",
-                "Pendiente" => $"<span class='badge-pendiente'>{estado}</span>",
-                "Cancelado" => $"<span class='badge-cancelado'>{estado}</span>",
-                "Sin Empezar" => $"<span class='badge-sinempezar'>{estado}</span>",
-                _ => $"<span>{estado}</span>"
+                "Finalizado" => $"<span class='badge badge-pagado'>{estado}</span>",
+                "En Proceso" => $"<span class='badge badge-proceso'>{estado}</span>",
+                "Pendiente" => $"<span class='badge badge-pendiente'>{estado}</span>",
+                "Cancelado" => $"<span class='badge badge-cancelado'>{estado}</span>",
+                "Sin Empezar" => $"<span class='badge badge-sinempezar'>{estado}</span>",
+                _ => $"<span class='badge'>{estado}</span>"
             };
         }
 
-        /// <summary>
-        /// Genera el reporte de clientes en formato PDF.
-        /// Consulta DNI, nombres, apellidos, teléfono y correo de todos los clientes
-        /// ordenados por apellido y los exporta a un archivo PDF en orientación vertical.
-        /// </summary>
-        private void GenerarReporteClientes()
+        // ─────────────────────────────────────────────
+        //  EXPORTAR PDF  (WebView2)
+        // ─────────────────────────────────────────────
+        private async Task ExportarPDF(string html, string nombreArchivo, bool landscape = false)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Filter = "PDF|*.pdf",
+                FileName = $"{nombreArchivo}_{DateTime.Now:yyyyMMdd}"
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            WebView2 webView = null;
+            Window hiddenWindow = null;
+
+            try
+            {
+                webView = new WebView2();
+                hiddenWindow = new Window
+                {
+                    Width = 1,
+                    Height = 1,
+                    ShowInTaskbar = false,
+                    WindowStyle = WindowStyle.None,
+                    Content = webView,
+                    Owner = this
+                };
+                hiddenWindow.Show();
+                hiddenWindow.Hide();
+
+                await webView.EnsureCoreWebView2Async();
+
+                var tcs = new TaskCompletionSource<bool>();
+                webView.CoreWebView2.NavigationCompleted += (s, e) => tcs.TrySetResult(e.IsSuccess);
+                webView.CoreWebView2.NavigateToString(html);
+                await tcs.Task;
+
+                var printSettings = webView.CoreWebView2.Environment.CreatePrintSettings();
+                printSettings.Orientation = landscape
+                    ? CoreWebView2PrintOrientation.Landscape
+                    : CoreWebView2PrintOrientation.Portrait;
+
+                bool success = await webView.CoreWebView2.PrintToPdfAsync(dialog.FileName, printSettings);
+
+                if (!success)
+                    throw new Exception("No se pudo generar el PDF con WebView2.");
+
+                MessageBox.Show("✅ Reporte generado correctamente.", "Éxito",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = dialog.FileName,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Error al generar el PDF:\n{ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                hiddenWindow?.Close();
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  REPORTE CLIENTES
+        // ─────────────────────────────────────────────
+        private async Task GenerarReporteClientes()
         {
             string accent = "#1e2d5f";
             var db = new clsConexion(); db.Abrir();
-            string sql = "SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos, Cliente_TelefonoPrincipal, Cliente_Email FROM Cliente ORDER BY Cliente_Apellidos";
+            string sql = @"SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                                  Cliente_TelefonoPrincipal, Cliente_Email
+                           FROM Cliente ORDER BY Cliente_Apellidos";
 
             string filas = "";
-            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-            using (SqlDataReader r = cmd.ExecuteReader())
+            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var r = cmd.ExecuteReader())
                 while (r.Read())
                     filas += $@"<tr>
                         <td>{r["Cliente_DNI"]}</td>
@@ -355,11 +406,8 @@ namespace Login
                 <div class='content'>
                 <table>
                     <colgroup>
-                        <col style='width:16%'/>
-                        <col style='width:20%'/>
-                        <col style='width:20%'/>
-                        <col style='width:14%'/>
-                        <col style='width:30%'/>
+                        <col style='width:16%'/><col style='width:20%'/><col style='width:20%'/>
+                        <col style='width:14%'/><col style='width:30%'/>
                     </colgroup>
                     <thead><tr>
                         <th>DNI</th><th>Nombres</th><th>Apellidos</th><th>Teléfono</th><th>Email</th>
@@ -370,83 +418,71 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            ExportarPDF(html, "Reporte_Clientes", landscape: false);
+            await ExportarPDF(html, "Reporte_Clientes", landscape: false);
         }
 
-        /// <summary>
-        /// Genera el reporte de inventario en formato PDF.
-        /// Solicita al usuario un período mediante <see cref="ObtenerRangoFechas"/>.
-        /// Si se selecciona "Todo", muestra el inventario completo sin filtro de fecha.
-        /// Si se selecciona un período, muestra únicamente los productos utilizados
-        /// en órdenes dentro del rango, con la cantidad usada acumulada.
-        /// Exporta el resultado en orientación horizontal.
-        /// </summary>
-        private void GenerarReporteInventario()
+        // ─────────────────────────────────────────────
+        //  REPORTE INVENTARIO
+        // ─────────────────────────────────────────────
+        private async Task GenerarReporteInventario()
         {
             if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
                 return;
 
             string accent = "#1e2d5f";
-            var db = new clsConexion();
-            db.Abrir();
-
-            string sql;
+            var db = new clsConexion(); db.Abrir();
             string filas = "";
 
             if (periodoTexto == "Todo")
             {
-                sql = @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
-                       Producto_Modelo, Producto_Precio,
-                       Producto_Cantidad_Actual, Producto_Stock_Minimo,
-                       NULL AS Cantidad_Usada
-                FROM Producto
-                ORDER BY Producto_Nombre";
+                string sql = @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
+                               Producto_Modelo, Producto_Precio,
+                               Producto_Cantidad_Actual, Producto_Stock_Minimo
+                        FROM Producto ORDER BY Producto_Nombre";
 
-                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-                using (SqlDataReader r = cmd.ExecuteReader())
+                using (var cmd = new SqlCommand(sql, db.SqlC))
+                using (var r = cmd.ExecuteReader())
                     while (r.Read())
                     {
                         int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
                         int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
-                        string stockBadge = cant <= min
-                            ? $"<span class='badge-cancelado'>{cant}</span>"
-                            : $"<span class='badge-pagado'>{cant}</span>";
+                        string stock = cant <= min
+                            ? $"<span class='badge badge-cancelado'>{cant}</span>"
+                            : $"<span class='badge badge-activo'>{cant}</span>";
 
                         filas += $@"<tr>
-                    <td class='left'>{r["Producto_Nombre"]}</td>
-                    <td class='left'>{r["Producto_Categoria"]}</td>
-                    <td>{r["Producto_Marca"]}</td>
-                    <td>{r["Producto_Modelo"]}</td>
-                    <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
-                    <td>{stockBadge}</td>
-                    <td>{min}</td>
-                    <td>—</td>
-                </tr>";
+                            <td class='left'>{r["Producto_Nombre"]}</td>
+                            <td class='left'>{r["Producto_Categoria"]}</td>
+                            <td>{r["Producto_Marca"]}</td>
+                            <td>{r["Producto_Modelo"]}</td>
+                            <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
+                            <td>{stock}</td>
+                            <td>{min}</td>
+                            <td>—</td>
+                        </tr>";
                     }
             }
             else
             {
-                sql = @"SELECT p.Producto_Nombre, p.Producto_Categoria,
-                       p.Producto_Marca,  p.Producto_Modelo,
-                       p.Producto_Precio,
-                       p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
-                       SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
-                FROM Orden_Repuesto orep
-                INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
-                INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
-                WHERE ot.Fecha BETWEEN @FechaInicio AND @FechaFin
-                GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
-                         p.Producto_Marca, p.Producto_Modelo,
-                         p.Producto_Precio, p.Producto_Cantidad_Actual,
-                         p.Producto_Stock_Minimo
-                ORDER BY Cantidad_Usada DESC, p.Producto_Nombre";
+                string sql = @"SELECT p.Producto_Nombre, p.Producto_Categoria,
+                               p.Producto_Marca, p.Producto_Modelo, p.Producto_Precio,
+                               p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
+                               SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
+                        FROM Orden_Repuesto orep
+                        INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
+                        INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
+                        WHERE ot.Fecha BETWEEN @FechaInicio AND @FechaFin
+                        GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
+                                 p.Producto_Marca, p.Producto_Modelo, p.Producto_Precio,
+                                 p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo
+                        ORDER BY Cantidad_Usada DESC, p.Producto_Nombre";
 
-                using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
+                using (var cmd = new SqlCommand(sql, db.SqlC))
                 {
                     cmd.Parameters.AddWithValue("@FechaInicio", fechaInicio);
                     cmd.Parameters.AddWithValue("@FechaFin", fechaFin);
 
-                    using (SqlDataReader r = cmd.ExecuteReader())
+                    using (var r = cmd.ExecuteReader())
                     {
                         bool hayDatos = false;
                         while (r.Read())
@@ -456,26 +492,26 @@ namespace Login
                             int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
                             int usados = Convert.ToInt32(r["Cantidad_Usada"]);
 
-                            string stockBadge = cant <= min
-                                ? $"<span class='badge-cancelado'>{cant}</span>"
-                                : $"<span class='badge-pagado'>{cant}</span>";
+                            string stock = cant <= min
+                                ? $"<span class='badge badge-cancelado'>{cant}</span>"
+                                : $"<span class='badge badge-activo'>{cant}</span>";
 
                             filas += $@"<tr>
-                        <td class='left'>{r["Producto_Nombre"]}</td>
-                        <td class='left'>{r["Producto_Categoria"]}</td>
-                        <td>{r["Producto_Marca"]}</td>
-                        <td>{r["Producto_Modelo"]}</td>
-                        <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
-                        <td>{stockBadge}</td>
-                        <td>{min}</td>
-                        <td><b>{usados}</b></td>
-                    </tr>";
+                                <td class='left'>{r["Producto_Nombre"]}</td>
+                                <td class='left'>{r["Producto_Categoria"]}</td>
+                                <td>{r["Producto_Marca"]}</td>
+                                <td>{r["Producto_Modelo"]}</td>
+                                <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
+                                <td>{stock}</td>
+                                <td>{min}</td>
+                                <td><b>{usados}</b></td>
+                            </tr>";
                         }
 
                         if (!hayDatos)
-                            filas = $@"<tr><td colspan='8' style='text-align:center; padding:20px; color:#888;'>
-                                   No se encontraron productos usados en el período: {periodoTexto}
-                               </td></tr>";
+                            filas = $@"<tr><td colspan='8' style='text-align:center;padding:20px;color:#888;'>
+                                No se encontraron productos usados en el período: {periodoTexto}
+                            </td></tr>";
                     }
                 }
             }
@@ -483,45 +519,31 @@ namespace Login
             db.Cerrar();
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-        {GetHeader(accent, periodoTexto)}
-        {GetTitleBar(accent, $"Reporte de Inventario — {periodoTexto}")}
-        <div class='content'>
-        <table>
-            <colgroup>
-                <col style='width:21%'/>
-                <col style='width:14%'/>
-                <col style='width:11%'/>
-                <col style='width:12%'/>
-                <col style='width:11%'/>
-                <col style='width:11%'/>
-                <col style='width:10%'/>
-                <col style='width:10%'/>
-            </colgroup>
-            <thead><tr>
-                <th>Nombre</th><th>Categoría</th><th>Marca</th><th>Modelo</th>
-                <th>Precio</th><th>Stock Actual</th><th>Stock Mín.</th><th>Usado (período)</th>
-            </tr></thead>
-            <tbody>{filas}</tbody>
-        </table>
-        </div>
-        {GetFooter()}
-    </body></html>";
+                {GetHeader(accent, periodoTexto)}
+                {GetTitleBar(accent, $"Reporte de Inventario — {periodoTexto}")}
+                <div class='content'>
+                <table>
+                    <colgroup>
+                        <col style='width:21%'/><col style='width:14%'/><col style='width:11%'/>
+                        <col style='width:12%'/><col style='width:11%'/><col style='width:11%'/>
+                        <col style='width:10%'/><col style='width:10%'/>
+                    </colgroup>
+                    <thead><tr>
+                        <th>Nombre</th><th>Categoría</th><th>Marca</th><th>Modelo</th>
+                        <th>Precio</th><th>Stock Actual</th><th>Stock Mín.</th><th>Usado (período)</th>
+                    </tr></thead>
+                    <tbody>{filas}</tbody>
+                </table>
+                </div>
+                {GetFooter()}
+            </body></html>";
 
-            ExportarPDF(html, $"Reporte_Inventario_{periodoTexto.Replace(" ", "_")}", landscape: true);
+            await ExportarPDF(html, $"Reporte_Inventario_{periodoTexto.Replace(" ", "_")}", landscape: true);
         }
 
-        /// <summary>
-        /// Muestra una ventana modal que permite al usuario seleccionar el período
-        /// del reporte mediante un ComboBox con opciones predefinidas.
-        /// Calcula el rango de fechas exacto según la opción elegida.
-        /// </summary>
-        /// <param name="fechaInicio">Fecha de inicio del período seleccionado.</param>
-        /// <param name="fechaFin">Fecha de fin del período seleccionado.</param>
-        /// <param name="periodoTexto">Texto descriptivo del período seleccionado.</param>
-        /// <returns>
-        /// <c>true</c> si el usuario confirmó la selección;
-        /// <c>false</c> si canceló el diálogo.
-        /// </returns>
+        // ─────────────────────────────────────────────
+        //  SELECTOR DE PERÍODO
+        // ─────────────────────────────────────────────
         private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
         {
             fechaInicio = DateTime.MinValue;
@@ -537,7 +559,7 @@ namespace Login
                 Owner = this,
                 ResizeMode = ResizeMode.NoResize,
                 Background = new System.Windows.Media.SolidColorBrush(
-                                    System.Windows.Media.Color.FromRgb(30, 45, 95))
+                                             System.Windows.Media.Color.FromRgb(30, 45, 95))
             };
 
             var panel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
@@ -577,10 +599,8 @@ namespace Login
                 Width = 90,
                 Height = 32,
                 Margin = new Thickness(0, 0, 8, 0),
-                Background = new System.Windows.Media.SolidColorBrush(
-                               System.Windows.Media.Color.FromRgb(255, 255, 255)),
-                Foreground = new System.Windows.Media.SolidColorBrush(
-                               System.Windows.Media.Color.FromRgb(30, 45, 95)),
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 45, 95)),
                 FontWeight = FontWeights.Bold,
                 Cursor = System.Windows.Input.Cursors.Hand
             };
@@ -625,10 +645,10 @@ namespace Login
                     break;
 
                 case "Trimestre actual":
-                    int trimestre = (hoy.Month - 1) / 3;
-                    fechaInicio = new DateTime(hoy.Year, trimestre * 3 + 1, 1);
+                    int trim = (hoy.Month - 1) / 3;
+                    fechaInicio = new DateTime(hoy.Year, trim * 3 + 1, 1);
                     fechaFin = fechaInicio.AddMonths(3).AddTicks(-1);
-                    periodoTexto = $"Q{trimestre + 1} {hoy.Year}";
+                    periodoTexto = $"Q{trim + 1} {hoy.Year}";
                     break;
 
                 case "Año actual":
@@ -643,7 +663,7 @@ namespace Login
                     periodoTexto = (hoy.Year - 1).ToString();
                     break;
 
-                default: // "Todo"
+                default:
                     fechaInicio = DateTime.MinValue;
                     fechaFin = DateTime.MaxValue;
                     periodoTexto = "Todo";
@@ -653,27 +673,26 @@ namespace Login
             return true;
         }
 
-        /// <summary>
-        /// Genera el reporte de vehículos en formato PDF.
-        /// Consulta placa, marca, modelo, año, tipo, DNI del cliente, estado
-        /// y observaciones de todos los vehículos ordenados por marca,
-        /// mostrando su estado con badges de color. Exporta en orientación horizontal.
-        /// </summary>
-        private void GenerarReporteVehiculos()
+        // ─────────────────────────────────────────────
+        //  REPORTE VEHÍCULOS
+        // ─────────────────────────────────────────────
+        private async Task GenerarReporteVehiculos()
         {
             string accent = "#1e2d5f";
             var db = new clsConexion(); db.Abrir();
-            string sql = "SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año, Vehiculo_Tipo, Cliente_DNI, Vehiculo_Activo, Vehiculo_Observaciones FROM Vehiculo ORDER BY Vehiculo_Marca";
+            string sql = @"SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año,
+                                  Vehiculo_Tipo, Cliente_DNI, Vehiculo_Activo, Vehiculo_Observaciones
+                           FROM Vehiculo ORDER BY Vehiculo_Marca";
 
             string filas = "";
-            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-            using (SqlDataReader r = cmd.ExecuteReader())
+            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
                     bool activo = r["Vehiculo_Activo"] != DBNull.Value && (bool)r["Vehiculo_Activo"];
                     string estadoBadge = activo
-                        ? "<span class='badge-activo'>Activo</span>"
-                        : "<span class='badge-inactivo'>Inactivo</span>";
+                        ? "<span class='badge badge-activo'>Activo</span>"
+                        : "<span class='badge badge-inactivo'>Inactivo</span>";
 
                     filas += $@"<tr>
                         <td><b>{r["Vehiculo_Placa"]}</b></td>
@@ -694,17 +713,13 @@ namespace Login
                 <div class='content'>
                 <table>
                     <colgroup>
-                        <col style='width:10%'/>
-                        <col style='width:10%'/>
-                        <col style='width:14%'/>
-                        <col style='width:6%'/>
-                        <col style='width:10%'/>
-                        <col style='width:14%'/>
-                        <col style='width:9%'/>
-                        <col style='width:27%'/>
+                        <col style='width:10%'/><col style='width:10%'/><col style='width:14%'/>
+                        <col style='width:6%'/><col style='width:10%'/><col style='width:14%'/>
+                        <col style='width:9%'/><col style='width:27%'/>
                     </colgroup>
                     <thead><tr>
-                        <th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Tipo</th><th>Cliente DNI</th><th>Estado</th><th>Observaciones</th>
+                        <th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th>
+                        <th>Tipo</th><th>Cliente DNI</th><th>Estado</th><th>Observaciones</th>
                     </tr></thead>
                     <tbody>{filas}</tbody>
                 </table>
@@ -712,16 +727,13 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            ExportarPDF(html, "Reporte_Vehiculos", landscape: true);
+            await ExportarPDF(html, "Reporte_Vehiculos", landscape: true);
         }
 
-        /// <summary>
-        /// Genera el reporte de órdenes de trabajo en formato PDF.
-        /// Consulta todas las órdenes ordenadas por fecha descendente, muestra el estado
-        /// con badges de color mediante <see cref="BadgeEstado"/> e incluye una fila
-        /// de total general al final de la tabla. Exporta en orientación horizontal.
-        /// </summary>
-        private void GenerarReporteOrdenes()
+        // ─────────────────────────────────────────────
+        //  REPORTE ÓRDENES
+        // ─────────────────────────────────────────────
+        private async Task GenerarReporteOrdenes()
         {
             string accent = "#1e2d5f";
             var db = new clsConexion(); db.Abrir();
@@ -732,8 +744,8 @@ namespace Login
 
             string filas = "";
             decimal grandTotal = 0;
-            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-            using (SqlDataReader r = cmd.ExecuteReader())
+            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
                     decimal total = Convert.ToDecimal(r["OrdenPrecio_Total"]);
@@ -758,15 +770,9 @@ namespace Login
                 <div class='content'>
                 <table>
                     <colgroup>
-                        <col style='width:4%'/>
-                        <col style='width:14%'/>
-                        <col style='width:10%'/>
-                        <col style='width:11%'/>
-                        <col style='width:9%'/>
-                        <col style='width:9%'/>
-                        <col style='width:10%'/>
-                        <col style='width:10%'/>
-                        <col style='width:23%'/>
+                        <col style='width:4%'/><col style='width:14%'/><col style='width:10%'/>
+                        <col style='width:11%'/><col style='width:9%'/><col style='width:9%'/>
+                        <col style='width:10%'/><col style='width:10%'/><col style='width:23%'/>
                     </colgroup>
                     <thead><tr>
                         <th>ID</th><th>Cliente DNI</th><th>Placa</th><th>Estado</th>
@@ -785,25 +791,24 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            ExportarPDF(html, "Reporte_Ordenes", landscape: true);
+            await ExportarPDF(html, "Reporte_Ordenes", landscape: true);
         }
 
-        /// <summary>
-        /// Genera el reporte de egresos (gastos) en formato PDF.
-        /// Consulta tipo, nombre, observaciones, precio y fecha de todos los gastos
-        /// registrados ordenados por fecha descendente, e incluye una fila con el
-        /// total general acumulado. Exporta en orientación vertical.
-        /// </summary>
-        private void GenerarReporteEgresos()
+        // ─────────────────────────────────────────────
+        //  REPORTE EGRESOS
+        // ─────────────────────────────────────────────
+        private async Task GenerarReporteEgresos()
         {
             string accent = "#7f1d1d";
             var db = new clsConexion(); db.Abrir();
-            string sql = "SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto FROM Contabilidad_Gastos ORDER BY Fecha_Gasto DESC";
+            string sql = @"SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto,
+                                  Precio_Gasto, Fecha_Gasto
+                           FROM Contabilidad_Gastos ORDER BY Fecha_Gasto DESC";
 
             string filas = "";
             decimal total = 0;
-            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-            using (SqlDataReader r = cmd.ExecuteReader())
+            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
                     decimal precio = r["Precio_Gasto"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Gasto"]);
@@ -824,11 +829,8 @@ namespace Login
                 <div class='content'>
                 <table>
                     <colgroup>
-                        <col style='width:15%'/>
-                        <col style='width:20%'/>
-                        <col style='width:40%'/>
-                        <col style='width:13%'/>
-                        <col style='width:12%'/>
+                        <col style='width:15%'/><col style='width:20%'/><col style='width:40%'/>
+                        <col style='width:13%'/><col style='width:12%'/>
                     </colgroup>
                     <thead><tr>
                         <th>Tipo</th><th>Nombre</th><th>Observaciones</th><th>Precio</th><th>Fecha</th>
@@ -846,31 +848,27 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            ExportarPDF(html, "Reporte_Egresos", landscape: false);
+            await ExportarPDF(html, "Reporte_Egresos", landscape: false);
         }
 
-        /// <summary>
-        /// Genera el reporte de ingresos (pagos) en formato PDF.
-        /// Consulta el ID de pago, nombre completo del cliente, DNI, ID de orden
-        /// y monto de todos los pagos registrados ordenados por ID descendente,
-        /// e incluye una fila con el total general acumulado. Exporta en orientación vertical.
-        /// </summary>
-        private void GenerarReporteIngresos()
+        // ─────────────────────────────────────────────
+        //  REPORTE INGRESOS
+        // ─────────────────────────────────────────────
+        private async Task GenerarReporteIngresos()
         {
             string accent = "#1b4332";
             var db = new clsConexion(); db.Abrir();
-            string sql = @"
-                SELECT p.Pago_ID,
-                       c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                       p.Cliente_DNI, p.Orden_ID, p.Precio_Pago
-                FROM Contabilidad_Pago p
-                INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
-                ORDER BY p.Pago_ID DESC";
+            string sql = @"SELECT p.Pago_ID,
+                                  c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                                  p.Cliente_DNI, p.Orden_ID, p.Precio_Pago
+                           FROM Contabilidad_Pago p
+                           INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
+                           ORDER BY p.Pago_ID DESC";
 
             string filas = "";
             decimal total = 0;
-            using (SqlCommand cmd = new SqlCommand(sql, db.SqlC))
-            using (SqlDataReader r = cmd.ExecuteReader())
+            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
                     decimal monto = r["Precio_Pago"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Pago"]);
@@ -881,7 +879,7 @@ namespace Login
                         <td>{r["Cliente_DNI"]}</td>
                         <td>{r["Orden_ID"]}</td>
                         <td>L {monto:N2}</td>
-                        <td><span class='badge-pagado'>Pagado</span></td>
+                        <td><span class='badge badge-pagado'>Pagado</span></td>
                     </tr>";
                 }
             db.Cerrar();
@@ -892,15 +890,12 @@ namespace Login
                 <div class='content'>
                 <table>
                     <colgroup>
-                        <col style='width:10%'/>
-                        <col style='width:30%'/>
-                        <col style='width:20%'/>
-                        <col style='width:15%'/>
-                        <col style='width:15%'/>
-                        <col style='width:10%'/>
+                        <col style='width:10%'/><col style='width:30%'/><col style='width:20%'/>
+                        <col style='width:15%'/><col style='width:15%'/><col style='width:10%'/>
                     </colgroup>
                     <thead><tr>
-                        <th>Pago ID</th><th>Cliente</th><th>DNI</th><th>Orden ID</th><th>Monto</th><th>Estado</th>
+                        <th>Pago ID</th><th>Cliente</th><th>DNI</th>
+                        <th>Orden ID</th><th>Monto</th><th>Estado</th>
                     </tr></thead>
                     <tbody>
                         {filas}
@@ -915,53 +910,7 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            ExportarPDF(html, "Reporte_Ingresos", landscape: false);
-        }
-
-        /// <summary>
-        /// Exporta el contenido HTML recibido a un archivo PDF mediante un diálogo
-        /// de guardado. Configura la orientación, márgenes y tamaño de página,
-        /// guarda el archivo en la ruta seleccionada y lo abre automáticamente
-        /// con el visor predeterminado del sistema.
-        /// </summary>
-        /// <param name="html">Contenido HTML completo del reporte a convertir.</param>
-        /// <param name="nombreArchivo">Nombre base sugerido para el archivo PDF.</param>
-        /// <param name="landscape">
-        /// <c>true</c> para orientación horizontal; <c>false</c> para orientación vertical.
-        /// </param>
-        private void ExportarPDF(string html, string nombreArchivo, bool landscape = false)
-        {
-            var dialog = new SaveFileDialog
-            {
-                Filter = "PDF|*.pdf",
-                FileName = $"{nombreArchivo}_{DateTime.Now:yyyyMMdd}"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                HtmlToPdf converter = new HtmlToPdf();
-                converter.Options.PdfPageSize = PdfPageSize.Letter;
-                converter.Options.PdfPageOrientation = landscape
-                    ? PdfPageOrientation.Landscape
-                    : PdfPageOrientation.Portrait;
-                converter.Options.MarginTop = 10;
-                converter.Options.MarginBottom = 10;
-                converter.Options.MarginLeft = 10;
-                converter.Options.MarginRight = 10;
-
-                PdfDocument pdf = converter.ConvertHtmlString(html);
-                pdf.Save(dialog.FileName);
-                pdf.Close();
-
-                MessageBox.Show("✅ Reporte generado correctamente.", "Éxito",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = dialog.FileName,
-                    UseShellExecute = true
-                });
-            }
+            await ExportarPDF(html, "Reporte_Ingresos", landscape: false);
         }
     }
 }
