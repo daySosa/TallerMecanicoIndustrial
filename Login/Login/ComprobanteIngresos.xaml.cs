@@ -1,16 +1,5 @@
-﻿using System;
-using Microsoft.Data.SqlClient;
-using System.Collections.Generic;
-using System.Text;
+﻿using Login.Clases;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using Login.Clases;
 
 namespace Contabilidad
 {
@@ -18,7 +7,7 @@ namespace Contabilidad
     /// Ventana encargada de mostrar el comprobante de un pago realizado,
     /// incluyendo información del cliente, monto y fecha.
     /// </summary>
-    public partial class ComprobanteDePago : Window
+    public partial class ComprobanteIngresos : Window
     {
         /// <summary>
         /// Instancia utilizada para consultar la información del comprobante en la base de datos.
@@ -30,7 +19,7 @@ namespace Contabilidad
         /// y carga los datos del pago correspondiente.
         /// </summary>
         /// <param name="pagoId">Identificador del pago.</param>
-        public ComprobanteDePago(int pagoId)
+        public ComprobanteIngresos(int pagoId)
         {
             InitializeComponent();
             CargarComprobante(pagoId);
