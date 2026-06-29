@@ -27,7 +27,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- HEADER -->
                     <Border Grid.Row="0" Background="#13161f" Height="54"
                             BorderBrush="#1e2235" BorderThickness="0,0,0,1">
                         <Grid Margin="20,0">
@@ -50,10 +49,8 @@
                         </Grid>
                     </Border>
 
-                    <!-- BODY -->
                     <StackPanel Grid.Row="1" Margin="20,18,20,20">
 
-                        <!-- PRODUCTO -->
                         <TextBlock Text="PRODUCTO" Foreground="#353a58"
                                    FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
                         <Border Background="#1e2235" CornerRadius="8"
@@ -84,7 +81,6 @@
                             </ComboBox>
                         </Border>
 
-                        <!-- CATEGORÍA · PRECIO · STOCK -->
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -94,7 +90,6 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Categoría -->
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="CATEGORÍA" Foreground="#353a58"
                                            FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
@@ -107,7 +102,6 @@
                                 </Border>
                             </StackPanel>
 
-                            <!-- Precio unitario -->
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="PRECIO UNIT." Foreground="#353a58"
                                            FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
@@ -120,7 +114,6 @@
                                 </Border>
                             </StackPanel>
 
-                            <!-- Stock -->
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="STOCK" Foreground="#353a58"
                                            FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
@@ -133,8 +126,7 @@
                                 </Border>
                             </StackPanel>
                         </Grid>
-
-                        <!-- CANTIDAD · SUBTOTAL -->
+                        
                         <Grid Margin="0,0,0,24">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -142,7 +134,6 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Cantidad -->
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="CANTIDAD" Foreground="#353a58"
                                            FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
@@ -156,7 +147,6 @@
                                 </Border>
                             </StackPanel>
 
-                            <!-- Subtotal -->
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="SUBTOTAL" Foreground="#353a58"
                                            FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
@@ -170,7 +160,6 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- BOTONES -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

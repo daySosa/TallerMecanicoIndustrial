@@ -3,33 +3,41 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Usuario" Height="620" Width="780"
-        WindowStyle="ThreeDBorderWindow"
-        Background="#1F2128" WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        MouseDown="Window_MouseDown">
 
     <Window.Resources>
+        <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
+
         <Style x:Key="CampoTexto" TargetType="TextBox">
-            <Setter Property="Background" Value="#1A1D2E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="CaretBrush" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3D4458"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,0,12,0"/>
+            <Setter Property="Background"               Value="#1e2235"/>
+            <Setter Property="Foreground"               Value="White"/>
+            <Setter Property="CaretBrush"               Value="White"/>
+            <Setter Property="BorderBrush"              Value="#252840"/>
+            <Setter Property="BorderThickness"          Value="1"/>
+            <Setter Property="Padding"                  Value="12,0"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Height" Value="42"/>
+            <Setter Property="FontSize"                 Value="13"/>
+            <Setter Property="Height"                   Value="42"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
                                           VerticalAlignment="Center" Focusable="False"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#3D7EFF"/>
+                                <Setter TargetName="border" Property="BorderBrush"     Value="#4f6ef7"/>
                                 <Setter TargetName="border" Property="BorderThickness" Value="2"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -39,204 +47,252 @@
         </Style>
 
         <Style x:Key="EtiquetaCampo" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#8B9BB4"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="Foreground" Value="#505880"/>
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="Margin"     Value="0,0,0,6"/>
         </Style>
     </Window.Resources>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="240"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Border CornerRadius="14" Effect="{StaticResource WinShadow}">
+            <Border CornerRadius="14" ClipToBounds="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="240"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-        <!-- Panel izquierdo: resumen / avatar -->
-        <Border Grid.Column="0" Background="#242731">
-            <StackPanel Margin="0,50,0,0">
-                <Border Width="100" Height="100" CornerRadius="50" Background="#1A3050"
-                        HorizontalAlignment="Center">
-                    <materialDesign:PackIcon x:Name="iconAvatar" Kind="AccountPlus" Width="46" Height="46"
-                                             Foreground="#4A9EFF" HorizontalAlignment="Center"
-                                             VerticalAlignment="Center"/>
-                </Border>
+                    <!-- PANEL IZQUIERDO -->
+                    <Border Grid.Column="0" Background="#13161f"
+                            BorderBrush="#1e2235" BorderThickness="0,0,1,0">
+                        <StackPanel Margin="0,50,0,0">
 
-                <TextBlock x:Name="tbTituloVentana" Text="Nuevo Usuario" Foreground="White"
-                           FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"
-                           Margin="0,20,0,4"/>
-                <TextBlock x:Name="tbSubtitulo" Text="Completa los datos del empleado"
-                           Foreground="#6B7280" FontSize="11" HorizontalAlignment="Center"
-                           TextAlignment="Center" TextWrapping="Wrap" Width="180"/>
+                            <Border Width="84" Height="84" CornerRadius="42"
+                                    HorizontalAlignment="Center">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#2a3580" Offset="0"/>
+                                        <GradientStop Color="#1c2455" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <materialDesign:PackIcon x:Name="iconAvatar" Kind="AccountPlus"
+                                                         Width="40" Height="40"
+                                                         Foreground="#4f6ef7"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"/>
+                            </Border>
 
-                <Border Background="#1A3050" CornerRadius="8" Margin="30,40,30,0" Padding="14,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <materialDesign:PackIcon Kind="ShieldAccount" Width="14" Height="14"
-                                                     Foreground="#4A9EFF" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Permisos según Rol" Foreground="#8B9BB4" FontSize="10"/>
-                        </StackPanel>
-                        <TextBlock Text="El rol seleccionado define a qué módulos podrá acceder este usuario en el sistema."
-                                   Foreground="#5A6478" FontSize="10" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Border>
+                            <TextBlock x:Name="tbTituloVentana" Text="Nuevo Usuario"
+                                       Foreground="White" FontSize="15" FontWeight="Bold"
+                                       HorizontalAlignment="Center" Margin="0,18,0,4"/>
+                            <TextBlock x:Name="tbSubtitulo" Text="Completa los datos del empleado"
+                                       Foreground="#505880" FontSize="11"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center" TextWrapping="Wrap" Width="180"/>
 
-        <!-- Panel derecho: formulario -->
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <ScrollViewer Grid.Row="0" Margin="32,30,32,0" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-
-                    <Grid Margin="0,0,0,16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="14"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Nombre" Style="{StaticResource EtiquetaCampo}"/>
-                            <TextBox x:Name="txtNombre" Style="{StaticResource CampoTexto}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Apellido" Style="{StaticResource EtiquetaCampo}"/>
-                            <TextBox x:Name="txtApellido" Style="{StaticResource CampoTexto}"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBlock Text="Correo Electrónico" Style="{StaticResource EtiquetaCampo}"/>
-                    <TextBox x:Name="txtCorreo" Style="{StaticResource CampoTexto}" Margin="0,0,0,16"/>
-
-                    <Grid Margin="0,0,0,16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="14"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Teléfono" Style="{StaticResource EtiquetaCampo}"/>
-                            <TextBox x:Name="txtTelefono" Style="{StaticResource CampoTexto}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Rol" Style="{StaticResource EtiquetaCampo}"/>
-                            <ComboBox x:Name="cmbRol" Height="42"
-                                      Background="#1A1D2E" Foreground="White"
-                                      BorderBrush="#3D4458" BorderThickness="1"
-                                      FontSize="13" Padding="12,0" VerticalContentAlignment="Center">
-                                <ComboBox.Resources>
-                                    <Style TargetType="ComboBoxItem">
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="Background" Value="#252836"/>
-                                    </Style>
-                                </ComboBox.Resources>
-                                <ComboBoxItem Content="Administrador"/>
-                                <ComboBoxItem Content="Mecanico" IsSelected="True"/>
-                                <ComboBoxItem Content="Recepcionista"/>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
-
-                    <!-- Solo visible al Agregar -->
-                    <StackPanel x:Name="panelContrasena" Margin="0,0,0,4">
-                        <TextBlock Text="Contraseña" Style="{StaticResource EtiquetaCampo}"/>
-                        <PasswordBox x:Name="txtContrasena" Height="42"
-                                     Background="#1A1D2E" Foreground="White" BorderBrush="#3D4458"
-                                     BorderThickness="1" Padding="12,0" CaretBrush="White"
-                                     VerticalContentAlignment="Center" FontSize="13" Margin="0,0,0,16"/>
-                    </StackPanel>
-
-                    <Border Background="#1A1D2E" CornerRadius="8" Padding="14,12" Margin="0,4,0,0">
-                        <StackPanel>
-                            <TextBlock Text="Estado del Usuario" Foreground="White" FontSize="12" FontWeight="Medium" Margin="0,0,0,10"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                        <materialDesign:PackIcon Kind="CheckCircleOutline"
-                                             x:Name="iconEstadoUsuario"
-                                             Foreground="#4CAF50"
-                                             Width="16" Height="16"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,6,0"/>
-                                        <TextBlock x:Name="txtEstadoUsuarioLabel"
-                               Text="El usuario está activo"
-                               Foreground="#4CAF50" FontSize="12" FontWeight="Medium"/>
+                            <Border Background="#1a1d35" CornerRadius="10"
+                                    Margin="24,36,24,0" Padding="14,12"
+                                    BorderBrush="#1e2235" BorderThickness="1">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <materialDesign:PackIcon Kind="ShieldAccount"
+                                                                 Width="14" Height="14"
+                                                                 Foreground="#4f6ef7"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,6,0"/>
+                                        <TextBlock Text="Permisos según Rol"
+                                                   Foreground="#8890b5" FontSize="10"/>
                                     </StackPanel>
-                                    <TextBlock x:Name="txtEstadoUsuarioSub"
-                           Text="Tiene acceso al sistema"
-                           Foreground="#5A6478" FontSize="10"/>
+                                    <TextBlock Text="El rol seleccionado define a qué módulos podrá acceder este usuario en el sistema."
+                                               Foreground="#353a58" FontSize="10" TextWrapping="Wrap"/>
                                 </StackPanel>
+                            </Border>
 
-                                <ToggleButton x:Name="toggleActivo"
-                          Grid.Column="1" IsChecked="True"
-                          Checked="ToggleActivo_Checked"
-                          Unchecked="ToggleActivo_Unchecked"
-                          VerticalAlignment="Center">
-                                    <ToggleButton.Style>
-                                        <Style TargetType="ToggleButton">
-                                            <Setter Property="Width" Value="54"/>
-                                            <Setter Property="Height" Value="30"/>
-                                            <Setter Property="Cursor" Value="Hand"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="ToggleButton">
-                                                        <Grid>
-                                                            <Border x:Name="switchBg" Background="#4CAF50"
-                                                CornerRadius="15" Width="54" Height="30"/>
-                                                            <Border x:Name="switchThumb" Background="White"
-                                                CornerRadius="12" Width="24" Height="24"
-                                                HorizontalAlignment="Right" Margin="0,0,3,0">
-                                                                <Border.Effect>
-                                                                    <DropShadowEffect Color="Black" Opacity="0.2"
-                                                                  BlurRadius="4" ShadowDepth="1"/>
-                                                                </Border.Effect>
-                                                            </Border>
-                                                        </Grid>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsChecked" Value="False">
-                                                                <Setter TargetName="switchBg" Property="Background" Value="#3a3f5c"/>
-                                                                <Setter TargetName="switchThumb" Property="HorizontalAlignment" Value="Left"/>
-                                                                <Setter TargetName="switchThumb" Property="Margin" Value="3,0,0,0"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </ToggleButton.Style>
-                                </ToggleButton>
-                            </Grid>
                         </StackPanel>
                     </Border>
 
-                </StackPanel>
-            </ScrollViewer>
+                    <!-- PANEL DERECHO -->
+                    <Grid Grid.Column="1" Background="#0f1117">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-            <!-- Botones -->
-            <Grid Grid.Row="1" Margin="32,16,32,24">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="160"/>
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="Cancelar"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Foreground="#6B7280" BorderBrush="#3D4458"
-                        Height="42" Click="btnCancelar_Click"/>
-                <Button Grid.Column="2" x:Name="btnGuardar" Content="Guardar Usuario"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        Background="#3D7EFF" Foreground="White"
-                        materialDesign:ButtonAssist.CornerRadius="8"
-                        Height="42" Click="btnGuardar_Click"/>
-            </Grid>
-        </Grid>
+                        <!-- Mini header -->
+                        <Border Grid.Row="0" Background="#13161f" Height="56"
+                                BorderBrush="#1e2235" BorderThickness="0,0,0,1">
+                            <StackPanel VerticalAlignment="Center" Margin="28,0">
+                                <TextBlock Text="Información del Usuario" Foreground="White"
+                                           FontSize="14" FontWeight="Bold"/>
+                                <TextBlock Text="Rellena todos los campos requeridos"
+                                           Foreground="#505880" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Formulario -->
+                        <ScrollViewer Grid.Row="1" Margin="28,20,28,0"
+                                      VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="14"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Nombre" Style="{StaticResource EtiquetaCampo}"/>
+                                        <TextBox x:Name="txtNombre" Style="{StaticResource CampoTexto}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Apellido" Style="{StaticResource EtiquetaCampo}"/>
+                                        <TextBox x:Name="txtApellido" Style="{StaticResource CampoTexto}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Correo Electrónico" Style="{StaticResource EtiquetaCampo}"/>
+                                <TextBox x:Name="txtCorreo" Style="{StaticResource CampoTexto}" Margin="0,0,0,16"/>
+
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="14"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Teléfono" Style="{StaticResource EtiquetaCampo}"/>
+                                        <TextBox x:Name="txtTelefono" Style="{StaticResource CampoTexto}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Rol" Style="{StaticResource EtiquetaCampo}"/>
+                                        <Border Background="#1e2235" CornerRadius="8"
+                                                BorderBrush="#252840" BorderThickness="1" Height="42">
+                                            <ComboBox x:Name="cmbRol"
+                                                      Background="Transparent" Foreground="White"
+                                                      BorderThickness="0" FontSize="13"
+                                                      Padding="12,0" VerticalContentAlignment="Center"
+                                                      Style="{StaticResource MaterialDesignComboBox}">
+                                                <ComboBoxItem Content="Administrador"/>
+                                                <ComboBoxItem Content="Mecanico" IsSelected="True"/>
+                                                <ComboBoxItem Content="Recepcionista"/>
+                                            </ComboBox>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel x:Name="panelContrasena" Margin="0,0,0,16">
+                                    <TextBlock Text="Contraseña" Style="{StaticResource EtiquetaCampo}"/>
+                                    <Border Background="#1e2235" CornerRadius="8"
+                                            BorderBrush="#252840" BorderThickness="1" Height="42">
+                                        <PasswordBox x:Name="txtContrasena"
+                                                     Background="Transparent" Foreground="White"
+                                                     BorderThickness="0" Padding="12,0"
+                                                     CaretBrush="White" VerticalContentAlignment="Center"
+                                                     FontSize="13"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <Border Background="#1a1d35" CornerRadius="10"
+                                        Padding="14,12" Margin="0,4,0,0"
+                                        BorderBrush="#1e2235" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="Estado del Usuario"
+                                                   Foreground="White" FontSize="12"
+                                                   FontWeight="Medium" Margin="0,0,0,10"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                    <materialDesign:PackIcon Kind="CheckCircleOutline"
+                                                                             x:Name="iconEstadoUsuario"
+                                                                             Foreground="#4CAF50"
+                                                                             Width="16" Height="16"
+                                                                             VerticalAlignment="Center"
+                                                                             Margin="0,0,6,0"/>
+                                                    <TextBlock x:Name="txtEstadoUsuarioLabel"
+                                                               Text="El usuario está activo"
+                                                               Foreground="#4CAF50" FontSize="12" FontWeight="Medium"/>
+                                                </StackPanel>
+                                                <TextBlock x:Name="txtEstadoUsuarioSub"
+                                                           Text="Tiene acceso al sistema"
+                                                           Foreground="#353a58" FontSize="10"/>
+                                            </StackPanel>
+
+                                            <ToggleButton x:Name="toggleActivo"
+                                                          Grid.Column="1" IsChecked="True"
+                                                          Checked="ToggleActivo_Checked"
+                                                          Unchecked="ToggleActivo_Unchecked"
+                                                          VerticalAlignment="Center">
+                                                <ToggleButton.Style>
+                                                    <Style TargetType="ToggleButton">
+                                                        <Setter Property="Width"  Value="54"/>
+                                                        <Setter Property="Height" Value="30"/>
+                                                        <Setter Property="Cursor" Value="Hand"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ToggleButton">
+                                                                    <Grid>
+                                                                        <Border x:Name="switchBg" Background="#4f6ef7"
+                                                                                CornerRadius="15" Width="54" Height="30"/>
+                                                                        <Border x:Name="switchThumb" Background="White"
+                                                                                CornerRadius="12" Width="24" Height="24"
+                                                                                HorizontalAlignment="Right" Margin="0,0,3,0">
+                                                                            <Border.Effect>
+                                                                                <DropShadowEffect Color="Black" Opacity="0.2"
+                                                                                                  BlurRadius="4" ShadowDepth="1"/>
+                                                                            </Border.Effect>
+                                                                        </Border>
+                                                                    </Grid>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsChecked" Value="False">
+                                                                            <Setter TargetName="switchBg"    Property="Background"         Value="#1e2235"/>
+                                                                            <Setter TargetName="switchThumb" Property="HorizontalAlignment" Value="Left"/>
+                                                                            <Setter TargetName="switchThumb" Property="Margin"              Value="3,0,0,0"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ToggleButton.Style>
+                                            </ToggleButton>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Botones -->
+                        <Border Grid.Row="2" BorderBrush="#1e2235" BorderThickness="0,1,0,0">
+                            <Grid Margin="28,16,28,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="160"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="Cancelar"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="#8890b5" BorderBrush="#1e2235"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        Height="42" Click="btnCancelar_Click"/>
+                                <Button Grid.Column="2" x:Name="btnGuardar" Content="Guardar Usuario"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Background="#4f6ef7" Foreground="White"
+                                        materialDesign:ButtonAssist.CornerRadius="8"
+                                        materialDesign:ElevationAssist.Elevation="Dp0"
+                                        Height="42" Click="btnGuardar_Click"/>
+                            </Grid>
+                        </Border>
+
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
     </Grid>
 </Window>
