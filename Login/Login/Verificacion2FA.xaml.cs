@@ -9,15 +9,10 @@ namespace Login
     public partial class Verificacion2FA : Window
     {
         private readonly string _correoUsuario;
-        private readonly clsAutenticacion _autenticacion = new();
+        private readonly clsConsultasBD _db = new();
         private readonly DispatcherTimer _timer = new();
-        private int _segundos = 300; // 5 minutos
-
-        private TextBox[] _cajas;
-
-        // ════════════════════════════════════════════════════════════
-        // CONSTRUCTOR
-        // ════════════════════════════════════════════════════════════
+        private readonly TextBox[] _cajas;
+        private int _segundos = 300;
 
         public Verificacion2FA(string correo)
         {
@@ -35,10 +30,6 @@ namespace Login
                 DragMove();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CAJAS DE DÍGITOS
-        // ════════════════════════════════════════════════════════════
-
         private void ConfigurarCajas()
         {
             foreach (var caja in _cajas)
@@ -52,7 +43,6 @@ namespace Login
 
         private void Caja_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            // Solo dígitos
             e.Handled = !char.IsDigit(e.Text, 0);
         }
 
@@ -89,10 +79,6 @@ namespace Login
             _cajas[0].Focus();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // TIMER
-        // ════════════════════════════════════════════════════════════
-
         private void IniciarTimer()
         {
             _timer.Interval = TimeSpan.FromSeconds(1);
@@ -116,83 +102,95 @@ namespace Login
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // VERIFICAR
-        // ════════════════════════════════════════════════════════════
-
         private void BtnVerificar_Click(object sender, RoutedEventArgs e)
         {
             string codigo = ObtenerCodigo();
 
-            if (codigo.Length < 6)
+            var (esValido, mensaje) = clsValidacionCodigo2FA.ValidarCodigo(codigo);
+            if (!esValido)
             {
-                MostrarError("⚠ Completa los 6 dígitos del código.");
+                MostrarError(mensaje);
                 return;
             }
 
-            if (_autenticacion.ValidarCodigo(_correoUsuario, codigo))
+            try
             {
-                _timer.Stop();
-                new Dasboard_Prueba.MenuPrincipal().Show();
-                this.Close();
+                if (_db.ValidarCodigoOTP(_correoUsuario, codigo))
+                {
+                    _timer.Stop();
+                    new Dasboard_Prueba.MenuPrincipal().Show();
+                    this.Close();
+                }
+                else
+                {
+                    MostrarError("⚠ Código incorrecto o expirado. Intenta nuevamente.");
+                    LimpiarCajas();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MostrarError("⚠ Código incorrecto o expirado. Intenta nuevamente.");
-                LimpiarCajas();
+                MostrarError("⚠ Error al validar el código: " + ex.Message);
             }
         }
-
-        // ════════════════════════════════════════════════════════════
-        // REENVIAR
-        // ════════════════════════════════════════════════════════════
 
         private async void BtnReenviar_Click(object sender, RoutedEventArgs e)
         {
             btnReenviar.IsEnabled = false;
 
-            string codigo = _autenticacion.GenerarCodigo(_correoUsuario);
-            bool enviado = await Task.Run(
-                () => _autenticacion.EnviarCorreo(_correoUsuario, codigo));
-
-            if (enviado)
+            try
             {
-                // Reiniciar timer
-                _timer.Stop();
-                _segundos = 300;
-                runTimer.Text = "05:00";
-                btnVerificar.IsEnabled = true;
-                _timer.Start();
+                bool enviado = await Task.Run(() =>
+                {
+                    string codigo = _db.GenerarCodigoOTP(_correoUsuario);
+                    return _db.EnviarCorreoOTP(_correoUsuario, codigo);
+                });
 
-                LimpiarCajas();
-                OcultarError();
+                if (enviado)
+                {
+                    _timer.Stop();
+                    _segundos = 300;
+                    runTimer.Text = "05:00";
+                    btnVerificar.IsEnabled = true;
+                    _timer.Start();
 
-                MessageBox.Show("✅ Código reenviado a tu correo.", "Código enviado",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                    LimpiarCajas();
+                    OcultarError();
+
+                    MessageBox.Show("✅ Código reenviado a tu correo.", "Código enviado",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("⚠ No se pudo reenviar el código. Intenta nuevamente.",
+                MessageBox.Show("⚠ No se pudo reenviar el código: " + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             btnReenviar.IsEnabled = true;
         }
 
-        // ════════════════════════════════════════════════════════════
-        // REGRESAR
-        // ════════════════════════════════════════════════════════════
-
         private void BtnRegresar_Click(object sender, RoutedEventArgs e)
         {
             _timer.Stop();
+
+            var db = _db;
+            string correo = _correoUsuario;
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    string nuevoCodigo = db.GenerarCodigoOTP(correo);
+                    db.EnviarCorreoOTP(correo, nuevoCodigo);
+                }
+                catch
+                {
+
+                }
+            });
+
             new OpcionSesion(_correoUsuario).Show();
             this.Close();
         }
-
-        // ════════════════════════════════════════════════════════════
-        // HELPERS
-        // ════════════════════════════════════════════════════════════
 
         private void MostrarError(string msg)
         {

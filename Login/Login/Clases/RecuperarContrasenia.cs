@@ -1,4 +1,3 @@
-using Microsoft.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -7,10 +6,9 @@ namespace Login.Clases
 {
     internal class RecuperarContrasenia
     {
-        private clsAutenticacion _auth = new clsAutenticacion();
-        private clsConexion _conexion = new clsConexion();
+        private readonly clsConsultasBD _db = new();
         private string _correoRecuperacion = string.Empty;
-        private MainWindow _mainWindow;
+        private readonly MainWindow _mainWindow;
 
         private Grid _overlayGrid;
         private Border _panelCentral;
@@ -51,14 +49,12 @@ namespace Login.Clases
             _panelCentral.Child = _contenidoPanel;
             _overlayGrid.Children.Add(_panelCentral);
 
-            // Funciona si el root es un Grid 
             if (_mainWindow.Content is Grid rootGrid)
             {
                 rootGrid.Children.Add(_overlayGrid);
             }
             else
             {
-                // Si no es Grid, envolvemos el contenido actual en uno
                 var contenidoActual = _mainWindow.Content as UIElement;
                 var nuevoGrid = new Grid();
                 _mainWindow.Content = null;
@@ -101,7 +97,7 @@ namespace Login.Clases
             };
         }
 
-        private TextBox CrearCampoTexto(bool esPassword = false)
+        private TextBox CrearCampoTexto()
         {
             return new TextBox
             {
@@ -149,7 +145,7 @@ namespace Login.Clases
             };
         }
 
-        //  PASO 1: Correo 
+        // PASO 1: Correo
         private void MostrarPasoCorreo()
         {
             _contenidoPanel.Children.Clear();
@@ -168,7 +164,7 @@ namespace Login.Clases
 
             btnCancelar.Click += (s, e) => CerrarOverlay();
 
-            btnSiguiente.Click += (s, e) =>
+            btnSiguiente.Click += async (s, e) =>
             {
                 string correo = txtCorreo.Text.Trim();
                 lblError.Visibility = Visibility.Collapsed;
@@ -180,30 +176,47 @@ namespace Login.Clases
                     return;
                 }
 
-                if (!CorreoExisteEnBD(correo))
+                btnSiguiente.IsEnabled = false;
+
+                try
                 {
-                    lblError.Text = "⚠ No encontramos una cuenta con ese correo.";
-                    lblError.Visibility = Visibility.Visible;
-                    return;
+                    bool existe = await Task.Run(() => _db.ExisteCorreoLogin(correo));
+                    if (!existe)
+                    {
+                        lblError.Text = "⚠ No encontramos una cuenta con ese correo.";
+                        lblError.Visibility = Visibility.Visible;
+                        return;
+                    }
+
+                    bool enviado = await Task.Run(() =>
+                    {
+                        string codigo = _db.GenerarCodigoOTP(correo);
+                        return _db.EnviarCorreoOTP(correo, codigo);
+                    });
+
+                    if (!enviado)
+                    {
+                        lblError.Text = "⚠ No se pudo enviar el correo. Intenta nuevamente.";
+                        lblError.Visibility = Visibility.Visible;
+                        return;
+                    }
+
+                    _correoRecuperacion = correo;
+                    MostrarPasoOTP();
                 }
-
-                string codigo = _auth.GenerarCodigo(correo);
-                bool enviado = _auth.EnviarCorreo(correo, codigo);
-
-                if (!enviado)
+                catch (Exception ex)
                 {
-                    lblError.Text = "⚠ No se pudo enviar el correo. Intenta nuevamente.";
+                    lblError.Text = "⚠ " + ex.Message;
                     lblError.Visibility = Visibility.Visible;
-                    return;
                 }
-
-                _correoRecuperacion = correo;
-                MostrarPasoOTP();
+                finally
+                {
+                    btnSiguiente.IsEnabled = true;
+                }
             };
 
-            btnRow.Children.Add(btnCancelar);
-            btnRow.Children.Add(new UIElement());
             var spacer = new Border { Width = 8 };
+            btnRow.Children.Add(btnCancelar);
             btnRow.Children.Add(spacer);
             btnRow.Children.Add(btnSiguiente);
 
@@ -215,8 +228,6 @@ namespace Login.Clases
 
             txtCorreo.Focus();
         }
-
-        // PASO 2: OTP 
         private void MostrarPasoOTP()
         {
             _contenidoPanel.Children.Clear();
@@ -232,36 +243,52 @@ namespace Login.Clases
             };
 
             var btnAtras = CrearBoton("← Atrás", "#475569", 100);
-            var btnSiguiente = CrearBoton("Verificar", "#2563EB", 110);
+            var btnVerificar = CrearBoton("Verificar", "#2563EB", 110);
 
             btnAtras.Click += (s, e) => MostrarPasoCorreo();
 
-            btnSiguiente.Click += (s, e) =>
+            btnVerificar.Click += async (s, e) =>
             {
                 string otp = txtOTP.Text.Trim();
                 lblError.Visibility = Visibility.Collapsed;
 
-                if (otp.Length != 6)
+                var (esValido, mensaje) = clsValidacionCodigo2FA.ValidarCodigo(otp);
+                if (!esValido)
                 {
-                    lblError.Text = "⚠ El código debe tener exactamente 6 dígitos.";
+                    lblError.Text = mensaje;
                     lblError.Visibility = Visibility.Visible;
                     return;
                 }
 
-                if (!_auth.ValidarCodigo(_correoRecuperacion, otp))
-                {
-                    lblError.Text = "⚠ Código incorrecto, expirado o superaste los 3 intentos.";
-                    lblError.Visibility = Visibility.Visible;
-                    return;
-                }
+                btnVerificar.IsEnabled = false;
 
-                MostrarPasoNuevaContrasena();
+                try
+                {
+                    bool valido = await Task.Run(() => _db.ValidarCodigoOTP(_correoRecuperacion, otp));
+                    if (!valido)
+                    {
+                        lblError.Text = "⚠ Código incorrecto, expirado o superaste los 3 intentos.";
+                        lblError.Visibility = Visibility.Visible;
+                        return;
+                    }
+
+                    MostrarPasoNuevaContrasena();
+                }
+                catch (Exception ex)
+                {
+                    lblError.Text = "⚠ " + ex.Message;
+                    lblError.Visibility = Visibility.Visible;
+                }
+                finally
+                {
+                    btnVerificar.IsEnabled = true;
+                }
             };
 
             var spacer = new Border { Width = 8 };
             btnRow.Children.Add(btnAtras);
             btnRow.Children.Add(spacer);
-            btnRow.Children.Add(btnSiguiente);
+            btnRow.Children.Add(btnVerificar);
 
             _contenidoPanel.Children.Add(CrearTitulo("Código de verificación"));
             _contenidoPanel.Children.Add(CrearMensaje($"Ingresa el código de 6 dígitos enviado a {_correoRecuperacion}.\nExpira en 5 minutos."));
@@ -272,7 +299,6 @@ namespace Login.Clases
             txtOTP.Focus();
         }
 
-        //PASO 3: Nueva contraseña 
         private void MostrarPasoNuevaContrasena()
         {
             _contenidoPanel.Children.Clear();
@@ -280,7 +306,6 @@ namespace Login.Clases
             var txtNueva = CrearCampoTexto();
             var txtConfirmar = CrearCampoTexto();
             var lblError = CrearMensajeError("");
-
 
             AgregarPlaceholder(txtNueva, "Nueva contraseña (mín. 6 caracteres)");
             AgregarPlaceholder(txtConfirmar, "Confirmar contraseña");
@@ -296,7 +321,7 @@ namespace Login.Clases
 
             btnAtras.Click += (s, e) => MostrarPasoOTP();
 
-            btnGuardar.Click += (s, e) =>
+            btnGuardar.Click += async (s, e) =>
             {
                 string nueva = txtNueva.Text.Trim();
                 string confirmar = txtConfirmar.Text.Trim();
@@ -316,14 +341,31 @@ namespace Login.Clases
                     return;
                 }
 
-                if (!ActualizarContrasenaEnBD(_correoRecuperacion, nueva))
-                {
-                    lblError.Text = "⚠ Error al guardar. Intenta nuevamente.";
-                    lblError.Visibility = Visibility.Visible;
-                    return;
-                }
+                btnGuardar.IsEnabled = false;
 
-                MostrarExito();
+                try
+                {
+                    bool actualizado = await Task.Run(
+                        () => _db.ActualizarContrasenaLogin(_correoRecuperacion, nueva));
+
+                    if (!actualizado)
+                    {
+                        lblError.Text = "⚠ Error al guardar. Intenta nuevamente.";
+                        lblError.Visibility = Visibility.Visible;
+                        return;
+                    }
+
+                    MostrarExito();
+                }
+                catch (Exception ex)
+                {
+                    lblError.Text = "⚠ " + ex.Message;
+                    lblError.Visibility = Visibility.Visible;
+                }
+                finally
+                {
+                    btnGuardar.IsEnabled = true;
+                }
             };
 
             var spacer = new Border { Width = 8 };
@@ -392,51 +434,6 @@ namespace Login.Clases
                         (Color)ColorConverter.ConvertFromString("#64748B"));
                 }
             };
-        }
-
-        private bool CorreoExisteEnBD(string correo)
-        {
-            try
-            {
-                _conexion.Abrir();
-                string query = "SELECT COUNT(1) FROM LOGIN WHERE Usuario_Email = @Correo";
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                cmd.Parameters.AddWithValue("@Correo", correo);
-                int count = (int)cmd.ExecuteScalar();
-                return count > 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al verificar correo: " + ex.Message);
-                return false;
-            }
-            finally
-            {
-                _conexion.Cerrar();
-            }
-        }
-
-        private bool ActualizarContrasenaEnBD(string correo, string nuevaContrasena)
-        {
-            try
-            {
-                _conexion.Abrir();
-                string query = "UPDATE LOGIN SET Usuario_Contraseña = @Nueva WHERE Usuario_Email = @Correo";
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
-                cmd.Parameters.AddWithValue("@Nueva", nuevaContrasena);
-                cmd.Parameters.AddWithValue("@Correo", correo);
-                int filas = cmd.ExecuteNonQuery();
-                return filas > 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al actualizar contraseña: " + ex.Message);
-                return false;
-            }
-            finally
-            {
-                _conexion.Cerrar();
-            }
         }
     }
 }

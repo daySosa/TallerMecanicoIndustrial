@@ -1,9 +1,9 @@
 ﻿using Dasboard_Prueba;
 using Microsoft.Data.SqlClient;
+using MimeKit;
 using Órdenes_de_Trabajo;
 using System.Data;
 using Vehículos;
-
 
 
 namespace Login.Clases
@@ -1583,6 +1583,169 @@ namespace Login.Clases
                 return lista;
             }
             catch (Exception ex) { throw new Exception("Error al cargar bitácora: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public string GenerarCodigoOTP(string correo)
+        {
+            string codigo = new Random().Next(100000, 999999).ToString();
+            DateTime expiracion = DateTime.UtcNow.AddMinutes(5);
+
+            try
+            {
+                _conexion.Abrir();
+
+                string invalidar = @"UPDATE CodigosOTP 
+                              SET Usado = 1 
+                              WHERE Correo = @Correo AND Usado = 0";
+                SqlCommand cmdInvalidar = new SqlCommand(invalidar, _conexion.SqlC);
+                cmdInvalidar.Parameters.AddWithValue("@Correo", correo);
+                cmdInvalidar.ExecuteNonQuery();
+
+                string insertar = @"INSERT INTO CodigosOTP 
+                             (Correo, Codigo, FechaExpiracion, Usado, Intentos)
+                             VALUES (@Correo, @Codigo, @Expiracion, 0, 0)";
+                SqlCommand cmdInsertar = new SqlCommand(insertar, _conexion.SqlC);
+                cmdInsertar.Parameters.AddWithValue("@Correo", correo);
+                cmdInsertar.Parameters.AddWithValue("@Codigo", codigo);
+                cmdInsertar.Parameters.AddWithValue("@Expiracion", expiracion);
+                cmdInsertar.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al generar el código OTP: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+
+            return codigo;
+        }
+
+        public bool ValidarCodigoOTP(string correo, string codigoIngresado)
+        {
+            try
+            {
+                _conexion.Abrir();
+
+                string query = @"SELECT Id FROM CodigosOTP 
+                          WHERE Correo = @Correo 
+                          AND Codigo = @Codigo 
+                          AND Usado = 0 
+                          AND FechaExpiracion > GETUTCDATE()
+                          AND Intentos < 3";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@Codigo", codigoIngresado);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int id = reader.GetInt32(0);
+                        reader.Close();
+
+                        SqlCommand cmdUpdate = new SqlCommand(
+                            "UPDATE CodigosOTP SET Usado = 1 WHERE Id = @Id", _conexion.SqlC);
+                        cmdUpdate.Parameters.AddWithValue("@Id", id);
+                        cmdUpdate.ExecuteNonQuery();
+
+                        return true;
+                    }
+                }
+
+                SqlCommand cmdIntentos = new SqlCommand(@"
+            UPDATE CodigosOTP 
+            SET Intentos = Intentos + 1 
+            WHERE Correo = @Correo AND Usado = 0", _conexion.SqlC);
+                cmdIntentos.Parameters.AddWithValue("@Correo", correo);
+                cmdIntentos.ExecuteNonQuery();
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al validar el código OTP: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool EnviarCorreoOTP(string correoDestino, string codigo)
+        {
+            try
+            {
+                var mensaje = new MimeMessage();
+                mensaje.From.Add(new MailboxAddress("Taller Mecánico", "tallermecanicoind26@gmail.com"));
+                mensaje.To.Add(new MailboxAddress("", correoDestino));
+                mensaje.Subject = "Código de verificación - Taller Mecánico";
+
+                mensaje.Body = new TextPart("html")
+                {
+                    Text = $@"
+            <div style='font-family: Arial; padding: 20px;'>
+                <h2 style='color: #2563EB;'>Verificación de identidad</h2>
+                <p>Tu código de verificación es:</p>
+                <h1 style='letter-spacing: 8px; color: #1E40AF;'>{codigo}</h1>
+                <p>Este código expira en <b>5 minutos</b>.</p>
+                <p style='color: gray; font-size: 12px;'>
+                    Si no fuiste tú, ignora este mensaje.
+                </p>
+            </div>"
+                };
+
+                using var smtp = new MailKit.Net.Smtp.SmtpClient();
+                smtp.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                smtp.Authenticate("tallermecanicoind26@gmail.com", "igzy ooxe fmjr ippx");
+                smtp.Send(mensaje);
+                smtp.Disconnect(true);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al enviar el correo: " + ex.Message);
+            }
+            finally { }
+        }
+
+        public bool ExisteCorreoLogin(string correo)
+        {
+            try
+            {
+                _conexion.Abrir();
+                string query = "SELECT COUNT(1) FROM LOGIN WHERE Usuario_Email = @Correo";
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al verificar correo: " + ex.Message);
+            }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool ActualizarContrasenaLogin(string correo, string nuevaContrasena)
+        {
+            try
+            {
+                string hash;
+                using (var sha = System.Security.Cryptography.SHA512.Create())
+                {
+                    byte[] bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(nuevaContrasena));
+                    hash = BitConverter.ToString(bytes).Replace("-", "");
+                }
+
+                _conexion.Abrir();
+                string query = "UPDATE LOGIN SET Usuario_Contraseña = @Hash WHERE Usuario_Email = @Correo";
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Hash", hash);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                return cmd.ExecuteNonQuery() > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al actualizar contraseña: " + ex.Message);
+            }
             finally { _conexion.Cerrar(); }
         }
 

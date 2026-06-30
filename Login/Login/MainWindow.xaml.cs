@@ -226,13 +226,11 @@ namespace Login
                     return;
                 }
 
-                clsAutenticacion auth = new clsAutenticacion();
-
-                string codigo2FA = await System.Threading.Tasks.Task.Run(
-                    () => auth.GenerarCodigo(correo));
-
-                bool enviado = await System.Threading.Tasks.Task.Run(
-                    () => auth.EnviarCorreo(correo, codigo2FA));
+                bool enviado = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    string codigo2FA = _db.GenerarCodigoOTP(correo);
+                    return _db.EnviarCorreoOTP(correo, codigo2FA);
+                });
 
                 if (enviado)
                 {

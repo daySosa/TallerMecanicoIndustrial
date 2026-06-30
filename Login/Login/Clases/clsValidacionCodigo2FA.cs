@@ -6,19 +6,25 @@
 
         public static (bool Ok, string Mensaje) ValidarCodigo(string codigo)
         {
-            // Usa clsValidaciones — requerido
-            if (!clsValidaciones.EsRequerido(codigo))
+            if (string.IsNullOrWhiteSpace(codigo))
                 return (false, "⚠ Ingresa el código de verificación.");
 
-            // Usa clsValidaciones — solo números
-            if (!clsValidaciones.EsSoloNumeros(codigo))
+            if (!EsSoloNumeros(codigo))
                 return (false, "⚠ El código solo debe contener números.");
 
-            // Usa clsValidaciones — longitud exacta
-            if (!clsValidaciones.TieneLongitudExacta(codigo, LongitudCodigo))
+            if (codigo.Length != LongitudCodigo)
                 return (false, $"⚠ El código debe tener exactamente {LongitudCodigo} dígitos.");
 
             return (true, string.Empty);
+        }
+
+        private static bool EsSoloNumeros(string texto)
+        {
+            foreach (char c in texto)
+            {
+                if (!char.IsDigit(c)) return false;
+            }
+            return true;
         }
     }
 }
