@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:Órdenes_de_Trabajo"
-        Title="Nueva Orden de Trabajo" Height="1000" Width="1280"
+        Title="Nueva Orden de Trabajo" Height="1300" Width="1280"
         TextElement.Foreground="White"
         WindowStyle="None"
         AllowsTransparency="True"

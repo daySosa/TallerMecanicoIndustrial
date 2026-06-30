@@ -5,7 +5,7 @@
         xmlns:hc="https://handyorg.github.io/handycontrol"
         Title="Login" Height="800" Width="1280"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="ThreeDBorderWindow"
+        WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
         MouseDown="Window_Drag">
