@@ -256,7 +256,8 @@ namespace Login
 
         private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
         {
-            // Implementar recuperación de contraseña
+            var recuperar = new RecuperarContrasenia(this);
+            recuperar.IniciarFlujo();
         }
 
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
