@@ -1548,5 +1548,43 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
+        public List<BitacoraItem> ObtenerBitacora()
+        {
+            var lista = new List<BitacoraItem>();
+            try
+            {
+                string query = @"
+            SELECT 
+                b.Bitacora_Fecha,
+                l.Usuario_Nombre + ' ' + l.Usuario_Apellido AS Bitacora_Usuario,
+                l.Usuario_Rol   AS Bitacora_Rol,
+                b.Bitacora_Modulo,
+                b.Bitacora_Accion,
+                b.Bitacora_Descripcion
+            FROM Bitacora b
+            INNER JOIN LOGIN l ON b.Usuario_ID = l.Usuario_ID
+            ORDER BY b.Bitacora_Fecha DESC";
+
+                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                _conexion.Abrir();
+                using SqlDataReader rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new BitacoraItem
+                    {
+                        Bitacora_Fecha = Convert.ToDateTime(rd["Bitacora_Fecha"]),
+                        Bitacora_Usuario = rd["Bitacora_Usuario"].ToString() ?? string.Empty,
+                        Bitacora_Rol = rd["Bitacora_Rol"].ToString() ?? string.Empty,
+                        Bitacora_Modulo = rd["Bitacora_Modulo"].ToString() ?? string.Empty,
+                        Bitacora_Accion = rd["Bitacora_Accion"].ToString() ?? string.Empty,
+                        Bitacora_Descripcion = rd["Bitacora_Descripcion"].ToString() ?? string.Empty
+                    });
+                }
+                return lista;
+            }
+            catch (Exception ex) { throw new Exception("Error al cargar bitácora: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
     }
 }

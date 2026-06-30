@@ -45,6 +45,9 @@ namespace InterfazClientes
         private void btnHome_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MenuPrincipal());
 
+        private void btnInventario_Click(object sender, RoutedEventArgs e)
+            => Navegar(() => new InterfazInventario.MenúPrincipalInventario());
+
         private void btnClientes_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MenúPrincipalClientes());
 

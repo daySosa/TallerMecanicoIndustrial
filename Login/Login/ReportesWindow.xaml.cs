@@ -20,6 +20,9 @@ namespace Login
             txtModulo.Text = $"Reporte de {modulo}";
         }
 
+        // ── FIX: método que faltaba ──────────────────────────────────
+        private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
+
         private async void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
         {
             switch (_modulo)
@@ -76,24 +79,18 @@ namespace Login
         }
 
         // ─────────────────────────────────────────────
-        //  ESTILOS BASE — diseño profesional renovado
+        //  ESTILOS BASE
         // ─────────────────────────────────────────────
         private string GetBaseStyles(string accentColor = "#1e2d5f")
         {
             return $@"
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
                 * {{ margin:0; padding:0; box-sizing:border-box; }}
                 body {{ font-family: Arial, sans-serif; font-size:11px; color:#1a1a2e; background:#fff; }}
-
-                /* ── HEADER ── */
                 .header {{
                     background: linear-gradient(135deg, {accentColor} 0%, {AdjustColor(accentColor)} 100%);
-                    color: white;
-                    padding: 20px 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
+                    color: white; padding: 20px 28px;
+                    display: flex; align-items: center; justify-content: space-between;
                 }}
                 .header-left {{ display:flex; align-items:center; gap:18px; }}
                 .logo-wrap {{
@@ -101,76 +98,47 @@ namespace Login
                     background:rgba(255,255,255,0.15);
                     border:2px solid rgba(255,255,255,0.4);
                     display:flex; align-items:center; justify-content:center;
-                    font-size:20px; font-weight:700; letter-spacing:1px;
-                    overflow:hidden; flex-shrink:0;
+                    font-size:20px; font-weight:700; overflow:hidden; flex-shrink:0;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
                 }}
                 .logo-wrap img {{ width:72px; height:72px; border-radius:50%; object-fit:cover; }}
-                .company-name {{ font-size:20px; font-weight:700; letter-spacing:0.3px; }}
-                .company-sub  {{ font-size:10px; opacity:0.80; margin-top:3px; letter-spacing:0.2px; }}
-                .divider-v {{ width:1px; background:rgba(255,255,255,0.25); margin:0 6px; align-self:stretch; }}
-                .header-right {{ display:flex; align-items:center; gap:0; }}
-                .header-meta {{
-                    padding: 6px 18px;
-                    text-align:center;
-                    border-left:1px solid rgba(255,255,255,0.2);
-                }}
+                .company-name {{ font-size:20px; font-weight:700; }}
+                .company-sub  {{ font-size:10px; opacity:0.80; margin-top:3px; }}
+                .header-right {{ display:flex; align-items:center; }}
+                .header-meta {{ padding: 6px 18px; text-align:center; border-left:1px solid rgba(255,255,255,0.2); }}
                 .meta-label {{ font-size:8px; text-transform:uppercase; opacity:0.70; letter-spacing:1.2px; }}
                 .meta-value {{ font-size:13px; font-weight:700; margin-top:3px; }}
-
-                /* ── TITLE BAR ── */
                 .title-bar {{
-                    background:#f4f6fb;
-                    padding:10px 28px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:space-between;
+                    background:#f4f6fb; padding:10px 28px;
+                    display:flex; align-items:center; justify-content:space-between;
                     border-bottom:3px solid {accentColor};
                 }}
-                .report-title {{ font-size:14px; font-weight:700; color:{accentColor}; letter-spacing:0.3px; }}
+                .report-title {{ font-size:14px; font-weight:700; color:{accentColor}; }}
                 .report-subtitle {{ font-size:10px; color:#888; }}
-
-                /* ── TABLA ── */
                 .content {{ padding:18px 28px; }}
                 table {{
-                    width:100%; border-collapse:collapse;
-                    margin-top:10px; font-size:10.5px;
-                    table-layout:fixed;
-                    border-radius:6px;
-                    overflow:hidden;
+                    width:100%; border-collapse:collapse; margin-top:10px;
+                    font-size:10.5px; table-layout:fixed;
                     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
                 }}
                 thead tr {{ background:{accentColor}; color:white; }}
                 thead th {{
-                    padding:10px 9px;
-                    text-align:center;
-                    font-weight:700;
-                    font-size:9.5px;
-                    text-transform:uppercase;
-                    letter-spacing:0.7px;
-                    white-space:nowrap;
-                    overflow:hidden;
+                    padding:10px 9px; text-align:center; font-weight:700;
+                    font-size:9.5px; text-transform:uppercase; letter-spacing:0.7px;
                 }}
-                tbody tr {{ border-bottom:1px solid #eceef5; transition:background 0.1s; }}
+                tbody tr {{ border-bottom:1px solid #eceef5; }}
                 tbody tr:nth-child(even) {{ background:#f8f9fd; }}
                 tbody tr:hover {{ background:#eef1fa; }}
                 tbody td {{
-                    padding:8px 9px;
-                    text-align:center;
-                    white-space:nowrap;
-                    overflow:hidden;
-                    text-overflow:ellipsis;
-                    color:#2c2c3e;
+                    padding:8px 9px; text-align:center;
+                    white-space:nowrap; overflow:hidden;
+                    text-overflow:ellipsis; color:#2c2c3e;
                 }}
                 tbody td.left {{ text-align:left; }}
                 tbody td.obs {{ text-align:left; white-space:normal; word-break:break-word; color:#555; }}
-
-                /* ── BADGES ── */
                 .badge {{
-                    padding:2px 9px; border-radius:20px;
-                    font-size:9.5px; font-weight:700;
-                    white-space:nowrap; display:inline-block;
-                    letter-spacing:0.3px;
+                    padding:2px 9px; border-radius:20px; font-size:9.5px;
+                    font-weight:700; display:inline-block;
                 }}
                 .badge-pagado    {{ background:#d1fae5; color:#065f46; }}
                 .badge-pendiente {{ background:#fef3c7; color:#92400e; }}
@@ -179,63 +147,44 @@ namespace Login
                 .badge-sinempezar{{ background:#ede9fe; color:#5b21b6; }}
                 .badge-activo    {{ background:#d1fae5; color:#065f46; }}
                 .badge-inactivo  {{ background:#fee2e2; color:#991b1b; }}
-
-                /* ── TOTAL ROW ── */
                 .total-row td {{
-                    background:{accentColor};
-                    color:white;
-                    font-weight:700;
-                    padding:10px 9px;
-                    font-size:11px;
-                    text-align:center;
-                    letter-spacing:0.3px;
+                    background:{accentColor}; color:white; font-weight:700;
+                    padding:10px 9px; font-size:11px; text-align:center;
                 }}
-
-                /* ── FOOTER ── */
                 .footer {{
-                    margin-top:20px;
-                    padding:10px 28px;
+                    margin-top:20px; padding:10px 28px;
                     border-top:1px solid #e0e3ef;
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    font-size:9px;
-                    color:#aaa;
+                    display:flex; justify-content:space-between;
+                    align-items:center; font-size:9px; color:#aaa;
                 }}
                 .footer-brand {{ font-weight:700; color:#999; font-size:9.5px; }}
             </style>";
         }
 
-        // Genera un tono ligeramente más claro/oscuro para el gradiente
         private string AdjustColor(string hex)
         {
             try
             {
                 hex = hex.TrimStart('#');
-                int r = Convert.ToInt32(hex.Substring(0, 2), 16);
-                int g = Convert.ToInt32(hex.Substring(2, 2), 16);
-                int b = Convert.ToInt32(hex.Substring(4, 2), 16);
-                r = Math.Min(255, r + 40);
-                g = Math.Min(255, g + 40);
-                b = Math.Min(255, b + 40);
+                int r = Math.Min(255, Convert.ToInt32(hex.Substring(0, 2), 16) + 40);
+                int g = Math.Min(255, Convert.ToInt32(hex.Substring(2, 2), 16) + 40);
+                int b = Math.Min(255, Convert.ToInt32(hex.Substring(4, 2), 16) + 40);
                 return $"#{r:X2}{g:X2}{b:X2}";
             }
             catch { return hex; }
         }
 
         // ─────────────────────────────────────────────
-        //  HEADER
+        //  HEADER / TITLE / FOOTER
         // ─────────────────────────────────────────────
         private string GetHeader(string accentColor, string periodo = "")
         {
             string periodoTexto = string.IsNullOrEmpty(periodo)
-                ? $"Q{((DateTime.Now.Month - 1) / 3 + 1)} {DateTime.Now.Year}"
-                : periodo;
+                ? $"Q{((DateTime.Now.Month - 1) / 3 + 1)} {DateTime.Now.Year}" : periodo;
 
             string logoBase64 = GetLogoBase64();
             string logoHtml = !string.IsNullOrEmpty(logoBase64)
-                ? $"<img src='data:image/png;base64,{logoBase64}' />"
-                : "TM";
+                ? $"<img src='data:image/png;base64,{logoBase64}' />" : "TM";
 
             return $@"
             <div class='header'>
@@ -243,7 +192,7 @@ namespace Login
                     <div class='logo-wrap'>{logoHtml}</div>
                     <div>
                         <div class='company-name'>Taller Mecánico AutoExpress</div>
-                        <div class='company-sub'>Tegucigalpa, Honduras &nbsp;·&nbsp; Tel: +504 2230-0000</div>
+                        <div class='company-sub'>Tegucigalpa, Honduras · Tel: +504 2230-0000</div>
                     </div>
                 </div>
                 <div class='header-right'>
@@ -263,15 +212,10 @@ namespace Login
             </div>";
         }
 
-        // ─────────────────────────────────────────────
-        //  TITLE BAR
-        // ─────────────────────────────────────────────
         private string GetTitleBar(string accentColor, string titulo, string subtitulo = "")
         {
             string sub = string.IsNullOrEmpty(subtitulo)
-                ? $"Generado el {DateTime.Now:dddd, dd 'de' MMMM 'de' yyyy}"
-                : subtitulo;
-
+                ? $"Generado el {DateTime.Now:dddd, dd 'de' MMMM 'de' yyyy}" : subtitulo;
             return $@"
             <div class='title-bar'>
                 <span class='report-title'>{titulo}</span>
@@ -279,37 +223,25 @@ namespace Login
             </div>";
         }
 
-        // ─────────────────────────────────────────────
-        //  FOOTER
-        // ─────────────────────────────────────────────
-        private string GetFooter()
-        {
-            return $@"
+        private string GetFooter() => $@"
             <div class='footer'>
                 <span class='footer-brand'>Taller Mecánico AutoExpress</span>
                 <span>Documento confidencial · Uso interno</span>
                 <span>Generado: {DateTime.Now:dd/MM/yyyy} {DateTime.Now:hh:mm tt}</span>
             </div>";
-        }
 
-        // ─────────────────────────────────────────────
-        //  BADGES DE ESTADO
-        // ─────────────────────────────────────────────
-        private string BadgeEstado(string estado)
+        private string BadgeEstado(string estado) => estado switch
         {
-            return estado switch
-            {
-                "Finalizado" => $"<span class='badge badge-pagado'>{estado}</span>",
-                "En Proceso" => $"<span class='badge badge-proceso'>{estado}</span>",
-                "Pendiente" => $"<span class='badge badge-pendiente'>{estado}</span>",
-                "Cancelado" => $"<span class='badge badge-cancelado'>{estado}</span>",
-                "Sin Empezar" => $"<span class='badge badge-sinempezar'>{estado}</span>",
-                _ => $"<span class='badge'>{estado}</span>"
-            };
-        }
+            "Finalizado" => $"<span class='badge badge-pagado'>{estado}</span>",
+            "En Proceso" => $"<span class='badge badge-proceso'>{estado}</span>",
+            "Pendiente" => $"<span class='badge badge-pendiente'>{estado}</span>",
+            "Cancelado" => $"<span class='badge badge-cancelado'>{estado}</span>",
+            "Sin Empezar" => $"<span class='badge badge-sinempezar'>{estado}</span>",
+            _ => $"<span class='badge'>{estado}</span>"
+        };
 
         // ─────────────────────────────────────────────
-        //  EXPORTAR PDF  (WebView2)
+        //  EXPORTAR PDF
         // ─────────────────────────────────────────────
         private async Task ExportarPDF(string html, string nombreArchivo, bool landscape = false)
         {
@@ -318,12 +250,10 @@ namespace Login
                 Filter = "PDF|*.pdf",
                 FileName = $"{nombreArchivo}_{DateTime.Now:yyyyMMdd}"
             };
-
             if (dialog.ShowDialog() != true) return;
 
             WebView2 webView = null;
             Window hiddenWindow = null;
-
             try
             {
                 webView = new WebView2();
@@ -352,9 +282,7 @@ namespace Login
                     : CoreWebView2PrintOrientation.Portrait;
 
                 bool success = await webView.CoreWebView2.PrintToPdfAsync(dialog.FileName, printSettings);
-
-                if (!success)
-                    throw new Exception("No se pudo generar el PDF con WebView2.");
+                if (!success) throw new Exception("No se pudo generar el PDF.");
 
                 MessageBox.Show("✅ Reporte generado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -370,10 +298,122 @@ namespace Login
                 MessageBox.Show($"❌ Error al generar el PDF:\n{ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally
+            finally { hiddenWindow?.Close(); }
+        }
+
+        // ─────────────────────────────────────────────
+        //  SELECTOR DE PERÍODO
+        // ─────────────────────────────────────────────
+        private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
+        {
+            fechaInicio = DateTime.MinValue;
+            fechaFin = DateTime.MaxValue;
+            periodoTexto = "Todo";
+
+            var ventana = new Window
             {
-                hiddenWindow?.Close();
+                Title = "Seleccionar Período",
+                Width = 340,
+                Height = 200,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this,
+                ResizeMode = ResizeMode.NoResize,
+                Background = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(30, 45, 95))
+            };
+
+            var panel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
+            panel.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona el período del reporte:",
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 13,
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+
+            var cmb = new System.Windows.Controls.ComboBox { FontSize = 12, Margin = new Thickness(0, 0, 0, 16) };
+            foreach (var op in new[] { "Mes actual", "Mes anterior", "Trimestre actual", "Año actual", "Año anterior", "Todo" })
+                cmb.Items.Add(op);
+            cmb.SelectedIndex = 0;
+
+            bool confirmado = false;
+            var btnPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var btnAceptar = new System.Windows.Controls.Button
+            {
+                Content = "Generar",
+                Width = 90,
+                Height = 32,
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 45, 95)),
+                FontWeight = FontWeights.Bold,
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+            btnAceptar.Click += (s, e) => { confirmado = true; ventana.Close(); };
+
+            var btnCancelarPeriodo = new System.Windows.Controls.Button
+            {
+                Content = "Cancelar",
+                Width = 80,
+                Height = 32,
+                Background = System.Windows.Media.Brushes.Transparent,
+                Foreground = System.Windows.Media.Brushes.White,
+                BorderBrush = System.Windows.Media.Brushes.White,
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+            btnCancelarPeriodo.Click += (s, e) => ventana.Close();
+
+            btnPanel.Children.Add(btnAceptar);
+            btnPanel.Children.Add(btnCancelarPeriodo);
+            panel.Children.Add(cmb);
+            panel.Children.Add(btnPanel);
+            ventana.Content = panel;
+            ventana.ShowDialog();
+
+            if (!confirmado) return false;
+
+            DateTime hoy = DateTime.Today;
+            switch (cmb.SelectedItem?.ToString())
+            {
+                case "Mes actual":
+                    fechaInicio = new DateTime(hoy.Year, hoy.Month, 1);
+                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
+                    periodoTexto = hoy.ToString("MMMM yyyy");
+                    break;
+                case "Mes anterior":
+                    var mesAnt = hoy.AddMonths(-1);
+                    fechaInicio = new DateTime(mesAnt.Year, mesAnt.Month, 1);
+                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
+                    periodoTexto = mesAnt.ToString("MMMM yyyy");
+                    break;
+                case "Trimestre actual":
+                    int trim = (hoy.Month - 1) / 3;
+                    fechaInicio = new DateTime(hoy.Year, trim * 3 + 1, 1);
+                    fechaFin = fechaInicio.AddMonths(3).AddTicks(-1);
+                    periodoTexto = $"Q{trim + 1} {hoy.Year}";
+                    break;
+                case "Año actual":
+                    fechaInicio = new DateTime(hoy.Year, 1, 1);
+                    fechaFin = new DateTime(hoy.Year, 12, 31, 23, 59, 59);
+                    periodoTexto = hoy.Year.ToString();
+                    break;
+                case "Año anterior":
+                    fechaInicio = new DateTime(hoy.Year - 1, 1, 1);
+                    fechaFin = new DateTime(hoy.Year - 1, 12, 31, 23, 59, 59);
+                    periodoTexto = (hoy.Year - 1).ToString();
+                    break;
+                default:
+                    fechaInicio = DateTime.MinValue;
+                    fechaFin = DateTime.MaxValue;
+                    periodoTexto = "Todo";
+                    break;
             }
+            return true;
         }
 
         // ─────────────────────────────────────────────
@@ -383,12 +423,11 @@ namespace Login
         {
             string accent = "#1e2d5f";
             var db = new clsConexion(); db.Abrir();
-            string sql = @"SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                                  Cliente_TelefonoPrincipal, Cliente_Email
-                           FROM Cliente ORDER BY Cliente_Apellidos";
-
             string filas = "";
-            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var cmd = new SqlCommand(
+                @"SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                         Cliente_TelefonoPrincipal, Cliente_Email
+                  FROM Cliente ORDER BY Cliente_Apellidos", db.SqlC))
             using (var r = cmd.ExecuteReader())
                 while (r.Read())
                     filas += $@"<tr>
@@ -413,12 +452,11 @@ namespace Login
                         <th>DNI</th><th>Nombres</th><th>Apellidos</th><th>Teléfono</th><th>Email</th>
                     </tr></thead>
                     <tbody>{filas}</tbody>
-                </table>
-                </div>
+                </table></div>
                 {GetFooter()}
             </body></html>";
 
-            await ExportarPDF(html, "Reporte_Clientes", landscape: false);
+            await ExportarPDF(html, "Reporte_Clientes");
         }
 
         // ─────────────────────────────────────────────
@@ -435,12 +473,11 @@ namespace Login
 
             if (periodoTexto == "Todo")
             {
-                string sql = @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
-                               Producto_Modelo, Producto_Precio,
-                               Producto_Cantidad_Actual, Producto_Stock_Minimo
-                        FROM Producto ORDER BY Producto_Nombre";
-
-                using (var cmd = new SqlCommand(sql, db.SqlC))
+                using (var cmd = new SqlCommand(
+                    @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
+                             Producto_Modelo, Producto_Precio,
+                             Producto_Cantidad_Actual, Producto_Stock_Minimo
+                      FROM Producto ORDER BY Producto_Nombre", db.SqlC))
                 using (var r = cmd.ExecuteReader())
                     while (r.Read())
                     {
@@ -449,73 +486,56 @@ namespace Login
                         string stock = cant <= min
                             ? $"<span class='badge badge-cancelado'>{cant}</span>"
                             : $"<span class='badge badge-activo'>{cant}</span>";
-
                         filas += $@"<tr>
                             <td class='left'>{r["Producto_Nombre"]}</td>
                             <td class='left'>{r["Producto_Categoria"]}</td>
                             <td>{r["Producto_Marca"]}</td>
                             <td>{r["Producto_Modelo"]}</td>
                             <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
-                            <td>{stock}</td>
-                            <td>{min}</td>
-                            <td>—</td>
+                            <td>{stock}</td><td>{min}</td><td>—</td>
                         </tr>";
                     }
             }
             else
             {
-                string sql = @"SELECT p.Producto_Nombre, p.Producto_Categoria,
+                using (var cmd = new SqlCommand(
+                    @"SELECT p.Producto_Nombre, p.Producto_Categoria, p.Producto_Marca,
+                             p.Producto_Modelo, p.Producto_Precio,
+                             p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
+                             SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
+                      FROM Orden_Repuesto orep
+                      INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
+                      INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
+                      WHERE ot.Fecha BETWEEN @FI AND @FF
+                      GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
                                p.Producto_Marca, p.Producto_Modelo, p.Producto_Precio,
-                               p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
-                               SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
-                        FROM Orden_Repuesto orep
-                        INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
-                        INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
-                        WHERE ot.Fecha BETWEEN @FechaInicio AND @FechaFin
-                        GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
-                                 p.Producto_Marca, p.Producto_Modelo, p.Producto_Precio,
-                                 p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo
-                        ORDER BY Cantidad_Usada DESC, p.Producto_Nombre";
-
-                using (var cmd = new SqlCommand(sql, db.SqlC))
+                               p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo
+                      ORDER BY Cantidad_Usada DESC", db.SqlC))
                 {
-                    cmd.Parameters.AddWithValue("@FechaInicio", fechaInicio);
-                    cmd.Parameters.AddWithValue("@FechaFin", fechaFin);
-
-                    using (var r = cmd.ExecuteReader())
+                    cmd.Parameters.AddWithValue("@FI", fechaInicio);
+                    cmd.Parameters.AddWithValue("@FF", fechaFin);
+                    using var r = cmd.ExecuteReader();
+                    bool hay = false;
+                    while (r.Read())
                     {
-                        bool hayDatos = false;
-                        while (r.Read())
-                        {
-                            hayDatos = true;
-                            int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
-                            int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
-                            int usados = Convert.ToInt32(r["Cantidad_Usada"]);
-
-                            string stock = cant <= min
-                                ? $"<span class='badge badge-cancelado'>{cant}</span>"
-                                : $"<span class='badge badge-activo'>{cant}</span>";
-
-                            filas += $@"<tr>
-                                <td class='left'>{r["Producto_Nombre"]}</td>
-                                <td class='left'>{r["Producto_Categoria"]}</td>
-                                <td>{r["Producto_Marca"]}</td>
-                                <td>{r["Producto_Modelo"]}</td>
-                                <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
-                                <td>{stock}</td>
-                                <td>{min}</td>
-                                <td><b>{usados}</b></td>
-                            </tr>";
-                        }
-
-                        if (!hayDatos)
-                            filas = $@"<tr><td colspan='8' style='text-align:center;padding:20px;color:#888;'>
-                                No se encontraron productos usados en el período: {periodoTexto}
-                            </td></tr>";
+                        hay = true;
+                        int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
+                        int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
+                        string stock = cant <= min
+                            ? $"<span class='badge badge-cancelado'>{cant}</span>"
+                            : $"<span class='badge badge-activo'>{cant}</span>";
+                        filas += $@"<tr>
+                            <td class='left'>{r["Producto_Nombre"]}</td>
+                            <td class='left'>{r["Producto_Categoria"]}</td>
+                            <td>{r["Producto_Marca"]}</td><td>{r["Producto_Modelo"]}</td>
+                            <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
+                            <td>{stock}</td><td>{min}</td>
+                            <td><b>{r["Cantidad_Usada"]}</b></td>
+                        </tr>";
                     }
+                    if (!hay) filas = $"<tr><td colspan='8' style='text-align:center;padding:20px;color:#888;'>Sin datos para {periodoTexto}</td></tr>";
                 }
             }
-
             db.Cerrar();
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
@@ -530,147 +550,14 @@ namespace Login
                     </colgroup>
                     <thead><tr>
                         <th>Nombre</th><th>Categoría</th><th>Marca</th><th>Modelo</th>
-                        <th>Precio</th><th>Stock Actual</th><th>Stock Mín.</th><th>Usado (período)</th>
+                        <th>Precio</th><th>Stock Actual</th><th>Stock Mín.</th><th>Usado</th>
                     </tr></thead>
                     <tbody>{filas}</tbody>
-                </table>
-                </div>
+                </table></div>
                 {GetFooter()}
             </body></html>";
 
             await ExportarPDF(html, $"Reporte_Inventario_{periodoTexto.Replace(" ", "_")}", landscape: true);
-        }
-
-        // ─────────────────────────────────────────────
-        //  SELECTOR DE PERÍODO
-        // ─────────────────────────────────────────────
-        private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
-        {
-            fechaInicio = DateTime.MinValue;
-            fechaFin = DateTime.MaxValue;
-            periodoTexto = "Todo";
-
-            var ventana = new Window
-            {
-                Title = "Seleccionar Período",
-                Width = 340,
-                Height = 200,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = this,
-                ResizeMode = ResizeMode.NoResize,
-                Background = new System.Windows.Media.SolidColorBrush(
-                                             System.Windows.Media.Color.FromRgb(30, 45, 95))
-            };
-
-            var panel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
-
-            var lbl = new System.Windows.Controls.Label
-            {
-                Content = "Selecciona el período del reporte:",
-                Foreground = System.Windows.Media.Brushes.White,
-                FontSize = 13,
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-
-            var cmb = new System.Windows.Controls.ComboBox
-            {
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 16)
-            };
-            cmb.Items.Add("Mes actual");
-            cmb.Items.Add("Mes anterior");
-            cmb.Items.Add("Trimestre actual");
-            cmb.Items.Add("Año actual");
-            cmb.Items.Add("Año anterior");
-            cmb.Items.Add("Todo");
-            cmb.SelectedIndex = 0;
-
-            var btnPanel = new System.Windows.Controls.StackPanel
-            {
-                Orientation = System.Windows.Controls.Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
-
-            bool confirmado = false;
-
-            var btnAceptar = new System.Windows.Controls.Button
-            {
-                Content = "Generar",
-                Width = 90,
-                Height = 32,
-                Margin = new Thickness(0, 0, 8, 0),
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 45, 95)),
-                FontWeight = FontWeights.Bold,
-                Cursor = System.Windows.Input.Cursors.Hand
-            };
-            btnAceptar.Click += (s, e) => { confirmado = true; ventana.Close(); };
-
-            var btnCancelar = new System.Windows.Controls.Button
-            {
-                Content = "Cancelar",
-                Width = 80,
-                Height = 32,
-                Background = System.Windows.Media.Brushes.Transparent,
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderBrush = System.Windows.Media.Brushes.White,
-                Cursor = System.Windows.Input.Cursors.Hand
-            };
-            btnCancelar.Click += (s, e) => ventana.Close();
-
-            btnPanel.Children.Add(btnAceptar);
-            btnPanel.Children.Add(btnCancelar);
-            panel.Children.Add(lbl);
-            panel.Children.Add(cmb);
-            panel.Children.Add(btnPanel);
-            ventana.Content = panel;
-            ventana.ShowDialog();
-
-            if (!confirmado) return false;
-
-            DateTime hoy = DateTime.Today;
-            switch (cmb.SelectedItem?.ToString())
-            {
-                case "Mes actual":
-                    fechaInicio = new DateTime(hoy.Year, hoy.Month, 1);
-                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
-                    periodoTexto = hoy.ToString("MMMM yyyy");
-                    break;
-
-                case "Mes anterior":
-                    var mesAnt = hoy.AddMonths(-1);
-                    fechaInicio = new DateTime(mesAnt.Year, mesAnt.Month, 1);
-                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
-                    periodoTexto = mesAnt.ToString("MMMM yyyy");
-                    break;
-
-                case "Trimestre actual":
-                    int trim = (hoy.Month - 1) / 3;
-                    fechaInicio = new DateTime(hoy.Year, trim * 3 + 1, 1);
-                    fechaFin = fechaInicio.AddMonths(3).AddTicks(-1);
-                    periodoTexto = $"Q{trim + 1} {hoy.Year}";
-                    break;
-
-                case "Año actual":
-                    fechaInicio = new DateTime(hoy.Year, 1, 1);
-                    fechaFin = new DateTime(hoy.Year, 12, 31, 23, 59, 59);
-                    periodoTexto = hoy.Year.ToString();
-                    break;
-
-                case "Año anterior":
-                    fechaInicio = new DateTime(hoy.Year - 1, 1, 1);
-                    fechaFin = new DateTime(hoy.Year - 1, 12, 31, 23, 59, 59);
-                    periodoTexto = (hoy.Year - 1).ToString();
-                    break;
-
-                default:
-                    fechaInicio = DateTime.MinValue;
-                    fechaFin = DateTime.MaxValue;
-                    periodoTexto = "Todo";
-                    break;
-            }
-
-            return true;
         }
 
         // ─────────────────────────────────────────────
@@ -680,28 +567,23 @@ namespace Login
         {
             string accent = "#1e2d5f";
             var db = new clsConexion(); db.Abrir();
-            string sql = @"SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año,
-                                  Vehiculo_Tipo, Cliente_DNI, Vehiculo_Activo, Vehiculo_Observaciones
-                           FROM Vehiculo ORDER BY Vehiculo_Marca";
-
             string filas = "";
-            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var cmd = new SqlCommand(
+                @"SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año,
+                         Vehiculo_Tipo, Cliente_DNI, Vehiculo_Activo, Vehiculo_Observaciones
+                  FROM Vehiculo ORDER BY Vehiculo_Marca", db.SqlC))
             using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
                     bool activo = r["Vehiculo_Activo"] != DBNull.Value && (bool)r["Vehiculo_Activo"];
-                    string estadoBadge = activo
+                    string badge = activo
                         ? "<span class='badge badge-activo'>Activo</span>"
                         : "<span class='badge badge-inactivo'>Inactivo</span>";
-
                     filas += $@"<tr>
                         <td><b>{r["Vehiculo_Placa"]}</b></td>
-                        <td>{r["Vehiculo_Marca"]}</td>
-                        <td>{r["Vehiculo_Modelo"]}</td>
-                        <td>{r["Vehiculo_Año"]}</td>
-                        <td>{r["Vehiculo_Tipo"]}</td>
-                        <td>{r["Cliente_DNI"]}</td>
-                        <td>{estadoBadge}</td>
+                        <td>{r["Vehiculo_Marca"]}</td><td>{r["Vehiculo_Modelo"]}</td>
+                        <td>{r["Vehiculo_Año"]}</td><td>{r["Vehiculo_Tipo"]}</td>
+                        <td>{r["Cliente_DNI"]}</td><td>{badge}</td>
                         <td class='obs'>{(r["Vehiculo_Observaciones"] == DBNull.Value ? "—" : r["Vehiculo_Observaciones"])}</td>
                     </tr>";
                 }
@@ -722,8 +604,7 @@ namespace Login
                         <th>Tipo</th><th>Cliente DNI</th><th>Estado</th><th>Observaciones</th>
                     </tr></thead>
                     <tbody>{filas}</tbody>
-                </table>
-                </div>
+                </table></div>
                 {GetFooter()}
             </body></html>";
 
@@ -737,14 +618,12 @@ namespace Login
         {
             string accent = "#1e2d5f";
             var db = new clsConexion(); db.Abrir();
-            string sql = @"SELECT Orden_ID, Cliente_DNI, Vehiculo_Placa, Estado,
-                                  Fecha, Fecha_Entrega, Servicio_Precio,
-                                  OrdenPrecio_Total, Observaciones
-                           FROM Orden_Trabajo ORDER BY Fecha DESC";
-
             string filas = "";
             decimal grandTotal = 0;
-            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var cmd = new SqlCommand(
+                @"SELECT Orden_ID, Cliente_DNI, Vehiculo_Placa, Estado,
+                         Fecha, Fecha_Entrega, Servicio_Precio, OrdenPrecio_Total, Observaciones
+                  FROM Orden_Trabajo ORDER BY Fecha DESC", db.SqlC))
             using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
@@ -752,8 +631,7 @@ namespace Login
                     grandTotal += total;
                     filas += $@"<tr>
                         <td><b>{r["Orden_ID"]}</b></td>
-                        <td>{r["Cliente_DNI"]}</td>
-                        <td>{r["Vehiculo_Placa"]}</td>
+                        <td>{r["Cliente_DNI"]}</td><td>{r["Vehiculo_Placa"]}</td>
                         <td>{BadgeEstado(r["Estado"].ToString())}</td>
                         <td>{Convert.ToDateTime(r["Fecha"]):dd/MM/yyyy}</td>
                         <td>{(r["Fecha_Entrega"] == DBNull.Value ? "—" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString("dd/MM/yyyy"))}</td>
@@ -782,12 +660,10 @@ namespace Login
                         {filas}
                         <tr class='total-row'>
                             <td colspan='7'>TOTAL GENERAL</td>
-                            <td>L {grandTotal:N2}</td>
-                            <td></td>
+                            <td>L {grandTotal:N2}</td><td></td>
                         </tr>
                     </tbody>
-                </table>
-                </div>
+                </table></div>
                 {GetFooter()}
             </body></html>";
 
@@ -801,13 +677,11 @@ namespace Login
         {
             string accent = "#7f1d1d";
             var db = new clsConexion(); db.Abrir();
-            string sql = @"SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto,
-                                  Precio_Gasto, Fecha_Gasto
-                           FROM Contabilidad_Gastos ORDER BY Fecha_Gasto DESC";
-
             string filas = "";
             decimal total = 0;
-            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var cmd = new SqlCommand(
+                @"SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto
+                  FROM Contabilidad_Gastos ORDER BY Fecha_Gasto DESC", db.SqlC))
             using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
@@ -839,16 +713,14 @@ namespace Login
                         {filas}
                         <tr class='total-row'>
                             <td colspan='3'>TOTAL GENERAL</td>
-                            <td>L {total:N2}</td>
-                            <td></td>
+                            <td>L {total:N2}</td><td></td>
                         </tr>
                     </tbody>
-                </table>
-                </div>
+                </table></div>
                 {GetFooter()}
             </body></html>";
 
-            await ExportarPDF(html, "Reporte_Egresos", landscape: false);
+            await ExportarPDF(html, "Reporte_Egresos");
         }
 
         // ─────────────────────────────────────────────
@@ -858,16 +730,15 @@ namespace Login
         {
             string accent = "#1b4332";
             var db = new clsConexion(); db.Abrir();
-            string sql = @"SELECT p.Pago_ID,
-                                  c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                                  p.Cliente_DNI, p.Orden_ID, p.Precio_Pago
-                           FROM Contabilidad_Pago p
-                           INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
-                           ORDER BY p.Pago_ID DESC";
-
             string filas = "";
             decimal total = 0;
-            using (var cmd = new SqlCommand(sql, db.SqlC))
+            using (var cmd = new SqlCommand(
+                @"SELECT p.Pago_ID,
+                         c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                         p.Cliente_DNI, p.Orden_ID, p.Precio_Pago
+                  FROM Contabilidad_Pago p
+                  INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
+                  ORDER BY p.Pago_ID DESC", db.SqlC))
             using (var r = cmd.ExecuteReader())
                 while (r.Read())
                 {
@@ -876,8 +747,7 @@ namespace Login
                     filas += $@"<tr>
                         <td><b>{r["Pago_ID"]}</b></td>
                         <td class='left'>{r["NombreCompleto"]}</td>
-                        <td>{r["Cliente_DNI"]}</td>
-                        <td>{r["Orden_ID"]}</td>
+                        <td>{r["Cliente_DNI"]}</td><td>{r["Orden_ID"]}</td>
                         <td>L {monto:N2}</td>
                         <td><span class='badge badge-pagado'>Pagado</span></td>
                     </tr>";
@@ -901,16 +771,14 @@ namespace Login
                         {filas}
                         <tr class='total-row'>
                             <td colspan='4'>TOTAL GENERAL</td>
-                            <td>L {total:N2}</td>
-                            <td></td>
+                            <td>L {total:N2}</td><td></td>
                         </tr>
                     </tbody>
-                </table>
-                </div>
+                </table></div>
                 {GetFooter()}
             </body></html>";
 
-            await ExportarPDF(html, "Reporte_Ingresos", landscape: false);
+            await ExportarPDF(html, "Reporte_Ingresos");
         }
     }
 }

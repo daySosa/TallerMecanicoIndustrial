@@ -84,7 +84,7 @@ namespace Contabilidad
 
             var fila = (DataRowView)dgPagos.SelectedItem;
             int pagoId = Convert.ToInt32(fila["Pago_ID"]);
-            new ComprobanteIngresos(pagoId) { Owner = this }.ShowDialog();
+            new ComprobantePago(pagoId) { Owner = this }.ShowDialog();
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)

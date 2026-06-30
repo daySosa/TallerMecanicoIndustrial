@@ -43,6 +43,12 @@ namespace Órdenes_de_Trabajo
             CargarNotificaciones();
         }
 
+        private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+                DragMove();
+        }
+
         // ── NAVEGACIÓN ───────────────────────────────────────────────
 
         private void Navegar<T>(Func<T> crear) where T : Window
@@ -72,7 +78,6 @@ namespace Órdenes_de_Trabajo
         private void btnBitacora_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MenúPrincipalBitacora());
 
-        // ── CORRECCIÓN: usar los nombres reales de tus ventanas de contabilidad ──
         private void btnEgresos_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new Contabilidad.MenúPrincipalEgresos());
 

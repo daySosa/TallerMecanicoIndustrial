@@ -18,9 +18,11 @@ namespace Órdenes_de_Trabajo
             CargarProductos();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CARGA
-        // ════════════════════════════════════════════════════════════
+        private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+                DragMove();
+        }
 
         private void CargarProductos()
         {
@@ -35,10 +37,6 @@ namespace Órdenes_de_Trabajo
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        // ════════════════════════════════════════════════════════════
-        // EVENTOS UI
-        // ════════════════════════════════════════════════════════════
 
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -60,10 +58,6 @@ namespace Órdenes_de_Trabajo
         private void txtCantidad_TextChanged(object sender, TextChangedEventArgs e)
             => CalcularSubtotal();
 
-        // ════════════════════════════════════════════════════════════
-        // LÓGICA
-        // ════════════════════════════════════════════════════════════
-
         private void CalcularSubtotal()
         {
             if (_productoSeleccionado == null) return;
@@ -73,10 +67,6 @@ namespace Órdenes_de_Trabajo
                 ? $"L {_productoSeleccionado.Producto_Precio * cantidad:N2}"
                 : "L 0.00";
         }
-
-        // ════════════════════════════════════════════════════════════
-        // ACCIONES
-        // ════════════════════════════════════════════════════════════
 
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
