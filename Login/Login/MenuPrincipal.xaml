@@ -249,13 +249,13 @@
                                             <GradientStop Color="#1c2455" Offset="1"/>
                                         </LinearGradientBrush>
                                     </Border.Background>
-                                    <TextBlock Text="OS" Foreground="#7986f7"
+                                    <TextBlock x:Name="txtInicialesAvatar" Text="US" Foreground="#7986f7"
                                                FontSize="13" FontWeight="Bold"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock x:Name="txtNombreUsuario" Text="Oscar Sosa"
-                                               Foreground="White" FontSize="12" FontWeight="Medium"
+                                    <TextBlock x:Name="txtNombreUsuario" Text="" Foreground="White"
+                                               FontSize="16" FontWeight="Bold"
                                                TextTrimming="CharacterEllipsis"/>
                                     <TextBlock x:Name="txtRolUsuario" Text="Propietario"
                                                Foreground="#4f6ef7" FontSize="10"/>
@@ -283,7 +283,7 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                <TextBlock Text="Hola, Oscar Sosa" Foreground="White"
+                                <TextBlock x:Name="txtSaludoHeader" Text="Hola" Foreground="White"
                                            FontSize="16" FontWeight="Bold"/>
                                 <TextBlock Text="Revisemos tu taller hoy" Foreground="#505880" FontSize="11"/>
                             </StackPanel>
@@ -789,7 +789,7 @@
 
                                 <Border CornerRadius="12"
                                         Background="#13161f" BorderBrush="#1e2235" BorderThickness="1"
-                                        Padding="16" Height="290">
+                                        Padding="16">
                                     <StackPanel>
                                         <Grid Margin="0,0,0,10">
                                             <TextBlock x:Name="txtMesAnio" Foreground="White"
@@ -810,6 +810,12 @@
                                             </StackPanel>
                                         </Grid>
                                         <UniformGrid x:Name="gridDias" Columns="7"/>
+
+                                        <!-- NUEVO: detalle de órdenes del día seleccionado -->
+                                        <Rectangle Height="1" Fill="#1e2235" Margin="0,12,0,10"/>
+                                        <TextBlock x:Name="txtTituloOrdenesDia" Text="Selecciona un día con órdenes"
+                                                   Foreground="#505880" FontSize="11" Margin="0,0,0,8"/>
+                                        <StackPanel x:Name="panelOrdenesDia"/>
                                     </StackPanel>
                                 </Border>
 

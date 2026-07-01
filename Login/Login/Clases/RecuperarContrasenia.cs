@@ -468,9 +468,24 @@ namespace Login.Clases
                 string confirmar = ValorReal(txtConfirmar);
                 lblError.Visibility = Visibility.Collapsed;
 
-                if (nueva.Length < 6)
+                // ── Mismas validaciones de contraseña que usa el login (clsValidaciones) ──
+                if (!clsValidaciones.EsRequerido(nueva))
+                {
+                    lblError.Text = "⚠ Ingresa tu nueva contraseña.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (!clsValidaciones.TieneLongitudMinima(nueva, 6))
                 {
                     lblError.Text = "⚠ La contraseña debe tener al menos 6 caracteres.";
+                    lblError.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (!clsValidaciones.EsRequerido(confirmar))
+                {
+                    lblError.Text = "⚠ Confirma tu nueva contraseña.";
                     lblError.Visibility = Visibility.Visible;
                     return;
                 }
@@ -483,10 +498,24 @@ namespace Login.Clases
                 }
 
                 btnGuardar.IsEnabled = false;
-                btnGuardar.Content = "Guardando...";
+                btnGuardar.Content = "Validando...";
 
                 try
                 {
+                    // 🔒 La nueva contraseña no puede ser igual a la actual.
+                    // Si "loguea" con la contraseña nueva, significa que es idéntica a la guardada.
+                    bool esIgualALaActual = await Task.Run(
+                        () => _db.ValidarLogin(_correoRecuperacion, nueva));
+
+                    if (esIgualALaActual)
+                    {
+                        lblError.Text = "⚠ La nueva contraseña no puede ser igual a la actual.";
+                        lblError.Visibility = Visibility.Visible;
+                        return;
+                    }
+
+                    btnGuardar.Content = "Guardando...";
+
                     bool actualizado = await Task.Run(
                         () => _db.ActualizarContrasenaLogin(_correoRecuperacion, nueva));
 

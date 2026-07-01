@@ -10,11 +10,15 @@ namespace Login.Clases
 {
     public class clsConsultasBD
     {
-        private clsConexion _conexion = new clsConexion();
+        // ⚠️ Ya NO hay un campo compartido _conexion aquí.
+        // Cada método crea su propia instancia local de clsConexion,
+        // así cada consulta tiene su propia conexión física y pueden
+        // correr en paralelo (Task.WhenAll) sin pelear entre ellas.
 
         public bool ActualizarGasto(int gastoId, string tipoGasto, string nombreGasto,
                                      string observaciones, decimal precio, DateTime fecha)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -49,6 +53,7 @@ namespace Login.Clases
 
         public bool AgregarGasto(string tipoGasto, string nombreGasto, string observaciones, decimal precio)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -78,6 +83,7 @@ namespace Login.Clases
 
         public (string nombres, string apellidos) BuscarNombreCliente(string dni)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
@@ -101,6 +107,7 @@ namespace Login.Clases
 
         public decimal? ObtenerTotalOrden(int ordenId)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
@@ -123,6 +130,7 @@ namespace Login.Clases
 
         public bool ActualizarPago(int pagoId, string dni, int ordenId, decimal monto)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -151,6 +159,7 @@ namespace Login.Clases
 
         public bool RegistrarPago(string clienteDni, int ordenId, decimal monto)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string sql = @"
@@ -173,6 +182,7 @@ namespace Login.Clases
 
         public List<clsProductoInventario> ObtenerProductosInventario()
         {
+            var _conexion = new clsConexion();
             var lista = new List<clsProductoInventario>();
             try
             {
@@ -207,6 +217,7 @@ namespace Login.Clases
         public bool AgregarCliente(string dni, string nombres, string apellidos,
                                     string telefono, string email, string direccion)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string sql = @"
@@ -249,6 +260,7 @@ namespace Login.Clases
                 string telefono, string email, string direccion,
                 bool activo, string nuevoDni = null)
         {
+            var _conexion = new clsConexion();
             string dniAGuardar = string.IsNullOrEmpty(nuevoDni) ? dniOriginal : nuevoDni;
 
             try
@@ -323,6 +335,7 @@ namespace Login.Clases
 
         public bool ExisteTelefonoEnOtroCliente(string telefono, string dniActual)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -346,6 +359,7 @@ namespace Login.Clases
 
         public bool ExisteDNIEnOtroCliente(string dni, string dniActual)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -369,6 +383,7 @@ namespace Login.Clases
 
         public DataRow ObtenerComprobantePago(int pagoId)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -397,6 +412,7 @@ namespace Login.Clases
 
         public DataTable ObtenerGastos(string busqueda = null)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -426,6 +442,7 @@ namespace Login.Clases
 
         public int ContarNotificacionesPendientes()
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = "SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0";
@@ -442,6 +459,7 @@ namespace Login.Clases
 
         public DataTable ObtenerNotificacionesPendientes()
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -465,6 +483,7 @@ namespace Login.Clases
 
         public void MarcarNotificacionLeida(int? id)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string sql = id.HasValue
@@ -485,6 +504,7 @@ namespace Login.Clases
         public bool AgregarProducto(string nombre, string categoria, string marca,
                                      string modelo, decimal precio, int cantidad)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -519,6 +539,7 @@ namespace Login.Clases
         public bool ActualizarProducto(int productoId, string nombre, string categoria,
                                         string marca, string modelo, decimal precio, int cantidad)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -554,9 +575,9 @@ namespace Login.Clases
 
         public bool ValidarLogin(string correo, string contrasena)
         {
+            var _conexion = new clsConexion();
             try
             {
-                // Hashear la contraseña ingresada con SHA512
                 string inputHash;
                 using (var sha = System.Security.Cryptography.SHA512.Create())
                 {
@@ -584,6 +605,7 @@ namespace Login.Clases
 
         public DataTable ObtenerPagos(string busqueda = null)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = @"
@@ -619,6 +641,7 @@ namespace Login.Clases
 
         public (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaOrdenes(DateTime fechaDesde)
         {
+            var _conexion = new clsConexion();
             var vals = new List<double>();
             var labels = new List<string>();
             try
@@ -647,6 +670,7 @@ namespace Login.Clases
 
         public (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaCantidadOrdenes(DateTime fechaDesde)
         {
+            var _conexion = new clsConexion();
             var vals = new List<double>();
             var labels = new List<string>();
             try
@@ -675,6 +699,7 @@ namespace Login.Clases
 
         public (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaGastos(DateTime fechaDesde)
         {
+            var _conexion = new clsConexion();
             var vals = new List<double>();
             var labels = new List<string>();
             try
@@ -703,6 +728,7 @@ namespace Login.Clases
 
         public (List<OrdenReciente> ordenes, decimal balanceTotal, decimal gastosTotal) ObtenerDatosDashboard()
         {
+            var _conexion = new clsConexion();
             var ordenes = new List<OrdenReciente>();
             decimal balanceTotal = 0, gastosTotal = 0;
             try
@@ -750,6 +776,7 @@ namespace Login.Clases
 
         public List<NotificacionItem> ObtenerTodasNotificaciones()
         {
+            var _conexion = new clsConexion();
             var lista = new List<NotificacionItem>();
             try
             {
@@ -779,6 +806,7 @@ namespace Login.Clases
 
         public List<Repuesto> ObtenerProductos()
         {
+            var _conexion = new clsConexion();
             var lista = new List<Repuesto>();
             try
             {
@@ -822,6 +850,7 @@ namespace Login.Clases
 
         public List<OrdenTrabajo> ObtenerOrdenes()
         {
+            var _conexion = new clsConexion();
             var lista = new List<OrdenTrabajo>();
             try
             {
@@ -886,6 +915,7 @@ namespace Login.Clases
 
         public List<clsCliente> ObtenerClientes()
         {
+            var _conexion = new clsConexion();
             var lista = new List<clsCliente>();
             try
             {
@@ -928,6 +958,7 @@ namespace Login.Clases
 
         public List<Vehiculo> ObtenerVehiculos()
         {
+            var _conexion = new clsConexion();
             var lista = new List<Vehiculo>();
             try
             {
@@ -982,6 +1013,7 @@ namespace Login.Clases
                 string observaciones, decimal servicioPrecio, decimal ordenTotal,
                 string foto) ObtenerOrdenParaEditar(int ordenID)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string sql = @"
@@ -1032,6 +1064,7 @@ namespace Login.Clases
         bool activo, bool vehiculoActivo)
         BuscarClientePorDNI(string dni)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string sqlCliente = @"
@@ -1082,6 +1115,7 @@ namespace Login.Clases
                 bool activo, bool vehiculoActivo)
                 BuscarVehiculoPorPlaca(string placa)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string sql = @"
@@ -1122,6 +1156,7 @@ namespace Login.Clases
                           decimal precioServicio, decimal total, string foto,
                           List<RepuestoOrden> repuestos)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string queryOrden = @"
@@ -1186,6 +1221,7 @@ namespace Login.Clases
               decimal precioServicio, decimal total, string foto,
               List<RepuestoOrden> repuestos)
         {
+            var _conexion = new clsConexion();
 
             var productosOriginales = ObtenerRepuestosOrden(ordenID)
                 .Select(r => r.ProductoID)
@@ -1242,7 +1278,6 @@ namespace Login.Clases
                 {
                     if (!rep.Incluido) continue;
 
-                    // Siempre reinsertamos en Orden_Repuesto (ya borramos todos arriba)
                     string sqlReinsertar = @"
                             INSERT INTO Orden_Repuesto
                                 (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
@@ -1255,7 +1290,6 @@ namespace Login.Clases
                     cmdR.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
                     cmdR.ExecuteNonQuery();
 
-                    // Solo descontar stock si es un repuesto NUEVO (no estaba antes)
                     if (!productosOriginales.Contains(rep.ProductoID))
                     {
                         SqlCommand cmdStock = new SqlCommand(@"
@@ -1282,6 +1316,7 @@ namespace Login.Clases
 
         public (string nombre, bool existe) VerificarClienteDNI(string dni)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = "SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS Nombre FROM Cliente WHERE Cliente_DNI = @DNI";
@@ -1305,6 +1340,7 @@ namespace Login.Clases
 
         public void GuardarOActualizarVehiculo(bool esNuevo, dynamic v, string placaOriginal = "")
         {
+            var _conexion = new clsConexion();
             try
             {
                 _conexion.Abrir();
@@ -1357,6 +1393,7 @@ namespace Login.Clases
 
         public List<RepuestoOrden> ObtenerRepuestosOrden(int ordenID)
         {
+            var _conexion = new clsConexion();
             var lista = new List<RepuestoOrden>();
             try
             {
@@ -1392,6 +1429,7 @@ namespace Login.Clases
 
         public bool ExistePlaca(string placa)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string query = "SELECT COUNT(1) FROM Vehiculo WHERE Vehiculo_Placa = @Placa";
@@ -1416,6 +1454,7 @@ namespace Login.Clases
 
         public List<ClienteSugerencia> BuscarClientesPorDNI(string texto)
         {
+            var _conexion = new clsConexion();
             var lista = new List<ClienteSugerencia>();
             try
             {
@@ -1450,6 +1489,7 @@ namespace Login.Clases
 
         public DataTable ObtenerUsuarios(string busqueda = null)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_ListarTodos", _conexion.SqlC);
@@ -1469,6 +1509,7 @@ namespace Login.Clases
 
         public DataRow ObtenerUsuarioPorEmail(string email)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_ObtenerPorEmail", _conexion.SqlC);
@@ -1488,6 +1529,7 @@ namespace Login.Clases
         public bool AgregarUsuario(string nombre, string apellido, string email,
                                     string telefono, string rol, string contrasenaPlano)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_Insertar", _conexion.SqlC);
@@ -1512,6 +1554,7 @@ namespace Login.Clases
         public bool ActualizarUsuario(string email, string nombre, string apellido,
                                        string telefono, string rol)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_Actualizar", _conexion.SqlC);
@@ -1533,6 +1576,7 @@ namespace Login.Clases
 
         public bool CambiarContrasenaUsuario(string email, string nuevaContrasenaPlano)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_CambiarContrasena", _conexion.SqlC);
@@ -1551,6 +1595,7 @@ namespace Login.Clases
 
         public bool CambiarEstadoUsuario(string email, bool activo)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_CambiarEstado", _conexion.SqlC);
@@ -1569,6 +1614,7 @@ namespace Login.Clases
 
         public List<BitacoraItem> ObtenerBitacora()
         {
+            var _conexion = new clsConexion();
             var lista = new List<BitacoraItem>();
             try
             {
@@ -1607,6 +1653,7 @@ namespace Login.Clases
 
         public string GenerarCodigoOTP(string correo)
         {
+            var _conexion = new clsConexion();
             string codigo = new Random().Next(100000, 999999).ToString();
             DateTime expiracion = DateTime.UtcNow.AddMinutes(5);
 
@@ -1641,6 +1688,7 @@ namespace Login.Clases
 
         public bool ValidarCodigoOTP(string correo, string codigoIngresado)
         {
+            var _conexion = new clsConexion();
             try
             {
                 _conexion.Abrir();
@@ -1728,6 +1776,7 @@ namespace Login.Clases
 
         public bool ExisteCorreoLogin(string correo)
         {
+            var _conexion = new clsConexion();
             try
             {
                 _conexion.Abrir();
@@ -1745,6 +1794,7 @@ namespace Login.Clases
 
         public bool ActualizarContrasenaLogin(string correo, string nuevaContrasena)
         {
+            var _conexion = new clsConexion();
             try
             {
                 string hash;
@@ -1770,6 +1820,7 @@ namespace Login.Clases
 
         public bool GuardarBiometria(string email, byte[] foto)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_RegistrarBiometria", _conexion.SqlC);
@@ -1788,6 +1839,7 @@ namespace Login.Clases
 
         public bool EliminarBiometria(string email)
         {
+            var _conexion = new clsConexion();
             try
             {
                 SqlCommand cmd = new SqlCommand("sp_Usuario_EliminarBiometria", _conexion.SqlC);
