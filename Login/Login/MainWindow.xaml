@@ -47,7 +47,7 @@
                 </Border.Effect>
 
                 <StackPanel>
-                    
+
                     <Border Width="78" Height="78" CornerRadius="50"
                             Background="#03002E" Opacity="0.55"
                             HorizontalAlignment="Center" Margin="0,0,0,16">
@@ -237,6 +237,8 @@
                         </Button>
                     </Grid>
 
+
+
                     <Button Height="46"
                             FontSize="14" FontWeight="SemiBold"
                             Cursor="Hand"
@@ -266,6 +268,45 @@
 
                 </StackPanel>
             </Border>
+
+            <!-- Botón cerrar aplicación -->
+            <Button x:Name="btnCerrarApp"
+                    Content="✕"
+                    Width="34" Height="34"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,18,18,0"
+                    FontSize="14"
+                    Foreground="#94A3B8"
+                    Cursor="Hand"
+                    Click="BtnCerrarApp_Click"
+                    Panel.ZIndex="99">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="fondo" CornerRadius="8" Background="Transparent">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="fondo" Property="Background">
+                                                <Setter.Value>
+                                                    <SolidColorBrush Color="#F87171" Opacity="0.15"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Setter Property="Foreground" Value="#F87171"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
         </Grid>
     </Border>
 </Window>

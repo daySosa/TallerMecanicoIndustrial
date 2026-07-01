@@ -266,5 +266,11 @@ namespace Login
             if (txtErrorCorreo.Visibility == Visibility.Visible)
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
         }
+
+
+        private void BtnCerrarApp_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
 }

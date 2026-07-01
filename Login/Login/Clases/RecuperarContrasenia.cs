@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 
 namespace Login.Clases
 {
@@ -14,6 +16,46 @@ namespace Login.Clases
         private Border _panelCentral;
         private StackPanel _contenidoPanel;
 
+        // ── Paleta congelada (mismo tema del login: #03002E / #02006C / #38BDF8) ──
+        private static readonly SolidColorBrush BrushFondoOverlay = Congelar("#0B1120", 0.72);
+        private static readonly SolidColorBrush BrushPanel = Congelar("#03002E", 0.92);
+        private static readonly SolidColorBrush BrushBorde = Congelar("#FFFFFF", 0.12);
+        private static readonly SolidColorBrush BrushCampoFondo = Congelar("#FFFFFF", 0.07);
+        private static readonly SolidColorBrush BrushCampoBorde = Congelar("#FFFFFF", 0.14);
+        private static readonly SolidColorBrush BrushTexto = Congelar("#FFFFFF");
+        private static readonly SolidColorBrush BrushSubtexto = Congelar("#94A3B8");
+        private static readonly SolidColorBrush BrushPlaceholder = Congelar("#64748B");
+        private static readonly SolidColorBrush BrushError = Congelar("#F87171");
+        private static readonly SolidColorBrush BrushPrimario = Congelar("#02006C");
+        private static readonly SolidColorBrush BrushPrimarioHover = Congelar("#0284C7");
+        private static readonly SolidColorBrush BrushSecundario = Congelar("#FFFFFF", 0.08);
+        private static readonly SolidColorBrush BrushExito = Congelar("#16A34A");
+        private static readonly SolidColorBrush BrushExitoHover = Congelar("#15803D");
+        private static readonly SolidColorBrush BrushTransparente = Congelar("Transparent");
+
+        private static readonly Effect SombraPanel = CrearSombra();
+
+        private static SolidColorBrush Congelar(string hex, double? opacidad = null)
+        {
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            if (opacidad.HasValue) brush.Opacity = opacidad.Value;
+            brush.Freeze();
+            return brush;
+        }
+
+        private static Effect CrearSombra()
+        {
+            var efecto = new DropShadowEffect
+            {
+                Color = Colors.Black,
+                Opacity = 0.55,
+                BlurRadius = 40,
+                ShadowDepth = 0
+            };
+            efecto.Freeze();
+            return efecto;
+        }
+
         public RecuperarContrasenia(MainWindow mainWindow)
         {
             _mainWindow = mainWindow;
@@ -22,27 +64,35 @@ namespace Login.Clases
         public void IniciarFlujo()
         {
             ConstruirOverlay();
-            MostrarPasoCorreo();
+            ConstruirPasoCorreo();
+            FadeIn(_overlayGrid, 180);
         }
+
+        // ════════════════════════════════════════════════════════════
+        // OVERLAY BASE
+        // ════════════════════════════════════════════════════════════
 
         private void ConstruirOverlay()
         {
             _overlayGrid = new Grid
             {
-                Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0)),
+                Background = BrushFondoOverlay,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Opacity = 0
             };
 
             _panelCentral = new Border
             {
                 Width = 420,
-                Background = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#1E2A3A")),
-                CornerRadius = new CornerRadius(10),
-                Padding = new Thickness(30),
+                Background = BrushPanel,
+                BorderBrush = BrushBorde,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(18),
+                Padding = new Thickness(32, 30, 32, 30),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Effect = SombraPanel
             };
 
             _contenidoPanel = new StackPanel();
@@ -67,100 +117,219 @@ namespace Login.Clases
 
         private void CerrarOverlay()
         {
-            if (_mainWindow.Content is Grid rootGrid)
-                rootGrid.Children.Remove(_overlayGrid);
+            FadeOut(_overlayGrid, 140, () =>
+            {
+                if (_mainWindow.Content is Grid rootGrid)
+                    rootGrid.Children.Remove(_overlayGrid);
+            });
         }
 
-        private TextBlock CrearTitulo(string texto)
+        // ── Animaciones reutilizables (sin GC extra por cada Storyboard) ──
+        private static void FadeIn(UIElement el, int ms, System.Action alTerminar = null)
         {
-            return new TextBlock
+            var anim = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(ms))
+            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+            if (alTerminar != null) anim.Completed += (s, e) => alTerminar();
+            el.BeginAnimation(UIElement.OpacityProperty, anim);
+        }
+
+        private static void FadeOut(UIElement el, int ms, System.Action alTerminar = null)
+        {
+            var anim = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(ms))
+            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
+            if (alTerminar != null) anim.Completed += (s, e) => alTerminar();
+            el.BeginAnimation(UIElement.OpacityProperty, anim);
+        }
+
+        /// <summary>Crossfade entre pasos del formulario (sensación fluida al navegar).</summary>
+        private void TransicionarA(System.Action construirNuevoPaso)
+        {
+            var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(110))
+            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
+
+            fadeOut.Completed += (s, e) =>
             {
-                Text = texto,
-                Foreground = Brushes.White,
-                FontSize = 16,
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(0, 0, 0, 6),
-                TextWrapping = TextWrapping.Wrap
+                construirNuevoPaso();
+                FadeIn(_contenidoPanel, 180);
             };
+
+            _contenidoPanel.BeginAnimation(UIElement.OpacityProperty, fadeOut);
         }
 
-        private TextBlock CrearMensaje(string texto)
-        {
-            return new TextBlock
-            {
-                Text = texto,
-                Foreground = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#94A3B8")),
-                FontSize = 13,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 0, 0, 16)
-            };
-        }
+        // ════════════════════════════════════════════════════════════
+        // HELPERS DE UI (reutilizan brushes congelados, no crean colores nuevos)
+        // ════════════════════════════════════════════════════════════
 
-        private TextBox CrearCampoTexto()
+        private TextBlock CrearTitulo(string texto) => new()
         {
-            return new TextBox
+            Text = texto,
+            Foreground = BrushTexto,
+            FontSize = 17,
+            FontWeight = FontWeights.Bold,
+            Margin = new Thickness(0, 0, 0, 6),
+            TextWrapping = TextWrapping.Wrap
+        };
+
+        private TextBlock CrearMensaje(string texto) => new()
+        {
+            Text = texto,
+            Foreground = BrushSubtexto,
+            FontSize = 12.5,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 20)
+        };
+
+        private Border CrearContenedorCampo(out TextBox campo)
+        {
+            campo = new TextBox
             {
-                Height = 38,
+                Background = BrushTransparente,
+                BorderThickness = new Thickness(0),
+                Foreground = BrushTexto,
                 FontSize = 13,
-                Padding = new Thickness(10, 0, 10, 0),
+                Padding = new Thickness(14, 0, 14, 0),
                 VerticalContentAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 16),
-                Background = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#0F172A")),
-                Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#334155")),
-                CaretBrush = Brushes.White
+                CaretBrush = BrushTexto
             };
+
+            var contenedor = new Border
+            {
+                Height = 44,
+                CornerRadius = new CornerRadius(10),
+                Background = BrushCampoFondo,
+                BorderBrush = BrushCampoBorde,
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(0, 0, 0, 16),
+                Child = campo
+            };
+
+            // Foco visual estilo login (borde celeste)
+            campo.GotFocus += (s, e) =>
+            {
+                contenedor.BorderBrush = BrushPrimarioHover;
+                contenedor.BorderThickness = new Thickness(1.5);
+            };
+            campo.LostFocus += (s, e) =>
+            {
+                contenedor.BorderBrush = BrushCampoBorde;
+                contenedor.BorderThickness = new Thickness(1);
+            };
+
+            return contenedor;
         }
 
-        private Button CrearBoton(string texto, string colorHex, double width = 120)
+        private Button CrearBoton(string texto, bool esPrimario, double width = 118, bool esExito = false)
         {
-            return new Button
+            var fondoNormal = esExito ? BrushExito : (esPrimario ? BrushPrimario : BrushSecundario);
+            var fondoHover = esExito ? BrushExitoHover : (esPrimario ? BrushPrimarioHover : BrushCampoFondo);
+
+            var boton = new Button
             {
                 Content = texto,
                 Width = width,
-                Height = 36,
-                Background = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString(colorHex)),
-                Foreground = Brushes.White,
-                BorderThickness = new Thickness(0),
+                Height = 38,
                 FontSize = 13,
-                Cursor = System.Windows.Input.Cursors.Hand
+                FontWeight = FontWeights.SemiBold,
+                Foreground = BrushTexto,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Background = fondoNormal,
+                BorderThickness = new Thickness(0)
             };
-        }
 
-        private TextBlock CrearMensajeError(string texto)
-        {
-            return new TextBlock
+            boton.Style = new Style(typeof(Button))
             {
-                Text = texto,
-                Foreground = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#F87171")),
-                FontSize = 12,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, -10, 0, 12),
-                Visibility = Visibility.Collapsed
+                Setters =
+                {
+                    new Setter(Button.TemplateProperty, CrearPlantillaBoton())
+                }
+            };
+
+            boton.Resources[SystemColors.HighlightBrushKey] = fondoHover;
+            boton.MouseEnter += (s, e) => boton.Background = fondoHover;
+            boton.MouseLeave += (s, e) => boton.Background = fondoNormal;
+
+            return boton;
+        }
+
+        private static ControlTemplate _plantillaBotonCache;
+        private static ControlTemplate CrearPlantillaBoton()
+        {
+            if (_plantillaBotonCache != null) return _plantillaBotonCache;
+
+            var plantilla = new ControlTemplate(typeof(Button));
+            var borde = new FrameworkElementFactory(typeof(Border));
+            borde.SetValue(Border.CornerRadiusProperty, new CornerRadius(10));
+            borde.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background")
+            { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
+
+            var contenido = new FrameworkElementFactory(typeof(ContentPresenter));
+            contenido.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            contenido.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            borde.AppendChild(contenido);
+
+            plantilla.VisualTree = borde;
+            plantilla.Seal();
+            _plantillaBotonCache = plantilla;
+            return plantilla;
+        }
+
+        private TextBlock CrearMensajeError(string texto) => new()
+        {
+            Text = texto,
+            Foreground = BrushError,
+            FontSize = 11.5,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(2, -10, 0, 12),
+            Visibility = Visibility.Collapsed
+        };
+
+        /// <summary>
+        /// Placeholder seguro: usa Tag para saber si el texto mostrado es "de verdad"
+        /// o solo el placeholder, evitando el bug de guardar el placeholder como valor real.
+        /// </summary>
+        private void AplicarPlaceholder(TextBox txt, string placeholder)
+        {
+            txt.Text = placeholder;
+            txt.Foreground = BrushPlaceholder;
+            txt.Tag = "placeholder";
+
+            txt.GotFocus += (s, e) =>
+            {
+                if ((string)txt.Tag == "placeholder")
+                {
+                    txt.Text = string.Empty;
+                    txt.Foreground = BrushTexto;
+                    txt.Tag = null;
+                }
+            };
+
+            txt.LostFocus += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(txt.Text))
+                {
+                    txt.Text = placeholder;
+                    txt.Foreground = BrushPlaceholder;
+                    txt.Tag = "placeholder";
+                }
             };
         }
 
+        private static string ValorReal(TextBox txt) =>
+            (string)txt.Tag == "placeholder" ? string.Empty : txt.Text.Trim();
+
+        // ════════════════════════════════════════════════════════════
         // PASO 1: Correo
-        private void MostrarPasoCorreo()
+        // ════════════════════════════════════════════════════════════
+
+        private void ConstruirPasoCorreo()
         {
             _contenidoPanel.Children.Clear();
 
-            var txtCorreo = CrearCampoTexto();
-            var lblError = CrearMensajeError("⚠ Correo inválido o no encontrado.");
+            var contenedorCorreo = CrearContenedorCampo(out var txtCorreo);
+            var lblError = CrearMensajeError("");
 
-            var btnRow = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
-
-            var btnCancelar = CrearBoton("Cancelar", "#475569", 100);
-            var btnSiguiente = CrearBoton("Siguiente", "#2563EB", 110);
+            var btnCancelar = CrearBoton("Cancelar", esPrimario: false, width: 100);
+            var btnSiguiente = CrearBoton("Siguiente", esPrimario: true, width: 112);
 
             btnCancelar.Click += (s, e) => CerrarOverlay();
 
@@ -169,7 +338,7 @@ namespace Login.Clases
                 string correo = txtCorreo.Text.Trim();
                 lblError.Visibility = Visibility.Collapsed;
 
-                if (!correo.Contains("@") || !correo.Contains("."))
+                if (!correo.Contains('@') || !correo.Contains('.'))
                 {
                     lblError.Text = "⚠ El formato del correo no es válido.";
                     lblError.Visibility = Visibility.Visible;
@@ -177,6 +346,7 @@ namespace Login.Clases
                 }
 
                 btnSiguiente.IsEnabled = false;
+                btnSiguiente.Content = "Verificando...";
 
                 try
                 {
@@ -202,7 +372,7 @@ namespace Login.Clases
                     }
 
                     _correoRecuperacion = correo;
-                    MostrarPasoOTP();
+                    TransicionarA(ConstruirPasoOTP);
                 }
                 catch (Exception ex)
                 {
@@ -212,40 +382,40 @@ namespace Login.Clases
                 finally
                 {
                     btnSiguiente.IsEnabled = true;
+                    btnSiguiente.Content = "Siguiente";
                 }
             };
 
-            var spacer = new Border { Width = 8 };
+            var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
             btnRow.Children.Add(btnCancelar);
-            btnRow.Children.Add(spacer);
+            btnRow.Children.Add(new Border { Width = 8 });
             btnRow.Children.Add(btnSiguiente);
 
             _contenidoPanel.Children.Add(CrearTitulo("Recuperar contraseña"));
             _contenidoPanel.Children.Add(CrearMensaje("Ingresa el correo con el que te registraste y te enviaremos un código de verificación."));
-            _contenidoPanel.Children.Add(txtCorreo);
+            _contenidoPanel.Children.Add(contenedorCorreo);
             _contenidoPanel.Children.Add(lblError);
             _contenidoPanel.Children.Add(btnRow);
 
             txtCorreo.Focus();
         }
-        private void MostrarPasoOTP()
+
+        // ════════════════════════════════════════════════════════════
+        // PASO 2: Código OTP
+        // ════════════════════════════════════════════════════════════
+
+        private void ConstruirPasoOTP()
         {
             _contenidoPanel.Children.Clear();
 
-            var txtOTP = CrearCampoTexto();
+            var contenedorOTP = CrearContenedorCampo(out var txtOTP);
             txtOTP.MaxLength = 6;
             var lblError = CrearMensajeError("");
 
-            var btnRow = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
+            var btnAtras = CrearBoton("← Atrás", esPrimario: false, width: 100);
+            var btnVerificar = CrearBoton("Verificar", esPrimario: true, width: 112);
 
-            var btnAtras = CrearBoton("← Atrás", "#475569", 100);
-            var btnVerificar = CrearBoton("Verificar", "#2563EB", 110);
-
-            btnAtras.Click += (s, e) => MostrarPasoCorreo();
+            btnAtras.Click += (s, e) => TransicionarA(ConstruirPasoCorreo);
 
             btnVerificar.Click += async (s, e) =>
             {
@@ -261,6 +431,7 @@ namespace Login.Clases
                 }
 
                 btnVerificar.IsEnabled = false;
+                btnVerificar.Content = "Verificando...";
 
                 try
                 {
@@ -272,7 +443,7 @@ namespace Login.Clases
                         return;
                     }
 
-                    MostrarPasoNuevaContrasena();
+                    TransicionarA(ConstruirPasoNuevaContrasena);
                 }
                 catch (Exception ex)
                 {
@@ -282,49 +453,48 @@ namespace Login.Clases
                 finally
                 {
                     btnVerificar.IsEnabled = true;
+                    btnVerificar.Content = "Verificar";
                 }
             };
 
-            var spacer = new Border { Width = 8 };
+            var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
             btnRow.Children.Add(btnAtras);
-            btnRow.Children.Add(spacer);
+            btnRow.Children.Add(new Border { Width = 8 });
             btnRow.Children.Add(btnVerificar);
 
             _contenidoPanel.Children.Add(CrearTitulo("Código de verificación"));
             _contenidoPanel.Children.Add(CrearMensaje($"Ingresa el código de 6 dígitos enviado a {_correoRecuperacion}.\nExpira en 5 minutos."));
-            _contenidoPanel.Children.Add(txtOTP);
+            _contenidoPanel.Children.Add(contenedorOTP);
             _contenidoPanel.Children.Add(lblError);
             _contenidoPanel.Children.Add(btnRow);
 
             txtOTP.Focus();
         }
 
-        private void MostrarPasoNuevaContrasena()
+        // ════════════════════════════════════════════════════════════
+        // PASO 3: Nueva contraseña
+        // ════════════════════════════════════════════════════════════
+
+        private void ConstruirPasoNuevaContrasena()
         {
             _contenidoPanel.Children.Clear();
 
-            var txtNueva = CrearCampoTexto();
-            var txtConfirmar = CrearCampoTexto();
+            var contenedorNueva = CrearContenedorCampo(out var txtNueva);
+            var contenedorConfirmar = CrearContenedorCampo(out var txtConfirmar);
             var lblError = CrearMensajeError("");
 
-            AgregarPlaceholder(txtNueva, "Nueva contraseña (mín. 6 caracteres)");
-            AgregarPlaceholder(txtConfirmar, "Confirmar contraseña");
+            AplicarPlaceholder(txtNueva, "Nueva contraseña (mín. 6 caracteres)");
+            AplicarPlaceholder(txtConfirmar, "Confirmar contraseña");
 
-            var btnRow = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
+            var btnAtras = CrearBoton("← Atrás", esPrimario: false, width: 100);
+            var btnGuardar = CrearBoton("Guardar", esPrimario: false, width: 112, esExito: true);
 
-            var btnAtras = CrearBoton("← Atrás", "#475569", 100);
-            var btnGuardar = CrearBoton("Guardar", "#16A34A", 110);
-
-            btnAtras.Click += (s, e) => MostrarPasoOTP();
+            btnAtras.Click += (s, e) => TransicionarA(ConstruirPasoOTP);
 
             btnGuardar.Click += async (s, e) =>
             {
-                string nueva = txtNueva.Text.Trim();
-                string confirmar = txtConfirmar.Text.Trim();
+                string nueva = ValorReal(txtNueva);
+                string confirmar = ValorReal(txtConfirmar);
                 lblError.Visibility = Visibility.Collapsed;
 
                 if (nueva.Length < 6)
@@ -342,6 +512,7 @@ namespace Login.Clases
                 }
 
                 btnGuardar.IsEnabled = false;
+                btnGuardar.Content = "Guardando...";
 
                 try
                 {
@@ -355,7 +526,7 @@ namespace Login.Clases
                         return;
                     }
 
-                    MostrarExito();
+                    TransicionarA(ConstruirExito);
                 }
                 catch (Exception ex)
                 {
@@ -365,39 +536,44 @@ namespace Login.Clases
                 finally
                 {
                     btnGuardar.IsEnabled = true;
+                    btnGuardar.Content = "Guardar";
                 }
             };
 
-            var spacer = new Border { Width = 8 };
+            var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
             btnRow.Children.Add(btnAtras);
-            btnRow.Children.Add(spacer);
+            btnRow.Children.Add(new Border { Width = 8 });
             btnRow.Children.Add(btnGuardar);
 
             _contenidoPanel.Children.Add(CrearTitulo("Nueva contraseña"));
             _contenidoPanel.Children.Add(CrearMensaje("Elige una contraseña segura para tu cuenta."));
-            _contenidoPanel.Children.Add(txtNueva);
-            _contenidoPanel.Children.Add(txtConfirmar);
+            _contenidoPanel.Children.Add(contenedorNueva);
+            _contenidoPanel.Children.Add(contenedorConfirmar);
             _contenidoPanel.Children.Add(lblError);
             _contenidoPanel.Children.Add(btnRow);
 
             txtNueva.Focus();
         }
 
-        private void MostrarExito()
+        // ════════════════════════════════════════════════════════════
+        // PASO 4: Éxito
+        // ════════════════════════════════════════════════════════════
+
+        private void ConstruirExito()
         {
             _contenidoPanel.Children.Clear();
 
             var icono = new TextBlock
             {
                 Text = "✅",
-                FontSize = 40,
+                FontSize = 38,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 12)
+                Margin = new Thickness(0, 0, 0, 14)
             };
 
-            var btnCerrar = CrearBoton("Listo", "#2563EB", 120);
+            var btnCerrar = CrearBoton("Listo", esPrimario: true, width: 120);
             btnCerrar.HorizontalAlignment = HorizontalAlignment.Center;
-            btnCerrar.Margin = new Thickness(0, 16, 0, 0);
+            btnCerrar.Margin = new Thickness(0, 18, 0, 0);
             btnCerrar.Click += (s, e) =>
             {
                 _correoRecuperacion = string.Empty;
@@ -408,32 +584,6 @@ namespace Login.Clases
             _contenidoPanel.Children.Add(CrearTitulo("¡Contraseña actualizada!"));
             _contenidoPanel.Children.Add(CrearMensaje("Ya puedes iniciar sesión con tu nueva contraseña."));
             _contenidoPanel.Children.Add(btnCerrar);
-        }
-
-        private void AgregarPlaceholder(TextBox txt, string placeholder)
-        {
-            txt.Text = placeholder;
-            txt.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#64748B"));
-
-            txt.GotFocus += (s, e) =>
-            {
-                if (txt.Text == placeholder)
-                {
-                    txt.Text = string.Empty;
-                    txt.Foreground = Brushes.White;
-                }
-            };
-
-            txt.LostFocus += (s, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(txt.Text))
-                {
-                    txt.Text = placeholder;
-                    txt.Foreground = new SolidColorBrush(
-                        (Color)ColorConverter.ConvertFromString("#64748B"));
-                }
-            };
         }
     }
 }
