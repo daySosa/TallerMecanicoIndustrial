@@ -171,7 +171,6 @@
                                                       Style="{StaticResource MaterialDesignComboBox}">
                                                 <ComboBoxItem Content="Administrador"/>
                                                 <ComboBoxItem Content="Mecanico" IsSelected="True"/>
-                                                <ComboBoxItem Content="Recepcionista"/>
                                             </ComboBox>
                                         </Border>
                                     </StackPanel>

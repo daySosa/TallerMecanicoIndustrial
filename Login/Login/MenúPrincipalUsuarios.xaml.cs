@@ -30,6 +30,7 @@ namespace InterfazClientes
                 await CargarUsuariosAsync();
                 CargarNotificaciones();
             };
+
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
