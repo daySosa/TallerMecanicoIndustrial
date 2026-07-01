@@ -4,7 +4,6 @@ using InterfazInventario;
 using LiveCharts;
 using Login.Clases;
 using Órdenes_de_Trabajo;
-using System.Data;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,36 +16,62 @@ namespace Dasboard_Prueba
     public class OrdenReciente
     {
         public int Orden_ID { get; set; }
-        public string Cliente_NombreCompleto { get; set; }
-        public string Vehiculo_Placa { get; set; }
+        public string Cliente_NombreCompleto { get; set; } = string.Empty;
+        public string Vehiculo_Placa { get; set; } = string.Empty;
         public DateTime Fecha { get; set; }
-        public string Estado { get; set; }
+        public string Estado { get; set; } = string.Empty;
         public decimal OrdenPrecio_Total { get; set; }
     }
 
     public class NotificacionItem
     {
         public int Notificacion_ID { get; set; }
-        public string Tipo_Notificacion { get; set; }
-        public string Mensaje { get; set; }
+        public string Tipo_Notificacion { get; set; } = string.Empty;
+        public string Mensaje { get; set; } = string.Empty;
         public bool Leida { get; set; }
     }
 
     public partial class MenuPrincipal : Window
     {
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        // ── Mapas estáticos: evita duplicar switch/if en varios métodos ──
+        private static readonly Dictionary<string, string> ColorPorEstado = new()
+        {
+            ["En Espera"] = "#F0A500",
+            ["En Proceso"] = "#4f6ef7",
+            ["Sin Empezar"] = "#505880",
+            ["Finalizado"] = "#4CAF50",
+        };
+        private const string ColorEstadoDefault = "#8890b5";
 
-        private DateTime _mesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        private static readonly Dictionary<string, (string Color, string Icono)> InfoPorTipoNotificacion = new()
+        {
+            ["STOCK_BAJO"] = ("#F0A500", "AlertCircle"),
+            ["ORDEN_FINALIZADA"] = ("#4CAF50", "CheckCircle"),
+        };
+        private const string NotifColorDefault = "#4A9EFF";
+        private const string NotifIconoDefault = "Bell";
+
+        private static readonly string[] DiasSemana = { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
+
+        private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
+        private static readonly Dictionary<string, Color> _cacheColores = new();
+
+        // ── Estado interno ──────────────────────────────────────────
+        private clsConsultasBD? _db;
+        private readonly CancellationTokenSource _cts = new();
+        private bool _navegando;
+
+        private DateTime _mesActual = new(DateTime.Today.Year, DateTime.Today.Month, 1);
         private List<NotificacionItem> _notificaciones = new();
         private List<OrdenReciente> _ordenes = new();
         private int _mesesRango = 6;
 
-        // ── Chart bindings ───────────────────────────────────────────
-        public ChartValues<double> BalanceValues { get; set; }
-        public ChartValues<double> OrderValues { get; set; }
-        public ChartValues<double> GastosValues { get; set; }
-        public ChartValues<double> IngresosSemanalValues { get; set; }
-        public string[] IngresosSemanalLabels { get; set; }
+        // ── Bindings de las gráficas ─────────────────────────────────
+        public ChartValues<double> BalanceValues { get; } = new();
+        public ChartValues<double> OrderValues { get; } = new();
+        public ChartValues<double> GastosValues { get; } = new();
+        public ChartValues<double> IngresosSemanalValues { get; } = new();
+        public string[] IngresosSemanalLabels { get; set; } = Array.Empty<string>();
 
         // ════════════════════════════════════════════════════════════
         // CONSTRUCTOR
@@ -54,18 +79,31 @@ namespace Dasboard_Prueba
 
         public MenuPrincipal()
         {
-            BalanceValues = new ChartValues<double>();
-            OrderValues = new ChartValues<double>();
-            GastosValues = new ChartValues<double>();
-            IngresosSemanalValues = new ChartValues<double>();
-            IngresosSemanalLabels = Array.Empty<string>();
-
             DataContext = this;
             InitializeComponent();
+
+            try
+            {
+                _db = new clsConsultasBD();
+            }
+            catch (Exception ex)
+            {
+                _db = null;
+                MessageBox.Show(
+                    "No se pudo conectar con la base de datos. Algunas funciones estarán deshabilitadas.\n\n" + ex.Message,
+                    "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
             AplicarPermisos();
             CargarInfoUsuario();
 
-            cmbRango.SelectedIndex = 1;
+            if (cmbRango.Items.Count > 1)
+                cmbRango.SelectedIndex = 1;
+
+            GenerarEncabezadoCalendario();
+            GenerarCalendario();
+
+            Closed += (_, _) => LiberarRecursos();
 
             // Carga todo en segundo plano; la ventana ya queda pintada y responde de inmediato
             _ = InicializarDashboardAsync();
@@ -73,8 +111,29 @@ namespace Dasboard_Prueba
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
-                DragMove();
+            try
+            {
+                if (e.LeftButton == MouseButtonState.Pressed)
+                    DragMove();
+            }
+            catch (InvalidOperationException)
+            {
+                // DragMove puede fallar si el estado del mouse cambió a mitad del gesto; se ignora.
+            }
+        }
+
+        private void LiberarRecursos()
+        {
+            try
+            {
+                _cts.Cancel();
+                _cts.Dispose();
+                (_db as IDisposable)?.Dispose();
+            }
+            catch
+            {
+                // La ventana se está cerrando; no hay más que hacer con estos errores.
+            }
         }
 
         // ════════════════════════════════════════════════════════════
@@ -83,11 +142,19 @@ namespace Dasboard_Prueba
 
         private void AplicarPermisos()
         {
-            if (!Login.Clases.clsSesion.EsAdministrador)
+            try
             {
-                btnUsuarios.Visibility = Visibility.Collapsed;
-                btnBitacora.Visibility = Visibility.Collapsed;
-                expanderContabilidad.Visibility = Visibility.Collapsed;
+                if (!clsSesion.EsAdministrador)
+                {
+                    btnUsuarios.Visibility = Visibility.Collapsed;
+                    btnBitacora.Visibility = Visibility.Collapsed;
+                    expanderContabilidad.Visibility = Visibility.Collapsed;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al aplicar permisos:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -97,20 +164,25 @@ namespace Dasboard_Prueba
 
         private void CargarInfoUsuario()
         {
-            // ⚠️ Ajusta el nombre de la propiedad si tu clsSesion usa otro nombre
-            // (ej. clsSesion.Nombre, clsSesion.NombreCompleto, etc.). Ya usas
-            // clsSesion.EsAdministrador en tu código, así que asumo que también
-            // guarda el nombre del usuario logueado en alguna propiedad similar.
-            string nombre = string.IsNullOrWhiteSpace(Login.Clases.clsSesion.Nombre)
-                ? "Usuario"
-                : Login.Clases.clsSesion.Nombre;
+            try
+            {
+                string nombre = string.IsNullOrWhiteSpace(clsSesion.Nombre) ? "Usuario" : clsSesion.Nombre.Trim();
+                string rol = clsSesion.EsAdministrador ? "Administrador" : "Empleado";
 
-            string rol = Login.Clases.clsSesion.EsAdministrador ? "Administrador" : "Empleado";
-
-            txtNombreUsuario.Text = nombre;
-            txtRolUsuario.Text = rol;
-            txtSaludoHeader.Text = $"Hola, {nombre.Split(' ')[0]}";
-            txtInicialesAvatar.Text = ObtenerIniciales(nombre);
+                txtNombreUsuario.Text = nombre;
+                txtRolUsuario.Text = rol;
+                string primerNombre = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? nombre;
+                txtSaludoHeader.Text = $"Hola, {primerNombre}";
+                txtInicialesAvatar.Text = ObtenerIniciales(nombre);
+            }
+            catch (Exception ex)
+            {
+                txtNombreUsuario.Text = "Usuario";
+                txtRolUsuario.Text = "—";
+                txtSaludoHeader.Text = "Hola";
+                txtInicialesAvatar.Text = "US";
+                System.Diagnostics.Debug.WriteLine("Error al cargar info del usuario: " + ex.Message);
+            }
         }
 
         private static string ObtenerIniciales(string nombreCompleto)
@@ -127,34 +199,44 @@ namespace Dasboard_Prueba
 
         private async Task InicializarDashboardAsync()
         {
-            // Corren en paralelo: no hay dependencia entre datos, gráficas y notificaciones
+            if (_db is null) return;
+
+            // Corren en paralelo; cada una maneja sus propios errores
+            // para que una falla no tumbe a las demás.
             await Task.WhenAll(
                 CargarDatosAsync(),
                 CargarGraficasAsync(),
-                CargarNotificacionesAsync()
-            );
+                CargarNotificacionesAsync());
         }
 
         private async Task CargarDatosAsync()
         {
+            if (_db is null) return;
             try
             {
-                var (ordenes, balanceTotal, gastosTotal) =
-                    await Task.Run(() => _db.ObtenerDatosDashboard());
+                var (ordenes, balanceTotal, gastosTotal) = await Task.Run(
+                    () => _db.ObtenerDatosDashboard(), _cts.Token);
 
-                _ordenes = ordenes;
-                dgOrdenes.ItemsSource = ordenes;
-                tbTotalOrdenes.Text = $"{ordenes.Count} órdenes";
-                txtTotalOrdenes.Text = ordenes.Count.ToString();
+                if (_cts.IsCancellationRequested || !IsLoaded) return;
+
+                _ordenes = ordenes ?? new List<OrdenReciente>();
+                dgOrdenes.ItemsSource = _ordenes;
+                tbTotalOrdenes.Text = $"{_ordenes.Count} órdenes";
+                txtTotalOrdenes.Text = _ordenes.Count.ToString();
                 txtBalanceTotal.Text = $"L {balanceTotal:N2}";
                 txtGastosTotales.Text = $"L {gastosTotal:N2}";
 
-                GenerarCalendario(); // se genera aquí, ya con los datos listos
+                GenerarCalendario();
+            }
+            catch (OperationCanceledException)
+            {
+                // La ventana se cerró antes de terminar la carga; no es un error real.
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar datos:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (IsLoaded)
+                    MessageBox.Show("Error al cargar datos:\n" + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -164,32 +246,43 @@ namespace Dasboard_Prueba
 
         private async void cmbRango_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cmbRango.SelectedItem is ComboBoxItem item)
+            try
             {
-                _mesesRango = item.Tag?.ToString() switch
+                if (cmbRango.SelectedItem is ComboBoxItem item)
                 {
-                    "3" => 3,
-                    "6" => 6,
-                    "12" => 12,
-                    _ => 0
-                };
-                await CargarGraficasAsync();
+                    _mesesRango = item.Tag?.ToString() switch
+                    {
+                        "3" => 3,
+                        "6" => 6,
+                        "12" => 12,
+                        _ => 0
+                    };
+                    await CargarGraficasAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cambiar el rango de la gráfica:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private async Task CargarGraficasAsync()
         {
+            if (_db is null) return;
             try
             {
                 DateTime desde = _mesesRango > 0
                     ? DateTime.Today.AddMonths(-_mesesRango + 1).AddDays(1 - DateTime.Today.Day)
                     : new DateTime(2000, 1, 1);
 
-                var balTask = Task.Run(() => _db.ObtenerDatosGraficaOrdenes(desde));
-                var ordTask = Task.Run(() => _db.ObtenerDatosGraficaCantidadOrdenes(desde));
-                var gasTask = Task.Run(() => _db.ObtenerDatosGraficaGastos(desde));
+                var balTask = Task.Run(() => _db.ObtenerDatosGraficaOrdenes(desde), _cts.Token);
+                var ordTask = Task.Run(() => _db.ObtenerDatosGraficaCantidadOrdenes(desde), _cts.Token);
+                var gasTask = Task.Run(() => _db.ObtenerDatosGraficaGastos(desde), _cts.Token);
 
                 await Task.WhenAll(balTask, ordTask, gasTask);
+
+                if (_cts.IsCancellationRequested || !IsLoaded) return;
 
                 var (balVals, balLabels) = balTask.Result;
                 var (ordVals, _) = ordTask.Result;
@@ -200,19 +293,24 @@ namespace Dasboard_Prueba
                 Actualizar(GastosValues, gasVals);
                 Actualizar(IngresosSemanalValues, balVals);
 
-                IngresosSemanalLabels = balLabels.Count > 0
-                    ? balLabels.ToArray() : new[] { "-" };
+                IngresosSemanalLabels = (balLabels is { Count: > 0 }) ? balLabels.ToArray() : new[] { "-" };
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancelado por cierre de ventana; no es un error real.
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (IsLoaded)
+                    MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            static void Actualizar(ChartValues<double> chart, List<double> vals)
+            static void Actualizar(ChartValues<double> chart, List<double>? vals)
             {
                 chart.Clear();
-                foreach (var v in vals) chart.Add(v);
+                if (vals != null)
+                    foreach (var v in vals) chart.Add(v);
                 if (chart.Count == 0) chart.Add(0);
             }
         }
@@ -223,32 +321,72 @@ namespace Dasboard_Prueba
 
         private async Task CargarNotificacionesAsync()
         {
-            try { _notificaciones = await Task.Run(() => _db.ObtenerTodasNotificaciones()); }
-            catch { _notificaciones = new(); }
-            ActualizarPanelNotificaciones();
+            if (_db is null) return;
+            try
+            {
+                var resultado = await Task.Run(() => _db.ObtenerTodasNotificaciones(), _cts.Token);
+                if (_cts.IsCancellationRequested || !IsLoaded) return;
+                _notificaciones = resultado ?? new List<NotificacionItem>();
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch
+            {
+                _notificaciones = new List<NotificacionItem>();
+            }
+
+            if (IsLoaded)
+                ActualizarPanelNotificaciones();
         }
 
         private async void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
-            await CargarNotificacionesAsync();
-            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+            try
+            {
+                await CargarNotificacionesAsync();
+                popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al abrir notificaciones:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
+        private async void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            try { _db.MarcarNotificacionLeida(null); }
-            catch { }
-            foreach (var n in _notificaciones) n.Leida = true;
-            ActualizarPanelNotificaciones();
+            if (_db is null) return;
+            try
+            {
+                await Task.Run(() => _db.MarcarNotificacionLeida(null), _cts.Token);
+                foreach (var n in _notificaciones) n.Leida = true;
+                ActualizarPanelNotificaciones();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al marcar notificaciones como leídas:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void MarcarComoLeida(int id)
+        private async void MarcarComoLeida(int id)
         {
-            try { _db.MarcarNotificacionLeida(id); }
-            catch { }
-            var n = _notificaciones.FirstOrDefault(x => x.Notificacion_ID == id);
-            if (n != null) n.Leida = true;
-            ActualizarPanelNotificaciones();
+            if (_db is null) return;
+            try
+            {
+                await Task.Run(() => _db.MarcarNotificacionLeida(id), _cts.Token);
+                var n = _notificaciones.FirstOrDefault(x => x.Notificacion_ID == id);
+                if (n != null) n.Leida = true;
+                ActualizarPanelNotificaciones();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error al marcar notificación como leída: " + ex.Message);
+            }
         }
 
         private void ActualizarPanelNotificaciones()
@@ -277,14 +415,11 @@ namespace Dasboard_Prueba
 
             foreach (var notif in _notificaciones)
             {
-                string hex = notif.Tipo_Notificacion == "STOCK_BAJO" ? "#F0A500"
-                            : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "#4CAF50"
-                            : "#4A9EFF";
-                string icon = notif.Tipo_Notificacion == "STOCK_BAJO" ? "AlertCircle"
-                            : notif.Tipo_Notificacion == "ORDEN_FINALIZADA" ? "CheckCircle"
-                            : "Bell";
+                var (hex, icon) = InfoPorTipoNotificacion.TryGetValue(notif.Tipo_Notificacion ?? string.Empty, out var info)
+                    ? info
+                    : (NotifColorDefault, NotifIconoDefault);
 
-                Color iconColor = (Color)ColorConverter.ConvertFromString(hex);
+                Color iconColor = ObtenerColor(hex);
 
                 var card = new Border
                 {
@@ -305,8 +440,7 @@ namespace Dasboard_Prueba
                     Width = 32,
                     Height = 32,
                     CornerRadius = new CornerRadius(16),
-                    Background = new SolidColorBrush(
-                        Color.FromArgb(40, iconColor.R, iconColor.G, iconColor.B)),
+                    Background = new SolidColorBrush(Color.FromArgb(40, iconColor.R, iconColor.G, iconColor.B)),
                     VerticalAlignment = VerticalAlignment.Top,
                     Margin = new Thickness(0, 2, 8, 0)
                 };
@@ -324,7 +458,7 @@ namespace Dasboard_Prueba
                 var texto = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
                 texto.Children.Add(new TextBlock
                 {
-                    Text = notif.Tipo_Notificacion.Replace("_", " "),
+                    Text = (notif.Tipo_Notificacion ?? string.Empty).Replace("_", " "),
                     Foreground = new SolidColorBrush(iconColor),
                     FontSize = 11,
                     FontWeight = FontWeights.SemiBold,
@@ -366,32 +500,11 @@ namespace Dasboard_Prueba
         // CALENDARIO CON ÓRDENES
         // ════════════════════════════════════════════════════════════
 
-        private void btnAnterior_Click(object sender, RoutedEventArgs e)
+        private void GenerarEncabezadoCalendario()
         {
-            _mesActual = _mesActual.AddMonths(-1);
-            GenerarCalendario();
-        }
-
-        private void btnSiguiente_Click(object sender, RoutedEventArgs e)
-        {
-            _mesActual = _mesActual.AddMonths(1);
-            GenerarCalendario();
-        }
-
-        private void GenerarCalendario()
-        {
-            var cultura = new CultureInfo("es-HN");
-            string titulo = _mesActual.ToString("MMMM, yyyy", cultura);
-            txtMesAnio.Text = char.ToUpper(titulo[0]) + titulo[1..];
-            gridDias.Children.Clear();
-
-            // Limpia el detalle al cambiar de mes
-            panelOrdenesDia.Children.Clear();
-            txtTituloOrdenesDia.Text = "Selecciona un día con órdenes";
-
-            // Encabezados
-            foreach (string d in new[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" })
-                gridDias.Children.Add(new TextBlock
+            gridDiasHeader.Children.Clear();
+            foreach (string d in DiasSemana)
+                gridDiasHeader.Children.Add(new TextBlock
                 {
                     Text = d,
                     Foreground = Pincel("#8B9BB4"),
@@ -400,112 +513,174 @@ namespace Dasboard_Prueba
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(0, 0, 0, 6)
                 });
+        }
 
-            // Órdenes del mes indexadas por día
-            var ordenesPorDia = _ordenes
-                .Where(o => o.Fecha.Year == _mesActual.Year
-                         && o.Fecha.Month == _mesActual.Month)
-                .GroupBy(o => o.Fecha.Day)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            int primerDia = (int)_mesActual.DayOfWeek;
-            primerDia = primerDia == 0 ? 6 : primerDia - 1;
-            int diasMes = DateTime.DaysInMonth(_mesActual.Year, _mesActual.Month);
-            int diasMesAnt = DateTime.DaysInMonth(
-                _mesActual.AddMonths(-1).Year, _mesActual.AddMonths(-1).Month);
-
-            for (int i = 0; i < 42; i++)
+        private void btnAnterior_Click(object sender, RoutedEventArgs e)
+        {
+            try
             {
-                int dia; bool esDelMes;
-                if (i < primerDia) { dia = diasMesAnt - primerDia + 1 + i; esDelMes = false; }
-                else if (i >= primerDia + diasMes) { dia = i - primerDia - diasMes + 1; esDelMes = false; }
-                else { dia = i - primerDia + 1; esDelMes = true; }
+                _mesActual = _mesActual.AddMonths(-1);
+                GenerarCalendario();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cambiar de mes:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-                bool esHoy = esDelMes
-                          && dia == DateTime.Today.Day
-                          && _mesActual.Month == DateTime.Today.Month
-                          && _mesActual.Year == DateTime.Today.Year;
+        private void btnSiguiente_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _mesActual = _mesActual.AddMonths(1);
+                GenerarCalendario();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cambiar de mes:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-                bool tieneOrdenes = esDelMes && ordenesPorDia.ContainsKey(dia);
-                int cantOrdenes = tieneOrdenes ? ordenesPorDia[dia].Count : 0;
+        private void GenerarCalendario()
+        {
+            try
+            {
+                var cultura = new CultureInfo("es-HN");
+                string titulo = _mesActual.ToString("MMMM, yyyy", cultura);
+                txtMesAnio.Text = char.ToUpper(titulo[0]) + titulo[1..];
+                gridDias.Children.Clear();
 
-                // Contenedor del día
-                var celda = new Grid
+                // Limpia el detalle al cambiar de mes
+                panelOrdenesDia.Children.Clear();
+                txtTituloOrdenesDia.Text = "Selecciona un día con órdenes";
+
+                // Órdenes del mes indexadas por día
+                var ordenesPorDia = _ordenes
+                    .Where(o => o.Fecha.Year == _mesActual.Year && o.Fecha.Month == _mesActual.Month)
+                    .GroupBy(o => o.Fecha.Day)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                int primerDia = (int)_mesActual.DayOfWeek;
+                primerDia = primerDia == 0 ? 6 : primerDia - 1;
+                int diasMes = DateTime.DaysInMonth(_mesActual.Year, _mesActual.Month);
+                var mesAnterior = _mesActual.AddMonths(-1);
+                int diasMesAnt = DateTime.DaysInMonth(mesAnterior.Year, mesAnterior.Month);
+
+                for (int i = 0; i < 42; i++)
                 {
-                    Width = 34,
-                    Height = 38,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(2),
-                    Cursor = tieneOrdenes ? Cursors.Hand : Cursors.Arrow
-                };
-                celda.RowDefinitions.Add(new RowDefinition { Height = new GridLength(28) });
-                celda.RowDefinitions.Add(new RowDefinition { Height = new GridLength(8) });
+                    int dia; bool esDelMes;
+                    if (i < primerDia) { dia = diasMesAnt - primerDia + 1 + i; esDelMes = false; }
+                    else if (i >= primerDia + diasMes) { dia = i - primerDia - diasMes + 1; esDelMes = false; }
+                    else { dia = i - primerDia + 1; esDelMes = true; }
 
-                // Círculo del número
-                var circulo = new Border
-                {
-                    Width = 28,
-                    Height = 28,
-                    CornerRadius = new CornerRadius(14),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Background = esHoy
-                        ? Pincel("#FF4757")
-                        : tieneOrdenes && !esHoy
-                            ? Pincel("#1a2060")
-                            : Brushes.Transparent
-                };
+                    bool esHoy = esDelMes
+                              && dia == DateTime.Today.Day
+                              && _mesActual.Month == DateTime.Today.Month
+                              && _mesActual.Year == DateTime.Today.Year;
 
-                if (tieneOrdenes && !esHoy)
-                    circulo.BorderBrush = Pincel("#4f6ef7");
-                circulo.BorderThickness = new Thickness(1.5);
+                    bool tieneOrdenes = esDelMes && ordenesPorDia.ContainsKey(dia);
+                    int cantOrdenes = tieneOrdenes ? ordenesPorDia[dia].Count : 0;
 
-                circulo.Child = new TextBlock
-                {
-                    Text = dia.ToString(),
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    FontWeight = tieneOrdenes || esHoy ? FontWeights.SemiBold : FontWeights.Normal,
-                    Foreground = esHoy ? Brushes.White
-                                : esDelMes ? Brushes.White
-                                : Pincel("#4A5568")
-                };
-                Grid.SetRow(circulo, 0);
-                celda.Children.Add(circulo);
-
-                // Punto indicador de órdenes
-                if (tieneOrdenes && !esHoy)
-                {
-                    var dot = new Border
-                    {
-                        Width = cantOrdenes > 1 ? 14 : 6,
-                        Height = 4,
-                        CornerRadius = new CornerRadius(2),
-                        Background = Pincel("#4f6ef7"),
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    Grid.SetRow(dot, 1);
-                    celda.Children.Add(dot);
+                    gridDias.Children.Add(CrearCeldaDia(dia, esDelMes, esHoy, tieneOrdenes, cantOrdenes,
+                        tieneOrdenes ? ordenesPorDia[dia] : null));
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al generar el calendario:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-                // Tooltip + clic para ver el detalle del día
-                if (tieneOrdenes)
+        /// <summary>
+        /// Crea la celda visual de un día del calendario. Si tiene órdenes, dibuja
+        /// un badge circular en la esquina superior derecha del número (como un
+        /// contador de notificaciones), con la cantidad de órdenes dentro.
+        /// </summary>
+        private Grid CrearCeldaDia(int dia, bool esDelMes, bool esHoy, bool tieneOrdenes,
+            int cantOrdenes, List<OrdenReciente>? ordenesDelDia)
+        {
+            var celda = new Grid
+            {
+                Width = 40,
+                Height = 40,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(2),
+                Cursor = tieneOrdenes ? Cursors.Hand : Cursors.Arrow
+            };
+
+            // Círculo principal del número del día
+            var circulo = new Border
+            {
+                Width = 28,
+                Height = 28,
+                CornerRadius = new CornerRadius(14),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Background = esHoy
+                    ? Pincel("#FF4757")
+                    : tieneOrdenes
+                        ? Pincel("#1a2060")
+                        : Brushes.Transparent,
+                BorderThickness = new Thickness(tieneOrdenes && !esHoy ? 1.5 : 0),
+                BorderBrush = tieneOrdenes && !esHoy ? Pincel("#4f6ef7") : Brushes.Transparent
+            };
+
+            circulo.Child = new TextBlock
+            {
+                Text = dia.ToString(),
+                FontSize = 12,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontWeight = tieneOrdenes || esHoy ? FontWeights.SemiBold : FontWeights.Normal,
+                Foreground = esHoy ? Brushes.White
+                            : esDelMes ? Brushes.White
+                            : Pincel("#4A5568")
+            };
+            celda.Children.Add(circulo);
+
+            // Badge circular con el número de órdenes, estilo indicador de notificación
+            if (tieneOrdenes)
+            {
+                var badge = new Border
+                {
+                    Width = 16,
+                    Height = 16,
+                    CornerRadius = new CornerRadius(8),
+                    Background = Pincel("#4f6ef7"),
+                    BorderBrush = Pincel("#0f1117"),
+                    BorderThickness = new Thickness(1.5),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, -2, -2, 0)
+                };
+                badge.Child = new TextBlock
+                {
+                    Text = cantOrdenes > 9 ? "9+" : cantOrdenes.ToString(),
+                    Foreground = Brushes.White,
+                    FontSize = 8,
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                celda.Children.Add(badge);
+
+                if (ordenesDelDia != null)
                 {
                     var sb = new System.Text.StringBuilder();
-                    foreach (var o in ordenesPorDia[dia])
+                    foreach (var o in ordenesDelDia)
                         sb.AppendLine($"#{o.Orden_ID} — {o.Cliente_NombreCompleto} ({o.Estado})");
                     celda.ToolTip = sb.ToString().TrimEnd();
 
-                    int diaClic = dia; // captura local para el lambda
-                    celda.MouseLeftButtonDown += (s, e) =>
-                        MostrarOrdenesDelDia(diaClic, ordenesPorDia[diaClic]);
+                    var ordenesCapturadas = ordenesDelDia;
+                    celda.MouseLeftButtonDown += (s, e) => MostrarOrdenesDelDia(dia, ordenesCapturadas);
                 }
-
-                gridDias.Children.Add(celda);
             }
+
+            return celda;
         }
 
         // ════════════════════════════════════════════════════════════
@@ -514,81 +689,81 @@ namespace Dasboard_Prueba
 
         private void MostrarOrdenesDelDia(int dia, List<OrdenReciente> ordenesDelDia)
         {
-            panelOrdenesDia.Children.Clear();
-
-            var cultura = new CultureInfo("es-HN");
-            string tituloMes = _mesActual.ToString("MMMM", cultura);
-            txtTituloOrdenesDia.Text =
-                $"Órdenes del {dia} de {char.ToUpper(tituloMes[0]) + tituloMes[1..]} ({ordenesDelDia.Count})";
-
-            foreach (var o in ordenesDelDia.OrderBy(x => x.Fecha))
+            try
             {
-                string hex = o.Estado switch
+                panelOrdenesDia.Children.Clear();
+
+                var cultura = new CultureInfo("es-HN");
+                string tituloMes = _mesActual.ToString("MMMM", cultura);
+                txtTituloOrdenesDia.Text =
+                    $"Órdenes del {dia} de {char.ToUpper(tituloMes[0]) + tituloMes[1..]} ({ordenesDelDia.Count})";
+
+                foreach (var o in ordenesDelDia.OrderBy(x => x.Fecha))
                 {
-                    "En Espera" => "#F0A500",
-                    "En Proceso" => "#4f6ef7",
-                    "Sin Empezar" => "#505880",
-                    "Finalizado" => "#4CAF50",
-                    _ => "#8890b5"
-                };
-                Color colorEstado = (Color)ColorConverter.ConvertFromString(hex);
+                    string hex = ColorPorEstado.TryGetValue(o.Estado ?? string.Empty, out var c) ? c : ColorEstadoDefault;
+                    Color colorEstado = ObtenerColor(hex);
 
-                var card = new Border
-                {
-                    Background = Pincel("#0f1117"),
-                    BorderBrush = Pincel("#1e2235"),
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(8),
-                    Padding = new Thickness(12, 8, 12, 8),
-                    Margin = new Thickness(0, 0, 0, 6),
-                    Cursor = Cursors.Hand
-                };
+                    var card = new Border
+                    {
+                        Background = Pincel("#0f1117"),
+                        BorderBrush = Pincel("#1e2235"),
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(8),
+                        Padding = new Thickness(12, 8, 12, 8),
+                        Margin = new Thickness(0, 0, 0, 6),
+                        Cursor = Cursors.Hand
+                    };
 
-                var grid = new Grid();
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                    var grid = new Grid();
+                    grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-                var texto = new StackPanel();
-                texto.Children.Add(new TextBlock
-                {
-                    Text = $"#{o.Orden_ID} — {o.Cliente_NombreCompleto}",
-                    Foreground = Brushes.White,
-                    FontSize = 12,
-                    FontWeight = FontWeights.Medium
-                });
-                texto.Children.Add(new TextBlock
-                {
-                    Text = $"{o.Vehiculo_Placa}  ·  L {o.OrdenPrecio_Total:N2}",
-                    Foreground = Pincel("#8890b5"),
-                    FontSize = 11,
-                    Margin = new Thickness(0, 2, 0, 0)
-                });
-                Grid.SetColumn(texto, 0);
+                    var texto = new StackPanel();
+                    texto.Children.Add(new TextBlock
+                    {
+                        Text = $"#{o.Orden_ID} — {o.Cliente_NombreCompleto}",
+                        Foreground = Brushes.White,
+                        FontSize = 12,
+                        FontWeight = FontWeights.Medium
+                    });
+                    texto.Children.Add(new TextBlock
+                    {
+                        Text = $"{o.Vehiculo_Placa}  ·  L {o.OrdenPrecio_Total:N2}",
+                        Foreground = Pincel("#8890b5"),
+                        FontSize = 11,
+                        Margin = new Thickness(0, 2, 0, 0)
+                    });
+                    Grid.SetColumn(texto, 0);
 
-                var badgeEstado = new Border
-                {
-                    Background = new SolidColorBrush(Color.FromArgb(40, colorEstado.R, colorEstado.G, colorEstado.B)),
-                    CornerRadius = new CornerRadius(6),
-                    Padding = new Thickness(8, 3, 8, 3),
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                badgeEstado.Child = new TextBlock
-                {
-                    Text = o.Estado,
-                    Foreground = new SolidColorBrush(colorEstado),
-                    FontSize = 10,
-                    FontWeight = FontWeights.SemiBold
-                };
-                Grid.SetColumn(badgeEstado, 1);
+                    var badgeEstado = new Border
+                    {
+                        Background = new SolidColorBrush(Color.FromArgb(40, colorEstado.R, colorEstado.G, colorEstado.B)),
+                        CornerRadius = new CornerRadius(6),
+                        Padding = new Thickness(8, 3, 8, 3),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    badgeEstado.Child = new TextBlock
+                    {
+                        Text = o.Estado,
+                        Foreground = new SolidColorBrush(colorEstado),
+                        FontSize = 10,
+                        FontWeight = FontWeights.SemiBold
+                    };
+                    Grid.SetColumn(badgeEstado, 1);
 
-                grid.Children.Add(texto);
-                grid.Children.Add(badgeEstado);
-                card.Child = grid;
+                    grid.Children.Add(texto);
+                    grid.Children.Add(badgeEstado);
+                    card.Child = grid;
 
-                // Opcional: clic en la tarjeta para ir directo al módulo de Órdenes
-                card.MouseLeftButtonDown += (s, e) => Navegar(() => new MenúPrincipalOrdenes());
+                    card.MouseLeftButtonDown += (s, e) => Navegar(() => new MenúPrincipalOrdenes());
 
-                panelOrdenesDia.Children.Add(card);
+                    panelOrdenesDia.Children.Add(card);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al mostrar las órdenes del día:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -598,8 +773,20 @@ namespace Dasboard_Prueba
 
         private void Navegar<T>(Func<T> crear) where T : Window
         {
-            crear().Show();
-            this.Close();
+            if (_navegando) return; // evita abrir dos ventanas por doble clic accidental
+            _navegando = true;
+            try
+            {
+                var ventana = crear();
+                ventana.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                _navegando = false;
+                MessageBox.Show("No se pudo abrir la ventana:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void btnInventario_Click(object sender, RoutedEventArgs e)
@@ -628,11 +815,19 @@ namespace Dasboard_Prueba
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            try
             {
-                Login.Clases.clsSesion.CerrarSesion();
-                Navegar(() => new Login.MainWindow());
+                if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
+                        MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    clsSesion.CerrarSesion();
+                    Navegar(() => new Login.MainWindow());
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cerrar sesión:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -640,17 +835,33 @@ namespace Dasboard_Prueba
         // HELPERS
         // ════════════════════════════════════════════════════════════
 
-        private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
-
         private static SolidColorBrush Pincel(string hex)
         {
             if (_cachePinceles.TryGetValue(hex, out var existente))
                 return existente;
 
-            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            var brush = new SolidColorBrush(ObtenerColor(hex));
             brush.Freeze(); // WPF puede compartirlo entre hilos y se salta el chequeo de cambios en cada frame
             _cachePinceles[hex] = brush;
             return brush;
+        }
+
+        private static Color ObtenerColor(string hex)
+        {
+            if (_cacheColores.TryGetValue(hex, out var existente))
+                return existente;
+
+            Color color;
+            try
+            {
+                color = (Color)ColorConverter.ConvertFromString(hex);
+            }
+            catch
+            {
+                color = Colors.Gray; // valor seguro por si llega un hex inválido de la BD
+            }
+            _cacheColores[hex] = color;
+            return color;
         }
 
         private static MaterialDesignThemes.Wpf.PackIconKind ParseIconKind(string nombre)
