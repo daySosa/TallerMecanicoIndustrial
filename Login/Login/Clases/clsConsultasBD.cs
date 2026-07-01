@@ -1768,5 +1768,40 @@ namespace Login.Clases
             finally { _conexion.Cerrar(); }
         }
 
+        public bool GuardarBiometria(string email, byte[] foto)
+        {
+            try
+            {
+                SqlCommand cmd = new SqlCommand("sp_Usuario_RegistrarBiometria", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@Foto", foto);
+
+                _conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
+            catch (Exception ex) { throw new Exception("Error al guardar biometría: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool EliminarBiometria(string email)
+        {
+            try
+            {
+                SqlCommand cmd = new SqlCommand("sp_Usuario_EliminarBiometria", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Email", email);
+
+                _conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
+            catch (Exception ex) { throw new Exception("Error al eliminar biometría: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
     }
 }

@@ -1,9 +1,16 @@
-﻿using Login.Clases;
+﻿using AForge.Video;
+using AForge.Video.DirectShow;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using Login.Clases;
 using System.Data;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Drawing = System.Drawing;
 
 namespace InterfazClientes
 {
@@ -11,15 +18,19 @@ namespace InterfazClientes
     {
         private readonly clsConsultasBD _db = new();
         private DataTable _usuariosCache = new();
-        private int _usuarioIdSeleccionado = -1;
+        private string _emailSeleccionado = null;
         private byte[]? _rostroCapturado = null;
 
-        // cámara (usa AForge, OpenCvSharp, o lo que uses en tu proyecto)
-        // Si no tienes cámara aún, los métodos quedan como stubs.
+        // ── CÁMARA ───────────────────────────────────────────────────
+        private FilterInfoCollection? _camarasDisponibles;
+        private VideoCaptureDevice? _camaraActiva;
+        private CascadeClassifier? _detectorRostros;
+        private bool _rostroDetectadoEnVivo = false;
 
         public VentanaBiometria()
         {
             InitializeComponent();
+            CargarDetector();
             CargarUsuarios();
         }
 
@@ -29,6 +40,15 @@ namespace InterfazClientes
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
+        }
+
+        // ── DETECTOR DE ROSTROS ──────────────────────────────────────
+
+        private void CargarDetector()
+        {
+            const string ruta = "haarcascade_frontalface_default.xml";
+            if (File.Exists(ruta))
+                _detectorRostros = new CascadeClassifier(ruta);
         }
 
         // ── USUARIOS ─────────────────────────────────────────────────
@@ -53,9 +73,9 @@ namespace InterfazClientes
 
             _usuariosCache.DefaultView.RowFilter = string.IsNullOrWhiteSpace(texto)
                 ? string.Empty
-                : $"Usuario_Nombre LIKE '%{texto}%' OR Usuario_Correo LIKE '%{texto}%'";
+                : $"Usuario_Nombre LIKE '%{texto}%' OR Usuario_Apellido LIKE '%{texto}%' " +
+                  $"OR Usuario_Email LIKE '%{texto}%'";
 
-            // Si hay exactamente un resultado, seleccionarlo automáticamente
             if (_usuariosCache.DefaultView.Count == 1)
                 SeleccionarUsuario(_usuariosCache.DefaultView[0].Row);
             else
@@ -64,7 +84,7 @@ namespace InterfazClientes
 
         private void SeleccionarUsuario(DataRow row)
         {
-            _usuarioIdSeleccionado = Convert.ToInt32(row["Usuario_ID"]);
+            _emailSeleccionado = row["Usuario_Email"].ToString();
             string nombre = $"{row["Usuario_Nombre"]} {row["Usuario_Apellido"]}";
             txtUsuarioSeleccionado.Text = nombre;
             txtUsuarioSeleccionado.Foreground = Pincel("#FFFFFF");
@@ -73,7 +93,7 @@ namespace InterfazClientes
 
         private void LimpiarSeleccion()
         {
-            _usuarioIdSeleccionado = -1;
+            _emailSeleccionado = null;
             txtUsuarioSeleccionado.Text = "Sin usuario seleccionado";
             txtUsuarioSeleccionado.Foreground = Pincel("#353a58");
             ActualizarBotonesCaptura();
@@ -83,20 +103,34 @@ namespace InterfazClientes
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
+            if (_emailSeleccionado == null)
+            {
+                MessageBox.Show("Selecciona un usuario válido de la lista antes de activar la cámara.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                // TODO: inicializar tu componente de cámara aquí
-                // Ejemplo con AForge:
-                // _videoSource = new VideoCaptureDevice(videoDevices[0].MonikerString);
-                // _videoSource.NewFrame += NuevoFrame;
-                // _videoSource.Start();
+                _camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+
+                if (_camarasDisponibles.Count == 0)
+                {
+                    MessageBox.Show("No se detectó ninguna cámara conectada.",
+                        "Sin cámara", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                _camaraActiva = new VideoCaptureDevice(_camarasDisponibles[0].MonikerString);
+                _camaraActiva.NewFrame += CamaraActiva_NewFrame;
+                _camaraActiva.Start();
 
                 panelSinCamara.Visibility = Visibility.Collapsed;
                 btnCapturar.IsEnabled = true;
+                btnIniciarCamara.IsEnabled = false;
 
-                // Placeholder hasta integrar cámara real
-                MessageBox.Show("Cámara activada (integra tu librería de cámara aquí).",
-                    "Cámara", MessageBoxButton.OK, MessageBoxImage.Information);
+                txtEstadoDeteccion.Text = "Cámara iniciada — buscando rostro...";
+                txtEstadoDeteccion.Foreground = Pincel("#8890b5");
             }
             catch (Exception ex)
             {
@@ -104,18 +138,72 @@ namespace InterfazClientes
             }
         }
 
+        private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs args)
+        {
+            using Drawing.Bitmap frame = (Drawing.Bitmap)args.Frame.Clone();
+
+            if (_detectorRostros != null)
+            {
+                using var imgEmgu = frame.ToImage<Bgr, byte>();
+                using var imgGris = imgEmgu.Convert<Gray, byte>();
+
+                var rostros = _detectorRostros.DetectMultiScale(
+                    imgGris, scaleFactor: 1.1, minNeighbors: 6,
+                    minSize: new Drawing.Size(90, 90));
+
+                _rostroDetectadoEnVivo = rostros.Length > 0;
+
+                using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
+                foreach (var rostro in rostros)
+                    g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
+            }
+
+            var src = BitmapToImageSource(frame);
+            Dispatcher.Invoke(() =>
+            {
+                imgCamara.Source = src;
+
+                if (_rostroDetectadoEnVivo)
+                {
+                    txtEstadoDeteccion.Text = "Rostro detectado — listo para capturar";
+                    txtEstadoDeteccion.Foreground = Pincel("#4CAF50");
+                }
+                else
+                {
+                    txtEstadoDeteccion.Text = "No se detecta rostro";
+                    txtEstadoDeteccion.Foreground = Pincel("#E74C3C");
+                }
+            });
+        }
+
         private void btnCapturar_Click(object sender, RoutedEventArgs e)
         {
+            if (_emailSeleccionado == null)
+            {
+                MessageBox.Show("Selecciona un usuario válido de la lista antes de capturar.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!_rostroDetectadoEnVivo)
+            {
+                MessageBox.Show("No se detecta ningún rostro. Ubícate frente a la cámara.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                // TODO: capturar frame actual de la cámara
-                // Ejemplo: _rostroCapturado = CapturarFrameComoBytes();
-
-                // Placeholder: simula captura exitosa
-                _rostroCapturado = Array.Empty<byte>();
+                // Convierte el frame actual que se ve en pantalla a bytes (JPEG) para guardar
+                var bitmapSource = (BitmapSource)imgCamara.Source;
+                using MemoryStream ms = new();
+                var encoder = new JpegBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+                encoder.Save(ms);
+                _rostroCapturado = ms.ToArray();
 
                 txtEstadoRegistro.Text = "✔ Rostro capturado";
-                txtEstadoDeteccion.Text = "Rostro detectado correctamente";
+                txtEstadoDeteccion.Text = "Rostro capturado correctamente";
                 txtEstadoDeteccion.Foreground = Pincel("#4CAF50");
                 iconDeteccion.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
                 iconDeteccion.Foreground = Pincel("#4CAF50");
@@ -128,14 +216,38 @@ namespace InterfazClientes
             }
         }
 
+        private void DetenerCamara()
+        {
+            if (_camaraActiva is { IsRunning: true })
+            {
+                _camaraActiva.SignalToStop();
+                _camaraActiva.NewFrame -= CamaraActiva_NewFrame;
+                _camaraActiva = null;
+            }
+        }
+
+        private static BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
+        {
+            using MemoryStream ms = new();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            ms.Position = 0;
+            BitmapImage img = new();
+            img.BeginInit();
+            img.StreamSource = ms;
+            img.CacheOption = BitmapCacheOption.OnLoad;
+            img.EndInit();
+            img.Freeze();
+            return img;
+        }
+
         // ── GUARDAR / ELIMINAR ───────────────────────────────────────
 
         private void btnGuardarBiometria_Click(object sender, RoutedEventArgs e)
         {
-            if (_usuarioIdSeleccionado == -1)
+            if (_emailSeleccionado == null)
             {
-                MessageBox.Show("Selecciona un usuario primero.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Debes seleccionar un usuario ya registrado en el sistema.",
+                    "Usuario no seleccionado", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -148,9 +260,10 @@ namespace InterfazClientes
 
             try
             {
-                // TODO: llamar a _db.GuardarBiometria(_usuarioIdSeleccionado, _rostroCapturado);
+                _db.GuardarBiometria(_emailSeleccionado, _rostroCapturado);
                 MessageBox.Show("✅ Biometría guardada correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+                DetenerCamara();
                 this.Close();
             }
             catch (Exception ex)
@@ -161,10 +274,10 @@ namespace InterfazClientes
 
         private void btnEliminarBiometria_Click(object sender, RoutedEventArgs e)
         {
-            if (_usuarioIdSeleccionado == -1)
+            if (_emailSeleccionado == null)
             {
-                MessageBox.Show("Selecciona un usuario primero.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Debes seleccionar un usuario ya registrado en el sistema.",
+                    "Usuario no seleccionado", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -176,7 +289,7 @@ namespace InterfazClientes
 
             try
             {
-                // TODO: llamar a _db.EliminarBiometria(_usuarioIdSeleccionado);
+                _db.EliminarBiometria(_emailSeleccionado);
                 MessageBox.Show("✅ Registro biométrico eliminado.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 LimpiarSeleccion();
@@ -193,16 +306,21 @@ namespace InterfazClientes
 
         private void btnCerrar_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: detener cámara si está activa
-            // _videoSource?.SignalToStop();
+            DetenerCamara();
             this.Close();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            DetenerCamara();
+            base.OnClosed(e);
         }
 
         // ── HELPERS ──────────────────────────────────────────────────
 
         private void ActualizarBotonesCaptura()
         {
-            bool hayUsuario = _usuarioIdSeleccionado != -1;
+            bool hayUsuario = _emailSeleccionado != null;
             bool hayCaptura = _rostroCapturado != null && _rostroCapturado.Length > 0;
 
             btnGuardarBiometria.IsEnabled = hayUsuario && hayCaptura;

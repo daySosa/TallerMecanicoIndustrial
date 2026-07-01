@@ -148,20 +148,26 @@ namespace InterfazClientes
 
         private bool ValidarCampos()
         {
-            if (string.IsNullOrWhiteSpace(txtNombre.Text))
-            { Aviso("El nombre es requerido."); txtNombre.Focus(); return false; }
+            if (!clsValidacionesUsuarios.ValidarNombre(txtNombre.Text))
+            { txtNombre.Focus(); return false; }
 
-            if (string.IsNullOrWhiteSpace(txtApellido.Text))
-            { Aviso("El apellido es requerido."); txtApellido.Focus(); return false; }
+            if (!clsValidacionesUsuarios.ValidarApellido(txtApellido.Text))
+            { txtApellido.Focus(); return false; }
 
-            if (string.IsNullOrWhiteSpace(txtCorreo.Text) || !txtCorreo.Text.Contains('@'))
-            { Aviso("Ingresa un correo válido."); txtCorreo.Focus(); return false; }
+            if (!clsValidacionesUsuarios.ValidarCorreo(txtCorreo.Text))
+            { txtCorreo.Focus(); return false; }
 
-            if (!_esEdicion && string.IsNullOrWhiteSpace(txtContrasena.Password))
-            { Aviso("La contraseña es requerida para nuevos usuarios."); return false; }
+            if (!clsValidacionesUsuarios.ValidarTelefono(txtTelefono.Text))
+            { txtTelefono.Focus(); return false; }
 
-            if (cmbRol.SelectedItem == null)
-            { Aviso("Selecciona un rol."); cmbRol.Focus(); return false; }
+            if (!clsValidacionesUsuarios.ValidarRolSeleccionado(cmbRol.SelectedItem))
+            { cmbRol.Focus(); return false; }
+
+            bool contrasenaValida = _esEdicion
+                ? clsValidacionesUsuarios.ValidarContrasenaEdicion(txtContrasena.Password)
+                : clsValidacionesUsuarios.ValidarContrasenaNuevoUsuario(txtContrasena.Password);
+
+            if (!contrasenaValida) { txtContrasena.Focus(); return false; }
 
             return true;
         }

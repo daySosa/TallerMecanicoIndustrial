@@ -25,6 +25,7 @@ namespace InterfazClientes
         {
             InitializeComponent();
             AplicarPermisos();
+
             Loaded += async (s, e) =>
             {
                 await CargarUsuariosAsync();
