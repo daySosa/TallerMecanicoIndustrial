@@ -46,9 +46,18 @@ namespace InterfazClientes
 
         private void CargarDetector()
         {
-            const string ruta = "haarcascade_frontalface_default.xml";
+            string ruta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "haarcascade_frontalface_default.xml");
+
             if (File.Exists(ruta))
+            {
                 _detectorRostros = new CascadeClassifier(ruta);
+            }
+            else
+            {
+                MessageBox.Show("No se encontró el archivo del detector de rostros (haarcascade_frontalface_default.xml). " +
+                    "Verifica que esté en la carpeta de salida del proyecto y que su propiedad 'Copiar en el directorio de salida' esté activada.",
+                    "Detector no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         // ── USUARIOS ─────────────────────────────────────────────────
@@ -147,14 +156,41 @@ namespace InterfazClientes
                 using var imgEmgu = frame.ToImage<Bgr, byte>();
                 using var imgGris = imgEmgu.Convert<Gray, byte>();
 
-                var rostros = _detectorRostros.DetectMultiScale(
-                    imgGris, scaleFactor: 1.1, minNeighbors: 6,
-                    minSize: new Drawing.Size(90, 90));
+                CvInvoke.EqualizeHist(imgGris, imgGris);
 
-                _rostroDetectadoEnVivo = rostros.Length > 0;
+                // ROI central: solo buscamos rostros en el área donde normalmente
+                // se posiciona la persona, ignorando bordes/fondo
+                int roiWidth = (int)(frame.Width * 0.6);
+                int roiHeight = (int)(frame.Height * 0.75);
+                int roiX = (frame.Width - roiWidth) / 2;
+                int roiY = (frame.Height - roiHeight) / 2;
+                var roiRect = new Drawing.Rectangle(roiX, roiY, roiWidth, roiHeight);
+
+                imgGris.ROI = roiRect;
+
+                var rostrosEnRoi = _detectorRostros.DetectMultiScale(
+                    imgGris,
+                    scaleFactor: 1.1,
+                    minNeighbors: 10,
+                    minSize: new Drawing.Size(100, 100),
+                    maxSize: new Drawing.Size(350, 350));
+
+                imgGris.ROI = Drawing.Rectangle.Empty; // resetear ROI
+
+                // Convertimos las coordenadas de vuelta al frame completo (sumamos el offset del ROI)
+                var rostros = rostrosEnRoi
+                    .Select(r => new Drawing.Rectangle(r.X + roiX, r.Y + roiY, r.Width, r.Height))
+                    .ToArray();
+
+                // Nos quedamos solo con el rostro más grande (más cercano/confiable)
+                Drawing.Rectangle[] rostroPrincipal = rostros.Length > 0
+                    ? new[] { rostros.OrderByDescending(r => r.Width * r.Height).First() }
+                    : Array.Empty<Drawing.Rectangle>();
+
+                _rostroDetectadoEnVivo = rostroPrincipal.Length > 0;
 
                 using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
-                foreach (var rostro in rostros)
+                foreach (var rostro in rostroPrincipal)
                     g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
             }
 

@@ -110,11 +110,6 @@
                             <Grid>
                                 <Image x:Name="imgCamara" Stretch="UniformToFill"/>
 
-                                <Ellipse Width="170" Height="210"
-                                         Stroke="#4f6ef7" StrokeThickness="1.5"
-                                         StrokeDashArray="5 3" Fill="Transparent"
-                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
                                 <StackPanel x:Name="panelSinCamara"
                                             HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <materialDesign:PackIcon Kind="CameraOff" Width="50" Height="50"
