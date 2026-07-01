@@ -185,8 +185,7 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2"
-                                        Click="btnUsuarios_Click">
+                                <Button x:Name="btnUsuarios" Style="{StaticResource SidebarButton}" Margin="0,2" Click="btnUsuarios_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="#8890b5"
                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -195,8 +194,7 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2"
-                                        Click="btnBitacora_Click">
+                                <Button x:Name="btnBitacora" Style="{StaticResource SidebarButton}" Margin="0,2" Click="btnBitacora_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -205,8 +203,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Expander Background="Transparent" Foreground="#8890b5"
-                                          BorderThickness="0" Margin="-8,2,0,2">
+                                <Expander x:Name="expanderContabilidad" Background="Transparent" Foreground="#8890b5"
+                                    BorderThickness="0" Margin="-8,2,0,2">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal" Margin="-4,0,0,0" Width="200">
                                             <materialDesign:PackIcon Kind="BookOpenPageVariant" Foreground="#8890b5"

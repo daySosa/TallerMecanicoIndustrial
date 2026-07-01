@@ -39,6 +39,7 @@ namespace Órdenes_de_Trabajo
         public MenúPrincipalOrdenes()
         {
             InitializeComponent();
+            AplicarPermisos();
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }
@@ -47,6 +48,20 @@ namespace Órdenes_de_Trabajo
         {
             if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
                 DragMove();
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
+
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
         }
 
         // ── NAVEGACIÓN ───────────────────────────────────────────────
@@ -87,10 +102,12 @@ namespace Órdenes_de_Trabajo
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Login.Clases.clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
-
         // ── DATOS ────────────────────────────────────────────────────
 
         private void CargarDatosDesdeDB()

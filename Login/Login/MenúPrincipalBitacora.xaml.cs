@@ -30,6 +30,7 @@ namespace Órdenes_de_Trabajo
         public MenúPrincipalBitacora()
         {
             InitializeComponent();
+            AplicarPermisos();
             CargarBitacora();
             CargarNotificaciones();
         }
@@ -40,6 +41,19 @@ namespace Órdenes_de_Trabajo
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
+        }
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
+
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
         }
 
         // ── DATOS ────────────────────────────────────────────────────
@@ -300,7 +314,10 @@ namespace Órdenes_de_Trabajo
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Login.Clases.clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
 
         // ── HELPER ───────────────────────────────────────────────────

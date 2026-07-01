@@ -62,6 +62,7 @@ namespace Dasboard_Prueba
 
             DataContext = this;
             InitializeComponent();
+            AplicarPermisos();
 
             cmbRango.SelectedIndex = 1;
 
@@ -76,7 +77,19 @@ namespace Dasboard_Prueba
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
         }
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
 
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
+        }
         // ════════════════════════════════════════════════════════════
         // DATOS
         // ════════════════════════════════════════════════════════════
@@ -474,7 +487,10 @@ namespace Dasboard_Prueba
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Login.Clases.clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
 
         // ════════════════════════════════════════════════════════════

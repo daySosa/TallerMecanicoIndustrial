@@ -1,7 +1,5 @@
 ﻿using Login.Clases;
 using System.Data;
-using System.Security.Cryptography;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,7 +10,7 @@ namespace InterfazClientes
     public partial class VentanaUsuario : Window
     {
         private readonly clsConsultasBD _db = new();
-        private int _usuarioId = -1;
+        private string _usuarioEmail = null;
         private bool _esEdicion = false;
 
         // ── CONSTRUCTORES ────────────────────────────────────────────
@@ -22,11 +20,11 @@ namespace InterfazClientes
             InitializeComponent();
         }
 
-        public VentanaUsuario(int usuarioId) : this()
+        public VentanaUsuario(string usuarioEmail) : this()
         {
-            _usuarioId = usuarioId;
+            _usuarioEmail = usuarioEmail;
             _esEdicion = true;
-            CargarDatosParaEditar(usuarioId);
+            CargarDatosParaEditar(usuarioEmail);
         }
 
         // ── MOVER VENTANA ────────────────────────────────────────────
@@ -61,27 +59,17 @@ namespace InterfazClientes
 
         // ── CARGAR PARA EDITAR ───────────────────────────────────────
 
-        private void CargarDatosParaEditar(int usuarioId)
+        private void CargarDatosParaEditar(string email)
         {
             try
             {
-                // ← aquí estaba el bug: faltaba declarar y obtener 'datos'
-                DataTable datos = _db.ObtenerUsuarios();
-
-                DataRow? fila = null;
-                foreach (DataRow r in datos.Rows)
-                {
-                    if (Convert.ToInt32(r["Usuario_ID"]) == usuarioId)
-                    {
-                        fila = r;
-                        break;
-                    }
-                }
+                DataRow fila = _db.ObtenerUsuarioPorEmail(email);
                 if (fila == null) return;
 
                 txtNombre.Text = fila["Usuario_Nombre"].ToString();
                 txtApellido.Text = fila["Usuario_Apellido"].ToString();
-                txtCorreo.Text = fila["Usuario_Correo"].ToString();
+                txtCorreo.Text = fila["Usuario_Email"].ToString();
+                txtCorreo.IsEnabled = false; // el correo es la PK, no se edita
                 txtTelefono.Text = fila["Usuario_Telefono"]?.ToString() ?? string.Empty;
 
                 string rol = fila["Usuario_Rol"].ToString() ?? string.Empty;
@@ -96,7 +84,8 @@ namespace InterfazClientes
 
                 toggleActivo.IsChecked = fila["Usuario_Activo"] != DBNull.Value
                                           && (bool)fila["Usuario_Activo"];
-                panelContrasena.Opacity = 0.6;
+
+                txtContrasena.ToolTip = "Deja en blanco para no cambiar la contraseña";
                 tbTituloVentana.Text = "Editar Usuario";
                 tbSubtitulo.Text = "Modifica los datos del empleado";
                 iconAvatar.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountEdit;
@@ -127,17 +116,18 @@ namespace InterfazClientes
 
                 if (_esEdicion)
                 {
-                    _db.ActualizarUsuario(_usuarioId, nombre, apellido, correo,
-                                          telefono, rol, activo,
-                                          string.IsNullOrWhiteSpace(password)
-                                              ? null : HashSHA512(password));
+                    _db.ActualizarUsuario(_usuarioEmail, nombre, apellido, telefono, rol);
+                    _db.CambiarEstadoUsuario(_usuarioEmail, activo);
+
+                    if (!string.IsNullOrWhiteSpace(password))
+                        _db.CambiarContrasenaUsuario(_usuarioEmail, password);
+
                     MessageBox.Show("✅ Usuario actualizado correctamente.", "Éxito",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    _db.AgregarUsuario(nombre, apellido, correo,
-                                       telefono, rol, HashSHA512(password));
+                    _db.AgregarUsuario(nombre, apellido, correo, telefono, rol, password);
                     MessageBox.Show("✅ Usuario registrado correctamente.", "Éxito",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -177,12 +167,6 @@ namespace InterfazClientes
         }
 
         // ── HELPERS ──────────────────────────────────────────────────
-
-        private static string HashSHA512(string texto)
-        {
-            byte[] bytes = SHA512.HashData(Encoding.UTF8.GetBytes(texto));
-            return BitConverter.ToString(bytes).Replace("-", "");
-        }
 
         private static void Aviso(string msg) =>
             MessageBox.Show(msg, "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);

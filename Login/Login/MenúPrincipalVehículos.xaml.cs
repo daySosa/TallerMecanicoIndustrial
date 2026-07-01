@@ -24,6 +24,7 @@ namespace Vehículos
         public MenúPrincipalVehículos()
         {
             InitializeComponent();
+            AplicarPermisos();
             CargarDatosDesdeDB();
             CargarNotificaciones();
         }
@@ -35,7 +36,19 @@ namespace Vehículos
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
         }
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
 
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
+        }
         // ── NAVEGACIÓN ───────────────────────────────────────────────
 
         private void Navegar<T>(Func<T> crear) where T : Window
@@ -71,8 +84,11 @@ namespace Vehículos
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Login.Clases.clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
 
         // ── DATOS ────────────────────────────────────────────────────

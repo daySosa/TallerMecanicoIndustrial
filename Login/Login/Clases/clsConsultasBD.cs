@@ -1444,107 +1444,126 @@ namespace Login.Clases
         }
 
 
-        public DataTable ObtenerUsuarios()
+        // ═══════════════════════════════════════════════════════════
+        // USUARIOS
+        // ═══════════════════════════════════════════════════════════
+
+        public DataTable ObtenerUsuarios(string busqueda = null)
         {
             try
             {
-                string query = @"
-            SELECT 
-                Usuario_ID,
-                Usuario_Nombre,
-                Usuario_Apellido,
-                Usuario_NombreUsuario,
-                Usuario_Correo,
-                Usuario_Rol,
-                Usuario_Activo
-            FROM LOGIN
-            ORDER BY Usuario_Nombre";
+                SqlCommand cmd = new SqlCommand("sp_Usuario_ListarTodos", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Busqueda", string.IsNullOrWhiteSpace(busqueda)
+                    ? (object)DBNull.Value : busqueda.Trim());
 
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
                 _conexion.Abrir();
                 SqlDataAdapter da = new SqlDataAdapter(cmd);
                 DataTable dt = new DataTable();
                 da.Fill(dt);
                 return dt;
             }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener usuarios: " + ex.Message);
-            }
+            catch (Exception ex) { throw new Exception("Error al obtener usuarios: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
-        public bool AgregarUsuario(string nombre, string apellido, string correo,
-                            string telefono, string rol, string hashContrasena)
+        public DataRow ObtenerUsuarioPorEmail(string email)
         {
             try
             {
-                string query = @"
-            INSERT INTO LOGIN
-                (Usuario_Nombre, Usuario_Apellido, Usuario_Correo,
-                 Usuario_Telefono, Usuario_Rol, Usuario_Contraseña, Usuario_Activo)
-            VALUES
-                (@Nombre, @Apellido, @Correo,
-                 @Telefono, @Rol, @Hash, 1)";
+                SqlCommand cmd = new SqlCommand("sp_Usuario_ObtenerPorEmail", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Email", email);
 
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                _conexion.Abrir();
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                return dt.Rows.Count > 0 ? dt.Rows[0] : null;
+            }
+            catch (Exception ex) { throw new Exception("Error al obtener el usuario: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool AgregarUsuario(string nombre, string apellido, string email,
+                                    string telefono, string rol, string contrasenaPlano)
+        {
+            try
+            {
+                SqlCommand cmd = new SqlCommand("sp_Usuario_Insertar", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Nombre", nombre);
                 cmd.Parameters.AddWithValue("@Apellido", apellido);
-                cmd.Parameters.AddWithValue("@Correo", correo);
-                cmd.Parameters.AddWithValue("@Telefono", string.IsNullOrWhiteSpace(telefono)
-                                                          ? (object)DBNull.Value : telefono);
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@Telefono", telefono);
                 cmd.Parameters.AddWithValue("@Rol", rol);
-                cmd.Parameters.AddWithValue("@Hash", hashContrasena);
+                cmd.Parameters.AddWithValue("@Contrasena", contrasenaPlano);
+                cmd.Parameters.AddWithValue("@Activo", true);
+
                 _conexion.Abrir();
                 cmd.ExecuteNonQuery();
                 return true;
             }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
             catch (Exception ex) { throw new Exception("Error al agregar usuario: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 
-        public bool ActualizarUsuario(int usuarioId, string nombre, string apellido,
-                                       string correo, string telefono, string rol,
-                                       bool activo, string? hashContrasena = null)
+        public bool ActualizarUsuario(string email, string nombre, string apellido,
+                                       string telefono, string rol)
         {
             try
             {
-                string query = hashContrasena != null
-                    ? @"UPDATE LOGIN SET
-                    Usuario_Nombre     = @Nombre,
-                    Usuario_Apellido   = @Apellido,
-                    Usuario_Correo     = @Correo,
-                    Usuario_Telefono   = @Telefono,
-                    Usuario_Rol        = @Rol,
-                    Usuario_Activo     = @Activo,
-                    Usuario_Contraseña = @Hash
-                WHERE Usuario_ID = @ID"
-                    : @"UPDATE LOGIN SET
-                    Usuario_Nombre   = @Nombre,
-                    Usuario_Apellido = @Apellido,
-                    Usuario_Correo   = @Correo,
-                    Usuario_Telefono = @Telefono,
-                    Usuario_Rol      = @Rol,
-                    Usuario_Activo   = @Activo
-                WHERE Usuario_ID = @ID";
-
-                SqlCommand cmd = new SqlCommand(query, _conexion.SqlC);
+                SqlCommand cmd = new SqlCommand("sp_Usuario_Actualizar", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Email", email);
                 cmd.Parameters.AddWithValue("@Nombre", nombre);
                 cmd.Parameters.AddWithValue("@Apellido", apellido);
-                cmd.Parameters.AddWithValue("@Correo", correo);
-                cmd.Parameters.AddWithValue("@Telefono", string.IsNullOrWhiteSpace(telefono)
-                                                         ? (object)DBNull.Value : telefono);
+                cmd.Parameters.AddWithValue("@Telefono", telefono);
                 cmd.Parameters.AddWithValue("@Rol", rol);
-                cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
-                cmd.Parameters.AddWithValue("@ID", usuarioId);
-                if (hashContrasena != null)
-                    cmd.Parameters.AddWithValue("@Hash", hashContrasena);
 
                 _conexion.Abrir();
                 cmd.ExecuteNonQuery();
                 return true;
             }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
             catch (Exception ex) { throw new Exception("Error al actualizar usuario: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool CambiarContrasenaUsuario(string email, string nuevaContrasenaPlano)
+        {
+            try
+            {
+                SqlCommand cmd = new SqlCommand("sp_Usuario_CambiarContrasena", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@NuevaContrasena", nuevaContrasenaPlano);
+
+                _conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
+            catch (Exception ex) { throw new Exception("Error al cambiar contraseña: " + ex.Message); }
+            finally { _conexion.Cerrar(); }
+        }
+
+        public bool CambiarEstadoUsuario(string email, bool activo)
+        {
+            try
+            {
+                SqlCommand cmd = new SqlCommand("sp_Usuario_CambiarEstado", _conexion.SqlC);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@Activo", activo);
+
+                _conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException sqlEx) { throw new Exception(sqlEx.Message); }
+            catch (Exception ex) { throw new Exception("Error al cambiar estado: " + ex.Message); }
             finally { _conexion.Cerrar(); }
         }
 

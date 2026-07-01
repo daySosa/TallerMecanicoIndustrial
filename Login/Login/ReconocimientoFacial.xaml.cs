@@ -233,6 +233,23 @@ namespace Login
                 elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(46, 204, 113));
             });
 
+            // ── NUEVO: cargar sesión con el rol del usuario logueado ──
+            try
+            {
+                var db = new clsConsultasBD();
+                var datosUsuario = db.ObtenerUsuarioPorEmail(_correoUsuario);
+                if (datosUsuario != null)
+                {
+                    clsSesion.IniciarSesion(
+                        datosUsuario["Usuario_Email"].ToString(),
+                        datosUsuario["Usuario_Nombre"].ToString(),
+                        datosUsuario["Usuario_Apellido"].ToString(),
+                        datosUsuario["Usuario_Rol"].ToString()
+                    );
+                }
+            }
+            catch { /* si falla, sesión queda vacía y los permisos bloquean todo por defecto */ }
+
             await Task.Delay(3000);
 
             Dispatcher.Invoke(() =>
@@ -242,7 +259,6 @@ namespace Login
                 this.Close();
             });
         }
-
         // ════════════════════════════════════════════════════════════
         // NAVEGACIÓN
         // ════════════════════════════════════════════════════════════

@@ -24,6 +24,7 @@ namespace InterfazClientes
         public MenúPrincipalUsuarios()
         {
             InitializeComponent();
+            AplicarPermisos();
             Loaded += async (s, e) =>
             {
                 await CargarUsuariosAsync();
@@ -35,6 +36,20 @@ namespace InterfazClientes
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
+
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
         }
 
         // ════════════════════════════════════════════════════════════
@@ -69,8 +84,19 @@ namespace InterfazClientes
             _usuariosCache.DefaultView.RowFilter = string.IsNullOrWhiteSpace(texto)
                 ? string.Empty
                 : $"Usuario_Nombre LIKE '%{texto}%' OR Usuario_Apellido LIKE '%{texto}%' " +
-                  $"OR Usuario_NombreUsuario LIKE '%{texto}%' OR Usuario_Correo LIKE '%{texto}%'";
+                  $"OR Usuario_Email LIKE '%{texto}%'";
             ActualizarContador(_usuariosCache.DefaultView.Count);
+        }
+
+        // ── Doble clic en una fila = editar ese usuario ──────────────
+        private void dgUsuarios_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (dgUsuarios.SelectedItem is DataRowView fila)
+            {
+                string email = fila["Usuario_Email"].ToString();
+                new VentanaUsuario(email).ShowDialog();
+                CargarUsuarios();
+            }
         }
 
         private void dgUsuarios_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
@@ -318,7 +344,10 @@ namespace InterfazClientes
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
 
         // ════════════════════════════════════════════════════════════

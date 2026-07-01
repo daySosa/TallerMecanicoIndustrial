@@ -118,6 +118,19 @@ namespace Login
                 if (_db.ValidarCodigoOTP(_correoUsuario, codigo))
                 {
                     _timer.Stop();
+
+                    // ── NUEVO: cargar sesión con los datos del usuario ──
+                    var datosUsuario = _db.ObtenerUsuarioPorEmail(_correoUsuario);
+                    if (datosUsuario != null)
+                    {
+                        clsSesion.IniciarSesion(
+                            datosUsuario["Usuario_Email"].ToString(),
+                            datosUsuario["Usuario_Nombre"].ToString(),
+                            datosUsuario["Usuario_Apellido"].ToString(),
+                            datosUsuario["Usuario_Rol"].ToString()
+                        );
+                    }
+
                     new Dasboard_Prueba.MenuPrincipal().Show();
                     this.Close();
                 }

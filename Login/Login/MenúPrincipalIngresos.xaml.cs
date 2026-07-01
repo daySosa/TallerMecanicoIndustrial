@@ -19,6 +19,7 @@ namespace Contabilidad
         public MenúPrincipalIngresos()
         {
             InitializeComponent();
+            AplicarPermisos();
             CargarPago();
             CargarNotificaciones();
         }
@@ -29,6 +30,19 @@ namespace Contabilidad
                 DragMove();
         }
 
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
+
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
+        }
         // ════════════════════════════════════════════════════════════
         // PAGOS
         // ════════════════════════════════════════════════════════════
@@ -290,7 +304,10 @@ namespace Contabilidad
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Login.Clases.clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
 
         private static SolidColorBrush Pincel(string hex) =>

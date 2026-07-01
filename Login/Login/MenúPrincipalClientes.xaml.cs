@@ -22,6 +22,7 @@ namespace InterfazClientes
         public MenúPrincipalClientes()
         {
             InitializeComponent();
+            AplicarPermisos();
             CargarDatos();
             CargarNotificaciones();
         }
@@ -32,6 +33,20 @@ namespace InterfazClientes
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // PERMISOS SEGÚN ROL
+        // ════════════════════════════════════════════════════════════
+
+        private void AplicarPermisos()
+        {
+            if (!Login.Clases.clsSesion.EsAdministrador)
+            {
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnBitacora.Visibility = Visibility.Collapsed;
+                expanderContabilidad.Visibility = Visibility.Collapsed;
+            }
         }
 
         // ── NAVEGACIÓN ───────────────────────────────────────────────
@@ -72,8 +87,11 @@ namespace InterfazClientes
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Login.Clases.clsSesion.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
+            }
         }
 
         // ── DATOS ────────────────────────────────────────────────────
@@ -340,6 +358,7 @@ namespace InterfazClientes
             CargarNotificacionesEnPopup();
             CargarNotificaciones();
         }
+
 
         // ── HELPER ───────────────────────────────────────────────────
 

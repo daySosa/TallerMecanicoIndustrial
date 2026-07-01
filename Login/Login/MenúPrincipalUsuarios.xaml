@@ -218,16 +218,16 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
+                                <Button x:Name="btnUsuarios" Style="{StaticResource SidebarButtonActive}" Margin="0,2">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="#8890b5"
+                                        <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="White"
                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Usuarios" Foreground="#8890b5"
+                                        <TextBlock Text="Usuarios" Foreground="White"
                                                    FontSize="13" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2"  Click="btnBitacora_Click">
+                                <Button x:Name="btnBitacora" Style="{StaticResource SidebarButton}" Margin="0,2"  Click="btnBitacora_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -236,8 +236,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Expander Background="Transparent" Foreground="#8890b5"
-                                          BorderThickness="0" Margin="-8,2,0,2">
+                                <Expander x:Name="expanderContabilidad" Background="Transparent" Foreground="#8890b5"
+                                    BorderThickness="0" Margin="-8,2,0,2">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal" Margin="-4,0,0,0" Width="200">
                                             <materialDesign:PackIcon Kind="BookOpenPageVariant" Foreground="#8890b5"
@@ -437,7 +437,7 @@
                                 </Grid>
                             </Grid>
                         </Border>
-                        
+
                         <Grid Grid.Row="1" Margin="24,20,24,24">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -530,6 +530,7 @@
                                               CanUserReorderColumns="False" CanUserResizeColumns="False"
                                               IsReadOnly="True" SelectionMode="Single"
                                               SelectionChanged="dgUsuarios_SelectionChanged"
+                                              MouseDoubleClick="dgUsuarios_MouseDoubleClick"
                                               GridLinesVisibility="Horizontal"
                                               HorizontalGridLinesBrush="#1e2235"
                                               Background="Transparent" Foreground="White"
@@ -617,17 +618,6 @@
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
 
-                                            <DataGridTextColumn Header="Usuario" Binding="{Binding Usuario_NombreUsuario}" Width="130">
-                                                <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground"        Value="#505880"/>
-                                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                                        <Setter Property="Padding"           Value="12,0"/>
-                                                        <Setter Property="FontSize"          Value="12"/>
-                                                    </Style>
-                                                </DataGridTextColumn.ElementStyle>
-                                            </DataGridTextColumn>
-
                                             <DataGridTemplateColumn Header="Rol" Width="120">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
@@ -663,7 +653,7 @@
                                                             <materialDesign:PackIcon Kind="Email" Foreground="#4f6ef7"
                                                                                      Width="14" Height="14"
                                                                                      VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="{Binding Usuario_Correo}"
+                                                            <TextBlock Text="{Binding Usuario_Email}"
                                                                        Foreground="#8890b5" FontSize="12" VerticalAlignment="Center"
                                                                        TextTrimming="CharacterEllipsis" MaxWidth="140"/>
                                                         </StackPanel>
@@ -681,7 +671,7 @@
                                                                 <Style TargetType="Border">
                                                                     <Setter Property="Background" Value="#0d1f15"/>
                                                                     <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Usuario_BiometriaRegistrada}" Value="False">
+                                                                        <DataTrigger Binding="{Binding Biometria_Registrada}" Value="False">
                                                                             <Setter Property="Background" Value="#1f0d0d"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
@@ -695,7 +685,7 @@
                                                                         <Style TargetType="materialDesign:PackIcon">
                                                                             <Setter Property="Foreground" Value="#4CAF50"/>
                                                                             <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding Usuario_BiometriaRegistrada}" Value="False">
+                                                                                <DataTrigger Binding="{Binding Biometria_Registrada}" Value="False">
                                                                                     <Setter Property="Foreground" Value="#E74C3C"/>
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
@@ -708,7 +698,7 @@
                                                                             <Setter Property="Text"       Value="Registrada"/>
                                                                             <Setter Property="Foreground" Value="#4CAF50"/>
                                                                             <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding Usuario_BiometriaRegistrada}" Value="False">
+                                                                                <DataTrigger Binding="{Binding Biometria_Registrada}" Value="False">
                                                                                     <Setter Property="Text"       Value="Pendiente"/>
                                                                                     <Setter Property="Foreground" Value="#E74C3C"/>
                                                                                 </DataTrigger>
@@ -791,7 +781,7 @@
                                   Style="{StaticResource MaterialDesignComboBox}">
                             <ComboBoxItem Content="Todos" IsSelected="True"/>
                             <ComboBoxItem Content="Administrador"/>
-                            <ComboBoxItem Content="Empleado"/>
+                            <ComboBoxItem Content="Mecanico"/>
                         </ComboBox>
                     </Border>
 
