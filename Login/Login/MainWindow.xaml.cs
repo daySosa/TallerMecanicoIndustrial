@@ -18,7 +18,6 @@ namespace Login
             Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
 
-        // ── Brushes estáticos (Freeze evita re-renders innecesarios) ─
         private static readonly SolidColorBrush BrushFocus = Pincel("#2563EB");
         private static readonly SolidColorBrush BrushError = Pincel("#f44336");
         private static readonly SolidColorBrush BrushNormal = Pincel("#FFFFFF", 0.12);
@@ -39,19 +38,11 @@ namespace Login
             return brush;
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CONSTRUCTOR
-        // ════════════════════════════════════════════════════════════
-
         public MainWindow()
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
         }
-
-        // ════════════════════════════════════════════════════════════
-        // DRAG & FOCUS
-        // ════════════════════════════════════════════════════════════
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
@@ -76,11 +67,6 @@ namespace Login
             border.BorderBrush = enfocado ? BrushFocus : BrushVacio;
             border.BorderThickness = new Thickness(enfocado ? 2 : 1.5);
         }
-
-        // ════════════════════════════════════════════════════════════
-        // VER / OCULTAR CONTRASEÑA
-        // ════════════════════════════════════════════════════════════
-
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
             _contrasenaVisible = !_contrasenaVisible;
@@ -107,10 +93,6 @@ namespace Login
         private string ObtenerContrasena() =>
             _contrasenaVisible ? txtContrasenaVisible.Text : txtContrasena.Password;
 
-        // ════════════════════════════════════════════════════════════
-        // RECORDAR CREDENCIALES
-        // ════════════════════════════════════════════════════════════
-
         private void GuardarCredenciales(string correo, string contrasena)
         {
             try
@@ -118,7 +100,7 @@ namespace Login
                 File.WriteAllText(_archivoRecordar,
                     JsonSerializer.Serialize(new { Correo = correo, Contrasena = contrasena }));
             }
-            catch { /* fallo silencioso: no crítico */ }
+            catch { }
         }
 
         private void EliminarCredenciales()
@@ -143,15 +125,10 @@ namespace Login
             catch { }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // LOGIN
-        // ════════════════════════════════════════════════════════════
-
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             if (_procesandoLogin) return;
 
-            // — Validaciones —
             bool hayError = false;
 
             string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
@@ -249,11 +226,6 @@ namespace Login
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        // ════════════════════════════════════════════════════════════
-        // OTROS
-        // ════════════════════════════════════════════════════════════
-
         private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
         {
             var recuperar = new RecuperarContrasenia(this);
@@ -262,7 +234,6 @@ namespace Login
 
         private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            //Limpiar error en tiempo real si lo deseas:
             if (txtErrorCorreo.Visibility == Visibility.Visible)
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
         }

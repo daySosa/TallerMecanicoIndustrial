@@ -16,7 +16,6 @@ namespace Login.Clases
         private Border _panelCentral;
         private StackPanel _contenidoPanel;
 
-        // ── Paleta congelada (mismo tema del login: #03002E / #02006C / #38BDF8) ──
         private static readonly SolidColorBrush BrushFondoOverlay = Congelar("#0B1120", 0.72);
         private static readonly SolidColorBrush BrushPanel = Congelar("#03002E", 0.92);
         private static readonly SolidColorBrush BrushBorde = Congelar("#FFFFFF", 0.12);
@@ -67,10 +66,6 @@ namespace Login.Clases
             ConstruirPasoCorreo();
             FadeIn(_overlayGrid, 180);
         }
-
-        // ════════════════════════════════════════════════════════════
-        // OVERLAY BASE
-        // ════════════════════════════════════════════════════════════
 
         private void ConstruirOverlay()
         {
@@ -123,8 +118,6 @@ namespace Login.Clases
                     rootGrid.Children.Remove(_overlayGrid);
             });
         }
-
-        // ── Animaciones reutilizables (sin GC extra por cada Storyboard) ──
         private static void FadeIn(UIElement el, int ms, System.Action alTerminar = null)
         {
             var anim = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(ms))
@@ -141,7 +134,6 @@ namespace Login.Clases
             el.BeginAnimation(UIElement.OpacityProperty, anim);
         }
 
-        /// <summary>Crossfade entre pasos del formulario (sensación fluida al navegar).</summary>
         private void TransicionarA(System.Action construirNuevoPaso)
         {
             var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(110))
@@ -155,10 +147,6 @@ namespace Login.Clases
 
             _contenidoPanel.BeginAnimation(UIElement.OpacityProperty, fadeOut);
         }
-
-        // ════════════════════════════════════════════════════════════
-        // HELPERS DE UI (reutilizan brushes congelados, no crean colores nuevos)
-        // ════════════════════════════════════════════════════════════
 
         private TextBlock CrearTitulo(string texto) => new()
         {
@@ -203,7 +191,6 @@ namespace Login.Clases
                 Child = campo
             };
 
-            // Foco visual estilo login (borde celeste)
             campo.GotFocus += (s, e) =>
             {
                 contenedor.BorderBrush = BrushPrimarioHover;
@@ -283,10 +270,6 @@ namespace Login.Clases
             Visibility = Visibility.Collapsed
         };
 
-        /// <summary>
-        /// Placeholder seguro: usa Tag para saber si el texto mostrado es "de verdad"
-        /// o solo el placeholder, evitando el bug de guardar el placeholder como valor real.
-        /// </summary>
         private void AplicarPlaceholder(TextBox txt, string placeholder)
         {
             txt.Text = placeholder;
@@ -316,10 +299,6 @@ namespace Login.Clases
 
         private static string ValorReal(TextBox txt) =>
             (string)txt.Tag == "placeholder" ? string.Empty : txt.Text.Trim();
-
-        // ════════════════════════════════════════════════════════════
-        // PASO 1: Correo
-        // ════════════════════════════════════════════════════════════
 
         private void ConstruirPasoCorreo()
         {
@@ -400,10 +379,6 @@ namespace Login.Clases
             txtCorreo.Focus();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // PASO 2: Código OTP
-        // ════════════════════════════════════════════════════════════
-
         private void ConstruirPasoOTP()
         {
             _contenidoPanel.Children.Clear();
@@ -470,10 +445,6 @@ namespace Login.Clases
 
             txtOTP.Focus();
         }
-
-        // ════════════════════════════════════════════════════════════
-        // PASO 3: Nueva contraseña
-        // ════════════════════════════════════════════════════════════
 
         private void ConstruirPasoNuevaContrasena()
         {
@@ -554,10 +525,6 @@ namespace Login.Clases
 
             txtNueva.Focus();
         }
-
-        // ════════════════════════════════════════════════════════════
-        // PASO 4: Éxito
-        // ════════════════════════════════════════════════════════════
 
         private void ConstruirExito()
         {
