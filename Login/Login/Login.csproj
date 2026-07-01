@@ -13,10 +13,54 @@
 		<None Remove="fondo_login.png" />
 		<None Remove="OSM_LOGO.png" />
 		<None Remove="OSM_Logo_AR.png" />
+		<None Remove="Recursos\haarcascade_eye.xml" />
+		<None Remove="Recursos\haarcascade_frontalface_default.xml" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_41_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_46_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_49_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_51_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_54_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_00_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_04_Pro.jpg" />
+		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_06_Pro.jpg" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Recursos\haarcascade_eye.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Recursos\haarcascade_frontalface_default.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_41_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_46_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_49_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_51_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_54_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_00_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_04_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_06_Pro.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AForge.Video.DirectShow" Version="2.2.5" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="Emgu.CV" Version="4.13.0.5924" />
 		<PackageReference Include="Emgu.CV.Bitmap" Version="4.13.0.5924" />
 		<PackageReference Include="Emgu.CV.Models" Version="4.13.0.5924" />
@@ -27,8 +71,8 @@
 		<PackageReference Include="MaterialDesignColors" Version="5.3.2" />
 		<PackageReference Include="MaterialDesignThemes" Version="5.3.2" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.0.2" />
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 	</ItemGroup>
 
 	<ItemGroup>

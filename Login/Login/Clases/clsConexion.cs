@@ -16,7 +16,7 @@ namespace Login.Clases
         //// <summary>
         /// Cadena de conexión utilizada para acceder a la base de datos en Azure SQL.
         /// </summary>
-        string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+        string conexion = "Server=tcp:tallermecanic.database.windows.net;Database=Taller_Mecanico_Sistema;Authentication=Active Directory Default;TrustServerCertificate=True";
 
         /// <summary>
         /// Objeto de conexión SQL que se utiliza para ejecutar comandos en la base de datos.

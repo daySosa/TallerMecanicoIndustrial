@@ -1,294 +1,654 @@
-﻿using AForge.Video;
-using AForge.Video.DirectShow;
+﻿using Dasboard_Prueba;
 using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Login.Clases;
-using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Drawing = System.Drawing;
+using System.Windows.Threading;
 
 namespace Login
 {
+    /// <summary>
+    /// Ventana de verificación facial.
+    /// Requiere paquetes NuGet: Emgu.CV, Emgu.CV.runtime.windows (o windows.x64), Emgu.CV.Bitmap
+    /// Requiere los clasificadores Haar Cascade (haarcascade_frontalface_default.xml y
+    /// haarcascade_eye.xml, descargables del repositorio oficial de OpenCV) dentro de
+    /// una carpeta "Recursos" junto al ejecutable.
+    /// Requiere una carpeta "RostrosRegistrados" con subcarpetas por persona
+    /// (ej: RostrosRegistrados/Juan/foto1.jpg, foto2.jpg...) usadas para entrenar
+    /// el reconocedor al iniciar la ventana.
+    /// </summary>
     public partial class ReconocimientoFacial : Window
     {
-        private FilterInfoCollection? _camarasDisponibles;
-        private VideoCaptureDevice? _camaraActiva;
-        private CascadeClassifier? _detectorRostros;
+        // ---------------------- Configuración general ----------------------
+        private const int MAX_INTENTOS_FALLIDOS = 3;
+        private const int MINUTOS_BLOQUEO = 5;
 
-        private readonly clsServicioReconocimiento _servicioReconocimiento = new();
+        // Umbral de distancia LBPH: cuanto menor, más estricta la coincidencia.
+        // Ajustar según pruebas reales (valores típicos entre 45 y 75).
+        private const double UMBRAL_CONFIANZA_LBPH = 65.0;
 
-        private bool _rostroDetectado = false;
-        private bool _accesoOtorgado = false;
+        // Ventana de frames (a ~30 fps) dentro de la cual se debe superar la prueba de vida.
+        private const int FRAMES_PRUEBA_VIDA = 90;
+        private const int UMBRAL_MOVIMIENTO_PX = 8;
 
-        private readonly List<(int Id, string Nombre, Drawing.Bitmap Foto)> _personas = new();
+        private readonly string archivoIntentos =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seguridad_intentos.json");
+        private readonly string archivoLog =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log_accesos.txt");
 
-        private readonly string _correoUsuario;
+        // ---------------------- Cámara y clasificadores ----------------------
+        private VideoCapture _camara;
+        private DispatcherTimer _timer;
+        private DispatcherTimer _timerBloqueo;
 
-        // ════════════════════════════════════════════════════════════
-        // CONSTRUCTOR
-        // ════════════════════════════════════════════════════════════
+        private CascadeClassifier _clasificadorRostro;
+        private CascadeClassifier _clasificadorOjos;
 
-        public ReconocimientoFacial(string correo = "")
+        private LBPHFaceRecognizer _reconocedor;
+        private readonly Dictionary<int, string> _etiquetasNombres = new();
+
+        // ---------------------- Estado de prueba de vida ----------------------
+        private bool _ojosVisiblesFramePrevio = false;
+        private bool _esperandoReaperturaOjos = false;
+        private int _parpadeosDetectados = 0;
+
+        private System.Drawing.Point? _centroRostroPrevio = null;
+        private double _movimientoAcumulado = 0;
+
+        private int _framesProcesados = 0;
+        private bool _pruebaVidaSuperada = false;
+        private bool _verificando = false; // evita reentradas mientras se decide el acceso
+
+        private RegistroIntentos _registro;
+
+        public ReconocimientoFacial()
         {
             InitializeComponent();
-            _correoUsuario = correo;
-            CargarDetector();
-            CargarPersonasDesdeBD();
+
+            // ---------------------------------------------------------------------
+            // TEMPORAL: importa las fotos de la carpeta local a la base de datos.
+            // Ejecutar una sola vez y luego BORRAR esta línea (y el comentario)
+            // para que no se vuelva a correr y duplique las fotos en la tabla.
+            // ---------------------------------------------------------------------
+            Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
+
+            CargarRegistroIntentos();
+            InicializarClasificadores();
+            EntrenarReconocedor();
+            ActualizarUIBloqueo();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // DRAG
-        // ════════════════════════════════════════════════════════════
+        // ======================================================================
+        //  PERSISTENCIA DE INTENTOS FALLIDOS / BLOQUEO
+        // ======================================================================
 
-        private void Window_Drag(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private class RegistroIntentos
         {
-            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
-                DragMove();
+            public int IntentosFallidos { get; set; } = 0;
+            public DateTime? BloqueadoHasta { get; set; } = null;
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CARGA INICIAL
-        // ════════════════════════════════════════════════════════════
-
-        private void CargarDetector()
-        {
-            const string ruta = "haarcascade_frontalface_default.xml";
-            if (File.Exists(ruta))
-                _detectorRostros = new CascadeClassifier(ruta);
-            else
-                MostrarEstado("⚠ No se encontró el XML de detección.", esError: true);
-        }
-
-        private void CargarPersonasDesdeBD()
+        private void CargarRegistroIntentos()
         {
             try
             {
-                foreach (var p in _personas) p.Foto?.Dispose();
-                _personas.Clear();
-
-                clsConexion conexion = new();
-                conexion.Abrir();
-
-                const string query = "SELECT Id, Nombre, Foto FROM ReconocimientoFacial";
-                using SqlDataReader reader = new SqlCommand(query, conexion.SqlC).ExecuteReader();
-
-                while (reader.Read())
+                if (File.Exists(archivoIntentos))
                 {
-                    int id = reader.GetInt32(0);
-                    string nombre = reader.GetString(1);
-                    byte[] bytes = (byte[])reader[2];
-                    using MemoryStream ms = new(bytes);
-                    Drawing.Bitmap foto = new(new Drawing.Bitmap(ms));
-                    _personas.Add((id, nombre, foto));
+                    string json = File.ReadAllText(archivoIntentos);
+                    _registro = JsonSerializer.Deserialize<RegistroIntentos>(json) ?? new RegistroIntentos();
                 }
-
-                conexion.Cerrar();
-
-                if (_personas.Count > 0)
-                    _servicioReconocimiento.Entrenar(_personas);
-
-                MostrarEstado($"{_personas.Count} persona(s) cargada(s). Sistema listo.");
+                else
+                {
+                    _registro = new RegistroIntentos();
+                }
             }
-            catch (Exception ex)
+            catch
             {
-                MostrarEstado("Error al cargar datos: " + ex.Message, esError: true);
+                // Si el archivo está corrupto, se reinicia el registro por seguridad.
+                _registro = new RegistroIntentos();
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CÁMARA
-        // ════════════════════════════════════════════════════════════
-
-        private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
+        private void GuardarRegistroIntentos()
         {
-            _camarasDisponibles = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-
-            var (ok, msg) = clsValidacionReconocimiento
-                .ValidarCamaraDisponible(_camarasDisponibles.Count);
-
-            if (!ok)
+            try
             {
-                MessageBox.Show(msg, "Sin cámara", MessageBoxButton.OK, MessageBoxImage.Warning);
+                string json = JsonSerializer.Serialize(_registro);
+                File.WriteAllText(archivoIntentos, json);
+            }
+            catch
+            {
+                // El fallo al guardar no debe interrumpir el flujo de autenticación.
+            }
+        }
+
+        private void RegistrarEnLog(string mensaje)
+        {
+            try
+            {
+                string linea = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensaje}{Environment.NewLine}";
+                File.AppendAllText(archivoLog, linea);
+            }
+            catch
+            {
+                // El registro de log no debe interrumpir el flujo de autenticación.
+            }
+        }
+
+        private void ActualizarUIBloqueo()
+        {
+            bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
+                                  _registro.BloqueadoHasta.Value > DateTime.Now;
+
+            if (!estaBloqueado)
+            {
+                btnIniciarCamara.IsEnabled = true;
                 return;
             }
 
-            _accesoOtorgado = false;
+            btnIniciarCamara.IsEnabled = false;
+            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
 
-            _camaraActiva = new VideoCaptureDevice(_camarasDisponibles[0].MonikerString);
-            _camaraActiva.NewFrame += CamaraActiva_NewFrame;
-            _camaraActiva.Start();
+            _timerBloqueo = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _timerBloqueo.Tick += (s, e) =>
+            {
+                var restante = _registro.BloqueadoHasta.Value - DateTime.Now;
+
+                if (restante <= TimeSpan.Zero)
+                {
+                    _timerBloqueo.Stop();
+                    _registro.BloqueadoHasta = null;
+                    _registro.IntentosFallidos = 0;
+                    GuardarRegistroIntentos();
+
+                    btnIniciarCamara.IsEnabled = true;
+                    txtEstado.Text = "En espera...";
+                    elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                }
+                else
+                {
+                    txtEstado.Text = $"Bloqueado. Intenta de nuevo en {restante.Minutes:D2}:{restante.Seconds:D2}";
+                }
+            };
+            _timerBloqueo.Start();
+
+            txtEstado.Text = "Bloqueado temporalmente";
+        }
+
+        // ======================================================================
+        //  INICIALIZACIÓN DE CLASIFICADORES Y ENTRENAMIENTO
+        // ======================================================================
+
+        private void InicializarClasificadores()
+        {
+            string rutaRecursos = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recursos");
+            string rutaRostro = Path.Combine(rutaRecursos, "haarcascade_frontalface_default.xml");
+            string rutaOjos = Path.Combine(rutaRecursos, "haarcascade_eye.xml");
+
+            if (!File.Exists(rutaRostro) || !File.Exists(rutaOjos))
+            {
+                MessageBox.Show(
+                    "Faltan los archivos de clasificación Haar Cascade en la carpeta 'Recursos'.\n" +
+                    "Descárgalos desde el repositorio oficial de OpenCV (opencv/data/haarcascades) " +
+                    "y colócalos junto al ejecutable.",
+                    "Recursos faltantes", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _clasificadorRostro = new CascadeClassifier(rutaRostro);
+            _clasificadorOjos = new CascadeClassifier(rutaOjos);
+        }
+
+        private void EntrenarReconocedor()
+        {
+            var imagenes = new List<Image<Gray, byte>>();
+            var etiquetas = new List<int>();
+            _etiquetasNombres.Clear();
+
+            if (_clasificadorRostro == null)
+                return;
+
+            // Se agrupan las fotos por nombre de persona, tal como llegan de la tabla.
+            var fotosPorPersona = new Dictionary<string, List<byte[]>>();
+
+            var conexion = new clsConexion();
+            try
+            {
+                conexion.Abrir();
+
+                using var cmd = new Microsoft.Data.SqlClient.SqlCommand(
+                    "SELECT Nombre, Foto FROM RostrosRegistrados", conexion.SqlC);
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    string nombre = reader.GetString(reader.GetOrdinal("Nombre"));
+                    byte[] foto = (byte[])reader["Foto"];
+
+                    if (!fotosPorPersona.ContainsKey(nombre))
+                        fotosPorPersona[nombre] = new List<byte[]>();
+
+                    fotosPorPersona[nombre].Add(foto);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar los rostros registrados desde la base de datos: " + ex.Message,
+                    "Error de base de datos", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            finally
+            {
+                conexion.Cerrar();
+            }
+
+            int etiquetaActual = 0;
+
+            foreach (var persona in fotosPorPersona)
+            {
+                bool tieneImagenesValidas = false;
+
+                foreach (var datosFoto in persona.Value)
+                {
+                    try
+                    {
+                        using var ms = new MemoryStream(datosFoto);
+                        using var bmp = new System.Drawing.Bitmap(ms);
+                        using var imgColor = bmp.ToImage<Bgr, byte>();
+                        using var imgGris = imgColor.Convert<Gray, byte>();
+
+                        var rostros = _clasificadorRostro.DetectMultiScale(
+                            imgGris, 1.1, 6, System.Drawing.Size.Empty);
+
+                        if (rostros.Length == 0) continue;
+
+                        var rostroRect = rostros.OrderByDescending(r => r.Width * r.Height).First();
+                        using var rostroRecortado = imgGris.Copy(rostroRect);
+                        var rostroNormalizado = rostroRecortado.Resize(200, 200, Inter.Cubic);
+
+                        imagenes.Add(rostroNormalizado);
+                        etiquetas.Add(etiquetaActual);
+                        tieneImagenesValidas = true;
+                    }
+                    catch
+                    {
+                        // Se ignora una foto corrupta o no procesable y se continúa con el resto.
+                    }
+                }
+
+                if (tieneImagenesValidas)
+                {
+                    _etiquetasNombres[etiquetaActual] = persona.Key;
+                    etiquetaActual++;
+                }
+            }
+
+            if (imagenes.Count == 0)
+            {
+                txtEstado.Text = "Sin rostros registrados en la base de datos";
+                return;
+            }
+
+            // NOTA: la firma exacta del constructor/Create de LBPHFaceRecognizer puede variar
+            // según la versión de Emgu.CV instalada. Si el constructor no compila, usar:
+            // _reconocedor = LBPHFaceRecognizer.Create(1, 8, 8, 8, UMBRAL_CONFIANZA_LBPH);
+            _reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, UMBRAL_CONFIANZA_LBPH);
+
+            using var vectorImagenes = new Emgu.CV.Util.VectorOfMat();
+            foreach (var img in imagenes)
+                vectorImagenes.Push(img.Mat);
+
+            using var vectorEtiquetas = new Emgu.CV.Util.VectorOfInt(etiquetas.ToArray());
+
+            _reconocedor.Train(vectorImagenes, vectorEtiquetas);
+
+            foreach (var img in imagenes) img.Dispose();
+        }
+
+        // ======================================================================
+        //  CONTROL DE CÁMARA
+        // ======================================================================
+
+        private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
+        {
+            if (_registro.BloqueadoHasta.HasValue && _registro.BloqueadoHasta.Value > DateTime.Now)
+            {
+                MessageBox.Show("El acceso está temporalmente bloqueado por intentos fallidos.",
+                    "Bloqueado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_clasificadorRostro == null || _reconocedor == null)
+            {
+                MessageBox.Show(
+                    "No es posible iniciar la verificación: faltan recursos (clasificadores Haar) " +
+                    "o no hay rostros registrados para comparar.",
+                    "Error de configuración", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                _camara = new VideoCapture(0);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo acceder a la cámara: {ex.Message}",
+                    "Error de cámara", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            ReiniciarEstadoPruebaVida();
 
             pnlSinCamara.Visibility = Visibility.Collapsed;
             btnIniciarCamara.IsEnabled = false;
             btnDetenerCamara.IsEnabled = true;
+            bdNombreReconocido.Visibility = Visibility.Collapsed;
 
-            MostrarEstado("Cámara iniciada — buscando rostro...");
+            txtEstado.Text = "Analizando prueba de vida (parpadea y mueve la cabeza)...";
+            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0xf5, 0xa6, 0x23));
+
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
+            _timer.Tick += Timer_Tick;
+            _timer.Start();
         }
 
         private void btnDetenerCamara_Click(object sender, RoutedEventArgs e)
         {
-            DetenerCamara();
-            btnIniciarCamara.IsEnabled = true;
+            DetenerCamaraInterno();
+            txtEstado.Text = "En espera...";
+            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+            bdNombreReconocido.Visibility = Visibility.Collapsed;
+        }
+
+        private void DetenerCamaraInterno()
+        {
+            _timer?.Stop();
+            _timer = null;
+
+            _camara?.Dispose();
+            _camara = null;
+            _verificando = false;
+
             btnDetenerCamara.IsEnabled = false;
+
+            bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
+                                  _registro.BloqueadoHasta.Value > DateTime.Now;
+            if (!estaBloqueado)
+                btnIniciarCamara.IsEnabled = true;
+
             pnlSinCamara.Visibility = Visibility.Visible;
-            MostrarEstado("Cámara detenida.");
+            imgCamara.Source = null;
         }
 
-        private void DetenerCamara()
+        private void ReiniciarEstadoPruebaVida()
         {
-            if (_camaraActiva is { IsRunning: true })
-            {
-                _camaraActiva.SignalToStop();
-                _camaraActiva.NewFrame -= CamaraActiva_NewFrame;
-                _camaraActiva = null;
-            }
+            _ojosVisiblesFramePrevio = false;
+            _esperandoReaperturaOjos = false;
+            _parpadeosDetectados = 0;
+            _centroRostroPrevio = null;
+            _movimientoAcumulado = 0;
+            _framesProcesados = 0;
+            _pruebaVidaSuperada = false;
+            _verificando = false;
         }
 
-        // ════════════════════════════════════════════════════════════
-        // PROCESAMIENTO DE FRAMES
-        // ════════════════════════════════════════════════════════════
+        // ======================================================================
+        //  PROCESAMIENTO DE CADA FRAME
+        // ======================================================================
 
-        private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs args)
+        private void Timer_Tick(object sender, EventArgs e)
         {
-            if (_accesoOtorgado) return;
+            if (_camara == null || _verificando) return;
 
-            using Drawing.Bitmap frame = (Drawing.Bitmap)args.Frame.Clone();
+            using var frame = _camara.QueryFrame();
+            if (frame == null) return;
 
-            if (_detectorRostros == null)
+            using var imgColor = frame.ToImage<Bgr, byte>();
+            using var imgGris = imgColor.Convert<Gray, byte>();
+
+            var rostros = _clasificadorRostro.DetectMultiScale(
+                imgGris, 1.1, 5, new System.Drawing.Size(90, 90));
+
+            if (rostros.Length == 0)
             {
-                ActualizarVisor(frame);
+                txtEstado.Text = "No se detecta ningún rostro...";
+                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                MostrarFrame(imgColor);
                 return;
             }
 
-            using var imgEmgu = frame.ToImage<Bgr, byte>();
-            using var imgGris = imgEmgu.Convert<Gray, byte>();
+            var rostroRect = rostros.OrderByDescending(r => r.Width * r.Height).First();
+            imgColor.Draw(rostroRect, new Bgr(System.Drawing.Color.LimeGreen), 2);
 
-            var rostros = _detectorRostros.DetectMultiScale(
-                imgGris, scaleFactor: 1.1, minNeighbors: 6,
-                minSize: new Drawing.Size(90, 90));
-
-            _rostroDetectado = rostros.Length > 0;
-
-            using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
-
-            foreach (var rostro in rostros)
+            if (!_pruebaVidaSuperada)
             {
-                g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
+                ProcesarPruebaDeVida(imgGris, rostroRect);
+                MostrarFrame(imgColor);
 
-                if (_servicioReconocimiento.Entrenado)
+                if (_pruebaVidaSuperada)
                 {
-                    using var rostroGris = imgGris.Copy(rostro);
-                    var (label, distance) = _servicioReconocimiento.Predecir(rostroGris);
-                    bool valido = clsValidacionReconocimiento
-                        .EsReconocimientoValido(label, distance, _personas.Count);
-
-                    if (valido)
-                        FinalizarAcceso(_personas[label].Nombre);
-                    else
-                        Dispatcher.Invoke(() => txtNombreReconocido.Text =
-                            $"Desconocido  (dist: {distance:F1})");
+                    txtEstado.Text = "Prueba de vida superada. Verificando identidad...";
+                    elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x4f, 0x6e, 0xf7));
+                    _verificando = true;
+                    VerificarIdentidad(imgGris, rostroRect);
                 }
+                return;
             }
 
-            if (rostros.Length == 0)
-                Dispatcher.Invoke(() => txtNombreReconocido.Text = "");
-
-            ActualizarVisor(frame);
+            MostrarFrame(imgColor);
         }
 
-        private void ActualizarVisor(Drawing.Bitmap frame)
+        // ======================================================================
+        //  PRUEBA DE VIDA: PARPADEO + MOVIMIENTO DE CABEZA
+        // ======================================================================
+
+        private void ProcesarPruebaDeVida(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
-            var src = BitmapToImageSource(frame);
-            Dispatcher.Invoke(() =>
+            _framesProcesados++;
+
+            // ---- Detección de parpadeo (se busca en la mitad superior del rostro) ----
+            using var rostroROI = imgGris.Copy(rostroRect);
+            var zonaSuperior = new System.Drawing.Rectangle(0, 0, rostroROI.Width, Math.Max(1, rostroROI.Height / 2));
+            using var zonaOjos = rostroROI.Copy(zonaSuperior);
+
+            var ojos = _clasificadorOjos.DetectMultiScale(zonaOjos, 1.1, 6, System.Drawing.Size.Empty);
+            bool ojosVisiblesAhora = ojos.Length >= 1;
+
+            // Un parpadeo = transición de "ojos visibles" a "no visibles" y de vuelta a "visibles".
+            if (_ojosVisiblesFramePrevio && !ojosVisiblesAhora)
             {
-                imgCamara.Source = src;
+                _esperandoReaperturaOjos = true;
+            }
+            else if (_esperandoReaperturaOjos && ojosVisiblesAhora)
+            {
+                _parpadeosDetectados++;
+                _esperandoReaperturaOjos = false;
+            }
+            _ojosVisiblesFramePrevio = ojosVisiblesAhora;
 
-                MostrarEstado(_rostroDetectado
-                    ? "Rostro detectado, analizando..."
-                    : "Buscando rostro...");
+            // ---- Detección de movimiento de cabeza (centroide del rostro entre frames) ----
+            var centroActual = new System.Drawing.Point(
+                rostroRect.X + rostroRect.Width / 2,
+                rostroRect.Y + rostroRect.Height / 2);
 
-                elipseEstado.Fill = _rostroDetectado
-                    ? new SolidColorBrush(Color.FromRgb(46, 204, 113))
-                    : new SolidColorBrush(Color.FromRgb(100, 100, 100));
-            });
+            if (_centroRostroPrevio.HasValue)
+            {
+                double dx = centroActual.X - _centroRostroPrevio.Value.X;
+                double dy = centroActual.Y - _centroRostroPrevio.Value.Y;
+                _movimientoAcumulado += Math.Sqrt(dx * dx + dy * dy);
+            }
+            _centroRostroPrevio = centroActual;
+
+            // ---- Evaluación conjunta ----
+            bool huboParpadeo = _parpadeosDetectados >= 1;
+            bool huboMovimiento = _movimientoAcumulado >= UMBRAL_MOVIMIENTO_PX;
+
+            if (huboParpadeo && huboMovimiento)
+            {
+                _pruebaVidaSuperada = true;
+                return;
+            }
+
+            if (_framesProcesados >= FRAMES_PRUEBA_VIDA)
+            {
+                // Se agotó la ventana de tiempo sin cumplir ambas condiciones.
+                // No se cuenta como intento fallido de identidad: solo se reinicia la prueba de vida.
+                _framesProcesados = 0;
+                _parpadeosDetectados = 0;
+                _movimientoAcumulado = 0;
+                txtEstado.Text = "Parpadea y mueve levemente la cabeza para continuar...";
+            }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // ACCESO CONCEDIDO
-        // ════════════════════════════════════════════════════════════
+        // ======================================================================
+        //  COMPARACIÓN DE ROSTRO Y DECISIÓN DE ACCESO
+        // ======================================================================
 
-        private async void FinalizarAcceso(string nombre)
+        private void VerificarIdentidad(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
-            if (_accesoOtorgado) return;
-            _accesoOtorgado = true;
+            using var rostroRecortado = imgGris.Copy(rostroRect);
+            using var rostroNormalizado = rostroRecortado.Resize(200, 200, Inter.Cubic);
 
-            Dispatcher.Invoke(() =>
+            var resultado = _reconocedor.Predict(rostroNormalizado);
+
+            bool coincide = resultado.Label >= 0 &&
+                            resultado.Distance <= UMBRAL_CONFIANZA_LBPH &&
+                            _etiquetasNombres.ContainsKey(resultado.Label);
+
+            if (coincide)
             {
-                bdNombreReconocido.Visibility = Visibility.Visible;
-                txtNombreReconocido.Text = $"¡Bienvenido, {nombre}!";
-                MostrarEstado("Acceso concedido. Entrando en 3 segundos...");
-                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(46, 204, 113));
-            });
-
-            await Task.Delay(3000);
-
-            Dispatcher.Invoke(() =>
+                string nombre = _etiquetasNombres[resultado.Label];
+                AccesoConcedido(nombre);
+            }
+            else
             {
-                DetenerCamara();
-                new Dasboard_Prueba.MenuPrincipal().Show();
+                AccesoDenegado("Rostro no coincide con ningún registro");
+            }
+        }
+
+        private void AccesoConcedido(string nombre)
+        {
+            _registro.IntentosFallidos = 0;
+            _registro.BloqueadoHasta = null;
+            GuardarRegistroIntentos();
+
+            RegistrarEnLog($"ACCESO CONCEDIDO - Usuario: {nombre}");
+
+            DetenerCamaraInterno();
+
+            txtEstado.Text = "Identidad verificada";
+            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2E, 0xCC, 0x71));
+            txtNombreReconocido.Text = nombre;
+            bdNombreReconocido.Visibility = Visibility.Visible;
+
+            // Pequeña pausa visual para que el usuario vea el check verde y su nombre
+            // antes de pasar al menú principal.
+            var temporizadorTransicion = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
+            temporizadorTransicion.Tick += (s, e) =>
+            {
+                temporizadorTransicion.Stop();
+
+                var menu = new MenuPrincipal();
+                // Si MenuPrincipal necesita saber quién inició sesión, agrega un
+                // constructor que reciba el nombre, ej: new MenuPrincipal(nombre);
+                menu.Show();
                 this.Close();
-            });
+            };
+            temporizadorTransicion.Start();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // NAVEGACIÓN
-        // ════════════════════════════════════════════════════════════
+        private void AccesoDenegado(string motivo)
+        {
+            _registro.IntentosFallidos++;
+            RegistrarEnLog($"ACCESO DENEGADO - Motivo: {motivo} - Intento N.{_registro.IntentosFallidos}");
+
+            if (_registro.IntentosFallidos >= MAX_INTENTOS_FALLIDOS)
+            {
+                _registro.BloqueadoHasta = DateTime.Now.AddMinutes(MINUTOS_BLOQUEO);
+                RegistrarEnLog($"CUENTA BLOQUEADA TEMPORALMENTE hasta {_registro.BloqueadoHasta:yyyy-MM-dd HH:mm:ss}");
+                GuardarRegistroIntentos();
+
+                DetenerCamaraInterno();
+
+                MessageBox.Show(
+                    $"Se superó el número máximo de intentos fallidos ({MAX_INTENTOS_FALLIDOS}).\n" +
+                    $"El acceso ha sido bloqueado por {MINUTOS_BLOQUEO} minutos.",
+                    "Acceso bloqueado", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                ActualizarUIBloqueo();
+                return;
+            }
+
+            GuardarRegistroIntentos();
+            DetenerCamaraInterno();
+
+            txtEstado.Text = $"Rostro no reconocido ({_registro.IntentosFallidos}/{MAX_INTENTOS_FALLIDOS} intentos)";
+            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
+
+            MessageBox.Show("No se pudo verificar tu identidad. Inténtalo nuevamente.",
+                "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        // ======================================================================
+        //  UTILIDADES: RENDER DE FRAME, ARRASTRE DE VENTANA, NAVEGACIÓN
+        // ======================================================================
+
+        private void MostrarFrame(Image<Bgr, byte> imagen)
+        {
+            using var bitmap = imagen.ToBitmap();
+            imgCamara.Source = BitmapToBitmapSource(bitmap);
+        }
+
+        private BitmapSource BitmapToBitmapSource(System.Drawing.Bitmap bitmap)
+        {
+            IntPtr hBitmap = bitmap.GetHbitmap();
+            try
+            {
+                var bs = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                    hBitmap, IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                bs.Freeze();
+                return bs;
+            }
+            finally
+            {
+                DeleteObject(hBitmap);
+            }
+        }
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        private void Window_Drag(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+                DragMove();
+        }
 
         private void btnRegresar_Click(object sender, RoutedEventArgs e)
         {
-            DetenerCamara();
-            new OpcionSesion(_correoUsuario).Show();
-            this.Close();
+            DetenerCamaraInterno();
+            _timerBloqueo?.Stop();
+
+            // Punto de integración: cerrar esta ventana o navegar a la anterior, por ejemplo:
+            // this.Close();
         }
-
-        // ════════════════════════════════════════════════════════════
-        // HELPERS
-        // ════════════════════════════════════════════════════════════
-
-        private void MostrarEstado(string mensaje, bool esError = false)
-        {
-            txtEstado.Text = mensaje;
-            txtEstado.Foreground = esError
-                ? new SolidColorBrush(Color.FromRgb(231, 76, 60))
-                : new SolidColorBrush(Color.FromRgb(170, 170, 170));
-        }
-
-        private static BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
-        {
-            using MemoryStream ms = new();
-            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            ms.Position = 0;
-            BitmapImage img = new();
-            img.BeginInit();
-            img.StreamSource = ms;
-            img.CacheOption = BitmapCacheOption.OnLoad;
-            img.EndInit();
-            img.Freeze();
-            return img;
-        }
-
-        // ════════════════════════════════════════════════════════════
-        // CLEANUP
-        // ════════════════════════════════════════════════════════════
 
         protected override void OnClosed(EventArgs e)
         {
-            DetenerCamara();
-            _servicioReconocimiento.Dispose();
-            foreach (var p in _personas) p.Foto?.Dispose();
+            DetenerCamaraInterno();
+            _timerBloqueo?.Stop();
             base.OnClosed(e);
         }
     }

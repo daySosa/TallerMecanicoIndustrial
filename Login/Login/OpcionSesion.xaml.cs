@@ -31,6 +31,6 @@ namespace Login
             => Navegar(() => new Verificacion2FA(_correoUsuario));
 
         private void BtnReconocimientoFacial_Click(object sender, RoutedEventArgs e)
-            => Navegar(() => new ReconocimientoFacial(_correoUsuario));
+            => Navegar(() => new ReconocimientoFacial());
     }
 }
