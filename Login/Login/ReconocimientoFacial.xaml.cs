@@ -75,6 +75,13 @@ namespace Login
         {
             InitializeComponent();
 
+            // ---------------------------------------------------------------------
+            // TEMPORAL: importa las fotos de la carpeta local a la base de datos.
+            // Ejecutar una sola vez y luego BORRAR esta línea (y el comentario)
+            // para que no se vuelva a correr y duplique las fotos en la tabla.
+            // ---------------------------------------------------------------------
+            // Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
+
             CargarRegistroIntentos();
             InicializarClasificadores();
             EntrenarReconocedor();
@@ -253,10 +260,12 @@ namespace Login
             // de "conexion" ya cierra y libera la conexión automáticamente.
 
             int etiquetaActual = 0;
+            var conteoValidasPorPersona = new Dictionary<string, int>();
 
             foreach (var persona in fotosPorPersona)
             {
                 bool tieneImagenesValidas = false;
+                int validasDeEstaPersona = 0;
 
                 foreach (var datosFoto in persona.Value)
                 {
@@ -279,6 +288,7 @@ namespace Login
                         imagenes.Add(rostroNormalizado);
                         etiquetas.Add(etiquetaActual);
                         tieneImagenesValidas = true;
+                        validasDeEstaPersona++;
                     }
                     catch
                     {
@@ -286,12 +296,21 @@ namespace Login
                     }
                 }
 
+                conteoValidasPorPersona[persona.Key] = validasDeEstaPersona;
+
                 if (tieneImagenesValidas)
                 {
                     _etiquetasNombres[etiquetaActual] = persona.Key;
                     etiquetaActual++;
                 }
             }
+
+            // TEMPORAL: diagnóstico para saber cuántas fotos de cada persona realmente
+            // pasaron la detección de rostro y se usaron para entrenar. Borrar después.
+            var resumen = string.Join("\n", conteoValidasPorPersona.Select(kv =>
+                $"{kv.Key}: {kv.Value} de {fotosPorPersona[kv.Key].Count} fotos válidas"));
+            MessageBox.Show(resumen, "Diagnóstico de entrenamiento",
+                MessageBoxButton.OK, MessageBoxImage.Information);
 
             if (imagenes.Count == 0)
             {

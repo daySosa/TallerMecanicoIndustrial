@@ -105,7 +105,7 @@ namespace Login
                 return;
             }
 
-            Navegar(() => new ReconocimientoFacial(_correoUsuario));
+            Navegar(() => new ReconocimientoFacial());
         }
     }
 }
