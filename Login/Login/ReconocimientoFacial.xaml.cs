@@ -26,6 +26,15 @@ namespace Login
     /// Requiere una carpeta "RostrosRegistrados" con subcarpetas por persona
     /// (ej: RostrosRegistrados/Juan/foto1.jpg, foto2.jpg...) usadas para entrenar
     /// el reconocedor al iniciar la ventana.
+    ///
+    /// CAMBIOS EN ESTA VERSIÓN (corrección de falsos positivos):
+    /// 1. Umbral LBPH ahora debe recalibrarse con datos reales (ver diagnóstico en consola/log).
+    /// 2. Se aplica CLAHE (ecualización adaptativa) tanto al entrenar como al reconocer,
+    ///    para reducir el efecto de diferencias de iluminación entre fotos y cámara en vivo.
+    /// 3. La decisión de acceso ya NO se toma con un solo frame: se exige consenso de varios
+    ///    frames consecutivos con la misma etiqueta antes de conceder o denegar acceso.
+    /// 4. Se eliminaron los MessageBox de diagnóstico temporal (bloqueaban el hilo de UI);
+    ///    ahora el detalle de cada predicción se escribe en Debug.WriteLine y en el log.
     /// </summary>
     public partial class ReconocimientoFacial : Window
     {
@@ -34,12 +43,26 @@ namespace Login
         private const int MINUTOS_BLOQUEO = 5;
 
         // Umbral de distancia LBPH: cuanto menor, más estricta la coincidencia.
-        // Ajustar según pruebas reales (valores típicos entre 45 y 75).
-        private const double UMBRAL_CONFIANZA_LBPH = 65.0;
+        // IMPORTANTE: este valor DEBE recalibrarse con datos reales de tu instalación.
+        // Usa el log/Debug.WriteLine de VerificarIdentidad para recolectar distancias de:
+        //   a) personas SÍ registradas -> anota el rango típico de distancias
+        //   b) personas NO registradas -> anota el rango típico de distancias
+        // El umbral correcto es el punto medio entre ambos rangos. Con CLAHE aplicado,
+        // valores típicos suelen bajar respecto a los que tenías sin ecualizar (65.0 era
+        // demasiado permisivo). Empieza probando con 50.0 y ajusta según tus mediciones.
+        private const double UMBRAL_CONFIANZA_LBPH = 50.0;
 
         // Ventana de frames (a ~30 fps) dentro de la cual se debe superar la prueba de vida.
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
+
+        // Cantidad de frames consecutivos con predicción que se exigen antes de decidir
+        // el acceso. Esto evita que un solo frame con ruido/mala luz decida todo.
+        private const int FRAMES_CONSENSO_REQUERIDOS = 5;
+
+        // Tolerancia de frames "ruidosos" dentro de la ventana de consenso (frames que caen
+        // en una etiqueta distinta a la mayoritaria, pero no invalidan el consenso).
+        private const int TOLERANCIA_FRAMES_RUIDOSOS = 1;
 
         private readonly string archivoIntentos =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seguridad_intentos.json");
@@ -67,7 +90,10 @@ namespace Login
 
         private int _framesProcesados = 0;
         private bool _pruebaVidaSuperada = false;
-        private bool _verificando = false; // evita reentradas mientras se decide el acceso
+        private bool _verificando = false; // true solo mientras se evalúa la decisión final de acceso
+
+        // ---------------------- Estado de consenso multi-frame ----------------------
+        private readonly List<(int Label, double Distance)> _historialPredicciones = new();
 
         private RegistroIntentos _registro;
 
@@ -80,7 +106,7 @@ namespace Login
             // Ejecutar una sola vez y luego BORRAR esta línea (y el comentario)
             // para que no se vuelva a correr y duplique las fotos en la tabla.
             // ---------------------------------------------------------------------
-            // Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
+            Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
 
             CargarRegistroIntentos();
             InicializarClasificadores();
@@ -209,6 +235,27 @@ namespace Login
             _clasificadorOjos = new CascadeClassifier(rutaOjos);
         }
 
+        /// <summary>
+        /// Aplica ecualización de histograma adaptativa (CLAHE) a un rostro en escala de
+        /// grises. Se usa SIEMPRE en el mismo punto del pipeline (después de recortar el
+        /// rostro, antes de redimensionar) tanto al entrenar como al reconocer, para que
+        /// el modelo y las predicciones en vivo estén en las mismas condiciones de contraste
+        /// y no se vean afectados por diferencias de iluminación entre las fotos de la base
+        /// de datos y el video de la cámara.
+        /// </summary>
+        private Image<Gray, byte> NormalizarIluminacion(Image<Gray, byte> imgGris)
+        {
+            // Se usa el método estático CvInvoke.CLAHE en vez de instanciar la clase CLAHE
+            // directamente, ya que en algunas versiones de Emgu.CV el constructor público
+            // no está disponible y da error CS0246 ("no se encontró el tipo CLAHE").
+            // CvInvoke sí forma parte del núcleo de Emgu.CV y no requiere referencias extra.
+            var salida = new Image<Gray, byte>(imgGris.Size);
+            // El cuarto parámetro (256) es la cantidad de bins del histograma; 256 es el
+            // valor estándar para imágenes de 8 bits por canal (escala de grises 0-255).
+            CvInvoke.CLAHE(imgGris, 2.0, new System.Drawing.Size(8, 8), 256, salida);
+            return salida;
+        }
+
         private void EntrenarReconocedor()
         {
             var imagenes = new List<Image<Gray, byte>>();
@@ -283,7 +330,8 @@ namespace Login
 
                         var rostroRect = rostros.OrderByDescending(r => r.Width * r.Height).First();
                         using var rostroRecortado = imgGris.Copy(rostroRect);
-                        var rostroNormalizado = rostroRecortado.Resize(200, 200, Inter.Cubic);
+                        using var rostroEcualizado = NormalizarIluminacion(rostroRecortado);
+                        var rostroNormalizado = rostroEcualizado.Resize(200, 200, Inter.Cubic);
 
                         imagenes.Add(rostroNormalizado);
                         etiquetas.Add(etiquetaActual);
@@ -305,12 +353,14 @@ namespace Login
                 }
             }
 
-            // TEMPORAL: diagnóstico para saber cuántas fotos de cada persona realmente
-            // pasaron la detección de rostro y se usaron para entrenar. Borrar después.
-            var resumen = string.Join("\n", conteoValidasPorPersona.Select(kv =>
-                $"{kv.Key}: {kv.Value} de {fotosPorPersona[kv.Key].Count} fotos válidas"));
-            MessageBox.Show(resumen, "Diagnóstico de entrenamiento",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            // Diagnóstico de entrenamiento: cuántas fotos de cada persona pasaron la
+            // detección de rostro y se usaron realmente para entrenar. Si alguna persona
+            // queda con muy pocas fotos válidas (menos de 5-8), el modelo tendrá poca
+            // variación de esa cara y será más fácil que otro rostro caiga "cerca" de ella.
+            var resumen = string.Join(" | ", conteoValidasPorPersona.Select(kv =>
+                $"{kv.Key}: {kv.Value}/{fotosPorPersona[kv.Key].Count}"));
+            RegistrarEnLog($"ENTRENAMIENTO - Fotos válidas por persona -> {resumen}");
+            System.Diagnostics.Debug.WriteLine($"[ENTRENAMIENTO] {resumen}");
 
             if (imagenes.Count == 0)
             {
@@ -404,6 +454,7 @@ namespace Login
             _camara?.Dispose();
             _camara = null;
             _verificando = false;
+            _historialPredicciones.Clear();
 
             btnDetenerCamara.IsEnabled = false;
 
@@ -426,6 +477,7 @@ namespace Login
             _framesProcesados = 0;
             _pruebaVidaSuperada = false;
             _verificando = false;
+            _historialPredicciones.Clear();
         }
 
         // ======================================================================
@@ -434,7 +486,7 @@ namespace Login
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (_camara == null || _verificando) return;
+            if (_camara == null) return;
 
             using var frame = _camara.QueryFrame();
             if (frame == null) return;
@@ -465,10 +517,17 @@ namespace Login
                 {
                     txtEstado.Text = "Prueba de vida superada. Verificando identidad...";
                     elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x4f, 0x6e, 0xf7));
-                    _verificando = true;
-                    VerificarIdentidad(imgGris, rostroRect);
                 }
                 return;
+            }
+
+            // Ya se superó la prueba de vida: seguimos alimentando el historial de
+            // predicciones frame a frame hasta juntar el consenso necesario. La bandera
+            // _verificando evita que VerificarIdentidad se reevalúe mientras se procesa
+            // la decisión final (AccesoConcedido/AccesoDenegado detienen la cámara).
+            if (!_verificando)
+            {
+                VerificarIdentidad(imgGris, rostroRect);
             }
 
             MostrarFrame(imgColor);
@@ -537,34 +596,60 @@ namespace Login
         }
 
         // ======================================================================
-        //  COMPARACIÓN DE ROSTRO Y DECISIÓN DE ACCESO
+        //  COMPARACIÓN DE ROSTRO Y DECISIÓN DE ACCESO (con consenso multi-frame)
         // ======================================================================
 
         private void VerificarIdentidad(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
             using var rostroRecortado = imgGris.Copy(rostroRect);
-            using var rostroNormalizado = rostroRecortado.Resize(200, 200, Inter.Cubic);
+            using var rostroEcualizado = NormalizarIluminacion(rostroRecortado);
+            using var rostroNormalizado = rostroEcualizado.Resize(200, 200, Inter.Cubic);
 
             var resultado = _reconocedor.Predict(rostroNormalizado);
+            _historialPredicciones.Add((resultado.Label, resultado.Distance));
 
-            // TEMPORAL: para calibrar el umbral. Borrar esta línea después de ajustarlo.
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Label: {resultado.Label} | Distancia: {resultado.Distance}");
-            MessageBox.Show($"Etiqueta detectada: {resultado.Label}\nDistancia: {resultado.Distance:F2}\n" +
-                             $"Umbral actual: {UMBRAL_CONFIANZA_LBPH}",
-                             "Diagnóstico temporal", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Diagnostics.Debug.WriteLine(
+                $"[VERIFICACION] Frame {_historialPredicciones.Count}/{FRAMES_CONSENSO_REQUERIDOS} " +
+                $"| Label: {resultado.Label} | Distancia: {resultado.Distance:F2} | Umbral: {UMBRAL_CONFIANZA_LBPH}");
 
-            bool coincide = resultado.Label >= 0 &&
-                            resultado.Distance <= UMBRAL_CONFIANZA_LBPH &&
-                            _etiquetasNombres.ContainsKey(resultado.Label);
+            if (_historialPredicciones.Count < FRAMES_CONSENSO_REQUERIDOS)
+            {
+                txtEstado.Text = $"Confirmando identidad ({_historialPredicciones.Count}/{FRAMES_CONSENSO_REQUERIDOS})...";
+                return;
+            }
+
+            // Ya tenemos suficientes frames: se evalúa el consenso y se decide el acceso.
+            // Se bloquean nuevas llamadas a VerificarIdentidad mientras se resuelve esta decisión.
+            _verificando = true;
+
+            var etiquetaMasComun = _historialPredicciones
+                .GroupBy(p => p.Label)
+                .OrderByDescending(g => g.Count())
+                .First();
+
+            bool consensoSuficiente = etiquetaMasComun.Count() >= FRAMES_CONSENSO_REQUERIDOS - TOLERANCIA_FRAMES_RUIDOSOS;
+            double distanciaPromedio = etiquetaMasComun.Average(p => p.Distance);
+
+            bool coincide = consensoSuficiente &&
+                            etiquetaMasComun.Key >= 0 &&
+                            distanciaPromedio <= UMBRAL_CONFIANZA_LBPH &&
+                            _etiquetasNombres.ContainsKey(etiquetaMasComun.Key);
+
+            RegistrarEnLog(
+                $"CONSENSO - Etiqueta mayoritaria: {etiquetaMasComun.Key} " +
+                $"({etiquetaMasComun.Count()}/{FRAMES_CONSENSO_REQUERIDOS} frames) " +
+                $"| Distancia promedio: {distanciaPromedio:F2} | Coincide: {coincide}");
+
+            _historialPredicciones.Clear();
 
             if (coincide)
             {
-                string nombre = _etiquetasNombres[resultado.Label];
+                string nombre = _etiquetasNombres[etiquetaMasComun.Key];
                 AccesoConcedido(nombre);
             }
             else
             {
-                AccesoDenegado("Rostro no coincide con ningún registro");
+                AccesoDenegado("Rostro no coincide con ningún registro (o consenso insuficiente)");
             }
         }
 
