@@ -65,6 +65,7 @@ namespace Login
 
         private readonly string _correoUsuario;
 
+        public ReconocimientoFacial() : this(string.Empty) { }
         public ReconocimientoFacial(string correo)
         {
             InitializeComponent();
@@ -192,6 +193,8 @@ namespace Login
 
         private void EntrenarReconocedor()
         {
+            // Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
+
             var imagenes = new List<Image<Gray, byte>>();
             var etiquetas = new List<int>();
             _etiquetasNombres.Clear();
