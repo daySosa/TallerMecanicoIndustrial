@@ -646,22 +646,11 @@ namespace Login.Clases
             var lista = new List<Vehiculo>();
             try
             {
-                const string query = @"
-                    SELECT
-                        v.Vehiculo_Placa,
-                        v.Vehiculo_Marca,
-                        v.Vehiculo_Modelo,
-                        v.Vehiculo_Año,
-                        v.Vehiculo_Tipo,
-                        ISNULL(v.Vehiculo_Observaciones, '') AS Vehiculo_Observaciones,
-                        v.Vehiculo_Activo,
-                        c.Cliente_DNI,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto
-                    FROM Vehiculo v
-                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY v.Vehiculo_Placa";
+                using var cmd = new SqlCommand("sp_Vehiculo_ObtenerTodos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
-                using var cmd = new SqlCommand(query, conexion.SqlC);
                 conexion.Abrir();
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -692,8 +681,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT COUNT(1) FROM Vehiculo WHERE Vehiculo_Placa = @Placa";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Vehiculo_ExistePlaca", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Placa", placa);
 
                 conexion.Abrir();
@@ -712,18 +703,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string sql = @"
-                    SELECT v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           v.Vehiculo_Activo,
-                           c.Cliente_DNI,
-                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email, c.Cliente_Activo
-                    FROM   Vehiculo v
-                    INNER JOIN Cliente c ON v.Cliente_DNI = c.Cliente_DNI
-                    WHERE  v.Vehiculo_Placa = @Placa";
-
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Vehiculo_BuscarPorPlaca", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Placa", placa);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
@@ -747,51 +730,71 @@ namespace Login.Clases
             }
         }
 
-        public void GuardarOActualizarVehiculo(bool esNuevo, dynamic v, string placaOriginal = "")
+        // ANTES: GuardarOActualizarVehiculo(bool esNuevo, dynamic v, string placaOriginal)
+        // Un solo método con SQL de INSERT/UPDATE armado a mano según un "if".
+        // Ahora son 2 métodos separados y claros, cada uno con su SP.
+
+        public bool AgregarVehiculo(string placa, string dni, string marca, string modelo,
+                                     int anio, string tipo, string observaciones)
         {
             using var conexion = new ClsConexion();
             try
             {
-                conexion.Abrir();
-
-                string sql = esNuevo
-                    ? @"INSERT INTO Vehiculo
-                            (Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo,
-                             Vehiculo_Año, Vehiculo_Tipo, Vehiculo_Observaciones,
-                             Vehiculo_Activo, Cliente_DNI)
-                        VALUES
-                            (@Placa, @Marca, @Modelo, @Anio, @Tipo, @Obs, 1, @DNI)"
-                    : @"UPDATE Vehiculo SET
-                            Vehiculo_Placa         = @Placa,
-                            Vehiculo_Marca         = @Marca,
-                            Vehiculo_Modelo        = @Modelo,
-                            Vehiculo_Año           = @Anio,
-                            Vehiculo_Tipo          = @Tipo,
-                            Vehiculo_Observaciones = @Obs,
-                            Vehiculo_Activo        = @Activo,
-                            Cliente_DNI            = @DNI
-                        WHERE Vehiculo_Placa = @PlacaOriginal";
-
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
-                cmd.Parameters.AddWithValue("@Placa", v.Placa);
-                cmd.Parameters.AddWithValue("@Marca", v.Marca);
-                cmd.Parameters.AddWithValue("@Modelo", v.Modelo);
-                cmd.Parameters.AddWithValue("@Anio", v.Anio);
-                cmd.Parameters.AddWithValue("@Tipo", v.Tipo);
-                cmd.Parameters.AddWithValue("@DNI", v.DNI);
-                cmd.Parameters.AddWithValue("@Obs", (object)v.Obs ?? DBNull.Value);
-
-                if (!esNuevo)
+                // Antes esto era un INSERT manual. Ahora usa sp_RegistrarVehiculo,
+                // que ya existía en la base y valida que el cliente exista y que
+                // la placa no esté duplicada antes de insertar.
+                using var cmd = new SqlCommand("sp_RegistrarVehiculo", conexion.SqlC)
                 {
-                    cmd.Parameters.AddWithValue("@PlacaOriginal", placaOriginal);
-                    cmd.Parameters.AddWithValue("@Activo", v.Activo ? 1 : 0);
-                }
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Placa", placa);
+                cmd.Parameters.AddWithValue("@DNI", dni);
+                cmd.Parameters.AddWithValue("@Marca", marca);
+                cmd.Parameters.AddWithValue("@Modelo", modelo);
+                cmd.Parameters.AddWithValue("@Anio", anio);
+                cmd.Parameters.AddWithValue("@Tipo", tipo);
+                cmd.Parameters.AddWithValue("@Obs", string.IsNullOrWhiteSpace(observaciones)
+                    ? DBNull.Value : observaciones.Trim());
 
+                conexion.Abrir();
                 cmd.ExecuteNonQuery();
+                return true;
             }
             catch (SqlException ex)
             {
-                throw new Exception("Error al procesar el vehículo: " + ex.Message, ex);
+                throw new Exception("Error al registrar el vehículo: " + ex.Message, ex);
+            }
+        }
+
+        public bool ActualizarVehiculo(string placaOriginal, string placaNueva, string dni,
+                                        string marca, string modelo, int anio, string tipo,
+                                        string observaciones, bool activo)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Vehiculo_Actualizar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@PlacaOriginal", placaOriginal);
+                cmd.Parameters.AddWithValue("@PlacaNueva", placaNueva);
+                cmd.Parameters.AddWithValue("@Marca", marca);
+                cmd.Parameters.AddWithValue("@Modelo", modelo);
+                cmd.Parameters.AddWithValue("@Anio", anio);
+                cmd.Parameters.AddWithValue("@Tipo", tipo);
+                cmd.Parameters.AddWithValue("@Obs", string.IsNullOrWhiteSpace(observaciones)
+                    ? DBNull.Value : observaciones.Trim());
+                cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
+                cmd.Parameters.AddWithValue("@DNI", dni);
+
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al actualizar el vehículo: " + ex.Message, ex);
             }
         }
 
