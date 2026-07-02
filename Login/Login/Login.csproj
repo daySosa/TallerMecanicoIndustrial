@@ -13,6 +13,17 @@
 		<None Remove="fondo_login.png" />
 		<None Remove="OSM_LOGO.png" />
 		<None Remove="OSM_Logo_AR.png" />
+		<None Remove="Recursos\haarcascade_eye.xml" />
+		<None Remove="Recursos\haarcascade_frontalface_default.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Recursos\haarcascade_eye.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Recursos\haarcascade_frontalface_default.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -42,12 +53,6 @@
 		<Resource Include="Imagenes\OSM_Logo_AR.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="Recursos\haarcascade_frontalface_default.xml">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 </Project>
