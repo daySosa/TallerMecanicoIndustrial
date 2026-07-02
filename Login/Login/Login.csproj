@@ -15,14 +15,6 @@
 		<None Remove="OSM_Logo_AR.png" />
 		<None Remove="Recursos\haarcascade_eye.xml" />
 		<None Remove="Recursos\haarcascade_frontalface_default.xml" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_41_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_46_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_49_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_51_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_54_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_00_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_04_Pro.jpg" />
-		<None Remove="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_06_Pro.jpg" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -30,30 +22,6 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="Recursos\haarcascade_frontalface_default.xml">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_41_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_46_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_49_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_51_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_38_54_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_00_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_04_Pro.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="RostrosRegistrados\GabrielaPhotos\WIN_20260630_22_39_06_Pro.jpg">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>

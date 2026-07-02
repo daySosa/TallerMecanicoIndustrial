@@ -3,7 +3,6 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
-using Login.Clases;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -75,13 +74,6 @@ namespace Login
         public ReconocimientoFacial()
         {
             InitializeComponent();
-
-            // ---------------------------------------------------------------------
-            // TEMPORAL: importa las fotos de la carpeta local a la base de datos.
-            // Ejecutar una sola vez y luego BORRAR esta línea (y el comentario)
-            // para que no se vuelva a correr y duplique las fotos en la tabla.
-            // ---------------------------------------------------------------------
-            Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
 
             CargarRegistroIntentos();
             InicializarClasificadores();
@@ -222,13 +214,22 @@ namespace Login
             // Se agrupan las fotos por nombre de persona, tal como llegan de la tabla.
             var fotosPorPersona = new Dictionary<string, List<byte[]>>();
 
-            var conexion = new clsConexion();
+            // NOTA: se usa una cadena de conexión propia (en vez de clsConexion) para no
+            // modificar esa clase compartida por el equipo. Se agrega "Authentication=SqlPassword;"
+            // porque las versiones recientes de Microsoft.Data.SqlClient, al detectar un servidor
+            // "*.database.windows.net", intentan autenticar con Azure Active Directory por defecto
+            // si no se especifica el tipo de autenticación.
+            const string cadenaConexion =
+                "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;" +
+                "User ID=DayanaSosa;Password=Serv2026;Authentication=SqlPassword;";
+
+            using var conexion = new Microsoft.Data.SqlClient.SqlConnection(cadenaConexion);
             try
             {
-                conexion.Abrir();
+                conexion.Open();
 
                 using var cmd = new Microsoft.Data.SqlClient.SqlCommand(
-                    "SELECT Nombre, Foto FROM RostrosRegistrados", conexion.SqlC);
+                    "SELECT Nombre, Foto FROM RostrosRegistrados", conexion);
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -248,10 +249,8 @@ namespace Login
                     "Error de base de datos", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            finally
-            {
-                conexion.Cerrar();
-            }
+            // No se necesita "finally" con Cerrar(): el "using" en la declaración
+            // de "conexion" ya cierra y libera la conexión automáticamente.
 
             int etiquetaActual = 0;
 
