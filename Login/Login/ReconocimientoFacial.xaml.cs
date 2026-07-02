@@ -114,6 +114,7 @@ namespace Login
             // para que no se vuelva a correr y duplique las fotos en la tabla.
             // ---------------------------------------------------------------------
             // Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
+            // Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
 
             CargarRegistroIntentos();
             InicializarClasificadores();
