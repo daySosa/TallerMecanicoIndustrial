@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using System.Windows;
+﻿using System.Windows;
 
 namespace Login.Clases
 {
@@ -14,7 +13,7 @@ namespace Login.Clases
             string precioLimpio = precio.Replace("L", "").Replace("0.00", "")
                                         .Replace(",", "").Replace(" ", "").Trim();
 
-            return clsValidaciones.ValidarFormularioVacio(clienteDNI, vehiculoPlaca, precioLimpio);
+            return ValidacionesGenerales.ValidarFormularioVacio(clienteDNI, vehiculoPlaca, precioLimpio);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -24,14 +23,14 @@ namespace Login.Clases
         public static bool ValidarCampoBusqueda(string valor, bool esDNI)
         {
             string campo = esDNI ? "DNI del cliente" : "placa del vehículo";
-            return clsValidaciones.ValidarTextoRequerido(valor,
+            return ValidacionesGenerales.ValidarTextoRequerido(valor,
                 $"⚠ Ingresa el {campo} para realizar la búsqueda.",
                 msg => MessageBox.Show(msg, "Campo vacío", MessageBoxButton.OK, MessageBoxImage.Warning));
         }
 
         public static bool ValidarFormatoDNIBusqueda(string dni)
         {
-            return clsValidaciones.ValidarFormatoDNI(dni);
+            return ValidacionesGenerales.ValidarFormatoDNI(dni);
         }
 
         public static bool ValidarFormatoPlacaBusqueda(string placa)
@@ -112,7 +111,7 @@ namespace Login.Clases
 
         public static bool ValidarEstadoOrden(object itemSeleccionado)
         {
-            return clsValidaciones.ValidarComboSeleccionado(itemSeleccionado, "estado de la orden");
+            return ValidacionesGenerales.ValidarComboSeleccionado(itemSeleccionado, "estado de la orden");
         }
 
         public static bool ValidarCambioEstadoFinalizado(string estadoAnterior, string estadoNuevo)
@@ -136,7 +135,7 @@ namespace Login.Clases
 
         public static bool ValidarPrioridad(object itemSeleccionado)
         {
-            return clsValidaciones.ValidarComboSeleccionado(itemSeleccionado, "prioridad de la orden");
+            return ValidacionesGenerales.ValidarComboSeleccionado(itemSeleccionado, "prioridad de la orden");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -174,7 +173,7 @@ namespace Login.Clases
                 return false;
             }
 
-            if (!clsValidaciones.ValidarFechaEntrega(fechaInicio, fechaEntrega))
+            if (!ValidacionesGenerales.ValidarFechaEntrega(fechaInicio, fechaEntrega))
                 return false;
 
             if (fechaEntrega.Value.Date > DateTime.Today.AddYears(2))
@@ -189,7 +188,7 @@ namespace Login.Clases
 
         public static bool ValidarMesActualizacion(DateTime? fecha)
         {
-            return clsValidaciones.ValidarMesOrden(fecha);
+            return ValidacionesGenerales.ValidarMesOrden(fecha);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -288,10 +287,10 @@ namespace Login.Clases
         {
             if (string.IsNullOrWhiteSpace(texto)) return true;
 
-            if (!clsValidaciones.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;
-            if (!clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false;
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
-            if (!clsValidaciones.ValidarLongitudMaxima(texto, 500, "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(texto, 500, "observaciones")) return false;
 
             return true;
         }
@@ -355,7 +354,7 @@ namespace Login.Clases
             string rutaFoto,
             int cantidadRepuestos,
             out decimal precioServicio,
-            bool esActualizar = false)         
+            bool esActualizar = false)
         {
             precioServicio = 0;
 
@@ -363,7 +362,7 @@ namespace Login.Clases
             if (!ValidarVehiculoAsignado(vehiculoPlaca)) return false;
             if (!ValidarEstadoOrden(estadoSeleccionado)) return false;
             if (!ValidarPrioridad(prioridadSeleccionada)) return false;
-            if (!esActualizar && !ValidarFechaInicio(fechaInicio)) return false;  
+            if (!esActualizar && !ValidarFechaInicio(fechaInicio)) return false;
             if (!ValidarFechaEntrega(fechaInicio, fechaEntrega)) return false;
             if (!ValidarPrecioServicio(precioServicioTexto, out precioServicio)) return false;
             if (!ValidarObservaciones(observaciones)) return false;

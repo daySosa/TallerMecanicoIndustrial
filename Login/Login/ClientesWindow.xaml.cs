@@ -147,7 +147,7 @@ namespace InterfazClientes
             if (!clsValidacionesClientes.ValidarDNIHondureño(dni)) return false;
             if (!clsValidacionesClientes.ValidarLongitudNombre(txtNombre.Text, "nombre")) return false;
             if (!clsValidacionesClientes.ValidarLongitudNombre(txtApellido.Text, "apellido")) return false;
-            if (!clsValidaciones.Telefono(telefonoLimpio)) return false;
+            if (!ValidacionesGenerales.Telefono(telefonoLimpio)) return false;
             if (!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) return false;
             if (!clsValidacionesClientes.ValidarDireccion(txtDireccion.Text)) return false;
             if (!clsValidacionesClientes.ValidarDNINoDuplicado(dni, dniActual, db)) return false;

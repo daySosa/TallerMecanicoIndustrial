@@ -1,67 +1,94 @@
 ﻿using Microsoft.Data.SqlClient;
+using System.Configuration;
 using System.Data;
 using System.Windows;
-
-
-
 
 namespace Login.Clases
 {
     /// <summary>
     /// Clase encargada de gestionar la conexión a la base de datos SQL Server.
     /// Permite abrir y cerrar la conexión de forma segura.
+    /// La cadena de conexión se obtiene desde App.config.
     /// </summary>
-    internal class clsConexion
+    internal sealed class ClsConexion : IDisposable
     {
-        //// <summary>
-        /// Cadena de conexión utilizada para acceder a la base de datos en Azure SQL.
-        /// </summary>
-        string conexion = "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;User ID=DayanaSosa;Password=Serv2026;";
+        private const string NombreConexion = "TallerMecanico";
 
         /// <summary>
         /// Objeto de conexión SQL que se utiliza para ejecutar comandos en la base de datos.
         /// </summary>
-        public SqlConnection SqlC = new SqlConnection();
+        public SqlConnection SqlC { get; }
 
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="clsConexion"/>
-        /// y asigna la cadena de conexión al objeto SqlConnection.
+        /// Inicializa una nueva instancia de <see cref="ClsConexion"/> leyendo
+        /// la cadena de conexión desde App.config.
         /// </summary>
-        public clsConexion()
+        public ClsConexion()
         {
-            SqlC.ConnectionString = conexion;
+            string cadena = ObtenerCadenaConexion();
+            SqlC = new SqlConnection(cadena);
+        }
+
+        /// <summary>
+        /// Obtiene la cadena de conexión definida en App.config.
+        /// Lanza una excepción clara si no se encuentra configurada.
+        /// </summary>
+        private static string ObtenerCadenaConexion()
+        {
+            var config = ConfigurationManager.ConnectionStrings[NombreConexion];
+
+            if (config == null || string.IsNullOrWhiteSpace(config.ConnectionString))
+            {
+                throw new InvalidOperationException(
+                    $"No se encontró la cadena de conexión '{NombreConexion}' en App.config.");
+            }
+
+            return config.ConnectionString;
         }
 
         /// <summary>
         /// Abre la conexión a la base de datos si se encuentra cerrada.
-        /// Maneja excepciones en caso de error durante la apertura.
         /// </summary>
-        public void Abrir()
+        public bool Abrir()
         {
             try
             {
-                if (SqlC.State == ConnectionState.Closed) SqlC.Open();
+                if (SqlC.State == ConnectionState.Closed)
+                    SqlC.Open();
+
+                return true;
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
-                MessageBox.Show("Error al abrir la conexión: " + ex.Message);
+                MessageBox.Show($"Error al abrir la conexión: {ex.Message}",
+                    "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
         }
 
         /// <summary>
         /// Cierra la conexión a la base de datos si se encuentra abierta.
-        /// Maneja excepciones en caso de error durante el cierre.
         /// </summary>
         public void Cerrar()
         {
             try
             {
-                if (SqlC.State == ConnectionState.Open) SqlC.Close();
+                if (SqlC.State == ConnectionState.Open)
+                    SqlC.Close();
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
-                MessageBox.Show("Error al cerrar la conexión: " + ex.Message);
+                MessageBox.Show($"Error al cerrar la conexión: {ex.Message}",
+                    "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// Libera los recursos de la conexión SQL.
+        /// </summary>
+        public void Dispose()
+        {
+            SqlC?.Dispose();
         }
     }
 }

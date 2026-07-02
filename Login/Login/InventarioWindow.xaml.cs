@@ -56,7 +56,7 @@ namespace InterfazInventario
                 return;
             }
 
-            if (!clsValidaciones.ValidarEnteroPositivo(txtCantidad.Text, out cantidad, "Cantidad inválida"))
+            if (!ValidacionesGenerales.ValidarEnteroPositivo(txtCantidad.Text, out cantidad, "Cantidad inválida"))
             {
                 txtCantidad.Focus();
                 btnAgregar.IsEnabled = true;
@@ -180,55 +180,55 @@ namespace InterfazInventario
             precio = 0;
             cantidad = 0;
 
-            if (!clsValidaciones.ValidarFormularioVacio(
+            if (!ValidacionesGenerales.ValidarFormularioVacio(
                 txtNombre.Text, txtMarca.Text, txtPrecio.Text)) return false;
 
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text, "nombre del producto"))
+            if (!ValidacionesGenerales.ValidarTextoRequerido(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarNoEsSoloNumeros(txtNombre.Text, "nombre del producto"))
+            if (!ValidacionesGenerales.ValidarNoEsSoloNumeros(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarIniciaConLetra(txtNombre.Text, "nombre del producto"))
+            if (!ValidacionesGenerales.ValidarIniciaConLetra(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtNombre.Text, "nombre del producto"))
+            if (!ValidacionesGenerales.ValidarSinRepeticionExcesiva(txtNombre.Text, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarLongitudMaxima(txtNombre.Text, 100, "nombre del producto"))
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(txtNombre.Text, 100, "nombre del producto"))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarTextoRequerido(txtMarca.Text, "marca"))
+            if (!ValidacionesGenerales.ValidarTextoRequerido(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarNoEsSoloNumeros(txtMarca.Text, "marca"))
+            if (!ValidacionesGenerales.ValidarNoEsSoloNumeros(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarIniciaConLetra(txtMarca.Text, "marca"))
+            if (!ValidacionesGenerales.ValidarIniciaConLetra(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtMarca.Text, "marca"))
+            if (!ValidacionesGenerales.ValidarSinRepeticionExcesiva(txtMarca.Text, "marca"))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidaciones.ValidarLongitudMaxima(txtMarca.Text, 50, "marca"))
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(txtMarca.Text, 50, "marca"))
             { txtMarca.Focus(); return false; }
 
             if (!string.IsNullOrWhiteSpace(txtModelo.Text))
             {
-                if (!clsValidaciones.ValidarNoEsSoloNumeros(txtModelo.Text, "modelo"))
+                if (!ValidacionesGenerales.ValidarNoEsSoloNumeros(txtModelo.Text, "modelo"))
                 { txtModelo.Focus(); return false; }
 
-                if (!clsValidaciones.ValidarIniciaConLetra(txtModelo.Text, "modelo"))
+                if (!ValidacionesGenerales.ValidarIniciaConLetra(txtModelo.Text, "modelo"))
                 { txtModelo.Focus(); return false; }
 
-                if (!clsValidaciones.ValidarSinRepeticionExcesiva(txtModelo.Text, "modelo"))
+                if (!ValidacionesGenerales.ValidarSinRepeticionExcesiva(txtModelo.Text, "modelo"))
                 { txtModelo.Focus(); return false; }
 
-                if (!clsValidaciones.ValidarLongitudMaxima(txtModelo.Text, 80, "modelo"))
+                if (!ValidacionesGenerales.ValidarLongitudMaxima(txtModelo.Text, 80, "modelo"))
                 { txtModelo.Focus(); return false; }
             }
 
-            if (!clsValidaciones.ValidarPrecio(txtPrecio.Text, out precio))
+            if (!ValidacionesGenerales.ValidarPrecio(txtPrecio.Text, out precio))
             { txtPrecio.Focus(); return false; }
 
             return true;

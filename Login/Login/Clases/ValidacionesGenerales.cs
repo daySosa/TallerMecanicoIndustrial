@@ -4,9 +4,9 @@ using System.Windows.Controls;
 
 namespace Login.Clases
 {
-    public class clsValidaciones
+    public class ValidacionesGenerales
     {
-        public clsValidaciones() { }
+        public ValidacionesGenerales() { }
 
         // ─────────────────────────────────────────────────────────────
         // FORMULARIO VACÍO

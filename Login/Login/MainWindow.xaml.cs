@@ -12,7 +12,7 @@ namespace Login
         private bool _contrasenaVisible = false;
         private bool _procesandoLogin = false;
 
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private readonly RepositorioSql _repositorio = new();
 
         private readonly string _archivoRecordar =
             Path.Combine(Environment.GetFolderPath(
@@ -67,6 +67,7 @@ namespace Login
             border.BorderBrush = enfocado ? BrushFocus : BrushVacio;
             border.BorderThickness = new Thickness(enfocado ? 2 : 1.5);
         }
+
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
         {
             _contrasenaVisible = !_contrasenaVisible;
@@ -100,13 +101,13 @@ namespace Login
                 File.WriteAllText(_archivoRecordar,
                     JsonSerializer.Serialize(new { Correo = correo, Contrasena = contrasena }));
             }
-            catch { }
+            catch (IOException) { /* No es crítico si falla el guardado local */ }
         }
 
         private void EliminarCredenciales()
         {
             try { if (File.Exists(_archivoRecordar)) File.Delete(_archivoRecordar); }
-            catch { }
+            catch (IOException) { /* No es crítico si falla el borrado local */ }
         }
 
         private void CargarCredencialesRecordadas()
@@ -122,20 +123,34 @@ namespace Login
                 txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
                 chkRecordar.IsChecked = true;
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or JsonException)
+            {
+                // Archivo corrupto o inaccesible: se ignora y el usuario escribe sus datos de nuevo.
+            }
         }
 
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             if (_procesandoLogin) return;
 
+            // ── Control de bloqueo por intentos fallidos ──
+            if (ValidadorLogin.EstaBloqueado())
+            {
+                var restante = ValidadorLogin.TiempoRestanteBloqueo();
+                bool ignorar = false;
+                MostrarError(txtErrorCorreo, borderCorreo,
+                    $"⚠ Demasiados intentos. Intenta de nuevo en {restante.Minutes}m {restante.Seconds}s.",
+                    ref ignorar);
+                return;
+            }
+
             bool hayError = false;
 
-            string errorCorreo = clsValidaciones.ValidarCorreoLogin(txtCorreo.Text);
+            string errorCorreo = ValidadorLogin.ValidarCorreo(txtCorreo.Text);
             MostrarError(txtErrorCorreo, borderCorreo, errorCorreo, ref hayError);
 
             string contrasena = ObtenerContrasena();
-            string errorContrasena = clsValidaciones.ValidarContrasenaLogin(contrasena);
+            string errorContrasena = ValidadorLogin.ValidarContrasena(contrasena);
             MostrarError(txtErrorContrasena, borderContrasena, errorContrasena, ref hayError);
 
             if (hayError) return;
@@ -160,13 +175,13 @@ namespace Login
             }
         }
 
-        private void MostrarError(
+        private static void MostrarError(
             System.Windows.Controls.TextBlock txtError,
             System.Windows.Controls.Border border,
             string mensaje,
             ref bool hayError)
         {
-            if (mensaje != null)
+            if (mensaje is not null)
             {
                 txtError.Text = mensaje;
                 txtError.Visibility = Visibility.Visible;
@@ -180,39 +195,47 @@ namespace Login
             }
         }
 
-        private void SetCargando(bool cargando, System.Windows.Controls.Button boton)
+        private static void SetCargando(bool cargando, System.Windows.Controls.Button boton)
         {
-            if (boton == null) return;
+            if (boton is null) return;
             boton.IsEnabled = !cargando;
             boton.Content = cargando ? "Verificando..." : "Iniciar Sesión";
         }
 
-        private async System.Threading.Tasks.Task IniciarSesionAsync(string correo, string contrasena)
+        private async Task IniciarSesionAsync(string correo, string contrasena)
         {
             try
             {
-                bool valido = await System.Threading.Tasks.Task.Run(
-                    () => _db.ValidarLogin(correo, contrasena));
+                bool valido = await Task.Run(() => _repositorio.ValidarLogin(correo, contrasena));
 
                 if (!valido)
                 {
+                    ValidadorLogin.RegistrarIntentoFallido();
+
                     bool dummy = false;
-                    MostrarError(txtErrorCorreo, borderCorreo, "⚠ Correo o contraseña incorrectos.", ref dummy);
+                    int restantes = ValidadorLogin.IntentosRestantes();
+                    string mensaje = restantes > 0
+                        ? $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s)."
+                        : $"⚠ Cuenta bloqueada por {5} minutos por demasiados intentos fallidos.";
+
+                    MostrarError(txtErrorCorreo, borderCorreo, mensaje, ref dummy);
                     MostrarError(txtErrorContrasena, borderContrasena, null, ref dummy);
                     borderContrasena.BorderBrush = BrushError;
                     return;
                 }
 
-                bool enviado = await System.Threading.Tasks.Task.Run(() =>
+                ValidadorLogin.ResetearIntentos();
+
+                bool enviado = await Task.Run(() =>
                 {
-                    string codigo2FA = _db.GenerarCodigoOTP(correo);
-                    return _db.EnviarCorreoOTP(correo, codigo2FA);
+                    string codigo2FA = _repositorio.GenerarCodigoOTP(correo);
+                    return _repositorio.EnviarCorreoOTP(correo, codigo2FA);
                 });
 
                 if (enviado)
                 {
                     new OpcionSesion(correo).Show();
-                    this.Close();
+                    Close();
                 }
                 else
                 {
@@ -226,6 +249,7 @@ namespace Login
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
         {
             var recuperar = new RecuperarContrasenia(this);
@@ -237,7 +261,6 @@ namespace Login
             if (txtErrorCorreo.Visibility == Visibility.Visible)
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
         }
-
 
         private void BtnCerrarApp_Click(object sender, RoutedEventArgs e)
         {

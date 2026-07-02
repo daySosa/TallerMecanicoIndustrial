@@ -11,7 +11,7 @@ namespace Login.Clases
 
         public static bool ValidarFormularioVacio(params string[] campos)
         {
-            return clsValidaciones.ValidarFormularioVacio(campos);
+            return ValidacionesGenerales.ValidarFormularioVacio(campos);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -20,17 +20,17 @@ namespace Login.Clases
 
         public static bool ValidarPlacaNoNula(string placa)
         {
-            return clsValidaciones.ValidarTextoRequerido(placa, "placa del vehículo");
+            return ValidacionesGenerales.ValidarTextoRequerido(placa, "placa del vehículo");
         }
 
         public static bool ValidarPlacaSoloAlfanumerico(string placa)
         {
-            return clsValidaciones.ValidarPlaca(placa);
+            return ValidacionesGenerales.ValidarPlaca(placa);
         }
 
         public static bool ValidarLongitudPlaca(string placa)
         {
-            if (!clsValidaciones.ValidarLongitudMaxima(placa.Trim(), 7, "placa"))
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(placa.Trim(), 7, "placa"))
                 return false;
 
             if (placa.Trim().Length < 6)
@@ -148,11 +148,11 @@ namespace Login.Clases
 
         public static bool ValidarMarca(string marca)
         {
-            return clsValidaciones.ValidarTextoRequerido(marca, "marca del vehículo")
-                && clsValidaciones.ValidarNoEsSoloNumeros(marca.Trim(), "marca")
-                && clsValidaciones.ValidarIniciaConLetra(marca.Trim(), "marca")
-                && clsValidaciones.ValidarSinRepeticionExcesiva(marca.Trim(), "marca")
-                && clsValidaciones.ValidarLongitudMaxima(marca.Trim(), 50, "marca");
+            return ValidacionesGenerales.ValidarTextoRequerido(marca, "marca del vehículo")
+                && ValidacionesGenerales.ValidarNoEsSoloNumeros(marca.Trim(), "marca")
+                && ValidacionesGenerales.ValidarIniciaConLetra(marca.Trim(), "marca")
+                && ValidacionesGenerales.ValidarSinRepeticionExcesiva(marca.Trim(), "marca")
+                && ValidacionesGenerales.ValidarLongitudMaxima(marca.Trim(), 50, "marca");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -161,11 +161,11 @@ namespace Login.Clases
 
         public static bool ValidarModelo(string modelo)
         {
-            return clsValidaciones.ValidarTextoRequerido(modelo, "modelo del vehículo")
-                && clsValidaciones.ValidarNoEsSoloNumeros(modelo.Trim(), "modelo")
-                && clsValidaciones.ValidarIniciaConLetra(modelo.Trim(), "modelo")
-                && clsValidaciones.ValidarSinRepeticionExcesiva(modelo.Trim(), "modelo")
-                && clsValidaciones.ValidarLongitudMaxima(modelo.Trim(), 80, "modelo");
+            return ValidacionesGenerales.ValidarTextoRequerido(modelo, "modelo del vehículo")
+                && ValidacionesGenerales.ValidarNoEsSoloNumeros(modelo.Trim(), "modelo")
+                && ValidacionesGenerales.ValidarIniciaConLetra(modelo.Trim(), "modelo")
+                && ValidacionesGenerales.ValidarSinRepeticionExcesiva(modelo.Trim(), "modelo")
+                && ValidacionesGenerales.ValidarLongitudMaxima(modelo.Trim(), 80, "modelo");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -175,9 +175,9 @@ namespace Login.Clases
         public static bool ValidarAnioVehiculo(string texto, out int año)
         {
             año = 0;
-            return clsValidaciones.ValidarTextoRequerido(texto, "año del vehículo")
-                && clsValidaciones.ValidarAnioFormato(texto)
-                && clsValidaciones.ValidarAnio(texto, out año);
+            return ValidacionesGenerales.ValidarTextoRequerido(texto, "año del vehículo")
+                && ValidacionesGenerales.ValidarAnioFormato(texto)
+                && ValidacionesGenerales.ValidarAnio(texto, out año);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -186,7 +186,7 @@ namespace Login.Clases
 
         public static bool ValidarTipoVehiculo(object itemSeleccionado)
         {
-            return clsValidaciones.ValidarComboSeleccionado(itemSeleccionado, "tipo de vehículo");
+            return ValidacionesGenerales.ValidarComboSeleccionado(itemSeleccionado, "tipo de vehículo");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -196,9 +196,9 @@ namespace Login.Clases
         public static bool ValidarObservaciones(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return true;
-            return clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")
-                && clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")
-                && clsValidaciones.ValidarLongitudMaxima(texto.Trim(), 500, "observaciones");
+            return ValidacionesGenerales.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")
+                && ValidacionesGenerales.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")
+                && ValidacionesGenerales.ValidarLongitudMaxima(texto.Trim(), 500, "observaciones");
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -207,12 +207,12 @@ namespace Login.Clases
 
         public static bool ValidarClienteDNI(string textoDNI, string clienteVerificado)
         {
-            return clsValidaciones.ValidarClienteDNI(textoDNI, clienteVerificado);
+            return ValidacionesGenerales.ValidarClienteDNI(textoDNI, clienteVerificado);
         }
 
         public static bool ValidarFormatoDNICliente(string dni)
         {
-            return clsValidaciones.ValidarFormatoDNI(dni);
+            return ValidacionesGenerales.ValidarFormatoDNI(dni);
         }
     }
 }

@@ -70,9 +70,9 @@ namespace Órdenes_de_Trabajo
 
         private void btnAgregar_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidaciones.ValidarComboSeleccionado(_productoSeleccionado, "producto del inventario")) return;
-            if (!clsValidaciones.ValidarEnteroPositivo(txtCantidad.Text, out int cantidad, "Cantidad inválida")) return;
-            if (!clsValidaciones.ValidarStock(cantidad, _productoSeleccionado.Producto_Cantidad_Actual)) return;
+            if (!ValidacionesGenerales.ValidarComboSeleccionado(_productoSeleccionado, "producto del inventario")) return;
+            if (!ValidacionesGenerales.ValidarEnteroPositivo(txtCantidad.Text, out int cantidad, "Cantidad inválida")) return;
+            if (!ValidacionesGenerales.ValidarStock(cantidad, _productoSeleccionado.Producto_Cantidad_Actual)) return;
 
             RepuestoResultado = new RepuestoOrden
             {

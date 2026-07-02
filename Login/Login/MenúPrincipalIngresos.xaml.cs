@@ -36,7 +36,7 @@ namespace Contabilidad
 
         private void AplicarPermisos()
         {
-            if (!Login.Clases.clsSesion.EsAdministrador)
+            if (!Login.Clases.SesionActual.EsAdministrador)
             {
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
@@ -93,7 +93,7 @@ namespace Contabilidad
 
         private void btnMostrarComprobantes_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidaciones.ValidarComboSeleccionado(
+            if (!ValidacionesGenerales.ValidarComboSeleccionado(
                     dgPagos.SelectedItem, "pago para ver el comprobante")) return;
 
             var fila = (DataRowView)dgPagos.SelectedItem;
@@ -305,7 +305,7 @@ namespace Contabilidad
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                Login.Clases.clsSesion.CerrarSesion();
+                Login.Clases.SesionActual.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
             }
         }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows;
+﻿using System.Windows;
 
 namespace Login.Clases
 {
@@ -18,7 +14,7 @@ namespace Login.Clases
 
         public static bool ValidarFormularioVacio(params string[] campos)
         {
-            return clsValidaciones.ValidarFormularioVacio(campos);
+            return ValidacionesGenerales.ValidarFormularioVacio(campos);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -33,11 +29,11 @@ namespace Login.Clases
         {
             string limpio = texto.Trim();
 
-            if (!clsValidaciones.ValidarTextoRequerido(limpio, "nombre del gasto")) return false;
-            if (!clsValidaciones.ValidarNoEsSoloNumeros(limpio, "nombre del gasto")) return false;
-            if (!clsValidaciones.ValidarIniciaConLetra(limpio, "nombre del gasto")) return false;
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(limpio, "nombre del gasto")) return false;
-            if (!clsValidaciones.ValidarLongitudMaxima(limpio, 100, "nombre del gasto")) return false;
+            if (!ValidacionesGenerales.ValidarTextoRequerido(limpio, "nombre del gasto")) return false;
+            if (!ValidacionesGenerales.ValidarNoEsSoloNumeros(limpio, "nombre del gasto")) return false;
+            if (!ValidacionesGenerales.ValidarIniciaConLetra(limpio, "nombre del gasto")) return false;
+            if (!ValidacionesGenerales.ValidarSinRepeticionExcesiva(limpio, "nombre del gasto")) return false;
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(limpio, 100, "nombre del gasto")) return false;
 
             return true;
         }
@@ -50,17 +46,17 @@ namespace Login.Clases
         {
             if (string.IsNullOrWhiteSpace(texto)) return true;
 
-            if (!clsValidaciones.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;
-            if (!clsValidaciones.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false; 
-            if (!clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
-            if (!clsValidaciones.ValidarLongitudMaxima(texto.Trim(), 300, "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarIniciaConLetra(texto.Trim(), "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarNoEsSoloNumeros(texto.Trim(), "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarSinRepeticionExcesiva(texto.Trim(), "observaciones")) return false;
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(texto.Trim(), 300, "observaciones")) return false;
 
             return true;
         }
 
         public static bool ValidarPrecioGasto(string texto, out decimal precio)
         {
-            return clsValidaciones.ValidarPrecio(texto, out precio);
+            return ValidacionesGenerales.ValidarPrecio(texto, out precio);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -74,18 +70,18 @@ namespace Login.Clases
 
         public static bool ValidarClienteBuscado(string dni, string nombreCliente)
         {
-            return clsValidaciones.ValidarClienteDNI(dni, nombreCliente);
+            return ValidacionesGenerales.ValidarClienteDNI(dni, nombreCliente);
         }
 
         public static bool ValidarDNIBusqueda(string dni)
         {
-            return clsValidaciones.ValidarFormatoDNI(dni);
+            return ValidacionesGenerales.ValidarFormatoDNI(dni);
         }
 
         public static bool ValidarDNIPago(string dni, Action<string> mostrarMensaje)
         {
-            if (!clsValidaciones.ValidarTextoRequerido(dni, "⚠ El DNI es obligatorio.", mostrarMensaje)) return false;
-            if (!clsValidaciones.ValidarSoloDigitos(dni, "⚠ El DNI solo debe contener números.", mostrarMensaje)) return false;
+            if (!ValidacionesGenerales.ValidarTextoRequerido(dni, "⚠ El DNI es obligatorio.", mostrarMensaje)) return false;
+            if (!ValidacionesGenerales.ValidarSoloDigitos(dni, "⚠ El DNI solo debe contener números.", mostrarMensaje)) return false;
             return true;
         }
 
@@ -142,12 +138,12 @@ namespace Login.Clases
 
         public static string FormatearPrecioGasto(string texto)
         {
-            return clsValidaciones.FormatearPrecio(texto);
+            return ValidacionesGenerales.FormatearPrecio(texto);
         }
 
         public static string LimpiarPrecioGasto(string texto)
         {
-            return clsValidaciones.LimpiarPrefijoPrecio(texto);
+            return ValidacionesGenerales.LimpiarPrefijoPrecio(texto);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -156,7 +152,7 @@ namespace Login.Clases
 
         public static bool ValidarFechaGasto(string texto, out DateTime fecha)
         {
-            return clsValidaciones.ValidarFecha(texto, out fecha);
+            return ValidacionesGenerales.ValidarFecha(texto, out fecha);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -168,7 +164,7 @@ namespace Login.Clases
         /// </summary>
         public static bool ValidarCategoriaSeleccionada(object selectedItem)
         {
-            return clsValidaciones.ValidarComboSeleccionado(selectedItem, "tipo de gasto");
+            return ValidacionesGenerales.ValidarComboSeleccionado(selectedItem, "tipo de gasto");
         }
 
     }

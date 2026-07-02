@@ -144,7 +144,7 @@ namespace Dasboard_Prueba
         {
             try
             {
-                if (!clsSesion.EsAdministrador)
+                if (!SesionActual.EsAdministrador)
                 {
                     btnUsuarios.Visibility = Visibility.Collapsed;
                     btnBitacora.Visibility = Visibility.Collapsed;
@@ -166,8 +166,8 @@ namespace Dasboard_Prueba
         {
             try
             {
-                string nombre = string.IsNullOrWhiteSpace(clsSesion.Nombre) ? "Usuario" : clsSesion.Nombre.Trim();
-                string rol = clsSesion.EsAdministrador ? "Administrador" : "Empleado";
+                string nombre = string.IsNullOrWhiteSpace(SesionActual.Nombre) ? "Usuario" : SesionActual.Nombre.Trim();
+                string rol = SesionActual.EsAdministrador ? "Administrador" : "Empleado";
 
                 txtNombreUsuario.Text = nombre;
                 txtRolUsuario.Text = rol;
@@ -820,7 +820,7 @@ namespace Dasboard_Prueba
                 if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                         MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    clsSesion.CerrarSesion();
+                    SesionActual.CerrarSesion();
                     Navegar(() => new Login.MainWindow());
                 }
             }

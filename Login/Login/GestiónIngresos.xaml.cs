@@ -267,7 +267,7 @@ namespace Contabilidad
 
             if (!clsValidacionesContabilidad.ValidarFormularioVacio(dni, ordenStr)) return;
             if (!clsValidacionesContabilidad.ValidarClienteBuscado(dni, txtNombre.Text)) return;
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombre.Text,
+            if (!ValidacionesGenerales.ValidarTextoRequerido(txtNombre.Text,
                     "⚠ Busca un cliente válido antes de guardar.", MostrarMensajeAgregar)) return;
             if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
 
@@ -297,7 +297,7 @@ namespace Contabilidad
             if (!clsValidacionesContabilidad.ValidarFormularioVacio(
                     dni, ordenStr, txtPrecio.Text)) return;
             if (!clsValidacionesContabilidad.ValidarDNIPago(dni, MostrarMensajeEditar)) return;
-            if (!clsValidaciones.ValidarTextoRequerido(txtNombreCliente.Text,
+            if (!ValidacionesGenerales.ValidarTextoRequerido(txtNombreCliente.Text,
                     "⚠ Ingresa un DNI válido.", MostrarMensajeEditar)) return;
             if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
             if (!clsValidacionesContabilidad.ValidarMontoPago(txtPrecio.Text, out decimal monto)) return;

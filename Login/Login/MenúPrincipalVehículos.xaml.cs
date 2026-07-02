@@ -42,7 +42,7 @@ namespace Vehículos
 
         private void AplicarPermisos()
         {
-            if (!Login.Clases.clsSesion.EsAdministrador)
+            if (!Login.Clases.SesionActual.EsAdministrador)
             {
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
@@ -86,7 +86,7 @@ namespace Vehículos
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                Login.Clases.clsSesion.CerrarSesion();
+                Login.Clases.SesionActual.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
             }
         }

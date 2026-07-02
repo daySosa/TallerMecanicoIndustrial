@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace Login.Clases
@@ -13,7 +11,7 @@ namespace Login.Clases
 
         public static bool ValidarFormularioVacio(params string[] campos)
         {
-            return clsValidaciones.ValidarFormularioVacio(campos);
+            return ValidacionesGenerales.ValidarFormularioVacio(campos);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -186,7 +184,7 @@ namespace Login.Clases
 
         public static bool ValidarDNIHondureño(string dni)
         {
-            if (!clsValidaciones.ValidarFormatoDNI(dni)) return false;
+            if (!ValidacionesGenerales.ValidarFormatoDNI(dni)) return false;
             return DNI(dni);
         }
 
@@ -194,7 +192,7 @@ namespace Login.Clases
         {
             string dni = valor.Trim();
 
-            if (!clsValidaciones.ValidarFormatoDNI(dni)) return false;
+            if (!ValidacionesGenerales.ValidarFormatoDNI(dni)) return false;
 
             // ── Departamento ──────────────────────────────────────────
             int depto = int.Parse(dni.Substring(0, 2));
@@ -251,9 +249,9 @@ namespace Login.Clases
 
         public static bool ValidarLongitudNombre(string texto, string nombreCampo)
         {
-            return clsValidaciones.ValidarTextoRequerido(texto, nombreCampo)
-                && clsValidaciones.ValidarSinRepeticionExcesiva(texto.Trim(), nombreCampo)
-                && clsValidaciones.ValidarLongitudMaxima(texto.Trim(), 50, nombreCampo);
+            return ValidacionesGenerales.ValidarTextoRequerido(texto, nombreCampo)
+                && ValidacionesGenerales.ValidarSinRepeticionExcesiva(texto.Trim(), nombreCampo)
+                && ValidacionesGenerales.ValidarLongitudMaxima(texto.Trim(), 50, nombreCampo);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -264,14 +262,14 @@ namespace Login.Clases
         {
             if (string.IsNullOrWhiteSpace(correo)) return true;
 
-            string error = clsValidaciones.ValidarCorreoLogin(correo.Trim());
+            string error = ValidacionesGenerales.ValidarCorreoLogin(correo.Trim());
             if (error != null)
             {
                 MessageBox.Show(error, "Correo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (!clsValidaciones.ValidarLongitudMaxima(correo, 100, "correo")) return false;
+            if (!ValidacionesGenerales.ValidarLongitudMaxima(correo, 100, "correo")) return false;
 
             return true;
         }
@@ -282,11 +280,11 @@ namespace Login.Clases
 
         public static bool ValidarDireccion(string direccion)
         {
-            return clsValidaciones.ValidarTextoRequerido(direccion, "dirección del cliente")
-                && clsValidaciones.ValidarNoEsSoloNumeros(direccion.Trim(), "dirección")
-                && clsValidaciones.ValidarIniciaConLetra(direccion.Trim(), "dirección")
-                && clsValidaciones.ValidarSinRepeticionExcesiva(direccion.Trim(), "dirección")
-                && clsValidaciones.ValidarLongitudMaxima(direccion.Trim(), 150, "dirección");
+            return ValidacionesGenerales.ValidarTextoRequerido(direccion, "dirección del cliente")
+                && ValidacionesGenerales.ValidarNoEsSoloNumeros(direccion.Trim(), "dirección")
+                && ValidacionesGenerales.ValidarIniciaConLetra(direccion.Trim(), "dirección")
+                && ValidacionesGenerales.ValidarSinRepeticionExcesiva(direccion.Trim(), "dirección")
+                && ValidacionesGenerales.ValidarLongitudMaxima(direccion.Trim(), 150, "dirección");
         }
     }
 }

@@ -74,7 +74,7 @@ namespace InterfazInventario
 
         private void AplicarPermisos()
         {
-            if (!Login.Clases.clsSesion.EsAdministrador)
+            if (!Login.Clases.SesionActual.EsAdministrador)
             {
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
@@ -119,7 +119,7 @@ namespace InterfazInventario
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                Login.Clases.clsSesion.CerrarSesion();
+                Login.Clases.SesionActual.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
             }
         }
@@ -197,7 +197,7 @@ namespace InterfazInventario
 
         private void btnAplicarFiltros_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidaciones.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
+            if (!ValidacionesGenerales.ValidarRangoPrecios(txtPrecioMin.Text, txtPrecioMax.Text,
                     out decimal pMin, out decimal pMax))
                 return;
 

@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Login.Clases
+﻿namespace Login.Clases
 {
     /// <summary>
     /// Guarda los datos del usuario logueado durante toda la sesión de la app.
     /// Es estática porque debe ser accesible desde cualquier ventana sin pasarla por parámetro.
     /// </summary>
-    public static class clsSesion
+    public static class SesionActual
     {
         public static string Email { get; private set; }
         public static string Nombre { get; private set; }
