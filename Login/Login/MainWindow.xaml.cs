@@ -203,6 +203,23 @@ namespace Login
         {
             try
             {
+                //Verificar bloqueo activo en BD
+                DateTime? fechaBloqueo = await Task.Run(() => _repositorio.ObtenerFechaBloqueo(correo));
+
+                if (fechaBloqueo.HasValue && fechaBloqueo.Value > DateTime.Now)
+                {
+                    _fechaDesbloqueo = fechaBloqueo.Value;
+                    IniciarCuentaRegresiva();
+                    return;
+                }
+                else if (fechaBloqueo.HasValue)
+                {
+                    //Bloqueo expirado, solo limpiar fecha, mantener intentos
+                    int intentosActuales = await Task.Run(() => _repositorio.ObtenerIntentosFallidos(correo));
+                    await Task.Run(() => _repositorio.ActualizarBloqueo(correo, intentosActuales, null));
+                }
+
+                //Validar credenciales
                 bool valido = await Task.Run(() => _repositorio.ValidarLogin(correo, contrasena));
 
                 if (!valido)
@@ -229,6 +246,7 @@ namespace Login
                     return;
                 }
 
+                //Login exitoso
                 await Task.Run(() => _repositorio.ActualizarBloqueo(correo, 0, null));
                 DetenerCuentaRegresiva();
 
