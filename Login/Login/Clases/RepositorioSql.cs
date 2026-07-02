@@ -25,23 +25,17 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    UPDATE Contabilidad_Gastos SET
-                        Tipo_Gasto          = @TipoGasto,
-                        Nombre_Gasto        = @NombreGasto,
-                        Observaciones_Gasto = @Observaciones,
-                        Precio_Gasto        = @Precio,
-                        Fecha_Gasto         = @Fecha
-                    WHERE Gasto_ID = @GastoID";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Gasto_Actualizar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@GastoID", gastoId);
                 cmd.Parameters.AddWithValue("@TipoGasto", tipoGasto);
                 cmd.Parameters.AddWithValue("@NombreGasto", nombreGasto);
                 cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones)
                     ? DBNull.Value : observaciones.Trim());
                 cmd.Parameters.AddWithValue("@Precio", precio);
                 cmd.Parameters.AddWithValue("@Fecha", fecha);
-                cmd.Parameters.AddWithValue("@GastoID", gastoId);
 
                 conexion.Abrir();
                 cmd.ExecuteNonQuery();
@@ -58,13 +52,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    INSERT INTO Contabilidad_Gastos 
-                        (Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto)
-                    VALUES 
-                        (@TipoGasto, @NombreGasto, @Observaciones, @Precio, GETDATE())";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Gasto_Agregar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@TipoGasto", tipoGasto);
                 cmd.Parameters.AddWithValue("@NombreGasto", nombreGasto);
                 cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones)
@@ -86,15 +77,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    SELECT Gasto_ID, Tipo_Gasto, Nombre_Gasto, Precio_Gasto, Fecha_Gasto, Observaciones_Gasto
-                    FROM Contabilidad_Gastos
-                    WHERE (@Busqueda IS NULL
-                           OR Nombre_Gasto LIKE '%' + @Busqueda + '%'
-                           OR Tipo_Gasto   LIKE '%' + @Busqueda + '%')
-                    ORDER BY Fecha_Gasto DESC";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Gasto_ObtenerTodos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Busqueda", string.IsNullOrWhiteSpace(busqueda)
                     ? DBNull.Value : busqueda.Trim());
 
