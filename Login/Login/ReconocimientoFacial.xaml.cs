@@ -39,8 +39,8 @@ namespace Login
     public partial class ReconocimientoFacial : Window
     {
         // ---------------------- Configuración general ----------------------
-        private const int MAX_INTENTOS_FALLIDOS = 3;
-        private const int MINUTOS_BLOQUEO = 5;
+        private const int MAX_INTENTOS_FALLIDOS = 5;
+        private const int MINUTOS_BLOQUEO = 3;
 
         // Umbral de distancia LBPH: cuanto menor, más estricta la coincidencia.
         // IMPORTANTE: este valor DEBE recalibrarse con datos reales de tu instalación.
