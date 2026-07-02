@@ -9,7 +9,7 @@ namespace InterfazClientes
 {
     public partial class VentanaUsuario : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private string _usuarioEmail = null;
         private bool _esEdicion = false;
 

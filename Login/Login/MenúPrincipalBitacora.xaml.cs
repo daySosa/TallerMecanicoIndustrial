@@ -22,7 +22,7 @@ namespace Órdenes_de_Trabajo
 
     public partial class MenúPrincipalBitacora : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private List<BitacoraItem> _listaCompleta = new();
 
         // ── CONSTRUCTOR ──────────────────────────────────────────────

@@ -27,7 +27,7 @@ namespace Vehículos
 
     public partial class VehiWindow : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private string _placaSeleccionada = string.Empty;
         private string _clienteDNI = string.Empty;
 
@@ -142,7 +142,7 @@ namespace Vehículos
 
         private void SeleccionarSugerencia(object item)
         {
-            if (item is clsConsultasBD.ClienteSugerencia s)
+            if (item is RepositorioSql.ClienteSugerencia s)
             {
                 txtClienteDNI.Text = s.DNI;
                 _clienteDNI = s.DNI;

@@ -15,7 +15,7 @@ namespace Vehículos
 {
     public partial class MenúPrincipalVehículos : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private readonly ObservableCollection<Vehiculo> _listaVehiculos = new();
         private ICollectionView? _vistaVehiculos;
         private string _filtroPlaca = string.Empty;

@@ -10,7 +10,7 @@ namespace InterfazClientes
     {
         private string _dniEditando = string.Empty;
         public clsCliente ClienteResultado { get; private set; }
-        clsConsultasBD db = new clsConsultasBD();
+        RepositorioSql db = new RepositorioSql();
 
         public ClientesWindow()
         {

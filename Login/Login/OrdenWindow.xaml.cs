@@ -9,7 +9,7 @@ namespace Órdenes_de_Trabajo
 {
     public partial class OrdenWindow : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private string _clienteDNI = string.Empty;
         private string _vehiculoPlaca = string.Empty;
         private bool _buscarPorDNI = true;
@@ -514,7 +514,7 @@ namespace Órdenes_de_Trabajo
         private void lstAutocompletado_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (lstAutocompletado.SelectedIndex < 0) return;
-            if (lstAutocompletado.Tag is not List<clsConsultasBD.ClienteSugerencia> lista) return;
+            if (lstAutocompletado.Tag is not List<RepositorioSql.ClienteSugerencia> lista) return;
 
             var seleccionado = lista[lstAutocompletado.SelectedIndex];
             txtBuscar.Text = seleccionado.DNI;

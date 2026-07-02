@@ -13,7 +13,7 @@ namespace InterfazClientes
 {
     public partial class MenúPrincipalClientes : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private readonly ObservableCollection<clsCliente> _listaClientes = new();
         private ICollectionView? _vistaClientes;
 

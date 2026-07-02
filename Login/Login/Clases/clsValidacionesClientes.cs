@@ -18,7 +18,7 @@ namespace Login.Clases
         // CAMPOS DUPLICADOS
         // ─────────────────────────────────────────────────────────────
 
-        public static bool ValidarDNINoDuplicado(string dni, string dniActual, clsConsultasBD db)
+        public static bool ValidarDNINoDuplicado(string dni, string dniActual, RepositorioSql db)
         {
             if (db.ExisteDNIEnOtroCliente(dni, dniActual))
             {
@@ -29,7 +29,7 @@ namespace Login.Clases
             return true;
         }
 
-        public static bool ValidarTelefonoNoDuplicado(string telefono, string dniActual, clsConsultasBD db)
+        public static bool ValidarTelefonoNoDuplicado(string telefono, string dniActual, RepositorioSql db)
         {
             if (db.ExisteTelefonoEnOtroCliente(telefono, dniActual))
             {

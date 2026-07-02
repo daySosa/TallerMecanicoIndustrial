@@ -7,7 +7,7 @@ namespace InterfazInventario
 {
     public partial class InventarioWindow : Window
     {
-        private clsConsultasBD _db = new clsConsultasBD();
+        private RepositorioSql _db = new RepositorioSql();
         private int _productoIdSeleccionado = -1;
 
         public InventarioWindow()
@@ -145,7 +145,7 @@ namespace InterfazInventario
 
         // ── CARGA PARA EDICIÓN ───────────────────────────────────────
 
-        public void CargarProductoParaEditar(Repuesto producto)
+        public void CargarProductoParaEditar(ValidadorInventario producto)
         {
             _productoIdSeleccionado = producto.Producto_ID;
             txtNombre.Text = producto.Producto_Nombre;

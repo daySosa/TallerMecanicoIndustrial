@@ -8,7 +8,7 @@ namespace Contabilidad
     /// </summary>
     public partial class ComprobantePago : Window
     {
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private readonly RepositorioSql _db = new RepositorioSql();
 
         public ComprobantePago(int pagoId)
         {

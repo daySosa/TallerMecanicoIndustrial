@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using System;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,7 +17,7 @@ namespace Contabilidad
         /// <summary>
         /// Instancia de acceso a la base de datos.
         /// </summary>
-        private clsConsultasBD _db = new clsConsultasBD();
+        private RepositorioSql _db = new RepositorioSql();
 
         /// <summary>
         /// Acción que se ejecuta al cerrar la ventana.

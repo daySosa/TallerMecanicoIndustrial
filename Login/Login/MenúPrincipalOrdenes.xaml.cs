@@ -30,7 +30,7 @@ namespace Órdenes_de_Trabajo
 
     public partial class MenúPrincipalOrdenes : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private readonly ObservableCollection<OrdenTrabajo> _listaOrdenes = new();
         private ICollectionView? _vistaOrdenes;
         private string _filtroCliente = "";

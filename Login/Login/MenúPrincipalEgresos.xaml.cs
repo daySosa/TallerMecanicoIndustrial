@@ -13,7 +13,7 @@ namespace Contabilidad
 {
     public partial class MenúPrincipalEgresos : Window
     {
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private readonly RepositorioSql _db = new RepositorioSql();
         private DataTable _gastosCache;
         private readonly DispatcherTimer _debounceBusqueda;
 

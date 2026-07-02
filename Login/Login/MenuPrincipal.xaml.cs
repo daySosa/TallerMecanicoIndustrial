@@ -57,7 +57,7 @@ namespace Dasboard_Prueba
         private static readonly Dictionary<string, Color> _cacheColores = new();
 
         // ── Estado interno ──────────────────────────────────────────
-        private clsConsultasBD? _db;
+        private RepositorioSql? _db;
         private readonly CancellationTokenSource _cts = new();
         private bool _navegando;
 
@@ -84,7 +84,7 @@ namespace Dasboard_Prueba
 
             try
             {
-                _db = new clsConsultasBD();
+                _db = new RepositorioSql();
             }
             catch (Exception ex)
             {

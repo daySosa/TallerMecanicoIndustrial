@@ -11,7 +11,7 @@ namespace Contabilidad
 {
     public partial class GestiónIngresos : Window
     {
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private readonly RepositorioSql _db = new RepositorioSql();
         private readonly MenúPrincipalIngresos _menuRef;
         private bool _esEdicion = false;
         private int _pagoId = 0;

@@ -8,7 +8,7 @@ namespace Contabilidad
 {
     public partial class GestiónEgresos : Window
     {
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private readonly RepositorioSql _db = new RepositorioSql();
         private readonly MenúPrincipalEgresos _menuRef;
         private bool _esEdicion = false;
         private int _gastoId = 0;

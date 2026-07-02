@@ -16,7 +16,7 @@ namespace InterfazClientes
 {
     public partial class VentanaBiometria : Window
     {
-        private readonly clsConsultasBD _db = new();
+        private readonly RepositorioSql _db = new();
         private DataTable _usuariosCache = new();
         private string _emailSeleccionado = null;
         private byte[]? _rostroCapturado = null;
