@@ -410,8 +410,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT Cliente_Nombres, Cliente_Apellidos FROM Cliente WHERE Cliente_DNI = @DNI";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_BuscarNombre", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@DNI", dni);
 
                 conexion.Abrir();
@@ -432,22 +434,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string sql = @"
-                    IF NOT EXISTS (SELECT 1 FROM Cliente WHERE Cliente_DNI = @DNI)
-                    BEGIN
-                        INSERT INTO Cliente
-                            (Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                             Cliente_TelefonoPrincipal, Cliente_Email,
-                             Cliente_Direccion, Cliente_Activo)
-                        VALUES
-                            (@DNI, @Nombres, @Apellidos, @Telefono, @Email,
-                             @Direccion, 1)
-                        SELECT 1
-                    END
-                    ELSE
-                        SELECT 0";
-
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_Agregar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@DNI", dni);
                 cmd.Parameters.AddWithValue("@Nombres", nombres);
                 cmd.Parameters.AddWithValue("@Apellidos", apellidos);
@@ -476,41 +466,23 @@ namespace Login.Clases
 
             try
             {
+                using var cmd = new SqlCommand("sp_Cliente_Actualizar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
+                cmd.Parameters.AddWithValue("@NuevoDNI", dniAGuardar);
+                cmd.Parameters.AddWithValue("@Nombres", nombres);
+                cmd.Parameters.AddWithValue("@Apellidos", apellidos);
+                cmd.Parameters.AddWithValue("@Telefono", telefono);
+                cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(email)
+                    ? DBNull.Value : email.Trim());
+                cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(direccion)
+                    ? DBNull.Value : direccion.Trim());
+                cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
+
                 conexion.Abrir();
-
-                const string sql = @"
-                    UPDATE Cliente SET
-                        Cliente_DNI               = @NuevoDNI,
-                        Cliente_Nombres           = @Nombres,
-                        Cliente_Apellidos         = @Apellidos,
-                        Cliente_TelefonoPrincipal = @Telefono,
-                        Cliente_Email             = @Email,
-                        Cliente_Direccion         = @Direccion,
-                        Cliente_Activo            = @Activo
-                    WHERE Cliente_DNI = @DNIOriginal";
-
-                using (var cmd = new SqlCommand(sql, conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
-                    cmd.Parameters.AddWithValue("@NuevoDNI", dniAGuardar);
-                    cmd.Parameters.AddWithValue("@Nombres", nombres);
-                    cmd.Parameters.AddWithValue("@Apellidos", apellidos);
-                    cmd.Parameters.AddWithValue("@Telefono", telefono);
-                    cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(email)
-                        ? DBNull.Value : email.Trim());
-                    cmd.Parameters.AddWithValue("@Direccion", string.IsNullOrWhiteSpace(direccion)
-                        ? DBNull.Value : direccion.Trim());
-                    cmd.Parameters.AddWithValue("@Activo", activo ? 1 : 0);
-                    cmd.ExecuteNonQuery();
-                }
-
-                // Si el DNI cambió, propagar el nuevo valor a las tablas relacionadas
-                if (dniAGuardar != dniOriginal)
-                {
-                    ActualizarDniEnTabla(conexion, "Vehiculo", dniOriginal, dniAGuardar);
-                    ActualizarDniEnTabla(conexion, "Orden_Trabajo", dniOriginal, dniAGuardar);
-                    ActualizarDniEnTabla(conexion, "Contabilidad_Pago", dniOriginal, dniAGuardar);
-                }
+                cmd.ExecuteNonQuery();
 
                 return true;
             }
@@ -520,32 +492,17 @@ namespace Login.Clases
             }
         }
 
-        /// <summary>
-        /// Propaga el cambio de Cliente_DNI a una tabla relacionada. Usado únicamente por
-        /// ActualizarCliente cuando el DNI del cliente es modificado.
-        /// </summary>
-        private static void ActualizarDniEnTabla(ClsConexion conexion, string tabla, string dniOriginal, string dniNuevo)
-        {
-            string sql = $"UPDATE {tabla} SET Cliente_DNI = @NuevoDNI WHERE Cliente_DNI = @DNIOriginal";
-            using var cmd = new SqlCommand(sql, conexion.SqlC);
-            cmd.Parameters.AddWithValue("@NuevoDNI", dniNuevo);
-            cmd.Parameters.AddWithValue("@DNIOriginal", dniOriginal);
-            cmd.ExecuteNonQuery();
-        }
-
         public bool ExisteTelefonoEnOtroCliente(string telefono, string dniActual)
         {
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    SELECT COUNT(1) FROM Cliente 
-                    WHERE Cliente_TelefonoPrincipal = @Telefono 
-                    AND (@DNI = '' OR Cliente_DNI <> @DNI)";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_ExisteTelefonoEnOtro", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Telefono", telefono);
-                cmd.Parameters.AddWithValue("@DNI", dniActual ?? "");
+                cmd.Parameters.AddWithValue("@DNIActual", dniActual ?? "");
 
                 conexion.Abrir();
                 return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
@@ -561,12 +518,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    SELECT COUNT(1) FROM Cliente 
-                    WHERE Cliente_DNI = @DNI 
-                    AND Cliente_DNI <> @DNIActual";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_ExisteDNIEnOtro", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@DNI", dni);
                 cmd.Parameters.AddWithValue("@DNIActual", dniActual ?? "");
 
@@ -585,18 +540,11 @@ namespace Login.Clases
             var lista = new List<clsCliente>();
             try
             {
-                const string sql = @"
-                    SELECT Cliente_DNI,
-                           Cliente_Nombres,
-                           Cliente_Apellidos,
-                           Cliente_TelefonoPrincipal,
-                           Cliente_Email,
-                           Cliente_Direccion,
-                           Cliente_Activo
-                    FROM   Cliente
-                    ORDER  BY Cliente_Nombres";
+                using var cmd = new SqlCommand("sp_Cliente_ObtenerTodos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
@@ -625,8 +573,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS Nombre FROM Cliente WHERE Cliente_DNI = @DNI";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_VerificarPorDNI", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@DNI", dni);
 
                 conexion.Abrir();
@@ -646,46 +596,33 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string sqlCliente = @"
-                    SELECT Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto,
-                           Cliente_TelefonoPrincipal, Cliente_Email, Cliente_Activo
-                    FROM   Cliente WHERE Cliente_DNI = @DNI";
-
-                using var cmd = new SqlCommand(sqlCliente, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_BuscarPorDNI", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@DNI", dni);
                 conexion.Abrir();
 
-                string nombre, telefono, email;
-                bool activo;
-                using (var rd = cmd.ExecuteReader())
+                using var rd = cmd.ExecuteReader();
+
+                if (!rd.Read()) return default;
+
+                string nombre = rd["NombreCompleto"].ToString()!;
+                string telefono = rd["Cliente_TelefonoPrincipal"].ToString()!;
+                string email = rd["Cliente_Email"].ToString()!;
+                bool activo = rd["Cliente_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Cliente_Activo"]);
+
+                rd.NextResult();
+                if (rd.Read())
                 {
-                    if (!rd.Read()) return default;
-
-                    nombre = rd["NombreCompleto"].ToString()!;
-                    telefono = rd["Cliente_TelefonoPrincipal"].ToString()!;
-                    email = rd["Cliente_Email"].ToString()!;
-                    activo = rd["Cliente_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Cliente_Activo"]);
-                }
-
-                const string sqlVehiculo = @"
-                    SELECT TOP 1
-                           Vehiculo_Marca + ' ' + Vehiculo_Modelo AS NombreVehiculo,
-                           Vehiculo_Tipo + ' · ' + CAST(Vehiculo_Año AS VARCHAR) AS TipoAño,
-                           Vehiculo_Placa, Vehiculo_Activo
-                    FROM   Vehiculo WHERE Cliente_DNI = @DNI ORDER BY Vehiculo_Placa";
-
-                using var cmd2 = new SqlCommand(sqlVehiculo, conexion.SqlC);
-                cmd2.Parameters.AddWithValue("@DNI", dni);
-                using var rd2 = cmd2.ExecuteReader();
-                if (rd2.Read())
-                {
-                    bool vActivo = rd2["Vehiculo_Activo"] != DBNull.Value && Convert.ToBoolean(rd2["Vehiculo_Activo"]);
+                    bool vActivo = rd["Vehiculo_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Vehiculo_Activo"]);
                     return (nombre, telefono, email,
-                            rd2["NombreVehiculo"].ToString()!,
-                            rd2["TipoAño"].ToString()!,
-                            rd2["Vehiculo_Placa"].ToString()!,
+                            rd["NombreVehiculo"].ToString()!,
+                            rd["TipoAño"].ToString()!,
+                            rd["Vehiculo_Placa"].ToString()!,
                             activo, vActivo);
                 }
+
                 return (nombre, telefono, email, "", "", "", activo, true);
             }
             catch (SqlException ex)
@@ -706,16 +643,12 @@ namespace Login.Clases
             var lista = new List<ClienteSugerencia>();
             try
             {
-                const string query = @"
-                    SELECT TOP 8 Cliente_DNI,
-                           Cliente_Nombres + ' ' + Cliente_Apellidos AS NombreCompleto
-                    FROM   Cliente
-                    WHERE  Cliente_DNI LIKE @Texto + '%'
-                       OR  Cliente_Nombres + ' ' + Cliente_Apellidos LIKE '%' + @Texto + '%'
-                    ORDER  BY Cliente_DNI";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Cliente_BuscarSugerencias", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Texto", texto);
+
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
