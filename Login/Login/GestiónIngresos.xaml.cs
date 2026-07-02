@@ -337,6 +337,6 @@ namespace Contabilidad
             new((Color)ColorConverter.ConvertFromString(hex));
 
         private static string ObtenerCadena() =>
-            new clsConexion().SqlC.ConnectionString;
+            new ClsConexion().SqlC.ConnectionString;
     }
 }

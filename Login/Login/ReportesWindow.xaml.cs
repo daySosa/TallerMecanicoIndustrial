@@ -422,7 +422,7 @@ namespace Login
         private async Task GenerarReporteClientes()
         {
             string accent = "#1e2d5f";
-            var db = new clsConexion(); db.Abrir();
+            var db = new ClsConexion(); db.Abrir();
             string filas = "";
             using (var cmd = new SqlCommand(
                 @"SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
@@ -468,7 +468,7 @@ namespace Login
                 return;
 
             string accent = "#1e2d5f";
-            var db = new clsConexion(); db.Abrir();
+            var db = new ClsConexion(); db.Abrir();
             string filas = "";
 
             if (periodoTexto == "Todo")
@@ -566,7 +566,7 @@ namespace Login
         private async Task GenerarReporteVehiculos()
         {
             string accent = "#1e2d5f";
-            var db = new clsConexion(); db.Abrir();
+            var db = new ClsConexion(); db.Abrir();
             string filas = "";
             using (var cmd = new SqlCommand(
                 @"SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año,
@@ -617,7 +617,7 @@ namespace Login
         private async Task GenerarReporteOrdenes()
         {
             string accent = "#1e2d5f";
-            var db = new clsConexion(); db.Abrir();
+            var db = new ClsConexion(); db.Abrir();
             string filas = "";
             decimal grandTotal = 0;
             using (var cmd = new SqlCommand(
@@ -676,7 +676,7 @@ namespace Login
         private async Task GenerarReporteEgresos()
         {
             string accent = "#7f1d1d";
-            var db = new clsConexion(); db.Abrir();
+            var db = new ClsConexion(); db.Abrir();
             string filas = "";
             decimal total = 0;
             using (var cmd = new SqlCommand(
@@ -729,7 +729,7 @@ namespace Login
         private async Task GenerarReporteIngresos()
         {
             string accent = "#1b4332";
-            var db = new clsConexion(); db.Abrir();
+            var db = new ClsConexion(); db.Abrir();
             string filas = "";
             decimal total = 0;
             using (var cmd = new SqlCommand(

@@ -3,10 +3,7 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
@@ -66,18 +63,18 @@ namespace Login
 
         private RegistroIntentos _registro;
 
-        public ReconocimientoFacial()
+        private readonly string _correoUsuario;
+
+        public ReconocimientoFacial(string correo)
         {
             InitializeComponent();
-            // Ejecutar una sola vez y luego BORRAR esta línea (y el comentario)
-            // para que no se vuelva a correr y duplique las fotos en la tabla.
+            _correoUsuario = string.IsNullOrWhiteSpace(correo) ? string.Empty : correo.Trim();
 
             CargarRegistroIntentos();
             InicializarClasificadores();
             EntrenarReconocedor();
             ActualizarUIBloqueo();
         }
-        //  PERSISTENCIA DE INTENTOS FALLIDOS / BLOQUEO
 
         private class RegistroIntentos
         {
