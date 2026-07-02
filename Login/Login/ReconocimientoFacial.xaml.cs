@@ -92,6 +92,13 @@ namespace Login
         private bool _pruebaVidaSuperada = false;
         private bool _verificando = false; // true solo mientras se evalúa la decisión final de acceso
 
+        // ---------------------- Periodo de gracia al iniciar la cámara ----------------------
+        // Le da tiempo a la persona de acomodarse frente a la cámara antes de que se
+        // empiece a evaluar la prueba de vida o el reconocimiento. Durante este periodo
+        // solo se muestra el video en vivo con una cuenta regresiva, sin contar como intento.
+        private const int SEGUNDOS_GRACIA = 3;
+        private DateTime? _inicioGracia = null;
+
         // ---------------------- Estado de consenso multi-frame ----------------------
         private readonly List<(int Label, double Distance)> _historialPredicciones = new();
 
@@ -424,13 +431,14 @@ namespace Login
             }
 
             ReiniciarEstadoPruebaVida();
+            _inicioGracia = DateTime.Now;
 
             pnlSinCamara.Visibility = Visibility.Collapsed;
             btnIniciarCamara.IsEnabled = false;
             btnDetenerCamara.IsEnabled = true;
             bdNombreReconocido.Visibility = Visibility.Collapsed;
 
-            txtEstado.Text = "Analizando prueba de vida (parpadea y mueve la cabeza)...";
+            txtEstado.Text = $"Prepárate, colócate frente a la cámara... {SEGUNDOS_GRACIA}";
             elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0xf5, 0xa6, 0x23));
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
@@ -454,6 +462,7 @@ namespace Login
             _camara?.Dispose();
             _camara = null;
             _verificando = false;
+            _inicioGracia = null;
             _historialPredicciones.Clear();
 
             btnDetenerCamara.IsEnabled = false;
@@ -477,6 +486,7 @@ namespace Login
             _framesProcesados = 0;
             _pruebaVidaSuperada = false;
             _verificando = false;
+            _inicioGracia = null;
             _historialPredicciones.Clear();
         }
 
@@ -493,6 +503,25 @@ namespace Login
 
             using var imgColor = frame.ToImage<Bgr, byte>();
             using var imgGris = imgColor.Convert<Gray, byte>();
+
+            // ---- Periodo de gracia: le da tiempo a la persona de acomodarse frente a la
+            // cámara antes de empezar a evaluar prueba de vida o identidad. Durante este
+            // lapso solo se muestra el video con una cuenta regresiva; nada de esto cuenta
+            // como intento fallido. ----
+            if (_inicioGracia.HasValue)
+            {
+                double restante = SEGUNDOS_GRACIA - (DateTime.Now - _inicioGracia.Value).TotalSeconds;
+
+                if (restante > 0)
+                {
+                    txtEstado.Text = $"Prepárate, colócate frente a la cámara... {Math.Ceiling(restante):F0}";
+                    MostrarFrame(imgColor);
+                    return;
+                }
+
+                _inicioGracia = null;
+                txtEstado.Text = "Analizando prueba de vida (parpadea y mueve la cabeza)...";
+            }
 
             var rostros = _clasificadorRostro.DetectMultiScale(
                 imgGris, 1.1, 5, new System.Drawing.Size(90, 90));
@@ -712,8 +741,25 @@ namespace Login
             txtEstado.Text = $"Rostro no reconocido ({_registro.IntentosFallidos}/{MAX_INTENTOS_FALLIDOS} intentos)";
             elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
 
-            MessageBox.Show("No se pudo verificar tu identidad. Inténtalo nuevamente.",
-                "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+            int intentosRestantes = MAX_INTENTOS_FALLIDOS - _registro.IntentosFallidos;
+            string plural = intentosRestantes == 1 ? "intento" : "intentos";
+
+            var respuesta = MessageBox.Show(
+                $"Intento fallido. ¿Desea intentar de nuevo? (quedan {intentosRestantes} {plural})",
+                "Acceso denegado", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (respuesta == MessageBoxResult.Yes)
+            {
+                // Vuelve a abrir la cámara automáticamente para el siguiente intento
+                // (btnIniciarCamara_Click ya valida que no esté bloqueado y reinicia el
+                // periodo de gracia de SEGUNDOS_GRACIA para que la persona se acomode).
+                btnIniciarCamara_Click(this, new RoutedEventArgs());
+            }
+            else
+            {
+                txtEstado.Text = "En espera...";
+                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+            }
         }
 
         // ======================================================================
