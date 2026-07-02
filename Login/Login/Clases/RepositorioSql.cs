@@ -255,10 +255,10 @@ namespace Login.Clases
 
         #region INVENTARIO / PRODUCTOS
 
-        public List<clsProductoInventario> ObtenerProductosInventario()
+        public List<ValidadorInventario> ObtenerProductosInventario()
         {
             using var conexion = new ClsConexion();
-            var lista = new List<clsProductoInventario>();
+            var lista = new List<ValidadorInventario>();
             try
             {
                 using var cmd = new SqlCommand("sp_ObtenerProductosInventario", conexion.SqlC)
@@ -271,7 +271,7 @@ namespace Login.Clases
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
                 {
-                    lista.Add(new clsProductoInventario
+                    lista.Add(new ValidadorInventario
                     {
                         Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
                         Producto_Nombre = rd["Producto_Nombre"].ToString(),
@@ -288,10 +288,10 @@ namespace Login.Clases
             }
         }
 
-        public List<Repuesto> ObtenerProductos()
+        public List<ValidadorInventario> ObtenerProductos()
         {
             using var conexion = new ClsConexion();
-            var lista = new List<Repuesto>();
+            var lista = new List<ValidadorInventario>();
             try
             {
                 const string query = @"
@@ -311,7 +311,7 @@ namespace Login.Clases
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
                 {
-                    lista.Add(new Repuesto
+                    lista.Add(new ValidadorInventario
                     {
                         Producto_ID = rd.GetInt32(rd.GetOrdinal("Producto_ID")),
                         Producto_Nombre = rd["Producto_Nombre"].ToString(),

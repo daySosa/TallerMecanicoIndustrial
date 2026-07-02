@@ -1,4 +1,5 @@
-﻿using Dasboard_Prueba;
+﻿#nullable enable
+using Dasboard_Prueba;
 using InterfazClientes;
 using Login;
 using Login.Clases;
@@ -7,57 +8,36 @@ using System.ComponentModel;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace InterfazInventario
 {
-    public class Repuesto : INotifyPropertyChanged
-    {
-        private int _producto_Cantidad_Actual;
-
-        public int Producto_ID { get; set; }
-        public string? Producto_Nombre { get; set; }
-        public string? Producto_Categoria { get; set; }
-        public string? Producto_Marca { get; set; }
-        public string? Producto_Modelo { get; set; }
-        public int Producto_Cantidad_Minima { get; set; }
-        public decimal Producto_Precio { get; set; }
-
-        public int Producto_Cantidad_Actual
-        {
-            get => _producto_Cantidad_Actual;
-            set
-            {
-                _producto_Cantidad_Actual = value;
-                OnPropertyChanged(nameof(Producto_Cantidad_Actual));
-                OnPropertyChanged(nameof(StockBajo));
-            }
-        }
-
-        public bool StockBajo => Producto_Cantidad_Actual < Producto_Cantidad_Minima;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged(string name) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-
     public partial class MenúPrincipalInventario : Window
     {
-        private readonly clsConsultasBD _db = new();
-        private readonly ObservableCollection<Repuesto> _listaRepuestos = new();
+        private readonly RepositorioSql _db = new();
+        private readonly ObservableCollection<ValidadorInventario> _listaRepuestos = new();
         private ICollectionView? _vistaRepuestos;
+
         private string? _filtroCategoria = null;
         private decimal _filtroPrecioMin = 0;
         private decimal _filtroPrecioMax = decimal.MaxValue;
         private bool _filtroStockBajo = false;
 
+        private bool _cargandoDatos = false;
+
         public MenúPrincipalInventario()
         {
             InitializeComponent();
             AplicarPermisos();
-            CargarDatos();
-            CargarNotificaciones();
+            Loaded += MenúPrincipalInventario_Loaded;
+        }
+
+        private async void MenúPrincipalInventario_Loaded(object sender, RoutedEventArgs e)
+        {
+            await CargarDatosAsync();
+            await CargarNotificacionesAsync();
         }
 
         // ── MOVER VENTANA ────────────────────────────────────────────
@@ -74,7 +54,7 @@ namespace InterfazInventario
 
         private void AplicarPermisos()
         {
-            if (!Login.Clases.SesionActual.EsAdministrador)
+            if (!SesionActual.EsAdministrador)
             {
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
@@ -119,31 +99,61 @@ namespace InterfazInventario
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                Login.Clases.SesionActual.CerrarSesion();
+                SesionActual.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
             }
         }
 
         // ── DATOS ────────────────────────────────────────────────────
 
-        private void CargarDatos()
+        /// <summary>
+        /// Carga el inventario desde la base de datos sin bloquear la interfaz.
+        /// Se protege contra ejecuciones simultáneas con _cargandoDatos.
+        /// </summary>
+        private async Task CargarDatosAsync()
         {
-            _listaRepuestos.Clear();
+            if (_cargandoDatos) return;
+            _cargandoDatos = true;
+            Mouse.OverrideCursor = Cursors.Wait;
+
             try
             {
-                foreach (var p in _db.ObtenerProductos())
-                    _listaRepuestos.Add(new Repuesto
+                List<ValidadorInventario> productos = await Task.Run(() =>
+                {
+                    var lista = new List<ValidadorInventario>();
+                    foreach (var p in _db.ObtenerProductos())
                     {
-                        Producto_ID = p.Producto_ID,
-                        Producto_Nombre = p.Producto_Nombre,
-                        Producto_Categoria = p.Producto_Categoria,
-                        Producto_Marca = p.Producto_Marca,
-                        Producto_Modelo = p.Producto_Modelo,
-                        Producto_Cantidad_Minima = p.Producto_Cantidad_Minima,
-                        Producto_Precio = p.Producto_Precio,
-                        Producto_Cantidad_Actual = p.Producto_Cantidad_Actual
-                    });
+                        lista.Add(new ValidadorInventario
+                        {
+                            Producto_ID = p.Producto_ID,
+                            Producto_Nombre = p.Producto_Nombre,
+                            Producto_Categoria = p.Producto_Categoria,
+                            Producto_Marca = p.Producto_Marca,
+                            Producto_Modelo = p.Producto_Modelo,
+                            Producto_Cantidad_Minima = p.Producto_Cantidad_Minima,
+                            Producto_Precio = p.Producto_Precio,
+                            Producto_Cantidad_Actual = p.Producto_Cantidad_Actual
+                        });
+                    }
+                    return lista;
+                });
 
+                _listaRepuestos.Clear();
+                foreach (var p in productos)
+                    _listaRepuestos.Add(p);
+
+                if (_vistaRepuestos == null)
+                {
+                    _vistaRepuestos = CollectionViewSource.GetDefaultView(_listaRepuestos);
+                    _vistaRepuestos.Filter = AplicarFiltros;
+                    dgInventario.ItemsSource = _vistaRepuestos;
+                }
+                else
+                {
+                    _vistaRepuestos.Refresh();
+                }
+
+                ActualizarCategorias(productos);
                 ActualizarContador();
             }
             catch (Exception ex)
@@ -151,11 +161,39 @@ namespace InterfazInventario
                 MessageBox.Show("Error al cargar inventario:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                _cargandoDatos = false;
+            }
+        }
+
+        /// <summary>
+        /// Rellena el combo de categorías con los valores distintos presentes en el
+        /// inventario actual, conservando la selección previa si sigue existiendo.
+        /// </summary>
+        private void ActualizarCategorias(IEnumerable<ValidadorInventario> productos)
+        {
+            string? seleccionActual = cmbCategoria.SelectedItem as string;
+
+            var categorias = new List<string> { "Todas" };
+            categorias.AddRange(
+                productos
+                    .Select(p => p.Producto_Categoria)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct()
+                    .OrderBy(c => c)!);
+
+            cmbCategoria.ItemsSource = categorias;
+
+            cmbCategoria.SelectedItem = seleccionActual != null && categorias.Contains(seleccionActual)
+                ? seleccionActual
+                : categorias[0];
         }
 
         private bool AplicarFiltros(object item)
         {
-            if (item is not Repuesto r) return false;
+            if (item is not ValidadorInventario r) return false;
 
             string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
             if (!string.IsNullOrEmpty(texto))
@@ -201,7 +239,7 @@ namespace InterfazInventario
                     out decimal pMin, out decimal pMax))
                 return;
 
-            _filtroCategoria = cmbCategoria.SelectedItem?.ToString();
+            _filtroCategoria = cmbCategoria.SelectedItem as string;
             _filtroPrecioMin = pMin;
             _filtroPrecioMax = pMax;
             _filtroStockBajo = chkStockBajo.IsChecked == true;
@@ -212,14 +250,18 @@ namespace InterfazInventario
 
         private void btnLimpiarFiltros_Click(object sender, RoutedEventArgs e)
         {
-            cmbCategoria.SelectedIndex = 0;
+            if (cmbCategoria.Items.Count > 0)
+                cmbCategoria.SelectedIndex = 0;
+
             txtPrecioMin.Clear();
             txtPrecioMax.Clear();
             chkStockBajo.IsChecked = false;
+
             _filtroCategoria = null;
             _filtroPrecioMin = 0;
             _filtroPrecioMax = decimal.MaxValue;
             _filtroStockBajo = false;
+
             popupFiltros.IsOpen = false;
             _vistaRepuestos?.Refresh();
             ActualizarContador();
@@ -227,24 +269,24 @@ namespace InterfazInventario
 
         // ── DATAGRID ─────────────────────────────────────────────────
 
-        private void dgInventario_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private async void dgInventario_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (dgInventario.SelectedItem is Repuesto seleccionado)
-            {
-                var ventana = new InventarioWindow();
-                ventana.CargarProductoParaEditar(seleccionado);
-                ventana.ShowDialog();
-                dgInventario.SelectedItem = null;
-                CargarDatos();
-                CargarNotificaciones();
-            }
+            if (dgInventario.SelectedItem is not ValidadorInventario seleccionado) return;
+
+            var ventana = new InventarioWindow();
+            ventana.CargarProductoParaEditar(seleccionado);
+            ventana.ShowDialog();
+
+            dgInventario.SelectedItem = null;
+            await CargarDatosAsync();
+            await CargarNotificacionesAsync();
         }
 
-        private void btnAgregarRepuesto_Click(object sender, RoutedEventArgs e)
+        private async void btnAgregarRepuesto_Click(object sender, RoutedEventArgs e)
         {
             new InventarioWindow().ShowDialog();
-            CargarDatos();
-            CargarNotificaciones();
+            await CargarDatosAsync();
+            await CargarNotificacionesAsync();
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
@@ -252,30 +294,34 @@ namespace InterfazInventario
 
         // ── NOTIFICACIONES ───────────────────────────────────────────
 
-        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
+        private async void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
-                CargarNotificacionesEnPopup();
+                await CargarNotificacionesEnPopupAsync();
+
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
-        public void CargarNotificaciones()
+        private async Task CargarNotificacionesAsync()
         {
             try
             {
-                int cantidad = _db.ContarNotificacionesPendientes();
+                int cantidad = await Task.Run(() => _db.ContarNotificacionesPendientes());
                 badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
                 txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error al cargar notificaciones: " + ex.Message);
+            }
         }
 
-        private void CargarNotificacionesEnPopup()
+        private async Task CargarNotificacionesEnPopupAsync()
         {
             panelNotificaciones.Children.Clear();
             try
             {
-                DataTable dt = _db.ObtenerNotificacionesPendientes();
+                DataTable dt = await Task.Run(() => _db.ObtenerNotificacionesPendientes());
 
                 if (dt.Rows.Count == 0)
                 {
@@ -332,23 +378,23 @@ namespace InterfazInventario
             string colorFondo = esStock ? "#1A1500" : "#0D1A2E";
             string labelTipo = esStock ? "Stock Bajo" : "Orden Finalizada";
 
-            var contenido = new StackPanel();
-
             var badge = new Border
             {
                 Background = Pincel(colorBorde + "33"),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(6, 2, 6, 2),
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(0, 0, 0, 5)
+                Margin = new Thickness(0, 0, 0, 5),
+                Child = new TextBlock
+                {
+                    Text = labelTipo,
+                    Foreground = Pincel(colorBorde),
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold
+                }
             };
-            badge.Child = new TextBlock
-            {
-                Text = labelTipo,
-                Foreground = Pincel(colorBorde),
-                FontSize = 10,
-                FontWeight = FontWeights.SemiBold
-            };
+
+            var contenido = new StackPanel();
             contenido.Children.Add(badge);
             contenido.Children.Add(new TextBlock
             {
@@ -371,11 +417,19 @@ namespace InterfazInventario
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
-            btnLeida.Click += (s, _) =>
+            btnLeida.Click += async (s, _) =>
             {
-                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
-                CargarNotificacionesEnPopup();
-                CargarNotificaciones();
+                try
+                {
+                    int notifId = (int)((Button)s).Tag;
+                    await Task.Run(() => _db.MarcarNotificacionLeida(notifId));
+                    await CargarNotificacionesEnPopupAsync();
+                    await CargarNotificacionesAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al marcar como leída: " + ex.Message);
+                }
             };
 
             var grid = new Grid();
@@ -398,11 +452,18 @@ namespace InterfazInventario
             };
         }
 
-        private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
+        private async void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            _db.MarcarNotificacionLeida(null);
-            CargarNotificacionesEnPopup();
-            CargarNotificaciones();
+            try
+            {
+                await Task.Run(() => _db.MarcarNotificacionLeida(null));
+                await CargarNotificacionesEnPopupAsync();
+                await CargarNotificacionesAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al marcar notificaciones: " + ex.Message);
+            }
         }
 
         // ── HELPER ───────────────────────────────────────────────────
