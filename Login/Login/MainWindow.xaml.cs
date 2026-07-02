@@ -11,6 +11,10 @@ namespace Login
     {
         private bool _contrasenaVisible = false;
         private bool _procesandoLogin = false;
+        private System.Windows.Threading.DispatcherTimer _timerBloqueo;
+        private DateTime _fechaDesbloqueo;
+        private string _correoActual;
+
 
         private readonly RepositorioSql _repositorio = new();
 
@@ -42,6 +46,7 @@ namespace Login
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
+            _ = VerificarBloqueoAlIniciarAsync();
         }
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
@@ -134,15 +139,7 @@ namespace Login
             if (_procesandoLogin) return;
 
             // ── Control de bloqueo por intentos fallidos ──
-            if (ValidadorLogin.EstaBloqueado())
-            {
-                var restante = ValidadorLogin.TiempoRestanteBloqueo();
-                bool ignorar = false;
-                MostrarError(txtErrorCorreo, borderCorreo,
-                    $"⚠ Demasiados intentos. Intenta de nuevo en {restante.Minutes}m {restante.Seconds}s.",
-                    ref ignorar);
-                return;
-            }
+            _correoActual = txtCorreo.Text.Trim();
 
             bool hayError = false;
 
@@ -210,21 +207,30 @@ namespace Login
 
                 if (!valido)
                 {
-                    ValidadorLogin.RegistrarIntentoFallido();
+                    int intentos = await Task.Run(() => _repositorio.ObtenerIntentosFallidos(correo)) + 1;
+                    int minutos = ValidadorLogin.MinutosDeBloqueo(intentos);
 
-                    bool dummy = false;
-                    int restantes = ValidadorLogin.IntentosRestantes();
-                    string mensaje = restantes > 0
-                        ? $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s)."
-                        : $"⚠ Cuenta bloqueada por {5} minutos por demasiados intentos fallidos.";
-
-                    MostrarError(txtErrorCorreo, borderCorreo, mensaje, ref dummy);
-                    MostrarError(txtErrorContrasena, borderContrasena, null, ref dummy);
-                    borderContrasena.BorderBrush = BrushError;
+                    if (minutos > 0)
+                    {
+                        DateTime bloqueoHasta = DateTime.Now.AddMinutes(minutos);
+                        await Task.Run(() => _repositorio.ActualizarBloqueo(correo, intentos, bloqueoHasta));
+                        _fechaDesbloqueo = bloqueoHasta;
+                        IniciarCuentaRegresiva();
+                    }
+                    else
+                    {
+                        await Task.Run(() => _repositorio.ActualizarBloqueo(correo, intentos, null));
+                        int restantes = ValidadorLogin.IntentosRestantesParaBloqueo(intentos);
+                        bool dummy = false;
+                        MostrarError(txtErrorContrasena, borderContrasena,
+                            $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s).", ref dummy);
+                        borderCorreo.BorderBrush = BrushError;
+                    }
                     return;
                 }
 
-                ValidadorLogin.ResetearIntentos();
+                await Task.Run(() => _repositorio.ActualizarBloqueo(correo, 0, null));
+                DetenerCuentaRegresiva();
 
                 bool enviado = await Task.Run(() =>
                 {
@@ -265,6 +271,68 @@ namespace Login
         private void BtnCerrarApp_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private async Task VerificarBloqueoAlIniciarAsync()
+        {
+            string correo = txtCorreo.Text.Trim();
+            if (string.IsNullOrEmpty(correo)) return;
+
+            DateTime? fechaBloqueo = await Task.Run(() => _repositorio.ObtenerFechaBloqueo(correo));
+
+            if (fechaBloqueo.HasValue && fechaBloqueo.Value > DateTime.Now)
+            {
+                _correoActual = correo;
+                _fechaDesbloqueo = fechaBloqueo.Value;
+                IniciarCuentaRegresiva();
+            }
+        }
+
+        private void IniciarCuentaRegresiva()
+        {
+            DetenerCuentaRegresiva();
+            ActualizarContador();
+            borderCorreo.BorderBrush = BrushError;
+            borderContrasena.BorderBrush = BrushError;
+
+            _timerBloqueo = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _timerBloqueo.Tick += (s, e) =>
+            {
+                if ((_fechaDesbloqueo - DateTime.Now).TotalSeconds <= 0)
+                {
+                    DetenerCuentaRegresiva();
+                    txtContador.Text = "✅ Ya puedes intentar iniciar sesión.";
+                    txtContador.Foreground = new SolidColorBrush(
+                        (Color)ColorConverter.ConvertFromString("#4CAF50"));
+                    txtContador.Visibility = Visibility.Visible;
+                    borderCorreo.BorderBrush = BrushVacio;
+                    borderContrasena.BorderBrush = BrushVacio;
+                }
+                else
+                {
+                    ActualizarContador();
+                }
+            };
+            _timerBloqueo.Start();
+        }
+
+        private void ActualizarContador()
+        {
+            TimeSpan restante = _fechaDesbloqueo - DateTime.Now;
+            txtContador.Text = $"⛔ Cuenta bloqueada. Espere {(int)restante.TotalMinutes}:{restante.Seconds:D2} min.";
+            txtContador.Foreground = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#f44336"));
+            txtContador.Visibility = Visibility.Visible;
+        }
+
+        private void DetenerCuentaRegresiva()
+        {
+            _timerBloqueo?.Stop();
+            _timerBloqueo = null;
+            txtContador.Visibility = Visibility.Collapsed;
         }
     }
 }

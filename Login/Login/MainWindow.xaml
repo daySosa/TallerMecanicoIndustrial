@@ -186,6 +186,14 @@
                                Foreground="#F87171" FontSize="11"
                                Margin="4,4,0,0" Visibility="Collapsed"/>
 
+                    <TextBlock x:Name="txtContador"
+                               Visibility="Collapsed"
+                               Foreground="#f44336"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Margin="4,4,0,0"
+                               TextWrapping="Wrap"/>
+
                     <Grid Margin="0,18,0,22">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>

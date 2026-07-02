@@ -1378,6 +1378,69 @@ namespace Login.Clases
             }
         }
 
+        public int ObtenerIntentosFallidos(string correo)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                const string query = "SELECT ISNULL(IntentosFallidos, 0) FROM LOGIN WHERE Usuario_Email = @Correo";
+                using var cmd = new SqlCommand(query, conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+
+                conexion.Abrir();
+                object result = cmd.ExecuteScalar();
+                return result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al obtener intentos fallidos: " + ex.Message, ex);
+            }
+        }
+
+        public DateTime? ObtenerFechaBloqueo(string correo)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                const string query = "SELECT FechaBloqueo FROM LOGIN WHERE Usuario_Email = @Correo";
+                using var cmd = new SqlCommand(query, conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+
+                conexion.Abrir();
+                object result = cmd.ExecuteScalar();
+                return result != null && result != DBNull.Value ? Convert.ToDateTime(result) : null;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al obtener fecha de bloqueo: " + ex.Message, ex);
+            }
+        }
+
+        public void ActualizarBloqueo(string correo, int intentos, DateTime? fechaBloqueo)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                const string query = @"
+                    UPDATE LOGIN 
+                    SET IntentosFallidos = @Intentos,
+                        FechaBloqueo = @FechaBloqueo
+                    WHERE Usuario_Email = @Correo";
+
+                using var cmd = new SqlCommand(query, conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Intentos", intentos);
+                cmd.Parameters.AddWithValue("@FechaBloqueo", fechaBloqueo.HasValue ? fechaBloqueo.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al actualizar bloqueo: " + ex.Message, ex);
+            }
+        }
+
         #endregion
 
         #region CÓDIGOS OTP

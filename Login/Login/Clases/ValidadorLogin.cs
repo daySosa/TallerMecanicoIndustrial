@@ -74,5 +74,21 @@
 
         public static int IntentosRestantes() =>
             Math.Max(0, MaxIntentos - _intentosFallidos);
+
+        public static int MinutosDeBloqueo(int intentos)
+        {
+            if (intentos >= 9) return 5;
+            if (intentos >= 6) return 3;
+            if (intentos >= 3) return 1;
+            return 0;
+        }
+
+        public static int IntentosRestantesParaBloqueo(int intentos)
+        {
+            if (intentos < 3) return 3 - intentos;
+            if (intentos < 6) return 6 - intentos;
+            if (intentos < 9) return 9 - intentos;
+            return 0;
+        }
     }
 }
