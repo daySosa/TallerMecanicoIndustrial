@@ -280,8 +280,15 @@ namespace Vehículos
 
             try
             {
-                var datos = BuildDatos(año, activo: true);
-           
+                _db.AgregarVehiculo(
+                    txtPlaca.Text.Trim().ToUpper(),
+                    _clienteDNI,
+                    txtMarca.Text.Trim(),
+                    txtModelo.Text.Trim(),
+                    año,
+                    (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+                    string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim()
+                );
                 MessageBox.Show("✅ Vehículo registrado correctamente.", "Éxito",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
@@ -304,8 +311,17 @@ namespace Vehículos
 
             try
             {
-                var datos = BuildDatos(año, activo: toggleActivo.IsChecked == true);
-
+                _db.ActualizarVehiculo(
+                    _placaSeleccionada,
+                    txtPlaca.Text.Trim().ToUpper(),
+                    _clienteDNI,
+                    txtMarca.Text.Trim(),
+                    txtModelo.Text.Trim(),
+                    año,
+                    (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+                    string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim(),
+                    toggleActivo.IsChecked == true
+                );
                 MessageBox.Show("✅ Vehículo actualizado correctamente.", "Éxito",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
@@ -313,19 +329,6 @@ namespace Vehículos
             catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
 
-        private dynamic BuildDatos(int año, bool activo) => new
-        {
-            Placa = txtPlaca.Text.Trim().ToUpper(),
-            DNI = _clienteDNI,
-            Marca = txtMarca.Text.Trim(),
-            Modelo = txtModelo.Text.Trim(),
-            Anio = año,
-            Tipo = (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString(),
-            Obs = string.IsNullOrWhiteSpace(txtObservaciones.Text)
-                         ? (object)DBNull.Value
-                         : txtObservaciones.Text.Trim(),
-            Activo = activo
-        };
 
         // ── CANCELAR ─────────────────────────────────────────────────
 
