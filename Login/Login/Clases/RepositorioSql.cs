@@ -730,9 +730,6 @@ namespace Login.Clases
             }
         }
 
-        // ANTES: GuardarOActualizarVehiculo(bool esNuevo, dynamic v, string placaOriginal)
-        // Un solo método con SQL de INSERT/UPDATE armado a mano según un "if".
-        // Ahora son 2 métodos separados y claros, cada uno con su SP.
 
         public bool AgregarVehiculo(string placa, string dni, string marca, string modelo,
                                      int anio, string tipo, string observaciones)
@@ -740,9 +737,7 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                // Antes esto era un INSERT manual. Ahora usa sp_RegistrarVehiculo,
-                // que ya existía en la base y valida que el cliente exista y que
-                // la placa no esté duplicada antes de insertar.
+
                 using var cmd = new SqlCommand("sp_RegistrarVehiculo", conexion.SqlC)
                 {
                     CommandType = CommandType.StoredProcedure
