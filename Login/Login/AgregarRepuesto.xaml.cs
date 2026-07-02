@@ -8,7 +8,7 @@ namespace Órdenes_de_Trabajo
     public partial class AgregarRepuesto : Window
     {
         private readonly RepositorioSql _db = new RepositorioSql();
-        private clsProductoInventario _productoSeleccionado;
+        private ValidadorInventario _productoSeleccionado;
 
         public RepuestoOrden RepuestoResultado { get; private set; }
 
@@ -40,7 +40,7 @@ namespace Órdenes_de_Trabajo
 
         private void cmbProducto_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _productoSeleccionado = cmbProducto.SelectedItem as clsProductoInventario;
+            _productoSeleccionado = cmbProducto.SelectedItem as ValidadorInventario;
             if (_productoSeleccionado == null) return;
 
             txtCategoria.Text = _productoSeleccionado.Producto_Categoria;
