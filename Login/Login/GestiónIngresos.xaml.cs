@@ -1,5 +1,4 @@
 ﻿using Login.Clases;
-using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -103,26 +102,7 @@ namespace Contabilidad
         {
             try
             {
-                using var conn = new SqlConnection(ObtenerCadena());
-                const string query = @"
-                    SELECT ot.Orden_ID, ot.Vehiculo_Placa, ot.Estado,
-                           ot.OrdenPrecio_Total, ot.Fecha
-                    FROM Orden_Trabajo ot
-                    WHERE ot.Cliente_DNI = @DNI
-                      AND ot.Estado = 'Finalizado'
-                      AND NOT EXISTS (
-                            SELECT 1 FROM Contabilidad_Pago cp
-                            WHERE cp.Orden_ID = ot.Orden_ID
-                      )
-                    ORDER BY ot.Fecha DESC";
-
-                using var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@DNI", dni);
-                conn.Open();
-
-                var da = new SqlDataAdapter(cmd);
-                var dt = new DataTable();
-                da.Fill(dt);
+                var dt = _db.ObtenerOrdenesFinalizadasSinPago(dni);
 
                 if (dt.Rows.Count > 0)
                 {
@@ -336,7 +316,5 @@ namespace Contabilidad
         private static SolidColorBrush Pincel(string hex) =>
             new((Color)ColorConverter.ConvertFromString(hex));
 
-        private static string ObtenerCadena() =>
-            new ClsConexion().SqlC.ConnectionString;
     }
 }

@@ -105,8 +105,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT OrdenPrecio_Total FROM Orden_Trabajo WHERE Orden_ID = @OrdenID";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Orden_ObtenerTotal", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@OrdenID", ordenId);
 
                 conexion.Abrir();
@@ -126,18 +128,14 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    UPDATE Contabilidad_Pago
-                    SET Cliente_DNI = @DNI,
-                        Orden_ID    = @OrdenID,
-                        Precio_Pago = @Monto
-                    WHERE Pago_ID = @PagoID";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Pago_Actualizar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@PagoID", pagoId);
                 cmd.Parameters.AddWithValue("@DNI", dni);
                 cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                 cmd.Parameters.AddWithValue("@Monto", monto);
-                cmd.Parameters.AddWithValue("@PagoID", pagoId);
 
                 conexion.Abrir();
                 cmd.ExecuteNonQuery();
@@ -154,11 +152,11 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string sql = @"
-                    INSERT INTO Contabilidad_Pago (Cliente_DNI, Orden_ID, Precio_Pago, Fecha_Pago)
-                    VALUES (@ClienteDNI, @OrdenID, @Monto, GETDATE())";
 
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_RegistrarPago", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@ClienteDNI", clienteDni);
                 cmd.Parameters.AddWithValue("@OrdenID", ordenId);
                 cmd.Parameters.AddWithValue("@Monto", monto);
@@ -178,15 +176,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    SELECT 
-                        Pago_ID, Precio_Pago, Fecha_Pago,
-                        Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                        Orden_ID
-                    FROM Vista_Pagos_Completos
-                    WHERE Pago_ID = @PagoID";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Pago_ObtenerComprobante", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@PagoID", pagoId);
 
                 conexion.Abrir();
@@ -206,22 +199,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    SELECT 
-                        Pago_ID,
-                        Cliente_DNI,
-                        Cliente_Nombres,
-                        Orden_ID,
-                        Precio_Pago,
-                        Fecha_Pago
-                    FROM Vista_Pagos_Completos
-                    WHERE (@Busqueda IS NULL
-                           OR CAST(Pago_ID AS VARCHAR) LIKE '%' + @Busqueda + '%'
-                           OR Cliente_Nombres          LIKE '%' + @Busqueda + '%'
-                           OR Cliente_Apellidos        LIKE '%' + @Busqueda + '%')
-                    ORDER BY Fecha_Pago DESC";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Pago_ObtenerTodos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Busqueda", string.IsNullOrWhiteSpace(busqueda)
                     ? DBNull.Value : busqueda.Trim());
 
@@ -234,6 +215,29 @@ namespace Login.Clases
             catch (SqlException ex)
             {
                 throw new Exception("Error al cargar pagos: " + ex.Message, ex);
+            }
+        }
+
+        public DataTable ObtenerOrdenesFinalizadasSinPago(string dni)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Orden_ObtenerFinalizadasSinPago", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@DNI", dni);
+
+                conexion.Abrir();
+                using var da = new SqlDataAdapter(cmd);
+                var dt = new DataTable();
+                da.Fill(dt);
+                return dt;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al cargar órdenes del cliente: " + ex.Message, ex);
             }
         }
 
