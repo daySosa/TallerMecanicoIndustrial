@@ -3,7 +3,10 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
@@ -26,6 +29,7 @@ namespace Login
     /// </summary>
     public partial class ReconocimientoFacial : Window
     {
+        // ---------------------- Configuración general ----------------------
         private const int MAX_INTENTOS_FALLIDOS = 3;
         private const int MINUTOS_BLOQUEO = 5;
 
@@ -41,6 +45,8 @@ namespace Login
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seguridad_intentos.json");
         private readonly string archivoLog =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log_accesos.txt");
+
+        // ---------------------- Cámara y clasificadores ----------------------
         private VideoCapture _camara;
         private DispatcherTimer _timer;
         private DispatcherTimer _timerBloqueo;
@@ -50,6 +56,8 @@ namespace Login
 
         private LBPHFaceRecognizer _reconocedor;
         private readonly Dictionary<int, string> _etiquetasNombres = new();
+
+        // ---------------------- Estado de prueba de vida ----------------------
         private bool _ojosVisiblesFramePrevio = false;
         private bool _esperandoReaperturaOjos = false;
         private int _parpadeosDetectados = 0;
@@ -63,19 +71,19 @@ namespace Login
 
         private RegistroIntentos _registro;
 
-        private readonly string _correoUsuario;
-
-        public ReconocimientoFacial() : this(string.Empty) { }
-        public ReconocimientoFacial(string correo)
+        public ReconocimientoFacial()
         {
             InitializeComponent();
-            _correoUsuario = string.IsNullOrWhiteSpace(correo) ? string.Empty : correo.Trim();
 
             CargarRegistroIntentos();
             InicializarClasificadores();
             EntrenarReconocedor();
             ActualizarUIBloqueo();
         }
+
+        // ======================================================================
+        //  PERSISTENCIA DE INTENTOS FALLIDOS / BLOQUEO
+        // ======================================================================
 
         private class RegistroIntentos
         {
@@ -169,7 +177,10 @@ namespace Login
 
             txtEstado.Text = "Bloqueado temporalmente";
         }
+
+        // ======================================================================
         //  INICIALIZACIÓN DE CLASIFICADORES Y ENTRENAMIENTO
+        // ======================================================================
 
         private void InicializarClasificadores()
         {
@@ -193,8 +204,6 @@ namespace Login
 
         private void EntrenarReconocedor()
         {
-            // Login.Clases.ImportadorRostros.ImportarDesdeCarpeta(@"C:\Users\Valeria Perdomo\Desktop\PersonasRegistradas");
-
             var imagenes = new List<Image<Gray, byte>>();
             var etiquetas = new List<int>();
             _etiquetasNombres.Clear();
@@ -293,7 +302,13 @@ namespace Login
             // NOTA: la firma exacta del constructor/Create de LBPHFaceRecognizer puede variar
             // según la versión de Emgu.CV instalada. Si el constructor no compila, usar:
             // _reconocedor = LBPHFaceRecognizer.Create(1, 8, 8, 8, UMBRAL_CONFIANZA_LBPH);
-            _reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, UMBRAL_CONFIANZA_LBPH);
+            // IMPORTANTE: aquí se usa double.MaxValue (sin límite) en vez de UMBRAL_CONFIANZA_LBPH.
+            // Si le ponemos un límite aquí, Emgu.CV oculta la distancia real (la reemplaza por
+            // "infinito" y Label=-1) cada vez que alguien no coincide dentro de ese límite,
+            // lo cual hace imposible calibrar el umbral con datos reales. Dejamos que el motor
+            // siempre calcule y devuelva la distancia real, y decidimos nosotros en VerificarIdentidad
+            // comparando esa distancia contra UMBRAL_CONFIANZA_LBPH.
+            _reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, double.MaxValue);
 
             using var vectorImagenes = new Emgu.CV.Util.VectorOfMat();
             foreach (var img in imagenes)
@@ -305,7 +320,10 @@ namespace Login
 
             foreach (var img in imagenes) img.Dispose();
         }
+
+        // ======================================================================
         //  CONTROL DE CÁMARA
+        // ======================================================================
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
@@ -390,7 +408,10 @@ namespace Login
             _pruebaVidaSuperada = false;
             _verificando = false;
         }
+
+        // ======================================================================
         //  PROCESAMIENTO DE CADA FRAME
+        // ======================================================================
 
         private void Timer_Tick(object sender, EventArgs e)
         {
@@ -433,11 +454,16 @@ namespace Login
 
             MostrarFrame(imgColor);
         }
+
+        // ======================================================================
         //  PRUEBA DE VIDA: PARPADEO + MOVIMIENTO DE CABEZA
+        // ======================================================================
 
         private void ProcesarPruebaDeVida(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
             _framesProcesados++;
+
+            // ---- Detección de parpadeo (se busca en la mitad superior del rostro) ----
             using var rostroROI = imgGris.Copy(rostroRect);
             var zonaSuperior = new System.Drawing.Rectangle(0, 0, rostroROI.Width, Math.Max(1, rostroROI.Height / 2));
             using var zonaOjos = rostroROI.Copy(zonaSuperior);
@@ -456,6 +482,8 @@ namespace Login
                 _esperandoReaperturaOjos = false;
             }
             _ojosVisiblesFramePrevio = ojosVisiblesAhora;
+
+            // ---- Detección de movimiento de cabeza (centroide del rostro entre frames) ----
             var centroActual = new System.Drawing.Point(
                 rostroRect.X + rostroRect.Width / 2,
                 rostroRect.Y + rostroRect.Height / 2);
@@ -467,6 +495,8 @@ namespace Login
                 _movimientoAcumulado += Math.Sqrt(dx * dx + dy * dy);
             }
             _centroRostroPrevio = centroActual;
+
+            // ---- Evaluación conjunta ----
             bool huboParpadeo = _parpadeosDetectados >= 1;
             bool huboMovimiento = _movimientoAcumulado >= UMBRAL_MOVIMIENTO_PX;
 
@@ -486,7 +516,10 @@ namespace Login
                 txtEstado.Text = "Parpadea y mueve levemente la cabeza para continuar...";
             }
         }
+
+        // ======================================================================
         //  COMPARACIÓN DE ROSTRO Y DECISIÓN DE ACCESO
+        // ======================================================================
 
         private void VerificarIdentidad(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
@@ -494,6 +527,8 @@ namespace Login
             using var rostroNormalizado = rostroRecortado.Resize(200, 200, Inter.Cubic);
 
             var resultado = _reconocedor.Predict(rostroNormalizado);
+
+            // TEMPORAL: para calibrar el umbral. Borrar esta línea después de ajustarlo.
             System.Diagnostics.Debug.WriteLine($"[DEBUG] Label: {resultado.Label} | Distancia: {resultado.Distance}");
             MessageBox.Show($"Etiqueta detectada: {resultado.Label}\nDistancia: {resultado.Distance:F2}\n" +
                              $"Umbral actual: {UMBRAL_CONFIANZA_LBPH}",
@@ -576,7 +611,10 @@ namespace Login
             MessageBox.Show("No se pudo verificar tu identidad. Inténtalo nuevamente.",
                 "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+
+        // ======================================================================
         //  UTILIDADES: RENDER DE FRAME, ARRASTRE DE VENTANA, NAVEGACIÓN
+        // ======================================================================
 
         private void MostrarFrame(Image<Bgr, byte> imagen)
         {
