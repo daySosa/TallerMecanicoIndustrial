@@ -240,7 +240,7 @@ namespace Login
                 var datosUsuario = db.ObtenerUsuarioPorEmail(_correoUsuario);
                 if (datosUsuario != null)
                 {
-                    clsSesion.IniciarSesion(
+                    SesionActual.IniciarSesion(
                         datosUsuario["Usuario_Email"].ToString(),
                         datosUsuario["Usuario_Nombre"].ToString(),
                         datosUsuario["Usuario_Apellido"].ToString(),

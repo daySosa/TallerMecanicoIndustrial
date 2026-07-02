@@ -7,7 +7,7 @@ namespace Órdenes_de_Trabajo
 {
     public partial class AgregarRepuesto : Window
     {
-        private readonly clsConsultasBD _db = new clsConsultasBD();
+        private readonly RepositorioSql _db = new RepositorioSql();
         private clsProductoInventario _productoSeleccionado;
 
         public RepuestoOrden RepuestoResultado { get; private set; }
