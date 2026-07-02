@@ -284,19 +284,11 @@ namespace Login.Clases
             var lista = new List<ValidadorInventario>();
             try
             {
-                const string query = @"
-                    SELECT Producto_ID,
-                           Producto_Nombre,
-                           Producto_Categoria,
-                           ISNULL(Producto_Marca,  '—') AS Producto_Marca,
-                           ISNULL(Producto_Modelo, '—') AS Producto_Modelo,
-                           Producto_Cantidad_Actual,
-                           Producto_Stock_Minimo,
-                           Producto_Precio
-                    FROM   Producto
-                    ORDER  BY Producto_Nombre";
+                using var cmd = new SqlCommand("sp_Producto_ObtenerTodos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
-                using var cmd = new SqlCommand(query, conexion.SqlC);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
@@ -327,16 +319,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    INSERT INTO Producto
-                        (Producto_Nombre, Producto_Categoria, Producto_Marca,
-                         Producto_Modelo, Producto_Precio,
-                         Producto_Cantidad_Actual, Producto_Stock_Minimo)
-                    VALUES
-                        (@Nombre, @Categoria, @Marca, @Modelo,
-                         @Precio, @Cantidad, 10)";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Producto_Agregar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Nombre", nombre);
                 cmd.Parameters.AddWithValue("@Categoria", categoria);
                 cmd.Parameters.AddWithValue("@Marca", marca);
@@ -361,17 +347,11 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    UPDATE Producto SET
-                        Producto_Nombre          = @Nombre,
-                        Producto_Categoria       = @Categoria,
-                        Producto_Marca           = @Marca,
-                        Producto_Modelo          = @Modelo,
-                        Producto_Precio          = @Precio,
-                        Producto_Cantidad_Actual = Producto_Cantidad_Actual + @Cantidad
-                    WHERE Producto_ID = @ID";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Producto_Actualizar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@ID", productoId);
                 cmd.Parameters.AddWithValue("@Nombre", nombre);
                 cmd.Parameters.AddWithValue("@Categoria", categoria);
                 cmd.Parameters.AddWithValue("@Marca", marca);
@@ -379,7 +359,6 @@ namespace Login.Clases
                     ? DBNull.Value : modelo.Trim());
                 cmd.Parameters.AddWithValue("@Precio", precio);
                 cmd.Parameters.AddWithValue("@Cantidad", cantidad);
-                cmd.Parameters.AddWithValue("@ID", productoId);
 
                 conexion.Abrir();
                 cmd.ExecuteNonQuery();
