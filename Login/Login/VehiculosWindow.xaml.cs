@@ -272,7 +272,60 @@ namespace Vehículos
             return true;
         }
 
-        
+        // ── GUARDAR ──────────────────────────────────────────────────
+
+        private void BtnGuardar_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ValidarCamposGuardar(out int año)) return;
+
+            try
+            {
+                var datos = BuildDatos(año, activo: true);
+           
+                MessageBox.Show("✅ Vehículo registrado correctamente.", "Éxito",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                this.Close();
+            }
+            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+        }
+
+        // ── ACTUALIZAR ───────────────────────────────────────────────
+
+        private void BtnActualizar_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_placaSeleccionada))
+            {
+                MessageBox.Show("No hay ningún vehículo cargado para actualizar.",
+                    "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!ValidarCamposComunes(out int año)) return;
+
+            try
+            {
+                var datos = BuildDatos(año, activo: toggleActivo.IsChecked == true);
+
+                MessageBox.Show("✅ Vehículo actualizado correctamente.", "Éxito",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                this.Close();
+            }
+            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+        }
+
+        private dynamic BuildDatos(int año, bool activo) => new
+        {
+            Placa = txtPlaca.Text.Trim().ToUpper(),
+            DNI = _clienteDNI,
+            Marca = txtMarca.Text.Trim(),
+            Modelo = txtModelo.Text.Trim(),
+            Anio = año,
+            Tipo = (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+            Obs = string.IsNullOrWhiteSpace(txtObservaciones.Text)
+                         ? (object)DBNull.Value
+                         : txtObservaciones.Text.Trim(),
+            Activo = activo
+        };
 
         // ── CANCELAR ─────────────────────────────────────────────────
 
