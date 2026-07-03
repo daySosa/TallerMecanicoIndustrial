@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Reconocimiento Facial"
-        Height="600" Width="580"
+        Height="760" Width="640"
         Background="#0f1117"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
@@ -109,7 +109,7 @@
                         </StackPanel>
                         <Button Grid.Column="1" Width="30" Height="30"
                                 BorderThickness="0" Background="Transparent"
-                                Cursor="Hand" Click="btnRegresar_Click">
+                                Cursor="Hand" Click="btnCerrar_Click">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="cb" CornerRadius="7"
@@ -145,7 +145,7 @@
                             </LinearGradientBrush>
                         </Border.Background>
                         <Border CornerRadius="11" Background="#0c0e1a" ClipToBounds="True">
-                            <Grid Height="295">
+                            <Grid Height="460">
                                 <Image x:Name="imgCamara" Stretch="UniformToFill"
                                        RenderOptions.BitmapScalingMode="HighQuality"/>
 
