@@ -4,6 +4,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Login.Clases;
+using Microsoft.Data.SqlClient;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -22,50 +23,47 @@ namespace Login
     /// haarcascade_eye.xml, descargables del repositorio oficial de OpenCV) dentro de
     /// una carpeta "Recursos" junto al ejecutable.
     ///
-    /// CAMBIOS EN ESTA VERSIÓN:
-    /// 1. CORRECCIÓN CRÍTICA: el entrenamiento ahora lee de la tabla "ReconocimientoFacial"
-    ///    (la misma en la que VentanaBiometria guarda las fotos vía sp_Usuario_GuardarBiometria).
-    ///    Antes leía de "RostrosRegistrados", una tabla distinta y desconectada, por lo que
-    ///    el reconocedor nunca veía las fotos recién registradas.
-    /// 2. Ahora se guarda también el Usuario_Email de cada persona (no solo el Nombre), para
-    ///    poder iniciar sesión con la cuenta correcta al reconocer un rostro.
-    /// 3. El entrenamiento se ejecuta en segundo plano (Task.Run) para que la ventana no se
-    ///    congele mientras se conecta a la base de datos y entrena el modelo.
-    /// 4. Se aplica CLAHE (ecualización adaptativa) tanto al entrenar como al reconocer,
-    ///    para reducir el efecto de diferencias de iluminación entre fotos y cámara en vivo.
-    /// 5. La decisión de acceso no se toma con un solo frame: se exige consenso de varios
-    ///    frames consecutivos con la misma etiqueta antes de conceder o denegar acceso.
-    /// 6. Los MessageBox de diagnóstico se movieron a Debug.WriteLine y al log, para no
-    ///    bloquear el hilo de UI ni el bucle de la cámara.
+    /// La conexión a base de datos se maneja exclusivamente a través de ClsConexion
+    /// (App.config), sin cadenas de conexión hardcodeadas en esta clase.
     /// </summary>
     public partial class ReconocimientoFacial : Window
     {
+        // ---------------------- Colores de estado (brushes congelados) ----------------------
+
+        private static readonly SolidColorBrush BrushEspera = CrearBrush("#2d3050");
+        private static readonly SolidColorBrush BrushAlerta = CrearBrush("#f5a623");
+        private static readonly SolidColorBrush BrushError = CrearBrush("#7b1f1f");
+        private static readonly SolidColorBrush BrushInfo = CrearBrush("#4f6ef7");
+        private static readonly SolidColorBrush BrushExito = CrearBrush("#2ECC71");
+
+        private static SolidColorBrush CrearBrush(string hex)
+        {
+            var brush = (SolidColorBrush)new BrushConverter().ConvertFromString(hex);
+            brush.Freeze();
+            return brush;
+        }
+
         // ---------------------- Configuración general ----------------------
 
         private readonly RepositorioSql _db = new();
         private const int MAX_INTENTOS_FALLIDOS = 5;
         private const int MINUTOS_BLOQUEO = 3;
 
-
         // Umbral de distancia LBPH: cuanto menor, más estricta la coincidencia.
         // IMPORTANTE: este valor DEBE recalibrarse con datos reales de tu instalación.
-        // Usa el log/Debug.WriteLine de VerificarIdentidad para recolectar distancias de:
-        //   a) personas SÍ registradas -> anota el rango típico de distancias
-        //   b) personas NO registradas -> anota el rango típico de distancias
-        // El umbral correcto es el punto medio entre ambos rangos.
         private const double UMBRAL_CONFIANZA_LBPH = 50.0;
 
         // Ventana de frames (a ~30 fps) dentro de la cual se debe superar la prueba de vida.
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
 
-        // Cantidad de frames consecutivos con predicción que se exigen antes de decidir
-        // el acceso. Esto evita que un solo frame con ruido/mala luz decida todo.
+        // Cantidad de frames consecutivos con predicción que se exigen antes de decidir el acceso.
         private const int FRAMES_CONSENSO_REQUERIDOS = 5;
 
-        // Tolerancia de frames "ruidosos" dentro de la ventana de consenso (frames que caen
-        // en una etiqueta distinta a la mayoritaria, pero no invalidan el consenso).
+        // Tolerancia de frames "ruidosos" dentro de la ventana de consenso.
         private const int TOLERANCIA_FRAMES_RUIDOSOS = 1;
+
+        private const int SEGUNDOS_GRACIA = 3;
 
         private readonly string archivoIntentos =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seguridad_intentos.json");
@@ -97,10 +95,8 @@ namespace Login
 
         private int _framesProcesados = 0;
         private bool _pruebaVidaSuperada = false;
-        private bool _verificando = false; // true solo mientras se evalúa la decisión final de acceso
+        private bool _verificando = false;
 
-        // ---------------------- Periodo de gracia al iniciar la cámara ----------------------
-        private const int SEGUNDOS_GRACIA = 3;
         private DateTime? _inicioGracia = null;
 
         // ---------------------- Estado de consenso multi-frame ----------------------
@@ -116,18 +112,19 @@ namespace Login
             InicializarClasificadores();
             ActualizarUIBloqueo();
 
-            // El entrenamiento (conexión a BD + procesamiento de imágenes) se ejecuta en
-            // segundo plano para que la ventana aparezca de inmediato y no se congele.
             btnIniciarCamara.IsEnabled = false;
             txtEstado.Text = "Cargando rostros registrados...";
             _ = CargarYEntrenarAsync();
         }
 
+        private bool EstaBloqueado => _registro.BloqueadoHasta.HasValue &&
+                                       _registro.BloqueadoHasta.Value > DateTime.Now;
+
         private async Task CargarYEntrenarAsync()
         {
             try
             {
-                var (imagenes, etiquetas, nombres, emails) = await Task.Run(() => EntrenarReconocedor());
+                var (imagenes, etiquetas, nombres, emails) = await Task.Run(EntrenarReconocedor);
 
                 if (imagenes.Count == 0)
                 {
@@ -137,13 +134,14 @@ namespace Login
 
                 _reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, double.MaxValue);
 
-                using var vectorImagenes = new Emgu.CV.Util.VectorOfMat();
-                foreach (var img in imagenes)
-                    vectorImagenes.Push(img.Mat);
+                using (var vectorImagenes = new Emgu.CV.Util.VectorOfMat())
+                using (var vectorEtiquetas = new Emgu.CV.Util.VectorOfInt(etiquetas.ToArray()))
+                {
+                    foreach (var img in imagenes)
+                        vectorImagenes.Push(img.Mat);
 
-                using var vectorEtiquetas = new Emgu.CV.Util.VectorOfInt(etiquetas.ToArray());
-
-                await Task.Run(() => _reconocedor.Train(vectorImagenes, vectorEtiquetas));
+                    await Task.Run(() => _reconocedor.Train(vectorImagenes, vectorEtiquetas));
+                }
 
                 foreach (var img in imagenes) img.Dispose();
 
@@ -154,9 +152,7 @@ namespace Login
 
                 _modeloListo = true;
 
-                bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
-                                      _registro.BloqueadoHasta.Value > DateTime.Now;
-                if (!estaBloqueado)
+                if (!EstaBloqueado)
                 {
                     btnIniciarCamara.IsEnabled = true;
                     txtEstado.Text = "En espera...";
@@ -184,19 +180,12 @@ namespace Login
         {
             try
             {
-                if (File.Exists(archivoIntentos))
-                {
-                    string json = File.ReadAllText(archivoIntentos);
-                    _registro = JsonSerializer.Deserialize<RegistroIntentos>(json) ?? new RegistroIntentos();
-                }
-                else
-                {
-                    _registro = new RegistroIntentos();
-                }
+                _registro = File.Exists(archivoIntentos)
+                    ? JsonSerializer.Deserialize<RegistroIntentos>(File.ReadAllText(archivoIntentos)) ?? new RegistroIntentos()
+                    : new RegistroIntentos();
             }
             catch
             {
-                // Si el archivo está corrupto, se reinicia el registro por seguridad.
                 _registro = new RegistroIntentos();
             }
         }
@@ -205,8 +194,7 @@ namespace Login
         {
             try
             {
-                string json = JsonSerializer.Serialize(_registro);
-                File.WriteAllText(archivoIntentos, json);
+                File.WriteAllText(archivoIntentos, JsonSerializer.Serialize(_registro));
             }
             catch
             {
@@ -218,8 +206,7 @@ namespace Login
         {
             try
             {
-                string linea = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensaje}{Environment.NewLine}";
-                File.AppendAllText(archivoLog, linea);
+                File.AppendAllText(archivoLog, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensaje}{Environment.NewLine}");
             }
             catch
             {
@@ -229,42 +216,41 @@ namespace Login
 
         private void ActualizarUIBloqueo()
         {
-            bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
-                                  _registro.BloqueadoHasta.Value > DateTime.Now;
-
-            if (!estaBloqueado)
+            if (!EstaBloqueado)
             {
                 if (_modeloListo) btnIniciarCamara.IsEnabled = true;
                 return;
             }
 
             btnIniciarCamara.IsEnabled = false;
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
+            elipseEstado.Fill = BrushError;
 
             _timerBloqueo = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timerBloqueo.Tick += (s, e) =>
-            {
-                var restante = _registro.BloqueadoHasta.Value - DateTime.Now;
-
-                if (restante <= TimeSpan.Zero)
-                {
-                    _timerBloqueo.Stop();
-                    _registro.BloqueadoHasta = null;
-                    _registro.IntentosFallidos = 0;
-                    GuardarRegistroIntentos();
-
-                    if (_modeloListo) btnIniciarCamara.IsEnabled = true;
-                    txtEstado.Text = "En espera...";
-                    elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
-                }
-                else
-                {
-                    txtEstado.Text = $"Bloqueado. Intenta de nuevo en {restante.Minutes:D2}:{restante.Seconds:D2}";
-                }
-            };
+            _timerBloqueo.Tick += TimerBloqueo_Tick;
             _timerBloqueo.Start();
 
             txtEstado.Text = "Bloqueado temporalmente";
+        }
+
+        private void TimerBloqueo_Tick(object sender, EventArgs e)
+        {
+            var restante = _registro.BloqueadoHasta.Value - DateTime.Now;
+
+            if (restante <= TimeSpan.Zero)
+            {
+                _timerBloqueo.Stop();
+                _registro.BloqueadoHasta = null;
+                _registro.IntentosFallidos = 0;
+                GuardarRegistroIntentos();
+
+                if (_modeloListo) btnIniciarCamara.IsEnabled = true;
+                txtEstado.Text = "En espera...";
+                elipseEstado.Fill = BrushEspera;
+            }
+            else
+            {
+                txtEstado.Text = $"Bloqueado. Intenta de nuevo en {restante.Minutes:D2}:{restante.Seconds:D2}";
+            }
         }
 
         // ======================================================================
@@ -293,8 +279,8 @@ namespace Login
 
         /// <summary>
         /// Aplica ecualización de histograma adaptativa (CLAHE) a un rostro en escala de
-        /// grises. Se usa SIEMPRE en el mismo punto del pipeline (después de recortar el
-        /// rostro, antes de redimensionar) tanto al entrenar como al reconocer.
+        /// grises. Se usa SIEMPRE en el mismo punto del pipeline tanto al entrenar como al
+        /// reconocer, para reducir el efecto de diferencias de iluminación.
         /// </summary>
         private static Image<Gray, byte> NormalizarIluminacion(Image<Gray, byte> imgGris)
         {
@@ -304,9 +290,9 @@ namespace Login
         }
 
         /// <summary>
-        /// Se ejecuta en un hilo de fondo (Task.Run): se conecta a la base de datos, recorta
-        /// y normaliza cada rostro, y devuelve las listas ya listas para entrenar. No toca
-        /// controles de UI directamente (por eso no usa MessageBox/txtEstado aquí).
+        /// Se ejecuta en un hilo de fondo (Task.Run): se conecta a la base de datos vía
+        /// ClsConexion, recorta y normaliza cada rostro, y devuelve las listas ya listas
+        /// para entrenar. No toca controles de UI directamente.
         /// </summary>
         private (List<Image<Gray, byte>> Imagenes, List<int> Etiquetas,
                  Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
@@ -323,26 +309,15 @@ namespace Login
             // Nombre, para evitar mezclar a dos personas con el mismo nombre.
             var fotosPorPersona = new Dictionary<string, (string Nombre, List<byte[]> Fotos)>();
 
-            // NOTA: se usa una cadena de conexión propia (en vez de la clase compartida del
-            // proyecto) para no modificarla. Se agrega "Authentication=SqlPassword;" porque
-            // las versiones recientes de Microsoft.Data.SqlClient, al detectar un servidor
-            // "*.database.windows.net", intentan autenticar con Azure AD por defecto si no
-            // se especifica el tipo de autenticación.
-            const string cadenaConexion =
-                "Data Source=tallermecanic.database.windows.net;Initial Catalog=Taller_Mecanico_Sistema;" +
-                "User ID=DayanaSosa;Password=Serv2026;Authentication=SqlPassword;";
-
-            using var conexion = new Microsoft.Data.SqlClient.SqlConnection(cadenaConexion);
+            using var conexion = new ClsConexion();
             try
             {
-                conexion.Open();
+                if (!conexion.Abrir())
+                    return (imagenes, etiquetas, etiquetasNombres, etiquetasEmails);
 
-                // ✅ CORREGIDO: tabla "ReconocimientoFacial" (la misma en la que
-                // VentanaBiometria guarda vía sp_Usuario_GuardarBiometria), no "RostrosRegistrados".
-                // ✅ Se trae también Usuario_Email para poder iniciar sesión con la cuenta correcta.
-                using var cmd = new Microsoft.Data.SqlClient.SqlCommand(
+                using var cmd = new SqlCommand(
                     "SELECT Usuario_Email, Nombre, Foto FROM ReconocimientoFacial WHERE Usuario_Email IS NOT NULL",
-                    conexion);
+                    conexion.SqlC);
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -351,16 +326,22 @@ namespace Login
                     string nombre = reader.GetString(reader.GetOrdinal("Nombre"));
                     byte[] foto = (byte[])reader["Foto"];
 
-                    if (!fotosPorPersona.ContainsKey(email))
-                        fotosPorPersona[email] = (nombre, new List<byte[]>());
-
-                    fotosPorPersona[email].Fotos.Add(foto);
+                    if (!fotosPorPersona.TryGetValue(email, out var entrada))
+                    {
+                        entrada = (nombre, new List<byte[]>());
+                        fotosPorPersona[email] = entrada;
+                    }
+                    entrada.Fotos.Add(foto);
                 }
             }
             catch (Exception ex)
             {
                 RegistrarEnLog("ERROR AL CARGAR ROSTROS: " + ex.Message);
                 throw;
+            }
+            finally
+            {
+                conexion.Cerrar();
             }
 
             int etiquetaActual = 0;
@@ -427,7 +408,7 @@ namespace Login
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
-            if (_registro.BloqueadoHasta.HasValue && _registro.BloqueadoHasta.Value > DateTime.Now)
+            if (EstaBloqueado)
             {
                 MessageBox.Show("El acceso está temporalmente bloqueado por intentos fallidos.",
                     "Bloqueado", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -463,7 +444,7 @@ namespace Login
             bdNombreReconocido.Visibility = Visibility.Collapsed;
 
             txtEstado.Text = $"Prepárate, colócate frente a la cámara... {SEGUNDOS_GRACIA}";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0xf5, 0xa6, 0x23));
+            elipseEstado.Fill = BrushAlerta;
 
             _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
             _timer.Tick += Timer_Tick;
@@ -474,7 +455,7 @@ namespace Login
         {
             DetenerCamaraInterno();
             txtEstado.Text = "En espera...";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+            elipseEstado.Fill = BrushEspera;
             bdNombreReconocido.Visibility = Visibility.Collapsed;
         }
 
@@ -491,9 +472,7 @@ namespace Login
 
             btnDetenerCamara.IsEnabled = false;
 
-            bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
-                                  _registro.BloqueadoHasta.Value > DateTime.Now;
-            if (!estaBloqueado && _modeloListo)
+            if (!EstaBloqueado && _modeloListo)
                 btnIniciarCamara.IsEnabled = true;
 
             pnlSinCamara.Visibility = Visibility.Visible;
@@ -528,7 +507,6 @@ namespace Login
             using var imgColor = frame.ToImage<Bgr, byte>();
             using var imgGris = imgColor.Convert<Gray, byte>();
 
-            // ---- Periodo de gracia ----
             if (_inicioGracia.HasValue)
             {
                 double restante = SEGUNDOS_GRACIA - (DateTime.Now - _inicioGracia.Value).TotalSeconds;
@@ -550,7 +528,7 @@ namespace Login
             if (rostros.Length == 0)
             {
                 txtEstado.Text = "No se detecta ningún rostro...";
-                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                elipseEstado.Fill = BrushEspera;
                 MostrarFrame(imgColor);
                 return;
             }
@@ -566,7 +544,7 @@ namespace Login
                 if (_pruebaVidaSuperada)
                 {
                     txtEstado.Text = "Prueba de vida superada. Verificando identidad...";
-                    elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x4f, 0x6e, 0xf7));
+                    elipseEstado.Fill = BrushInfo;
                 }
                 return;
             }
@@ -683,9 +661,7 @@ namespace Login
 
             if (coincide)
             {
-                string nombre = _etiquetasNombres[etiquetaMasComun.Key];
-                string email = _etiquetasEmails[etiquetaMasComun.Key];
-                AccesoConcedido(nombre, email);
+                AccesoConcedido(_etiquetasNombres[etiquetaMasComun.Key], _etiquetasEmails[etiquetaMasComun.Key]);
             }
             else
             {
@@ -705,7 +681,7 @@ namespace Login
             DetenerCamaraInterno();
 
             txtEstado.Text = "Identidad verificada";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2E, 0xCC, 0x71));
+            elipseEstado.Fill = BrushExito;
             txtNombreReconocido.Text = nombre;
             bdNombreReconocido.Visibility = Visibility.Visible;
 
@@ -733,9 +709,8 @@ namespace Login
 
         /// <summary>
         /// Consulta los datos completos del usuario reconocido (nombre, apellido, rol)
-        /// y llena SesionActual exactamente igual que lo haría el login normal con
-        /// correo y contraseña, para que el resto de la app (permisos, bitácora, etc.)
-        /// funcione igual sin importar por qué método se inició sesión.
+        /// y llena SesionActual exactamente igual que lo haría el login normal, para que
+        /// el resto de la app funcione igual sin importar el método de inicio de sesión.
         /// </summary>
         private void IniciarSesionCompleta(string email)
         {
@@ -783,7 +758,7 @@ namespace Login
             DetenerCamaraInterno();
 
             txtEstado.Text = $"Rostro no reconocido ({_registro.IntentosFallidos}/{MAX_INTENTOS_FALLIDOS} intentos)";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
+            elipseEstado.Fill = BrushError;
 
             int intentosRestantes = MAX_INTENTOS_FALLIDOS - _registro.IntentosFallidos;
             string plural = intentosRestantes == 1 ? "intento" : "intentos";
@@ -799,7 +774,7 @@ namespace Login
             else
             {
                 txtEstado.Text = "En espera...";
-                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                elipseEstado.Fill = BrushEspera;
             }
         }
 
@@ -829,8 +804,9 @@ namespace Login
             }
         }
 
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
+        [LibraryImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool DeleteObject(IntPtr hObject);
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {

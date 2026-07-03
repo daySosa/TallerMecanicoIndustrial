@@ -68,6 +68,9 @@
     </Window.Resources>
 
     <Border CornerRadius="16" Effect="{StaticResource WinShadow}">
+        <Border.CacheMode>
+            <BitmapCache/>
+        </Border.CacheMode>
         <Border CornerRadius="16" ClipToBounds="True" Background="#0f1117">
             <Grid>
                 <Grid.RowDefinitions>
@@ -131,6 +134,9 @@
 
                     <Border CornerRadius="13" Padding="2"
                             Effect="{StaticResource CamGlow}">
+                        <Border.CacheMode>
+                            <BitmapCache/>
+                        </Border.CacheMode>
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#2a3580" Offset="0"/>
