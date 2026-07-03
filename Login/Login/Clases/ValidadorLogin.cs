@@ -39,17 +39,17 @@
 
         public static int MinutosDeBloqueo(int intentos)
         {
-            if (intentos >= TercerUmbral) return MinutosTercerBloqueo;
-            if (intentos >= SegundoUmbral) return MinutosSegundoBloqueo;
-            if (intentos >= PrimerUmbral) return MinutosPrimerBloqueo;
-            return 0;
+            if (intentos == 3) return 1;  
+            if (intentos == 6) return 3;  
+            if (intentos == 9) return 5;  
+            return 0;                      
         }
 
         public static int IntentosRestantesParaBloqueo(int intentos)
         {
-            if (intentos < PrimerUmbral) return PrimerUmbral - intentos;
-            if (intentos < SegundoUmbral) return SegundoUmbral - intentos;
-            if (intentos < TercerUmbral) return TercerUmbral - intentos;
+            if (intentos < 3) return 3 - intentos;
+            if (intentos < 6) return 6 - intentos;
+            if (intentos < 9) return 9 - intentos;
             return 0;
         }
     }
