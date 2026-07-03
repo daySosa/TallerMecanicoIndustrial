@@ -187,6 +187,9 @@ namespace InterfazClientes
                     return;
                 }
 
+                db.RegistrarBitacora(SesionActual.Email, "Clientes", "Agregar",
+                    $"Cliente {txtDPI.Text.Trim()} - {txtNombre.Text.Trim()} {txtApellido.Text.Trim()}");
+
                 ClienteResultado = new clsCliente
                 {
                     Cliente_DPI = txtDPI.Text.Trim(),
@@ -239,10 +242,13 @@ namespace InterfazClientes
                     nuevoDni
                 );
 
+                db.RegistrarBitacora(SesionActual.Email, "Clientes", "Actualizar",
+                    $"Cliente {nuevoDni} - {txtNombre.Text.Trim()} {txtApellido.Text.Trim()}");
+
                 _dniEditando = nuevoDni;
 
-                MessageBox.Show("✅ Cliente actualizado correctamente.",
-                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("✅ Cliente actualizado correctamente.", "Éxito",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
 
                 this.DialogResult = true;
                 this.Close();
@@ -253,5 +259,5 @@ namespace InterfazClientes
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+       }
     }
-}

@@ -74,6 +74,9 @@ namespace InterfazInventario
                     cantidad
                 );
 
+                _db.RegistrarBitacora(SesionActual.Email, "Inventario", "Agregar",
+                    $"Producto {txtNombre.Text.Trim()} - {cantidad} unidades");
+
                 MessageBox.Show("Producto agregado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
@@ -125,6 +128,9 @@ namespace InterfazInventario
                     precio,
                     cantidadAgregar
                 );
+
+                _db.RegistrarBitacora(SesionActual.Email, "Inventario", "Actualizar",
+                    $"Producto {txtNombre.Text.Trim()} (ID {_productoIdSeleccionado})");
 
                 string msg = cantidadAgregar > 0
                     ? $"Producto actualizado.\n+{cantidadAgregar} unidades agregadas al stock."

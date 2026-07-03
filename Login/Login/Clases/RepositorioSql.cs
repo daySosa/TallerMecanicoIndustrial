@@ -1674,19 +1674,11 @@ namespace Login.Clases
             var lista = new List<BitacoraItem>();
             try
             {
-                const string query = @"
-                    SELECT 
-                        b.Bitacora_Fecha,
-                        l.Usuario_Nombre + ' ' + l.Usuario_Apellido AS Bitacora_Usuario,
-                        l.Usuario_Rol   AS Bitacora_Rol,
-                        b.Bitacora_Modulo,
-                        b.Bitacora_Accion,
-                        b.Bitacora_Descripcion
-                    FROM Bitacora b
-                    INNER JOIN LOGIN l ON b.Usuario_ID = l.Usuario_ID
-                    ORDER BY b.Bitacora_Fecha DESC";
+                using var cmd = new SqlCommand("sp_Bitacora_ObtenerTodas", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
-                using var cmd = new SqlCommand(query, conexion.SqlC);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
@@ -1706,6 +1698,31 @@ namespace Login.Clases
             catch (SqlException ex)
             {
                 throw new Exception("Error al cargar bitácora: " + ex.Message, ex);
+            }
+        }
+
+
+        public void RegistrarBitacora(string email, string modulo, string accion, string descripcion = null)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Bitacora_Registrar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@Modulo", modulo);
+                cmd.Parameters.AddWithValue("@Accion", accion);
+                cmd.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(descripcion)
+                    ? DBNull.Value : descripcion.Trim());
+
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al registrar en bitácora: " + ex.Message, ex);
             }
         }
 

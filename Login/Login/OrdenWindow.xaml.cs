@@ -320,13 +320,16 @@ namespace Órdenes_de_Trabajo
                 decimal total = totalRepuestos + precioServicio;
                 string estado = ObtenerContenidoCombo(cmbEstado) ?? "Sin Empezar";
 
-                _db.AgregarOrden(
+                int ordenID = _db.AgregarOrden(
                     _clienteDNI, _vehiculoPlaca, null, estado,
                     dpFecha.SelectedDate ?? DateTime.Today,
                     dpEntrega.SelectedDate,
                     txtObservaciones.Text.Trim(),
                     precioServicio, total, string.Empty,
                     _repuestos.ToList());
+
+                _db.RegistrarBitacora(SesionActual.Email, "Órdenes", "Agregar",
+                    $"Orden #{ordenID} - Cliente {_clienteDNI}, Total L {total:N2}");
 
                 MessageBox.Show("✅ Orden guardada correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -368,8 +371,11 @@ namespace Órdenes_de_Trabajo
                     precioServicio, total, string.Empty,
                     _repuestos.ToList());
 
-                MessageBox.Show("✅ Orden actualizada correctamente.",
-                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                _db.RegistrarBitacora(SesionActual.Email, "Órdenes", "Actualizar",
+                    $"Orden #{_ordenIDEditar} - Estado: {estado}, Total L {total:N2}");
+
+                MessageBox.Show("✅ Orden actualizada correctamente.", "Éxito",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 Close();
             }
             catch (Exception ex)

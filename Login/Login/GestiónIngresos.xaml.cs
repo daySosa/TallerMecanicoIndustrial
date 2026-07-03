@@ -233,12 +233,6 @@ namespace Contabilidad
         // GUARDAR
         // ════════════════════════════════════════════════════════════
 
-        private void btnGuardar_Click(object sender, RoutedEventArgs e)
-        {
-            if (_esEdicion) GuardarEdicion();
-            else GuardarNuevo();
-        }
-
         private void GuardarNuevo()
         {
             OcultarMensajeAgregar();
@@ -260,6 +254,10 @@ namespace Contabilidad
                     return;
                 }
                 _db.RegistrarPago(dni, ordenId, total.Value);
+
+                _db.RegistrarBitacora(SesionActual.Email, "Ingresos", "Agregar",
+                    $"Pago Orden #{ordenId} - Cliente {dni}, L {total.Value:N2}");
+
                 MessageBox.Show("✅ ¡Pago registrado correctamente!", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 _menuRef.CargarPago();
@@ -285,6 +283,10 @@ namespace Contabilidad
             try
             {
                 _db.ActualizarPago(_pagoId, dni, ordenId, monto);
+
+                _db.RegistrarBitacora(SesionActual.Email, "Ingresos", "Actualizar",
+                    $"Pago #{_pagoId} - Orden #{ordenId}, L {monto:N2}");
+
                 MessageBox.Show("✅ ¡Pago actualizado correctamente!", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 _menuRef.CargarPago();

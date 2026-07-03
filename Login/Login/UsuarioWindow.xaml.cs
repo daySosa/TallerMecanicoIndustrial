@@ -122,12 +122,20 @@ namespace InterfazClientes
                     if (!string.IsNullOrWhiteSpace(password))
                         _db.CambiarContrasenaUsuario(_usuarioEmail, password);
 
+                    _db.RegistrarBitacora(SesionActual.Email, "Usuarios", "Actualizar",
+                        $"Usuario {_usuarioEmail} - Rol: {rol}{(activo ? "" : " (Desactivado)")}"
+                        + (!string.IsNullOrWhiteSpace(password) ? " · Contraseña cambiada" : ""));
+
                     MessageBox.Show("✅ Usuario actualizado correctamente.", "Éxito",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
                     _db.AgregarUsuario(nombre, apellido, correo, telefono, rol, password);
+
+                    _db.RegistrarBitacora(SesionActual.Email, "Usuarios", "Agregar",
+                        $"Usuario {correo} - Rol: {rol}");
+
                     MessageBox.Show("✅ Usuario registrado correctamente.", "Éxito",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }

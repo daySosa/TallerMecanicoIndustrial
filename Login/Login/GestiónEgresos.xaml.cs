@@ -129,12 +129,6 @@ namespace Contabilidad
         // GUARDAR
         // ════════════════════════════════════════════════════════════
 
-        private void btnGuardar_Click(object sender, RoutedEventArgs e)
-        {
-            if (_esEdicion) GuardarEdicion();
-            else GuardarNuevo();
-        }
-
         private void GuardarNuevo()
         {
             OcultarMensajeAgregar();
@@ -162,6 +156,10 @@ namespace Contabilidad
             try
             {
                 _db.AgregarGasto(tipo, nombre, observaciones, precio);
+
+                _db.RegistrarBitacora(SesionActual.Email, "Egresos", "Agregar",
+                    $"Gasto {nombre} - L {precio:N2}");
+
                 MessageBox.Show("✅ ¡Gasto registrado correctamente!", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 _menuRef.CargarEgreso();
@@ -197,6 +195,10 @@ namespace Contabilidad
             try
             {
                 _db.ActualizarGasto(_gastoId, tipo, nombre, observaciones, precio, _fechaRegistro);
+
+                _db.RegistrarBitacora(SesionActual.Email, "Egresos", "Actualizar",
+                    $"Gasto #{_gastoId} - {nombre}, L {precio:N2}");
+
                 MessageBox.Show("✅ ¡Gasto actualizado correctamente!", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 _menuRef.CargarEgreso();

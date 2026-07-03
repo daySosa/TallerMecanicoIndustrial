@@ -289,6 +289,10 @@ namespace Vehículos
                     (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString(),
                     string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim()
                 );
+
+                _db.RegistrarBitacora(SesionActual.Email, "Vehículos", "Agregar",
+                    $"Vehículo {txtPlaca.Text.Trim().ToUpper()} - Cliente {_clienteDNI}");
+
                 MessageBox.Show("✅ Vehículo registrado correctamente.", "Éxito",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
@@ -311,6 +315,8 @@ namespace Vehículos
 
             try
             {
+                string placaAnterior = _placaSeleccionada;
+
                 _db.ActualizarVehiculo(
                     _placaSeleccionada,
                     txtPlaca.Text.Trim().ToUpper(),
@@ -322,6 +328,10 @@ namespace Vehículos
                     string.IsNullOrWhiteSpace(txtObservaciones.Text) ? null : txtObservaciones.Text.Trim(),
                     toggleActivo.IsChecked == true
                 );
+
+                _db.RegistrarBitacora(SesionActual.Email, "Vehículos", "Actualizar",
+                    $"Vehículo {placaAnterior} → {txtPlaca.Text.Trim().ToUpper()}");
+
                 MessageBox.Show("✅ Vehículo actualizado correctamente.", "Éxito",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
