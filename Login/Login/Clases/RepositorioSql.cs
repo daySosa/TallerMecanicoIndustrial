@@ -803,34 +803,11 @@ namespace Login.Clases
             var lista = new List<OrdenTrabajo>();
             try
             {
-                const string query = @"
-                    SELECT
-                        o.Orden_ID,
-                        o.Cliente_DNI,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                        o.Vehiculo_Placa,
-                        ISNULL(
-                            (SELECT STRING_AGG(r.Repuesto_Nombre, ', ')
-                             FROM Orden_Repuesto r
-                             WHERE r.Orden_ID = o.Orden_ID),
-                        '—') AS Producto_Nombre,
-                        ISNULL(
-                            (SELECT STRING_AGG(p.Producto_Categoria, ', ')
-                             FROM Orden_Repuesto r
-                             INNER JOIN Producto p ON r.Producto_ID = p.Producto_ID
-                             WHERE r.Orden_ID = o.Orden_ID),
-                        '—') AS Producto_Categoria,
-                        o.Estado,
-                        o.Fecha,
-                        o.Fecha_Entrega,
-                        ISNULL(o.Observaciones, '') AS Observaciones,
-                        o.Servicio_Precio,
-                        o.OrdenPrecio_Total
-                    FROM  Orden_Trabajo o
-                    INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY o.Orden_ID DESC";
+                using var cmd = new SqlCommand("sp_Orden_ObtenerTodas", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
-                using var cmd = new SqlCommand(query, conexion.SqlC);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
@@ -870,21 +847,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string sql = @"
-                    SELECT o.Cliente_DNI, o.Vehiculo_Placa, o.Estado,
-                           o.Fecha, o.Fecha_Entrega, o.Observaciones,
-                           o.Servicio_Precio, o.OrdenPrecio_Total,
-                           o.Adjuntos_Fotos,
-                           c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                           c.Cliente_TelefonoPrincipal, c.Cliente_Email,
-                           v.Vehiculo_Marca + ' ' + v.Vehiculo_Modelo AS NombreVehiculo,
-                           v.Vehiculo_Tipo + ' · ' + CAST(v.Vehiculo_Año AS VARCHAR) AS TipoAño
-                    FROM   Orden_Trabajo o
-                    INNER JOIN Cliente  c ON o.Cliente_DNI    = c.Cliente_DNI
-                    INNER JOIN Vehiculo v ON o.Vehiculo_Placa = v.Vehiculo_Placa
-                    WHERE  o.Orden_ID = @OrdenID";
-
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Orden_ObtenerParaEditar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@OrdenID", ordenID);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
@@ -915,6 +881,20 @@ namespace Login.Clases
             }
         }
 
+
+        private static DataTable ConstruirTablaRepuestos(List<RepuestoOrden> repuestos)
+        {
+            var tabla = new DataTable();
+            tabla.Columns.Add("ProductoID", typeof(int));
+            tabla.Columns.Add("Cantidad", typeof(int));
+            tabla.Columns.Add("Incluido", typeof(bool));
+
+            foreach (var r in repuestos)
+                tabla.Rows.Add(r.ProductoID, r.Cantidad, r.Incluido);
+
+            return tabla;
+        }
+
         public int AgregarOrden(string clienteDNI, string placa, int? productoID, string estado,
                           DateTime fecha, DateTime? fechaEntrega, string observaciones,
                           decimal precioServicio, decimal total, string foto,
@@ -923,40 +903,29 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string queryOrden = @"
-                    INSERT INTO Orden_Trabajo
-                        (Cliente_DNI, Vehiculo_Placa, Producto_ID, Estado,
-                            Fecha, Fecha_Entrega, Observaciones,
-                            Servicio_Precio, OrdenPrecio_Total, Adjuntos_Fotos)
-                    VALUES
-                        (@ClienteDNI, @Placa, @ProductoID, @Estado,
-                            @Fecha, @FechaEntrega, @Observaciones,
-                            @ServicioPrecio, @Total, @Foto);
-                    SELECT SCOPE_IDENTITY();";
+
+                using var cmd = new SqlCommand("sp_Orden_Agregar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@ClienteDNI", clienteDNI);
+                cmd.Parameters.AddWithValue("@Placa", placa);
+                cmd.Parameters.AddWithValue("@ProductoID", productoID.HasValue ? productoID.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Estado", estado);
+                cmd.Parameters.AddWithValue("@Fecha", fecha);
+                cmd.Parameters.AddWithValue("@FechaEntrega", fechaEntrega.HasValue ? fechaEntrega.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones)
+                    ? DBNull.Value : observaciones.Trim());
+                cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
+                cmd.Parameters.AddWithValue("@Total", total);
+                cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(foto) ? DBNull.Value : foto);
+
+                var tvp = cmd.Parameters.AddWithValue("@Repuestos", ConstruirTablaRepuestos(repuestos));
+                tvp.SqlDbType = SqlDbType.Structured;
+                tvp.TypeName = "TipoRepuestoOrden";
 
                 conexion.Abrir();
-
-                int ordenID;
-                using (var cmd = new SqlCommand(queryOrden, conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@ClienteDNI", clienteDNI);
-                    cmd.Parameters.AddWithValue("@Placa", placa);
-                    cmd.Parameters.AddWithValue("@ProductoID", productoID.HasValue ? productoID.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Estado", estado);
-                    cmd.Parameters.AddWithValue("@Fecha", fecha);
-                    cmd.Parameters.AddWithValue("@FechaEntrega", fechaEntrega.HasValue ? fechaEntrega.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones)
-                        ? DBNull.Value : observaciones.Trim());
-                    cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
-                    cmd.Parameters.AddWithValue("@Total", total);
-                    cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(foto) ? DBNull.Value : foto);
-
-                    ordenID = Convert.ToInt32(Convert.ToDecimal(cmd.ExecuteScalar()));
-                }
-
-                InsertarRepuestosDeOrden(conexion, ordenID, repuestos, descontarStock: true);
-
-                return ordenID;
+                return Convert.ToInt32(cmd.ExecuteScalar());
             }
             catch (SqlException ex)
             {
@@ -972,99 +941,32 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                var productosOriginales = ObtenerRepuestosOrden(ordenID)
-                    .Select(r => r.ProductoID)
-                    .ToHashSet();
+
+                using var cmd = new SqlCommand("sp_Orden_Actualizar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@OrdenID", ordenID);
+                cmd.Parameters.AddWithValue("@Estado", estado);
+                cmd.Parameters.AddWithValue("@Fecha", fecha);
+                cmd.Parameters.AddWithValue("@FechaEntrega", fechaEntrega.HasValue ? fechaEntrega.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones)
+                    ? DBNull.Value : observaciones.Trim());
+                cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
+                cmd.Parameters.AddWithValue("@Total", total);
+                cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(foto) ? DBNull.Value : foto);
+
+                var tvp = cmd.Parameters.AddWithValue("@Repuestos", ConstruirTablaRepuestos(repuestos));
+                tvp.SqlDbType = SqlDbType.Structured;
+                tvp.TypeName = "TipoRepuestoOrden";
 
                 conexion.Abrir();
-
-                const string sqlUpdate = @"
-                    UPDATE Orden_Trabajo SET
-                        Estado            = @Estado,
-                        Fecha             = @Fecha,
-                        Fecha_Entrega     = @FechaEntrega,
-                        Observaciones     = @Observaciones,
-                        Servicio_Precio   = @ServicioPrecio,
-                        OrdenPrecio_Total = @Total,
-                        Adjuntos_Fotos    = @Foto
-                    WHERE Orden_ID = @OrdenID";
-
-                using (var cmd = new SqlCommand(sqlUpdate, conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Estado", estado);
-                    cmd.Parameters.AddWithValue("@Fecha", fecha);
-                    cmd.Parameters.AddWithValue("@FechaEntrega", fechaEntrega.HasValue ? fechaEntrega.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Observaciones", string.IsNullOrWhiteSpace(observaciones)
-                        ? DBNull.Value : observaciones.Trim());
-                    cmd.Parameters.AddWithValue("@ServicioPrecio", precioServicio);
-                    cmd.Parameters.AddWithValue("@Total", total);
-                    cmd.Parameters.AddWithValue("@Foto", string.IsNullOrEmpty(foto) ? DBNull.Value : foto);
-                    cmd.Parameters.AddWithValue("@OrdenID", ordenID);
-                    cmd.ExecuteNonQuery();
-                }
-
-                using (var cmdPago = new SqlCommand(
-                    "UPDATE Contabilidad_Pago SET Precio_Pago = @Total WHERE Orden_ID = @OrdenID", conexion.SqlC))
-                {
-                    cmdPago.Parameters.AddWithValue("@Total", total);
-                    cmdPago.Parameters.AddWithValue("@OrdenID", ordenID);
-                    cmdPago.ExecuteNonQuery();
-                }
-
-                using (var cmdDel = new SqlCommand(
-                    "DELETE FROM Orden_Repuesto WHERE Orden_ID = @OrdenID", conexion.SqlC))
-                {
-                    cmdDel.Parameters.AddWithValue("@OrdenID", ordenID);
-                    cmdDel.ExecuteNonQuery();
-                }
-
-                InsertarRepuestosDeOrden(conexion, ordenID, repuestos, descontarStock: false,
-                    productosYaDescontados: productosOriginales);
-
+                cmd.ExecuteNonQuery();
                 return true;
             }
             catch (SqlException ex)
             {
                 throw new Exception("Error al actualizar la orden: " + ex.Message, ex);
-            }
-        }
-
-        /// <summary>
-        /// Inserta los repuestos incluidos en una orden y, opcionalmente, descuenta stock.
-        /// Compartido entre AgregarOrden y ActualizarOrden para evitar duplicar la lógica.
-        /// </summary>
-        private static void InsertarRepuestosDeOrden(ClsConexion conexion, int ordenID,
-            List<RepuestoOrden> repuestos, bool descontarStock, HashSet<int> productosYaDescontados = null)
-        {
-            foreach (var rep in repuestos.Where(r => r.Incluido))
-            {
-                const string sqlInsertar = @"
-                    INSERT INTO Orden_Repuesto
-                        (Orden_ID, Producto_ID, Repuesto_Nombre, Repuesto_Cantidad, Repuesto_Precio)
-                    SELECT @OrdenID, p.Producto_ID, p.Producto_Nombre, @Cantidad, p.Producto_Precio
-                    FROM   Producto p WHERE p.Producto_ID = @ProductoID";
-
-                using (var cmd = new SqlCommand(sqlInsertar, conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@OrdenID", ordenID);
-                    cmd.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                    cmd.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                    cmd.ExecuteNonQuery();
-                }
-
-                bool debeDescontar = descontarStock ||
-                    (productosYaDescontados is not null && !productosYaDescontados.Contains(rep.ProductoID));
-
-                if (debeDescontar)
-                {
-                    using var cmdStock = new SqlCommand(@"
-                        UPDATE Producto
-                        SET    Producto_Cantidad_Actual = Producto_Cantidad_Actual - @Cantidad
-                        WHERE  Producto_ID = @ProductoID", conexion.SqlC);
-                    cmdStock.Parameters.AddWithValue("@ProductoID", rep.ProductoID);
-                    cmdStock.Parameters.AddWithValue("@Cantidad", rep.Cantidad);
-                    cmdStock.ExecuteNonQuery();
-                }
             }
         }
 
@@ -1074,12 +976,10 @@ namespace Login.Clases
             var lista = new List<RepuestoOrden>();
             try
             {
-                const string sql = @"
-                    SELECT r.Producto_ID, r.Repuesto_Nombre, r.Repuesto_Cantidad, r.Repuesto_Precio 
-                    FROM Orden_Repuesto r 
-                    WHERE r.Orden_ID = @OrdenID";
-
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Orden_ObtenerRepuestos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@OrdenID", ordenID);
 
                 conexion.Abrir();

@@ -297,7 +297,7 @@ namespace InterfazClientes
             try
             {
                 _db.GuardarBiometria(_emailSeleccionado, _rostroCapturado);
-                MessageBox.Show("✅ Biometría guardada correctamente.", "Éxito",
+                MessageBox.Show(" Biometría guardada correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 DetenerCamara();
                 this.Close();
@@ -326,7 +326,7 @@ namespace InterfazClientes
             try
             {
                 _db.EliminarBiometria(_emailSeleccionado);
-                MessageBox.Show("✅ Registro biométrico eliminado.", "Éxito",
+                MessageBox.Show(" Registro biométrico eliminado.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 LimpiarSeleccion();
                 _rostroCapturado = null;
