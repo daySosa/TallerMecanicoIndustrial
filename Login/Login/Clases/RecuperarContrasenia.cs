@@ -11,9 +11,10 @@ namespace Login.Clases
     /// <summary>
     /// Flujo de recuperación de contraseña (correo → OTP → nueva contraseña) mostrado
     /// como overlay sobre MainWindow. Incluye protecciones anti abuso: cooldown de
-    /// reenvío de OTP, límite de intentos y enmascarado de contraseñas nuevas.
+    /// reenvío de OTP, límite de intentos, validación robusta de contraseña e
+    /// indicador de fortaleza en vivo.
     /// </summary>
-    internal class RecuperarContrasenia
+    internal class RecuperarContrasenia(MainWindow mainWindow)
     {
         private const int SegundosCooldownReenvioOtp = 60;
         private const int MaxIntentosOtpCliente = 3;
@@ -23,7 +24,6 @@ namespace Login.Clases
         private static readonly ConcurrentDictionary<string, DateTime> _ultimoEnvioOtp = new();
 
         private readonly RepositorioSql _repositorio = new();
-        private readonly MainWindow _mainWindow;
 
         private string _correoRecuperacion = string.Empty;
         private int _intentosOtpFallidos = 0;
@@ -49,7 +49,14 @@ namespace Login.Clases
         private static readonly SolidColorBrush BrushExitoHover = Congelar("#15803D");
         private static readonly SolidColorBrush BrushTransparente = Congelar("Transparent");
 
-        private static readonly Effect SombraPanel = CrearSombra();
+        // Colores del indicador de fortaleza (precomputados: nada de parsear
+        // strings de color en cada tecla que el usuario escribe).
+        private static readonly SolidColorBrush BrushFortalezaDebil = BrushError;
+        private static readonly SolidColorBrush BrushFortalezaRegular = Congelar("#FBBF24");
+        private static readonly SolidColorBrush BrushFortalezaBuena = Congelar("#38BDF8");
+        private static readonly SolidColorBrush BrushFortalezaFuerte = BrushExito;
+
+        private static readonly DropShadowEffect SombraPanel = CrearSombra();
 
         private static SolidColorBrush Congelar(string hex, double? opacidad = null)
         {
@@ -59,7 +66,7 @@ namespace Login.Clases
             return brush;
         }
 
-        private static Effect CrearSombra()
+        private static DropShadowEffect CrearSombra()
         {
             var efecto = new DropShadowEffect
             {
@@ -70,11 +77,6 @@ namespace Login.Clases
             };
             efecto.Freeze();
             return efecto;
-        }
-
-        public RecuperarContrasenia(MainWindow mainWindow)
-        {
-            _mainWindow = mainWindow;
         }
 
         public void IniciarFlujo()
@@ -91,7 +93,7 @@ namespace Login.Clases
 
         private bool ExisteOverlayActivo()
         {
-            return _mainWindow.Content is Grid rootGrid &&
+            return mainWindow.Content is Grid rootGrid &&
                    rootGrid.Children.OfType<Grid>().Any(g => g.Tag as string == "OverlayRecuperacion");
         }
 
@@ -123,19 +125,19 @@ namespace Login.Clases
             _panelCentral.Child = _contenidoPanel;
             _overlayGrid.Children.Add(_panelCentral);
 
-            if (_mainWindow.Content is Grid rootGrid)
+            if (mainWindow.Content is Grid rootGrid)
             {
                 rootGrid.Children.Add(_overlayGrid);
             }
             else
             {
-                var contenidoActual = _mainWindow.Content as UIElement;
+                var contenidoActual = mainWindow.Content as UIElement;
                 var nuevoGrid = new Grid();
-                _mainWindow.Content = null;
+                mainWindow.Content = null;
                 if (contenidoActual is not null)
                     nuevoGrid.Children.Add(contenidoActual);
                 nuevoGrid.Children.Add(_overlayGrid);
-                _mainWindow.Content = nuevoGrid;
+                mainWindow.Content = nuevoGrid;
             }
         }
 
@@ -146,7 +148,7 @@ namespace Login.Clases
 
             FadeOut(_overlayGrid, 140, () =>
             {
-                if (_mainWindow.Content is Grid rootGrid)
+                if (mainWindow.Content is Grid rootGrid)
                     rootGrid.Children.Remove(_overlayGrid);
             });
         }
@@ -256,11 +258,14 @@ namespace Login.Clases
         }
 
         /// <summary>
-        /// Crea un campo de contraseña enmascarado con botón para mostrar/ocultar,
-        /// igual que en el login. Reemplaza el TextBox de texto plano que se usaba
-        /// antes para la nueva contraseña.
+        /// Crea un campo de contraseña enmascarado con botón para mostrar/ocultar.
+        /// El parámetro opcional <paramref name="alCambiar"/> se invoca en cada
+        /// cambio de texto (útil para el indicador de fortaleza en vivo).
         /// </summary>
-        private static Border CrearContenedorCampoContrasena(out Func<string> obtenerValor, out Action limpiar)
+        private static Border CrearContenedorCampoContrasena(
+    out Func<string> obtenerValor,
+    out Action limpiar,
+    Action<string> alCambiar = null)
         {
             var passwordBox = new PasswordBox
             {
@@ -268,7 +273,7 @@ namespace Login.Clases
                 BorderThickness = new Thickness(0),
                 Foreground = BrushTexto,
                 FontSize = 13,
-                Padding = new Thickness(14, 0, 40, 0),
+                Padding = new Thickness(40, 0, 40, 0),
                 VerticalContentAlignment = VerticalAlignment.Center
             };
 
@@ -278,7 +283,7 @@ namespace Login.Clases
                 BorderThickness = new Thickness(0),
                 Foreground = BrushTexto,
                 FontSize = 13,
-                Padding = new Thickness(14, 0, 40, 0),
+                Padding = new Thickness(40, 0, 40, 0),
                 VerticalContentAlignment = VerticalAlignment.Center,
                 CaretBrush = BrushTexto,
                 Visibility = Visibility.Collapsed
@@ -286,18 +291,47 @@ namespace Login.Clases
 
             bool visible = false;
 
+            string ObtenerValorLocal() => visible ? campoVisible.Text : passwordBox.Password;
+
+            // Ícono de candado (izquierda)
+            var iconoCandado = new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse("M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"),
+                Fill = BrushPlaceholder,
+                Stretch = Stretch.Uniform,
+                Width = 14,
+                Height = 14,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(14, 0, 0, 0),
+                IsHitTestVisible = false
+            };
+
+            // Ícono de ojo (derecha) — cambia su Data entre abierto/cerrado
+            var iconoOjo = new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse("M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"),
+                Fill = BrushPlaceholder,
+                Stretch = Stretch.Uniform,
+                Width = 16,
+                Height = 16
+            };
+
+            string OjoAbierto = "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z";
+            string OjoCerrado = "M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,15 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.09L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z";
+
             var botonOjo = new Button
             {
-                Content = "👁",
+                Content = iconoOjo,
                 Width = 34,
                 Height = 34,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 4, 0),
+                Margin = new Thickness(0, 0, 8, 0),
                 Background = BrushTransparente,
                 BorderThickness = new Thickness(0),
-                Foreground = BrushPlaceholder,
-                Cursor = Cursors.Hand
+                Cursor = Cursors.Hand,
+                Template = ObtenerPlantillaBoton()
             };
 
             botonOjo.Click += (s, e) =>
@@ -310,6 +344,7 @@ namespace Login.Clases
                     campoVisible.Visibility = Visibility.Visible;
                     campoVisible.Focus();
                     campoVisible.CaretIndex = campoVisible.Text.Length;
+                    iconoOjo.Data = Geometry.Parse(OjoCerrado);
                 }
                 else
                 {
@@ -317,10 +352,15 @@ namespace Login.Clases
                     campoVisible.Visibility = Visibility.Collapsed;
                     passwordBox.Visibility = Visibility.Visible;
                     passwordBox.Focus();
+                    iconoOjo.Data = Geometry.Parse(OjoAbierto);
                 }
             };
 
+            passwordBox.PasswordChanged += (s, e) => alCambiar?.Invoke(ObtenerValorLocal());
+            campoVisible.TextChanged += (s, e) => alCambiar?.Invoke(ObtenerValorLocal());
+
             var grid = new Grid();
+            grid.Children.Add(iconoCandado);
             grid.Children.Add(passwordBox);
             grid.Children.Add(campoVisible);
             grid.Children.Add(botonOjo);
@@ -341,7 +381,7 @@ namespace Login.Clases
             campoVisible.GotFocus += (s, e) => ActualizarFocoContenedor(contenedor, true);
             campoVisible.LostFocus += (s, e) => ActualizarFocoContenedor(contenedor, false);
 
-            obtenerValor = () => visible ? campoVisible.Text : passwordBox.Password;
+            obtenerValor = ObtenerValorLocal;
             limpiar = () =>
             {
                 passwordBox.Password = string.Empty;
@@ -697,7 +737,70 @@ namespace Login.Clases
         {
             _contenidoPanel.Children.Clear();
 
-            var contenedorNueva = CrearContenedorCampoContrasena(out var obtenerNueva, out var limpiarNueva);
+            // Indicador de fortaleza: 4 barras + etiqueta descriptiva, se actualiza
+            // en vivo mientras el usuario escribe (sin crear brushes en cada tecla).
+            var indicadorFortaleza = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+
+            List<Border> segmentos = [];
+            for (int i = 0; i < 4; i++)
+            {
+                var segmento = new Border
+                {
+                    Width = 44,
+                    Height = 4,
+                    CornerRadius = new CornerRadius(2),
+                    Background = BrushCampoBorde,
+                    Margin = new Thickness(0, 0, 4, 0)
+                };
+                segmentos.Add(segmento);
+                indicadorFortaleza.Children.Add(segmento);
+            }
+
+            var lblFortaleza = new TextBlock
+            {
+                Foreground = BrushSubtexto,
+                FontSize = 10.5,
+                Margin = new Thickness(0, 4, 0, 14),
+                Text = "Escribe una contraseña"
+            };
+
+            void ActualizarFortaleza(string valor)
+            {
+                int nivel = ValidadorRecuperarContrasenia.CalcularFortaleza(valor);
+                var colorNivel = nivel switch
+                {
+                    <= 1 => BrushFortalezaDebil,
+                    2 => BrushFortalezaRegular,
+                    3 => BrushFortalezaBuena,
+                    _ => BrushFortalezaFuerte
+                };
+
+                for (int i = 0; i < segmentos.Count; i++)
+                    segmentos[i].Background = i < nivel ? colorNivel : BrushCampoBorde;
+
+                if (string.IsNullOrEmpty(valor))
+                {
+                    lblFortaleza.Text = "Escribe una contraseña";
+                    lblFortaleza.Foreground = BrushSubtexto;
+                }
+                else
+                {
+                    lblFortaleza.Text = nivel switch
+                    {
+                        <= 1 => "Débil",
+                        2 => "Regular",
+                        3 => "Buena",
+                        _ => "Fuerte"
+                    };
+                    lblFortaleza.Foreground = colorNivel;
+                }
+            }
+
+            var contenedorNueva = CrearContenedorCampoContrasena(out var obtenerNueva, out var limpiarNueva, ActualizarFortaleza);
             var contenedorConfirmar = CrearContenedorCampoContrasena(out var obtenerConfirmar, out var limpiarConfirmar);
             var lblError = CrearMensajeError("");
 
@@ -719,21 +822,10 @@ namespace Login.Clases
                 string confirmar = obtenerConfirmar();
                 OcultarErrorLocal(lblError);
 
-                if (!ValidacionesGenerales.EsRequerido(nueva))
+                string errorContrasena = ValidadorRecuperarContrasenia.Validar(nueva, _correoRecuperacion);
+                if (errorContrasena is not null)
                 {
-                    MostrarErrorLocal(lblError, "⚠ Ingresa tu nueva contraseña.");
-                    return;
-                }
-
-                if (!ValidacionesGenerales.TieneLongitudMinima(nueva, 6))
-                {
-                    MostrarErrorLocal(lblError, "⚠ La contraseña debe tener al menos 6 caracteres.");
-                    return;
-                }
-
-                if (nueva.Contains(' '))
-                {
-                    MostrarErrorLocal(lblError, "⚠ La contraseña no puede contener espacios.");
+                    MostrarErrorLocal(lblError, errorContrasena);
                     return;
                 }
 
@@ -798,8 +890,10 @@ namespace Login.Clases
 
             _contenidoPanel.Children.Add(CrearTitulo("Nueva contraseña"));
             _contenidoPanel.Children.Add(CrearMensaje("Elige una contraseña segura para tu cuenta."));
-            _contenidoPanel.Children.Add(CrearEtiquetaCampo("Nueva contraseña (mín. 6 caracteres)"));
+            _contenidoPanel.Children.Add(CrearEtiquetaCampo($"Nueva contraseña (mín. {ValidadorRecuperarContrasenia.LongitudMinima} caracteres)"));
             _contenidoPanel.Children.Add(contenedorNueva);
+            _contenidoPanel.Children.Add(indicadorFortaleza);
+            _contenidoPanel.Children.Add(lblFortaleza);
             _contenidoPanel.Children.Add(CrearEtiquetaCampo("Confirmar contraseña"));
             _contenidoPanel.Children.Add(contenedorConfirmar);
             _contenidoPanel.Children.Add(lblError);

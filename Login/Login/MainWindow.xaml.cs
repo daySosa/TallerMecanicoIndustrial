@@ -15,7 +15,6 @@ namespace Login
         private DateTime _fechaDesbloqueo;
         private string _correoActual;
 
-
         private readonly RepositorioSql _repositorio = new();
 
         private readonly string _archivoRecordar =
@@ -24,6 +23,7 @@ namespace Login
 
         private static readonly SolidColorBrush BrushFocus = Pincel("#2563EB");
         private static readonly SolidColorBrush BrushError = Pincel("#f44336");
+        private static readonly SolidColorBrush BrushExito = Pincel("#4CAF50");
         private static readonly SolidColorBrush BrushNormal = Pincel("#FFFFFF", 0.12);
         private static readonly SolidColorBrush BrushVacio = PincelTransparente();
 
@@ -46,6 +46,7 @@ namespace Login
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
+            Closed += (_, _) => DetenerCuentaRegresiva();
             _ = VerificarBloqueoAlIniciarAsync();
         }
 
@@ -138,19 +139,16 @@ namespace Login
         {
             if (_procesandoLogin) return;
 
-            // ── Control de bloqueo por intentos fallidos ──
             _correoActual = txtCorreo.Text.Trim();
 
-            bool hayError = false;
-
             string errorCorreo = ValidadorLogin.ValidarCorreo(txtCorreo.Text);
-            MostrarError(txtErrorCorreo, borderCorreo, errorCorreo, ref hayError);
+            bool errorEnCorreo = MostrarError(txtErrorCorreo, borderCorreo, errorCorreo);
 
             string contrasena = ObtenerContrasena();
             string errorContrasena = ValidadorLogin.ValidarContrasena(contrasena);
-            MostrarError(txtErrorContrasena, borderContrasena, errorContrasena, ref hayError);
+            bool errorEnContrasena = MostrarError(txtErrorContrasena, borderContrasena, errorContrasena);
 
-            if (hayError) return;
+            if (errorEnCorreo || errorEnContrasena) return;
 
             string correo = txtCorreo.Text.Trim();
             var btnLogin = sender as System.Windows.Controls.Button;
@@ -172,24 +170,16 @@ namespace Login
             }
         }
 
-        private static void MostrarError(
+        private static bool MostrarError(
             System.Windows.Controls.TextBlock txtError,
             System.Windows.Controls.Border border,
-            string mensaje,
-            ref bool hayError)
+            string mensaje)
         {
-            if (mensaje is not null)
-            {
-                txtError.Text = mensaje;
-                txtError.Visibility = Visibility.Visible;
-                border.BorderBrush = BrushError;
-                hayError = true;
-            }
-            else
-            {
-                txtError.Visibility = Visibility.Collapsed;
-                border.BorderBrush = BrushVacio;
-            }
+            bool hayError = mensaje is not null;
+            txtError.Text = mensaje ?? string.Empty;
+            txtError.Visibility = hayError ? Visibility.Visible : Visibility.Collapsed;
+            border.BorderBrush = hayError ? BrushError : BrushVacio;
+            return hayError;
         }
 
         private static void SetCargando(bool cargando, System.Windows.Controls.Button boton)
@@ -238,9 +228,8 @@ namespace Login
                     {
                         await Task.Run(() => _repositorio.ActualizarBloqueo(correo, intentos, null));
                         int restantes = ValidadorLogin.IntentosRestantesParaBloqueo(intentos);
-                        bool dummy = false;
                         MostrarError(txtErrorContrasena, borderContrasena,
-                            $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s).", ref dummy);
+                            $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s).");
                         borderCorreo.BorderBrush = BrushError;
                     }
                     return;
@@ -309,7 +298,10 @@ namespace Login
         private void IniciarCuentaRegresiva()
         {
             DetenerCuentaRegresiva();
+
+            txtContador.Foreground = BrushError;
             ActualizarContador();
+
             borderCorreo.BorderBrush = BrushError;
             borderContrasena.BorderBrush = BrushError;
 
@@ -323,8 +315,7 @@ namespace Login
                 {
                     DetenerCuentaRegresiva();
                     txtContador.Text = "✅ Ya puedes intentar iniciar sesión.";
-                    txtContador.Foreground = new SolidColorBrush(
-                        (Color)ColorConverter.ConvertFromString("#4CAF50"));
+                    txtContador.Foreground = BrushExito;
                     txtContador.Visibility = Visibility.Visible;
                     borderCorreo.BorderBrush = BrushVacio;
                     borderContrasena.BorderBrush = BrushVacio;
@@ -341,8 +332,6 @@ namespace Login
         {
             TimeSpan restante = _fechaDesbloqueo - DateTime.Now;
             txtContador.Text = $"⛔ Cuenta bloqueada. Espere {(int)restante.TotalMinutes}:{restante.Seconds:D2} min.";
-            txtContador.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#f44336"));
             txtContador.Visibility = Visibility.Visible;
         }
 

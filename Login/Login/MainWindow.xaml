@@ -8,6 +8,9 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
         MouseDown="Window_Drag">
 
     <Border CornerRadius="0" ClipToBounds="True">
@@ -244,8 +247,6 @@
                             </Button.Style>
                         </Button>
                     </Grid>
-
-
 
                     <Button Height="46"
                             FontSize="14" FontWeight="SemiBold"

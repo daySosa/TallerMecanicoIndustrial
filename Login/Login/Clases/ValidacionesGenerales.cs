@@ -9,6 +9,27 @@ namespace Login.Clases
         public ValidacionesGenerales() { }
 
         // ─────────────────────────────────────────────────────────────
+        // REGEX PRECOMPILADAS (evita recompilar el patrón en cada llamada)
+        // ─────────────────────────────────────────────────────────────
+        private static readonly Regex RegexCorreo = new(
+            @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$", RegexOptions.Compiled);
+
+        private static readonly Regex RegexTelefonoLongitud = new(@"^\d{8}$", RegexOptions.Compiled);
+        private static readonly Regex RegexTelefonoPrefijo = new(@"^[2389]", RegexOptions.Compiled);
+        private static readonly Regex RegexPlaca = new(@"^[A-Z0-9]+$", RegexOptions.Compiled);
+        private static readonly Regex RegexAnio4Digitos = new(@"^\d{4}$", RegexOptions.Compiled);
+        private static readonly Regex RegexDni = new(@"^\d{13}$", RegexOptions.Compiled);
+        private static readonly Regex RegexIniciaConLetra = new(
+            @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]", RegexOptions.Compiled);
+        private static readonly Regex RegexRepeticionExcesiva = new(@"(.)\1{4,}", RegexOptions.Compiled);
+
+        private static readonly Regex RegexMayuscula = new(@"[A-Z]", RegexOptions.Compiled);
+        private static readonly Regex RegexMinuscula = new(@"[a-z]", RegexOptions.Compiled);
+        private static readonly Regex RegexDigito = new(@"\d", RegexOptions.Compiled);
+        private static readonly Regex RegexEspecial = new(@"[^a-zA-Z0-9]", RegexOptions.Compiled);
+        private static readonly Regex RegexEspacioBlanco = new(@"\s", RegexOptions.Compiled);
+
+        // ─────────────────────────────────────────────────────────────
         // FORMULARIO VACÍO
         // ─────────────────────────────────────────────────────────────
         public static bool ValidarFormularioVacio(params string[] campos)
@@ -197,7 +218,7 @@ namespace Login.Clases
 
         public static bool ValidarIniciaConLetra(string texto, string nombreCampo)
         {
-            if (!Regex.IsMatch(texto.Trim(), @"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]"))
+            if (!RegexIniciaConLetra.IsMatch(texto.Trim()))
             {
                 MessageBox.Show($"⚠ El {nombreCampo} debe iniciar con una letra.",
                     $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -219,7 +240,7 @@ namespace Login.Clases
 
         public static bool ValidarSinRepeticionExcesiva(string texto, string nombreCampo)
         {
-            if (Regex.IsMatch(texto.Trim(), @"(.)\1{4,}"))
+            if (RegexRepeticionExcesiva.IsMatch(texto.Trim()))
             {
                 MessageBox.Show($"⚠ El {nombreCampo} contiene caracteres repetidos excesivamente.",
                     $"{nombreCampo} inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -246,7 +267,7 @@ namespace Login.Clases
             if (usuario.All(char.IsDigit)) return "⚠ El correo no puede ser solo números.";
             if (correo.Length > 100) return "⚠ El correo es demasiado largo (máximo 100 caracteres).";
 
-            if (!Regex.IsMatch(correo, @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$"))
+            if (!RegexCorreo.IsMatch(correo))
                 return "⚠ Ingresa un correo electrónico válido.";
 
             if (correo.StartsWith(".")) return "⚠ El correo no puede empezar con un punto.";
@@ -267,14 +288,14 @@ namespace Login.Clases
         {
             string tel = valor.Trim();
 
-            if (!Regex.IsMatch(tel, @"^\d{8}$"))
+            if (!RegexTelefonoLongitud.IsMatch(tel))
             {
                 MessageBox.Show("El teléfono debe contener solo números y tener exactamente 8 dígitos.",
                     "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (!Regex.IsMatch(tel, @"^[2389]"))
+            if (!RegexTelefonoPrefijo.IsMatch(tel))
             {
                 MessageBox.Show("El teléfono debe iniciar con 2, 3, 8 o 9.",
                     "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -305,7 +326,7 @@ namespace Login.Clases
                     "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
-            if (!Regex.IsMatch(p, @"^[A-Z0-9]+$"))
+            if (!RegexPlaca.IsMatch(p))
             {
                 MessageBox.Show("⚠ La placa solo puede contener letras y números.",
                     "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -347,7 +368,7 @@ namespace Login.Clases
 
         public static bool ValidarAnioFormato(string texto)
         {
-            if (!Regex.IsMatch(texto.Trim(), @"^\d{4}$"))
+            if (!RegexAnio4Digitos.IsMatch(texto.Trim()))
             {
                 MessageBox.Show("⚠ El año debe tener exactamente 4 dígitos.",
                     "Año inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -382,7 +403,7 @@ namespace Login.Clases
 
         public static bool ValidarFormatoDNI(string dni)
         {
-            if (!Regex.IsMatch(dni.Trim(), @"^\d{13}$"))
+            if (!RegexDni.IsMatch(dni.Trim()))
             {
                 MessageBox.Show("⚠ El DNI debe contener exactamente 13 dígitos numéricos.",
                     "DNI inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -426,7 +447,7 @@ namespace Login.Clases
         }
 
         // ─────────────────────────────────────────────────────────────
-        // LOGIN
+        // LOGIN — helpers básicos
         // ─────────────────────────────────────────────────────────────
 
         public static string ValidarContrasenaLogin(string contrasena)
@@ -437,17 +458,11 @@ namespace Login.Clases
             return null;
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // MÉTODOS REQUERIDOS POR clsValidacionLogin y clsValidacionCodigo2FA
-        // ─────────────────────────────────────────────────────────────
-
         public static bool EsRequerido(string valor)
             => !string.IsNullOrWhiteSpace(valor);
 
         public static bool EsCorreoValido(string correo)
-            => !string.IsNullOrWhiteSpace(correo) &&
-               System.Text.RegularExpressions.Regex.IsMatch(
-                   correo.Trim(), @"^[a-z0-9][a-z0-9._%+\-]*@[a-z0-9.\-]+\.[a-z]{2,}$");
+            => !string.IsNullOrWhiteSpace(correo) && RegexCorreo.IsMatch(correo.Trim());
 
         public static bool EsSoloNumeros(string valor)
             => !string.IsNullOrEmpty(valor) && valor.All(char.IsDigit);
@@ -457,5 +472,87 @@ namespace Login.Clases
 
         public static bool TieneLongitudMinima(string valor, int minimo)
             => (valor?.Length ?? 0) >= minimo;
+
+        // ─────────────────────────────────────────────────────────────
+        // CONTRASEÑA — VALIDACIÓN COMPLETA DE FORTALEZA
+        // Usado en el flujo de "Recuperar contraseña". Devuelve el primer
+        // requisito incumplido, o null si la contraseña es válida.
+        // ─────────────────────────────────────────────────────────────
+
+        public const int LongitudMinimaContrasena = 8;
+        public const int LongitudMaximaContrasena = 64;
+
+        private static readonly HashSet<string> ContrasenasComunes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "12345678", "123456789", "1234567890", "password", "contraseña",
+            "qwerty123", "abc12345", "11111111", "00000000", "password1",
+            "admin123", "iloveyou", "letmein1", "welcome1", "12345678a",
+            "qwertyui", "asdfghjk", "1q2w3e4r", "taller123", "mecanico1"
+        };
+
+        public static string ValidarFortalezaContrasena(string contrasena, string correo = null)
+        {
+            if (!EsRequerido(contrasena))
+                return "⚠ Ingresa tu nueva contraseña.";
+
+            if (contrasena.Length < LongitudMinimaContrasena)
+                return $"⚠ La contraseña debe tener al menos {LongitudMinimaContrasena} caracteres.";
+
+            if (contrasena.Length > LongitudMaximaContrasena)
+                return $"⚠ La contraseña no puede superar {LongitudMaximaContrasena} caracteres.";
+
+            if (RegexEspacioBlanco.IsMatch(contrasena))
+                return "⚠ La contraseña no puede contener espacios ni tabulaciones.";
+
+            if (!RegexMayuscula.IsMatch(contrasena))
+                return "⚠ La contraseña debe incluir al menos una letra mayúscula.";
+
+            if (!RegexMinuscula.IsMatch(contrasena))
+                return "⚠ La contraseña debe incluir al menos una letra minúscula.";
+
+            if (!RegexDigito.IsMatch(contrasena))
+                return "⚠ La contraseña debe incluir al menos un número.";
+
+            if (!RegexEspecial.IsMatch(contrasena))
+                return "⚠ La contraseña debe incluir al menos un carácter especial (ej: @, #, $, %).";
+
+            if (RegexRepeticionExcesiva.IsMatch(contrasena))
+                return "⚠ La contraseña no puede repetir el mismo carácter muchas veces seguidas.";
+
+            if (TieneSecuenciaObvia(contrasena))
+                return "⚠ La contraseña no puede contener secuencias obvias (ej: 1234, abcd).";
+
+            if (ContrasenasComunes.Contains(contrasena))
+                return "⚠ Esta contraseña es demasiado común. Elige una más segura.";
+
+            if (!string.IsNullOrWhiteSpace(correo))
+            {
+                string usuarioCorreo = correo.Split('@')[0];
+                if (contrasena.Contains(usuarioCorreo, StringComparison.OrdinalIgnoreCase))
+                    return "⚠ La contraseña no puede contener tu correo o nombre de usuario.";
+            }
+
+            return null;
+        }
+
+        /// <summary>Detecta secuencias ascendentes/descendentes de 4+ caracteres (1234, dcba, etc.).</summary>
+        private static bool TieneSecuenciaObvia(string texto)
+        {
+            const int longitudSecuencia = 4;
+            int consecutivosAsc = 1;
+            int consecutivosDesc = 1;
+
+            for (int i = 1; i < texto.Length; i++)
+            {
+                int diferencia = texto[i] - texto[i - 1];
+
+                consecutivosAsc = diferencia == 1 ? consecutivosAsc + 1 : 1;
+                consecutivosDesc = diferencia == -1 ? consecutivosDesc + 1 : 1;
+
+                if (consecutivosAsc >= longitudSecuencia || consecutivosDesc >= longitudSecuencia)
+                    return true;
+            }
+            return false;
+        }
     }
 }
