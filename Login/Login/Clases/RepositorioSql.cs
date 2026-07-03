@@ -1116,7 +1116,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                using var cmd = new SqlCommand("SELECT COUNT(*) FROM Notificaciones WHERE Leida = 0", conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Notificacion_ContarPendientes", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 conexion.Abrir();
                 return (int)cmd.ExecuteScalar();
             }
@@ -1131,12 +1134,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje
-                    FROM Vista_Notificaciones_Pendientes
-                    ORDER BY Notificacion_ID DESC";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Notificacion_ObtenerPendientes", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 conexion.Abrir();
                 using var da = new SqlDataAdapter(cmd);
                 var dt = new DataTable();
@@ -1155,12 +1156,10 @@ namespace Login.Clases
             var lista = new List<NotificacionItem>();
             try
             {
-                const string query = @"
-                    SELECT Notificacion_ID, Tipo_Notificacion, Mensaje, Leida 
-                    FROM Notificaciones 
-                    ORDER BY Notificacion_ID DESC";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Notificacion_ObtenerTodas", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
                 while (rd.Read())
@@ -1186,13 +1185,11 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                string sql = id.HasValue
-                    ? "UPDATE Notificaciones SET Leida = 1 WHERE Notificacion_ID = @ID"
-                    : "UPDATE Notificaciones SET Leida = 1 WHERE Leida = 0";
-
-                using var cmd = new SqlCommand(sql, conexion.SqlC);
-                if (id.HasValue)
-                    cmd.Parameters.AddWithValue("@ID", id.Value);
+                using var cmd = new SqlCommand("sp_Notificacion_MarcarLeida", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@ID", id.HasValue ? id.Value : DBNull.Value);
 
                 conexion.Abrir();
                 cmd.ExecuteNonQuery();
