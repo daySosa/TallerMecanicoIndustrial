@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
 namespace Login
@@ -25,6 +26,7 @@ namespace Login
         private bool _navegando;
         private bool _verificando;
         private bool _disposed;
+        private bool _codigoInicialEnviado;
 
         public Verificacion2FA(string correo)
         {
@@ -33,16 +35,35 @@ namespace Login
 
             _cajas = [d1, d2, d3, d4, d5, d6];
             ConfigurarCajas();
+            HabilitarCajas(false);
 
             _timer.Tick += Timer_Tick;
-            _timer.Start();
 
             if (_correoUsuario.Length == 0)
             {
-                MostrarError("⚠ No hay un correo válido asociado a esta verificación.");
-                btnVerificar.IsEnabled = false;
+                barraEnvioInicial.Visibility = Visibility.Collapsed;
+                txtEstadoEnvioInicial.Text = "⚠ No hay un correo válido asociado a esta verificación.";
                 btnReenviar.IsEnabled = false;
             }
+        }
+
+        /// <summary>
+        /// Al cargar la ventana: aplica un fade-in suave y, si hay un correo
+        /// válido, dispara el envío del código inicial. Este envío es una
+        /// continuación directa de la acción explícita del usuario (haber
+        /// elegido "Código de verificación" en la pantalla anterior), por lo
+        /// que dispararlo aquí SÍ es correcto — no es un envío no solicitado.
+        /// </summary>
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180))
+            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+            BeginAnimation(OpacityProperty, fadeIn);
+
+            if (_codigoInicialEnviado || _correoUsuario.Length == 0) return;
+            _codigoInicialEnviado = true;
+
+            await EnviarCodigoInicialAsync();
         }
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
@@ -73,6 +94,75 @@ namespace Login
                 System.Diagnostics.Debug.WriteLine("Error al liberar recursos: " + ex.Message);
             }
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // ENVÍO DEL CÓDIGO INICIAL (con estado de carga)
+        // ─────────────────────────────────────────────────────────────
+
+        private async Task EnviarCodigoInicialAsync()
+        {
+            barraEnvioInicial.Visibility = Visibility.Visible;
+            txtEstadoEnvioInicial.Text = "Enviando código a tu correo...";
+            btnReintentarEnvio.Visibility = Visibility.Collapsed;
+            panelEnvioInicial.Visibility = Visibility.Visible;
+            panelContenidoCodigo.Visibility = Visibility.Collapsed;
+
+            try
+            {
+                bool enviado = await Task.Run(() =>
+                {
+                    string codigo = _db.GenerarCodigoOTP(_correoUsuario);
+                    return _db.EnviarCorreoOTP(_correoUsuario, codigo);
+                }, _cts.Token);
+
+                if (_cts.IsCancellationRequested || !IsLoaded) return;
+
+                if (enviado)
+                    MostrarPanelListoParaIngresarCodigo();
+                else
+                    MostrarErrorEnvioInicial("⚠ No se pudo enviar el código. Intenta de nuevo.");
+            }
+            catch (OperationCanceledException)
+            {
+                // Ventana cerrada mientras se enviaba el primer código; nada que hacer.
+            }
+            catch (Exception ex)
+            {
+                if (IsLoaded)
+                    MostrarErrorEnvioInicial("⚠ No se pudo enviar el código: " + ex.Message);
+            }
+        }
+
+        private void MostrarPanelListoParaIngresarCodigo()
+        {
+            panelEnvioInicial.Visibility = Visibility.Collapsed;
+            panelContenidoCodigo.Visibility = Visibility.Visible;
+
+            HabilitarCajas(true);
+            btnVerificar.IsEnabled = true;
+            d1.Focus();
+
+            _segundos = SegundosIniciales;
+            runTimer.Text = "05:00";
+            _timer.Start();
+        }
+
+        private void MostrarErrorEnvioInicial(string mensaje)
+        {
+            barraEnvioInicial.Visibility = Visibility.Collapsed;
+            txtEstadoEnvioInicial.Text = mensaje;
+            btnReintentarEnvio.Visibility = Visibility.Visible;
+        }
+
+        private async void BtnReintentarEnvio_Click(object sender, RoutedEventArgs e)
+        {
+            btnReintentarEnvio.Visibility = Visibility.Collapsed;
+            await EnviarCodigoInicialAsync();
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // CAJAS DE DÍGITOS
+        // ─────────────────────────────────────────────────────────────
 
         private void ConfigurarCajas()
         {
@@ -204,6 +294,10 @@ namespace Login
                 MostrarError("⚠ El código ha expirado. Reenvíalo para continuar.");
             }
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // VERIFICACIÓN DEL CÓDIGO
+        // ─────────────────────────────────────────────────────────────
 
         private async void BtnVerificar_Click(object sender, RoutedEventArgs e)
         {
@@ -354,9 +448,8 @@ namespace Login
         }
 
         /// <summary>
-        /// Único punto donde se solicita un nuevo código: acción explícita del
-        /// usuario al presionar "Reenviar ahora". Nunca debe dispararse de forma
-        /// automática (ni al abrir la ventana ni al presionar "Cancelar").
+        /// Reenvío explícito solicitado por el usuario (botón "Reenviar ahora").
+        /// Independiente del envío inicial automático de EnviarCodigoInicialAsync.
         /// </summary>
         private async void BtnReenviar_Click(object sender, RoutedEventArgs e)
         {
@@ -418,7 +511,6 @@ namespace Login
 
         /// <summary>
         /// Regresa a la pantalla anterior SIN generar ni enviar un nuevo código.
-        /// El reenvío es una acción explícita reservada a "Reenviar ahora".
         /// </summary>
         private void BtnRegresar_Click(object sender, RoutedEventArgs e)
         {

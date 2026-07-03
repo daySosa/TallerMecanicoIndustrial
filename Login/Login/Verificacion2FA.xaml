@@ -8,6 +8,8 @@
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
         TextElement.Foreground="White"
+        Opacity="0"
+        Loaded="Window_Loaded"
         MouseDown="Window_Drag">
 
     <Window.Resources>
@@ -33,8 +35,7 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10"
-                                SnapsToDevicePixels="True">
+                                CornerRadius="10" SnapsToDevicePixels="True">
                             <ScrollViewer x:Name="PART_ContentHost"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"/>
@@ -209,7 +210,7 @@
 
                     <Border Background="#0d1020" CornerRadius="10"
                             BorderBrush="#1a1f35" BorderThickness="1"
-                            Padding="16,12" Margin="0,0,0,32">
+                            Padding="16,12" Margin="0,0,0,24">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="EmailOutline"
                                                      Foreground="#4f6ef7"
@@ -225,47 +226,87 @@
                         </StackPanel>
                     </Border>
 
-                    <TextBlock Text="INGRESA EL CÓDIGO"
-                               Foreground="#6470a0"
-                               FontSize="10" FontWeight="Medium"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,14"/>
+                    <Grid>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                                Margin="0,0,0,8">
-                        <TextBox x:Name="d1" Style="{StaticResource DigitBox}" Margin="5,0"/>
-                        <TextBox x:Name="d2" Style="{StaticResource DigitBox}" Margin="5,0"/>
-                        <TextBox x:Name="d3" Style="{StaticResource DigitBox}" Margin="5,0"/>
-                        <TextBlock Text="—" Foreground="#2a2f47" FontSize="20"
-                                   VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBox x:Name="d4" Style="{StaticResource DigitBox}" Margin="5,0"/>
-                        <TextBox x:Name="d5" Style="{StaticResource DigitBox}" Margin="5,0"/>
-                        <TextBox x:Name="d6" Style="{StaticResource DigitBox}" Margin="5,0"/>
-                    </StackPanel>
+                        <!-- Estado inicial: enviando el código por primera vez.
+                             Se oculta en cuanto el envío se confirma exitoso. -->
+                        <StackPanel x:Name="panelEnvioInicial"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,26,0,26">
+                            <ProgressBar x:Name="barraEnvioInicial"
+                                         IsIndeterminate="True"
+                                         Width="140" Height="4"
+                                         Foreground="#4f6ef7"
+                                         Background="#1e2235"
+                                         BorderThickness="0"
+                                         Margin="0,0,0,16"/>
+                            <TextBlock x:Name="txtEstadoEnvioInicial"
+                                       Text="Enviando código a tu correo..."
+                                       Foreground="#6470a0" FontSize="12"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Width="260"/>
+                            <Button x:Name="btnReintentarEnvio"
+                                    Content="Reintentar"
+                                    Style="{StaticResource GhostButton}"
+                                    Height="34" Padding="18,0"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,16,0,0"
+                                    Visibility="Collapsed"
+                                    Click="BtnReintentarEnvio_Click"/>
+                        </StackPanel>
 
-                    <TextBlock x:Name="txtErrorCodigo" Text=""
-                               Foreground="#e05560" FontSize="11"
-                               HorizontalAlignment="Center"
-                               Margin="0,10,0,0" Visibility="Collapsed"/>
+                        <!-- Estado listo: el código ya se envió, se puede ingresar. -->
+                        <StackPanel x:Name="panelContenidoCodigo" Visibility="Collapsed">
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                                Margin="0,28,0,0">
-                        <materialDesign:PackIcon Kind="ClockOutline"
-                                                 Foreground="#353a58" Width="13" Height="13"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Foreground="#353a58" FontSize="11" VerticalAlignment="Center">
-                            <Run Text="Código expira en "/>
-                            <Run x:Name="runTimer" Text="05:00" Foreground="#4f5880" FontWeight="Medium"/>
-                        </TextBlock>
-                    </StackPanel>
+                            <TextBlock Text="INGRESA EL CÓDIGO"
+                                       Foreground="#6470a0"
+                                       FontSize="10" FontWeight="Medium"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,14"/>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                                Margin="0,14,0,0">
-                        <TextBlock Text="¿No llegó el código?" Foreground="#353a58" FontSize="12"/>
-                        <Button x:Name="btnReenviar" Content="Reenviar ahora"
-                                Style="{StaticResource LinkButton}"
-                                Click="BtnReenviar_Click" Margin="6,0,0,0"/>
-                    </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                        Margin="0,0,0,8">
+                                <TextBox x:Name="d1" Style="{StaticResource DigitBox}" Margin="5,0"/>
+                                <TextBox x:Name="d2" Style="{StaticResource DigitBox}" Margin="5,0"/>
+                                <TextBox x:Name="d3" Style="{StaticResource DigitBox}" Margin="5,0"/>
+                                <TextBlock Text="—" Foreground="#2a2f47" FontSize="20"
+                                           VerticalAlignment="Center" Margin="4,0"/>
+                                <TextBox x:Name="d4" Style="{StaticResource DigitBox}" Margin="5,0"/>
+                                <TextBox x:Name="d5" Style="{StaticResource DigitBox}" Margin="5,0"/>
+                                <TextBox x:Name="d6" Style="{StaticResource DigitBox}" Margin="5,0"/>
+                            </StackPanel>
+
+                            <TextBlock x:Name="txtErrorCodigo" Text=""
+                                       Foreground="#e05560" FontSize="11"
+                                       HorizontalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       Margin="0,10,0,0" Visibility="Collapsed"/>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                        Margin="0,28,0,0">
+                                <materialDesign:PackIcon Kind="ClockOutline"
+                                                         Foreground="#353a58" Width="13" Height="13"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Foreground="#353a58" FontSize="11" VerticalAlignment="Center">
+                                    <Run Text="Código expira en "/>
+                                    <Run x:Name="runTimer" Text="05:00" Foreground="#4f5880" FontWeight="Medium"/>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                        Margin="0,14,0,0">
+                                <TextBlock Text="¿No llegó el código?" Foreground="#353a58" FontSize="12"/>
+                                <Button x:Name="btnReenviar" Content="Reenviar ahora"
+                                        Style="{StaticResource LinkButton}"
+                                        Click="BtnReenviar_Click" Margin="6,0,0,0"/>
+                            </StackPanel>
+
+                        </StackPanel>
+
+                    </Grid>
 
                 </StackPanel>
 
@@ -303,6 +344,7 @@
                             <Button x:Name="btnVerificar"
                                     Style="{StaticResource PrimaryButton}"
                                     Height="36" Padding="22,0"
+                                    IsEnabled="False"
                                     Click="BtnVerificar_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ArrowRight"

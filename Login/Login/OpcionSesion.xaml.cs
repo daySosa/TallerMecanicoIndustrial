@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using Login.Clases;
 using System.Windows;
 using System.Windows.Input;
 
@@ -8,9 +7,7 @@ namespace Login
     public partial class OpcionSesion : Window
     {
         private readonly string _correoUsuario;
-        private readonly RepositorioSql _repositorio = new();
         private bool _navegando;
-        private bool _enviandoCodigo;
 
         public OpcionSesion(string correo)
         {
@@ -28,21 +25,16 @@ namespace Login
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
-
-            try
-            {
-                DragMove();
-            }
-            catch (InvalidOperationException)
-            {
-                // Ocurre si el mouse se suelta antes de iniciar el arrastre; se ignora.
-            }
+            try { DragMove(); }
+            catch (InvalidOperationException) { /* Soltó el botón antes de iniciar el arrastre */ }
         }
 
         /// <summary>
-        /// Crea la siguiente ventana del flujo y cierra la actual. Bloquea clics
-        /// repetidos mientras la navegación está en curso (_navegando) y revierte
-        /// el estado si la creación de la ventana falla.
+        /// Crea la siguiente ventana y cierra la actual de forma INMEDIATA, sin
+        /// esperar operaciones de red/BD aquí. Cualquier tarea larga —como el
+        /// envío del código OTP— se ejecuta dentro de la ventana de destino, con
+        /// su propio indicador de carga, para que el cambio de pantalla se sienta
+        /// instantáneo en vez de "congelado".
         /// </summary>
         private void Navegar<T>(Func<T> crear) where T : Window
         {
@@ -79,60 +71,21 @@ namespace Login
             => Navegar(() => new MainWindow());
 
         /// <summary>
-        /// Único punto donde se genera y envía el código OTP inicial: la elección
-        /// explícita del usuario por "Código de verificación". No debe enviarse
-        /// antes de este punto (ni en el login, ni en el constructor de esta
-        /// ventana, ni en el de Verificacion2FA).
+        /// Navega de inmediato a Verificacion2FA. Esa ventana es responsable de
+        /// generar y enviar el código OTP inicial (una sola vez, al cargarse),
+        /// mostrando su propio estado de carga mientras dura el envío.
         /// </summary>
-        private async void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
+        private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
         {
-            if (_enviandoCodigo) return;
-
             if (_correoUsuario.Length == 0)
             {
                 MessageBox.Show(
-                    "No es posible enviar el código: no hay un correo asociado a esta sesión.",
+                    "No es posible continuar: no hay un correo asociado a esta sesión.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            _enviandoCodigo = true;
-            btnCodigoVerificacion.IsEnabled = false;
-            btnReconocimientoFacial.IsEnabled = false;
-
-            try
-            {
-                bool enviado = await Task.Run(() =>
-                {
-                    string codigo = _repositorio.GenerarCodigoOTP(_correoUsuario);
-                    return _repositorio.EnviarCorreoOTP(_correoUsuario, codigo);
-                });
-
-                if (!enviado)
-                {
-                    MessageBox.Show(
-                        "⚠ No se pudo enviar el código. Intenta nuevamente.",
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                Navegar(() => new Verificacion2FA(_correoUsuario));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    "⚠ No se pudo enviar el código: " + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                _enviandoCodigo = false;
-                if (!_navegando)
-                {
-                    btnCodigoVerificacion.IsEnabled = true;
-                    btnReconocimientoFacial.IsEnabled = true;
-                }
-            }
+            Navegar(() => new Verificacion2FA(_correoUsuario));
         }
 
         private void BtnReconocimientoFacial_Click(object sender, RoutedEventArgs e)
