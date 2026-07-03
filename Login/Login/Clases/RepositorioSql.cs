@@ -1698,6 +1698,10 @@ namespace Login.Clases
 
         public void RegistrarBitacora(string email, string modulo, string accion, string descripcion = null)
         {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new Exception("No se pudo registrar en bitácora: no hay una sesión activa (SesionActual.Email está vacío). " +
+                                     "Verifica que el login haya iniciado sesión correctamente antes de esta acción.");
+
             using var conexion = new ClsConexion();
             try
             {

@@ -18,14 +18,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="Recursos\haarcascade_eye.xml">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="Recursos\haarcascade_frontalface_default.xml">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+		<None Include="Recursos\haarcascade_frontalface_default.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="Recursos\haarcascade_eye.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="haarcascade_frontalface_default.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
-
+	
 	<ItemGroup>
 		<PackageReference Include="AForge.Video.DirectShow" Version="2.2.5" />
 		<PackageReference Include="Emgu.CV" Version="4.13.0.5924" />
