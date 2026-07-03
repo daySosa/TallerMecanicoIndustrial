@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Vehículos;
 
 namespace InterfazClientes
@@ -16,6 +17,7 @@ namespace InterfazClientes
     {
         private readonly RepositorioSql _db = new RepositorioSql();
         private DataTable _usuariosCache;
+        private DispatcherTimer _debounceBusqueda;
 
         // ════════════════════════════════════════════════════════════
         // CONSTRUCTOR
@@ -25,13 +27,28 @@ namespace InterfazClientes
         {
             InitializeComponent();
             AplicarPermisos();
+            ConfigurarDebounce();
 
-            Loaded += async (s, e) =>
+            Loaded += async (s, e) => await InicializarAsync();
+        }
+
+        private async Task InicializarAsync()
+        {
+            await CargarUsuariosAsync();
+            CargarNotificaciones();
+        }
+
+        private void ConfigurarDebounce()
+        {
+            _debounceBusqueda = new DispatcherTimer
             {
-                await CargarUsuariosAsync();
-                CargarNotificaciones();
+                Interval = TimeSpan.FromMilliseconds(300)
             };
-
+            _debounceBusqueda.Tick += (s, e) =>
+            {
+                _debounceBusqueda.Stop();
+                AplicarFiltroBusqueda();
+            };
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -46,7 +63,7 @@ namespace InterfazClientes
 
         private void AplicarPermisos()
         {
-            if (!Login.Clases.SesionActual.EsAdministrador)
+            if (!SesionActual.EsAdministrador)
             {
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
@@ -62,7 +79,8 @@ namespace InterfazClientes
         {
             try
             {
-                _usuariosCache = await Task.Run(() => _db.ObtenerUsuarios());
+                var datos = await Task.Run(() => _db.ObtenerUsuarios());
+                _usuariosCache = datos;
                 dgUsuarios.ItemsSource = _usuariosCache.DefaultView;
                 ActualizarContador(_usuariosCache.Rows.Count);
             }
@@ -73,16 +91,40 @@ namespace InterfazClientes
             }
         }
 
-        public async void CargarUsuarios()
-            => await CargarUsuariosAsync();
+        public void CargarUsuarios()
+        {
+            _ = RecargarUsuariosSeguroAsync();
+        }
+
+        private async Task RecargarUsuariosSeguroAsync()
+        {
+            try
+            {
+                await CargarUsuariosAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al recargar usuarios: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void ActualizarContador(int cantidad)
             => tbTotalUsuarios.Text = cantidad == 1 ? "1 usuario" : $"{cantidad} usuarios";
 
+        // ── Búsqueda con debounce para no filtrar en cada tecla ──────
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_usuariosCache == null) return;
-            string texto = txtBuscar.Text.Trim().Replace("'", "''");
+            _debounceBusqueda.Stop();
+            _debounceBusqueda.Start();
+        }
+
+        private void AplicarFiltroBusqueda()
+        {
+            if (_usuariosCache == null) return;
+
+            string texto = EscaparParaFiltro(txtBuscar.Text.Trim());
             _usuariosCache.DefaultView.RowFilter = string.IsNullOrWhiteSpace(texto)
                 ? string.Empty
                 : $"Usuario_Nombre LIKE '%{texto}%' OR Usuario_Apellido LIKE '%{texto}%' " +
@@ -90,12 +132,26 @@ namespace InterfazClientes
             ActualizarContador(_usuariosCache.DefaultView.Count);
         }
 
+        /// Escapa comillas y caracteres especiales de LIKE (% * [ ]) usados por DataView.RowFilter.
+        private static string EscaparParaFiltro(string texto)
+        {
+            if (string.IsNullOrEmpty(texto)) return texto;
+            return texto
+                .Replace("'", "''")
+                .Replace("[", "[[]")
+                .Replace("%", "[%]")
+                .Replace("*", "[*]");
+        }
+
         // ── Doble clic en una fila = editar ese usuario ──────────────
         private void dgUsuarios_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (dgUsuarios.SelectedItem is DataRowView fila)
             {
-                string email = fila["Usuario_Email"].ToString();
+                object valor = fila["Usuario_Email"];
+                if (valor == null || valor == DBNull.Value) return;
+
+                string email = valor.ToString();
                 new VentanaUsuario(email).ShowDialog();
                 CargarUsuarios();
             }
@@ -132,13 +188,13 @@ namespace InterfazClientes
 
             var filtros = new List<string>();
 
-            string nombre = txtFiltroNombre.Text.Trim().Replace("'", "''");
+            string nombre = EscaparParaFiltro(txtFiltroNombre.Text.Trim());
             if (!string.IsNullOrWhiteSpace(nombre))
                 filtros.Add($"(Usuario_Nombre LIKE '%{nombre}%' OR Usuario_Apellido LIKE '%{nombre}%')");
 
             string rol = (cmbFiltroRol.SelectedItem as ComboBoxItem)?.Content?.ToString();
             if (!string.IsNullOrEmpty(rol) && rol != "Todos")
-                filtros.Add($"Usuario_Rol = '{rol}'");
+                filtros.Add($"Usuario_Rol = '{EscaparParaFiltro(rol)}'");
 
             string estado = (cmbFiltroEstado.SelectedItem as ComboBoxItem)?.Content?.ToString();
             if (!string.IsNullOrEmpty(estado) && estado != "Todos")
@@ -180,7 +236,10 @@ namespace InterfazClientes
                     ? Visibility.Visible : Visibility.Collapsed;
                 txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error al cargar notificaciones: " + ex.Message);
+            }
         }
 
         private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
@@ -224,7 +283,8 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error notificaciones: " + ex.Message);
+                MessageBox.Show("Error notificaciones: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -290,9 +350,17 @@ namespace InterfazClientes
             };
             btnLeida.Click += (s, _) =>
             {
-                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
-                CargarNotificacionesEnPopup();
-                CargarNotificaciones();
+                try
+                {
+                    _db.MarcarNotificacionLeida((int)((Button)s).Tag);
+                    CargarNotificacionesEnPopup();
+                    CargarNotificaciones();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al marcar notificación: " + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             };
             Grid.SetColumn(btnLeida, 1);
             grid.Children.Add(btnLeida);
@@ -303,9 +371,17 @@ namespace InterfazClientes
 
         private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            _db.MarcarNotificacionLeida(null);
-            CargarNotificacionesEnPopup();
-            CargarNotificaciones();
+            try
+            {
+                _db.MarcarNotificacionLeida(null);
+                CargarNotificacionesEnPopup();
+                CargarNotificaciones();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al marcar notificaciones: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // ════════════════════════════════════════════════════════════
@@ -314,8 +390,17 @@ namespace InterfazClientes
 
         private void Navegar<T>(Func<T> crear) where T : Window
         {
-            crear().Show();
-            this.Close();
+            try
+            {
+                var ventana = crear();
+                ventana.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al navegar: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
