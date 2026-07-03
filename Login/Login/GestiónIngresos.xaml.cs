@@ -297,6 +297,15 @@ namespace Contabilidad
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
+
+        private void btnGuardar_Click(object sender, RoutedEventArgs e)
+        {
+            if (_esEdicion)
+                GuardarEdicion();
+            else
+                GuardarNuevo();
+        }
+
         // ── Mensajes ─────────────────────────────────────────────────
         private void MostrarMensajeAgregar(string msg)
         {
