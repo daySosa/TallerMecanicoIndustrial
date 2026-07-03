@@ -1015,42 +1015,38 @@ namespace Login.Clases
             var ordenes = new List<OrdenReciente>();
             try
             {
-                const string query = @"
-                    SELECT TOP 10
-                        o.Orden_ID,
-                        c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS Cliente_NombreCompleto,
-                        o.Vehiculo_Placa, o.Fecha, o.Estado, o.OrdenPrecio_Total
-                    FROM Orden_Trabajo o
-                    INNER JOIN Cliente c ON o.Cliente_DNI = c.Cliente_DNI
-                    ORDER BY o.Fecha DESC";
+                // un solo SP que devuelve 3 result sets en una sola llamada.
+                using var cmd = new SqlCommand("sp_Dashboard_ObtenerResumen", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
                 conexion.Abrir();
+                using var rd = cmd.ExecuteReader();
 
-                using (var cmd = new SqlCommand(query, conexion.SqlC))
-                using (var rd = cmd.ExecuteReader())
+                // Result set 1: órdenes recientes
+                while (rd.Read())
                 {
-                    while (rd.Read())
+                    ordenes.Add(new OrdenReciente
                     {
-                        ordenes.Add(new OrdenReciente
-                        {
-                            Orden_ID = Convert.ToInt32(rd["Orden_ID"]),
-                            Cliente_NombreCompleto = rd["Cliente_NombreCompleto"].ToString(),
-                            Vehiculo_Placa = rd["Vehiculo_Placa"].ToString(),
-                            Fecha = Convert.ToDateTime(rd["Fecha"]),
-                            Estado = rd["Estado"].ToString(),
-                            OrdenPrecio_Total = Convert.ToDecimal(rd["OrdenPrecio_Total"])
-                        });
-                    }
+                        Orden_ID = Convert.ToInt32(rd["Orden_ID"]),
+                        Cliente_NombreCompleto = rd["Cliente_NombreCompleto"].ToString(),
+                        Vehiculo_Placa = rd["Vehiculo_Placa"].ToString(),
+                        Fecha = Convert.ToDateTime(rd["Fecha"]),
+                        Estado = rd["Estado"].ToString(),
+                        OrdenPrecio_Total = Convert.ToDecimal(rd["OrdenPrecio_Total"])
+                    });
                 }
 
-                decimal balanceTotal, gastosTotal;
-                using (var cmd2 = new SqlCommand(
-                    "SELECT ISNULL(SUM(OrdenPrecio_Total), 0) FROM Orden_Trabajo", conexion.SqlC))
-                    balanceTotal = Convert.ToDecimal(cmd2.ExecuteScalar());
+                decimal balanceTotal = 0, gastosTotal = 0;
 
-                using (var cmd3 = new SqlCommand(
-                    "SELECT ISNULL(SUM(Precio_Gasto), 0) FROM Contabilidad_Gastos", conexion.SqlC))
-                    gastosTotal = Convert.ToDecimal(cmd3.ExecuteScalar());
+                // Result set 2: balance total
+                if (rd.NextResult() && rd.Read())
+                    balanceTotal = Convert.ToDecimal(rd["BalanceTotal"]);
+
+                // Result set 3: gastos totales
+                if (rd.NextResult() && rd.Read())
+                    gastosTotal = Convert.ToDecimal(rd["GastosTotal"]);
 
                 return (ordenes, balanceTotal, gastosTotal);
             }
@@ -1062,35 +1058,33 @@ namespace Login.Clases
 
         public (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaOrdenes(DateTime fechaDesde)
             => ObtenerDatosGraficaMensual(
-                "SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes, SUM(OrdenPrecio_Total) AS Valor " +
-                "FROM Orden_Trabajo WHERE Fecha >= @Desde GROUP BY YEAR(Fecha), MONTH(Fecha) ORDER BY Anio, Mes",
-                fechaDesde, "Error al cargar gráfica de órdenes");
+                "sp_Dashboard_GraficaOrdenesMonto", fechaDesde, "Error al cargar gráfica de órdenes");
 
         public (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaCantidadOrdenes(DateTime fechaDesde)
             => ObtenerDatosGraficaMensual(
-                "SELECT YEAR(Fecha) AS Anio, MONTH(Fecha) AS Mes, COUNT(*) AS Valor " +
-                "FROM Orden_Trabajo WHERE Fecha >= @Desde GROUP BY YEAR(Fecha), MONTH(Fecha) ORDER BY Anio, Mes",
-                fechaDesde, "Error al cargar gráfica de cantidad de órdenes");
+                "sp_Dashboard_GraficaOrdenesCantidad", fechaDesde, "Error al cargar gráfica de cantidad de órdenes");
 
         public (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaGastos(DateTime fechaDesde)
             => ObtenerDatosGraficaMensual(
-                "SELECT YEAR(Fecha_Gasto) AS Anio, MONTH(Fecha_Gasto) AS Mes, SUM(Precio_Gasto) AS Valor " +
-                "FROM Contabilidad_Gastos WHERE Fecha_Gasto >= @Desde GROUP BY YEAR(Fecha_Gasto), MONTH(Fecha_Gasto) ORDER BY Anio, Mes",
-                fechaDesde, "Error al cargar gráfica de gastos");
+                "sp_Dashboard_GraficaGastos", fechaDesde, "Error al cargar gráfica de gastos");
 
         /// <summary>
-        /// Helper compartido por las 3 gráficas mensuales (órdenes, cantidad de órdenes y gastos),
-        /// que solo se diferenciaban en el query. Evita triplicar la misma lógica de lectura.
+        /// Helper compartido por las 3 gráficas mensuales (órdenes, cantidad de
+        /// órdenes y gastos), que solo se diferencian en qué SP llaman. Evita
+        /// triplicar la misma lógica de lectura.
         /// </summary>
         private static (List<double> valores, List<string> etiquetas) ObtenerDatosGraficaMensual(
-            string query, DateTime fechaDesde, string mensajeError)
+            string nombreSp, DateTime fechaDesde, string mensajeError)
         {
             using var conexion = new ClsConexion();
             var vals = new List<double>();
             var labels = new List<string>();
             try
             {
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand(nombreSp, conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Desde", fechaDesde);
                 conexion.Abrir();
                 using var rd = cmd.ExecuteReader();
