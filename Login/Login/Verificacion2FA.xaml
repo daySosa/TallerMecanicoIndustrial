@@ -5,12 +5,14 @@
         Title="Verificación de Código" Height="520" Width="440"
         Background="#0f1117" WindowStartupLocation="CenterScreen"
         WindowStyle="None" AllowsTransparency="True"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
         TextElement.Foreground="White"
         MouseDown="Window_Drag">
 
     <Window.Resources>
-        <DropShadowEffect x:Key="GlowBlue" Color="#4f6ef7" BlurRadius="18" ShadowDepth="0" Opacity="0.45"/>
-        <DropShadowEffect x:Key="GlowSubtle" Color="#000000" BlurRadius="32" ShadowDepth="0" Opacity="0.6"/>
+        <DropShadowEffect x:Key="GlowBlue" Color="#4f6ef7" BlurRadius="18" ShadowDepth="0" Opacity="0.45" RenderingBias="Performance"/>
+        <DropShadowEffect x:Key="GlowSubtle" Color="#000000" BlurRadius="32" ShadowDepth="0" Opacity="0.6" RenderingBias="Performance"/>
 
         <Style x:Key="DigitBox" TargetType="TextBox">
             <Setter Property="Width" Value="48"/>
@@ -31,7 +33,8 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10">
+                                CornerRadius="10"
+                                SnapsToDevicePixels="True">
                             <ScrollViewer x:Name="PART_ContentHost"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"/>
@@ -60,7 +63,8 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                CornerRadius="8" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -85,7 +89,8 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bg"
                                 Background="{TemplateBinding Background}"
-                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                CornerRadius="8" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -94,6 +99,35 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="bg" Property="Background" Value="#3d5ae0"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bg" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LinkButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="txt" Text="{TemplateBinding Content}"
+                                   Foreground="#4f6ef7" FontSize="12"
+                                   FontWeight="Medium" Cursor="Hand"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="txt" Property="Foreground" Value="#7986f7"/>
+                                <Setter TargetName="txt" Property="TextDecorations" Value="Underline"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="txt" Property="Foreground" Value="#353a58"/>
+                                <Setter TargetName="txt" Property="Cursor" Value="Arrow"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -110,7 +144,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                
+
                 <Border Grid.Row="0" Background="#13161f"
                         BorderBrush="#1e2235" BorderThickness="0,0,0,1"
                         Padding="28,20,28,20">
@@ -152,7 +186,8 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="closeBg" CornerRadius="6"
-                                            Background="Transparent" Width="28" Height="28">
+                                            Background="Transparent" Width="28" Height="28"
+                                            SnapsToDevicePixels="True">
                                         <materialDesign:PackIcon Kind="Close"
                                                                  Foreground="#505880"
                                                                  Width="14" Height="14"
@@ -227,31 +262,9 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                                 Margin="0,14,0,0">
                         <TextBlock Text="¿No llegó el código?" Foreground="#353a58" FontSize="12"/>
-                        <Button x:Name="btnReenviar" Cursor="Hand"
-                                Click="BtnReenviar_Click" Margin="6,0,0,0">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Padding" Value="0"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <TextBlock x:Name="txt" Text="Reenviar ahora"
-                                                           Foreground="#4f6ef7" FontSize="12"
-                                                           FontWeight="Medium" Cursor="Hand"/>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="txt" Property="Foreground" Value="#7986f7"/>
-                                                        <Setter TargetName="txt" Property="TextDecorations" Value="Underline"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                        <Button x:Name="btnReenviar" Content="Reenviar ahora"
+                                Style="{StaticResource LinkButton}"
+                                Click="BtnReenviar_Click" Margin="6,0,0,0"/>
                     </StackPanel>
 
                 </StackPanel>

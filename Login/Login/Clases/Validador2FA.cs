@@ -13,8 +13,7 @@ namespace Login.Clases
 
         private const string MsgVacio = "⚠ Ingresa el código de verificación.";
         private const string MsgCaracteresInvalidos = "⚠ El código solo debe contener números.";
-        private static readonly string MsgLongitudInvalida =
-            $"⚠ El código debe tener exactamente {LongitudCodigo} dígitos.";
+        private const string MsgLongitudInvalida = "⚠ El código debe tener exactamente 6 dígitos.";
 
         /// <summary>
         /// Valida que el código cumpla con el formato esperado: no vacío,
@@ -35,10 +34,9 @@ namespace Login.Clases
             if (span.Length != LongitudCodigo)
                 return (false, MsgLongitudInvalida);
 
-            if (!SonSoloDigitosAscii(span))
-                return (false, MsgCaracteresInvalidos);
-
-            return (true, string.Empty);
+            return SonSoloDigitosAscii(span)
+                ? (true, string.Empty)
+                : (false, MsgCaracteresInvalidos);
         }
 
         /// <summary>

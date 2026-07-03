@@ -1,4 +1,5 @@
-﻿using Login.Clases;
+﻿#nullable enable
+using Login.Clases;
 using System.Data;
 using System.Text;
 using System.Windows;
@@ -15,7 +16,7 @@ namespace Login
 
         private readonly string _correoUsuario;
         private readonly RepositorioSql _db = new();
-        private readonly DispatcherTimer _timer = new();
+        private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
         private readonly TextBox[] _cajas;
         private readonly CancellationTokenSource _cts = new();
 
@@ -32,9 +33,11 @@ namespace Login
 
             _cajas = [d1, d2, d3, d4, d5, d6];
             ConfigurarCajas();
-            IniciarTimer();
 
-            if (string.IsNullOrEmpty(_correoUsuario))
+            _timer.Tick += Timer_Tick;
+            _timer.Start();
+
+            if (_correoUsuario.Length == 0)
             {
                 MostrarError("⚠ No hay un correo válido asociado a esta verificación.");
                 btnVerificar.IsEnabled = false;
@@ -44,20 +47,15 @@ namespace Login
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
-            try
-            {
-                if (e.LeftButton == MouseButtonState.Pressed)
-                    DragMove();
-            }
-            catch (InvalidOperationException)
-            { }
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            try { DragMove(); }
+            catch (InvalidOperationException) { /* soltó el botón antes de iniciar el arrastre */ }
         }
 
         /// <summary>
-        /// Libera recursos una única vez. Protegido con guardia para evitar
-        /// doble Cancel/Dispose si el evento Closed y OnClosed se disparan juntos.
-        /// RepositorioSql no implementa IDisposable (cada consulta abre/cierra su
-        /// propia conexión internamente), por lo que aquí solo se libera el CTS y el timer.
+        /// Libera recursos una única vez. RepositorioSql no implementa IDisposable
+        /// (cada consulta abre/cierra su propia conexión internamente), por lo que
+        /// aquí solo se libera el CTS y el timer.
         /// </summary>
         private void LiberarRecursos()
         {
@@ -83,10 +81,13 @@ namespace Login
                 caja.PreviewTextInput += Caja_PreviewTextInput;
                 caja.TextChanged += Caja_TextChanged;
                 caja.KeyDown += Caja_KeyDown;
-                caja.GotFocus += (s, _) => ((TextBox)s).SelectAll();
+                caja.GotFocus += Caja_GotFocus;
                 DataObject.AddPastingHandler(caja, Caja_Pasting);
             }
         }
+
+        private static void Caja_GotFocus(object sender, RoutedEventArgs e)
+            => ((TextBox)sender).SelectAll();
 
         /// <summary>
         /// Valida TODO el texto entrante (no solo el primer carácter), ya que este
@@ -104,17 +105,12 @@ namespace Login
         /// </summary>
         private void Caja_Pasting(object sender, DataObjectPastingEventArgs e)
         {
-            if (!e.DataObject.GetDataPresent(DataFormats.Text))
+            if (e.DataObject.GetDataPresent(DataFormats.Text) &&
+                e.DataObject.GetData(DataFormats.Text) is string texto)
             {
-                e.CancelCommand();
-                return;
-            }
-
-            string texto = ((string)e.DataObject.GetData(DataFormats.Text)).Trim();
-
-            if (texto.Length == Validador2FA.LongitudCodigo && SonSoloDigitosAscii(texto))
-            {
-                DistribuirCodigoEnCajas(texto);
+                texto = texto.Trim();
+                if (texto.Length == Validador2FA.LongitudCodigo && SonSoloDigitosAscii(texto))
+                    DistribuirCodigoEnCajas(texto);
             }
 
             // Siempre se cancela el pegado por defecto: o ya se distribuyó
@@ -168,7 +164,7 @@ namespace Login
             int index = Array.IndexOf(_cajas, caja);
             if (index < 0) return;
 
-            if (e.Key == Key.Back && string.IsNullOrEmpty(caja.Text) && index > 0)
+            if (e.Key == Key.Back && caja.Text.Length == 0 && index > 0)
             {
                 _cajas[index - 1].Focus();
                 _cajas[index - 1].Clear();
@@ -195,24 +191,15 @@ namespace Login
             foreach (var c in _cajas) c.IsEnabled = habilitar;
         }
 
-        private void IniciarTimer()
-        {
-            _timer.Interval = TimeSpan.FromSeconds(1);
-            _timer.Tick += Timer_Tick;
-            _timer.Start();
-        }
-
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
             _segundos--;
-            int min = Math.Max(_segundos, 0) / 60;
-            int seg = Math.Max(_segundos, 0) % 60;
-            runTimer.Text = $"{min:D2}:{seg:D2}";
+            int restante = Math.Max(_segundos, 0);
+            runTimer.Text = $"{restante / 60:D2}:{restante % 60:D2}";
 
             if (_segundos <= 0)
             {
                 _timer.Stop();
-                runTimer.Text = "00:00";
                 btnVerificar.IsEnabled = false;
                 MostrarError("⚠ El código ha expirado. Reenvíalo para continuar.");
             }
@@ -221,14 +208,14 @@ namespace Login
         private async void BtnVerificar_Click(object sender, RoutedEventArgs e)
         {
             if (_verificando) return;
-            if (string.IsNullOrEmpty(_correoUsuario))
+
+            if (_correoUsuario.Length == 0)
             {
                 MostrarError("⚠ No hay un correo válido para verificar.");
                 return;
             }
 
             string codigo = ObtenerCodigo();
-
             var (esValido, mensaje) = Validador2FA.ValidarCodigo(codigo);
             if (!esValido)
             {
@@ -256,7 +243,7 @@ namespace Login
 
                 _intentosFallidos = 0;
 
-                DataRow datosUsuario = await Task.Run(
+                DataRow? datosUsuario = await Task.Run(
                     () => _db.ObtenerUsuarioPorEmail(_correoUsuario), _cts.Token);
 
                 if (_cts.IsCancellationRequested || !IsLoaded) return;
@@ -271,7 +258,9 @@ namespace Login
                 AbrirDashboardYCerrar();
             }
             catch (OperationCanceledException)
-            { }
+            {
+                // Ventana cerrada mientras la verificación estaba en curso; nada que hacer.
+            }
             catch (Exception ex)
             {
                 if (IsLoaded)
@@ -317,17 +306,16 @@ namespace Login
         /// Devuelve false si los datos son insuficientes; en ese caso NO se debe
         /// continuar hacia el dashboard.
         /// </summary>
-        private static bool IntentarIniciarSesion(DataRow datosUsuario)
+        private static bool IntentarIniciarSesion(DataRow? datosUsuario)
         {
             if (datosUsuario is null) return false;
 
             string email = ObtenerValorTexto(datosUsuario, "Usuario_Email");
+            if (string.IsNullOrWhiteSpace(email)) return false;
+
             string nombre = ObtenerValorTexto(datosUsuario, "Usuario_Nombre");
             string apellido = ObtenerValorTexto(datosUsuario, "Usuario_Apellido");
             string rol = ObtenerValorTexto(datosUsuario, "Usuario_Rol");
-
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
 
             SesionActual.IniciarSesion(email, nombre, apellido, rol);
             return true;
@@ -342,7 +330,7 @@ namespace Login
             if (!fila.Table.Columns.Contains(columna)) return string.Empty;
 
             object valor = fila[columna];
-            return (valor == null || valor == DBNull.Value) ? string.Empty : valor.ToString() ?? string.Empty;
+            return valor is null or DBNull ? string.Empty : valor.ToString() ?? string.Empty;
         }
 
         private void AbrirDashboardYCerrar()
@@ -350,25 +338,29 @@ namespace Login
             if (_navegando) return;
             _navegando = true;
 
-            Dasboard_Prueba.MenuPrincipal dashboard = null;
+            Dasboard_Prueba.MenuPrincipal? dashboard = null;
             try
             {
                 dashboard = new Dasboard_Prueba.MenuPrincipal();
                 dashboard.Show();
-                this.Close();
+                Close();
             }
             catch (Exception ex)
             {
-                try { dashboard?.Close(); } catch { }
-
+                CerrarSiPosible(dashboard);
                 _navegando = false;
                 MostrarError("⚠ No se pudo abrir el panel principal: " + ex.Message);
             }
         }
 
+        /// <summary>
+        /// Único punto donde se solicita un nuevo código: acción explícita del
+        /// usuario al presionar "Reenviar ahora". Nunca debe dispararse de forma
+        /// automática (ni al abrir la ventana ni al presionar "Cancelar").
+        /// </summary>
         private async void BtnReenviar_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(_correoUsuario))
+            if (_correoUsuario.Length == 0)
             {
                 MessageBox.Show("No hay un correo válido para reenviar el código.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -408,7 +400,9 @@ namespace Login
                 }
             }
             catch (OperationCanceledException)
-            { }
+            {
+                // Ventana cerrada mientras se reenviaba; nada que hacer.
+            }
             catch (Exception ex)
             {
                 if (IsLoaded)
@@ -422,6 +416,10 @@ namespace Login
             }
         }
 
+        /// <summary>
+        /// Regresa a la pantalla anterior SIN generar ni enviar un nuevo código.
+        /// El reenvío es una acción explícita reservada a "Reenviar ahora".
+        /// </summary>
         private void BtnRegresar_Click(object sender, RoutedEventArgs e)
         {
             if (_navegando) return;
@@ -429,40 +427,27 @@ namespace Login
 
             _timer.Stop();
 
-            if (!string.IsNullOrEmpty(_correoUsuario))
-            {
-                var db = _db;
-                string correo = _correoUsuario;
-                _ = Task.Run(() =>
-                {
-                    try
-                    {
-                        string nuevoCodigo = db.GenerarCodigoOTP(correo);
-                        db.EnviarCorreoOTP(correo, nuevoCodigo);
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(
-                            "Error al regenerar código OTP al regresar: " + ex.Message);
-                    }
-                }, _cts.Token);
-            }
-
-            OpcionSesion anterior = null;
+            OpcionSesion? anterior = null;
             try
             {
                 anterior = new OpcionSesion(_correoUsuario);
                 anterior.Show();
-                this.Close();
+                Close();
             }
             catch (Exception ex)
             {
-                try { anterior?.Close(); } catch { }
-
+                CerrarSiPosible(anterior);
                 _navegando = false;
                 MessageBox.Show("No se pudo regresar a la pantalla anterior:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private static void CerrarSiPosible(Window? ventana)
+        {
+            if (ventana is null) return;
+            try { ventana.Close(); }
+            catch { /* La ventana ya pudo haberse cerrado o nunca llegó a mostrarse */ }
         }
 
         private void MostrarError(string msg)

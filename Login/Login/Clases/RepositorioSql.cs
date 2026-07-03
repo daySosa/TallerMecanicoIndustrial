@@ -1430,31 +1430,43 @@ namespace Login.Clases
         /// a App.config junto con la cadena de conexión (ver claves EmailRemitente / EmailClave
         /// en connectionStrings o appSettings) para no exponerlas en el código fuente.
         /// </summary>
+        private static readonly string EmailRemitente =
+            System.Configuration.ConfigurationManager.AppSettings["EmailRemitente"]
+                ?? throw new InvalidOperationException("Falta configurar 'EmailRemitente' en App.config.");
+
+        private static readonly string EmailClave =
+            System.Configuration.ConfigurationManager.AppSettings["EmailClave"]
+                ?? throw new InvalidOperationException("Falta configurar 'EmailClave' en App.config.");
+
+        /// <summary>
+        /// Envía el código OTP por correo vía Gmail SMTP. Las credenciales se leen desde
+        /// App.config (claves EmailRemitente / EmailClave) para no exponerlas en el código fuente.
+        /// </summary>
         public bool EnviarCorreoOTP(string correoDestino, string codigo)
         {
             try
             {
                 var mensaje = new MimeMessage();
-                mensaje.From.Add(new MailboxAddress("Taller Mecánico", "tallermecanicoind26@gmail.com"));
+                mensaje.From.Add(new MailboxAddress("Taller Mecánico", EmailRemitente));
                 mensaje.To.Add(new MailboxAddress("", correoDestino));
                 mensaje.Subject = "Código de verificación - Taller Mecánico";
                 mensaje.Body = new TextPart("html")
                 {
                     Text = $@"
-                        <div style='font-family: Arial; padding: 20px;'>
-                            <h2 style='color: #2563EB;'>Verificación de identidad</h2>
-                            <p>Tu código de verificación es:</p>
-                            <h1 style='letter-spacing: 8px; color: #1E40AF;'>{codigo}</h1>
-                            <p>Este código expira en <b>5 minutos</b>.</p>
-                            <p style='color: gray; font-size: 12px;'>
-                                Si no fuiste tú, ignora este mensaje.
-                            </p>
-                        </div>"
+                <div style='font-family: Arial; padding: 20px;'>
+                    <h2 style='color: #2563EB;'>Verificación de identidad</h2>
+                    <p>Tu código de verificación es:</p>
+                    <h1 style='letter-spacing: 8px; color: #1E40AF;'>{codigo}</h1>
+                    <p>Este código expira en <b>5 minutos</b>.</p>
+                    <p style='color: gray; font-size: 12px;'>
+                        Si no fuiste tú, ignora este mensaje.
+                    </p>
+                </div>"
                 };
 
                 using var smtp = new SmtpClient();
                 smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-                smtp.Authenticate("tallermecanicoind26@gmail.com", "igzy ooxe fmjr ippx");
+                smtp.Authenticate(EmailRemitente, EmailClave);
                 smtp.Send(mensaje);
                 smtp.Disconnect(true);
 

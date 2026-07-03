@@ -235,26 +235,14 @@ namespace Login
                     return;
                 }
 
-                //Login exitoso
+                //Login exitoso: solo se navega a OpcionSesion. El código OTP se genera y
+                //envía únicamente cuando el usuario elige explícitamente "Código de
+                //verificación" en esa pantalla, no aquí.
                 await Task.Run(() => _repositorio.ActualizarBloqueo(correo, 0, null));
                 DetenerCuentaRegresiva();
 
-                bool enviado = await Task.Run(() =>
-                {
-                    string codigo2FA = _repositorio.GenerarCodigoOTP(correo);
-                    return _repositorio.EnviarCorreoOTP(correo, codigo2FA);
-                });
-
-                if (enviado)
-                {
-                    new OpcionSesion(correo).Show();
-                    Close();
-                }
-                else
-                {
-                    MessageBox.Show("⚠ No se pudo enviar el código. Intenta nuevamente.",
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                new OpcionSesion(correo).Show();
+                Close();
             }
             catch (Exception ex)
             {

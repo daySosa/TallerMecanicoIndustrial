@@ -11,11 +11,83 @@
         WindowStyle="None"
         AllowsTransparency="True"
         ResizeMode="NoResize"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
         MouseDown="Window_Drag">
 
     <Window.Resources>
+
         <DropShadowEffect x:Key="WinShadow" Color="#000000"
-                          BlurRadius="48" ShadowDepth="0" Opacity="0.7"/>
+                          BlurRadius="48" ShadowDepth="0" Opacity="0.7"
+                          RenderingBias="Performance"/>
+
+        <!-- Estilo compartido: botón "X" de cerrar en la cabecera -->
+        <Style x:Key="BotonCerrarXStyle" TargetType="Button">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="cb" CornerRadius="7"
+                                Background="Transparent"
+                                Width="30" Height="30"
+                                SnapsToDevicePixels="True">
+                            <materialDesign:PackIcon Kind="Close"
+                                                     Foreground="#404568"
+                                                     Width="14" Height="14"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="cb" Property="Background" Value="#1e2235"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo compartido: botón "Cancelar" del pie de ventana -->
+        <Style x:Key="BotonCancelarStyle" TargetType="Button">
+            <Setter Property="Width" Value="115"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="Transparent"
+                                BorderBrush="#2e3350" BorderThickness="1"
+                                CornerRadius="9" Padding="16,0"
+                                SnapsToDevicePixels="True">
+                            <TextBlock Text="Cancelar" Foreground="#7880a4"
+                                       FontSize="12"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#1c2035"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#3d4470"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo base compartido por AMBAS tarjetas: mismos triggers hover/pressed,
+             cada botón solo aporta su propio ControlTemplate.VisualTree vía BasedOn -->
+        <Style x:Key="TarjetaBaseStyle" TargetType="Button">
+            <Setter Property="Width" Value="210"/>
+            <Setter Property="Height" Value="200"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
     </Window.Resources>
 
     <Border CornerRadius="16" Effect="{StaticResource WinShadow}">
@@ -27,6 +99,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- Cabecera -->
                 <Border Grid.Row="0" Background="#13161f"
                         BorderBrush="#1e2235" BorderThickness="0,0,0,1"
                         Padding="26,18">
@@ -58,38 +131,19 @@
                                            Margin="0,2,0,0"/>
                             </StackPanel>
                         </StackPanel>
-                        <Button Grid.Column="1" Width="30" Height="30"
-                                BorderThickness="0" Background="Transparent"
-                                Cursor="Hand" Click="BtnCerrar_Click">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="cb" CornerRadius="7"
-                                            Background="Transparent"
-                                            Width="30" Height="30">
-                                        <materialDesign:PackIcon Kind="Close"
-                                                                 Foreground="#404568"
-                                                                 Width="14" Height="14"
-                                                                 HorizontalAlignment="Center"
-                                                                 VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="cb" Property="Background" Value="#1e2235"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
+                        <Button Grid.Column="1" Style="{StaticResource BotonCerrarXStyle}"
+                                Click="BtnCerrar_Click"/>
                     </Grid>
                 </Border>
 
+                <!-- Tarjetas de opción -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Margin="26,0">
 
                     <Button x:Name="btnCodigoVerificacion"
-                            Width="210" Height="200"
-                            Cursor="Hand" Click="BtnCodigoVerificacion_Click">
+                            Style="{StaticResource TarjetaBaseStyle}"
+                            Click="BtnCodigoVerificacion_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="card"
@@ -97,7 +151,8 @@
                                         CornerRadius="14"
                                         BorderBrush="#252840"
                                         BorderThickness="1.5"
-                                        Background="#13161f">
+                                        Background="#13161f"
+                                        SnapsToDevicePixels="True">
                                     <StackPanel VerticalAlignment="Center"
                                                 HorizontalAlignment="Center">
                                         <Border Width="56" Height="56" CornerRadius="14"
@@ -150,10 +205,10 @@
                                    Fill="#1e2235"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
-                    
+
                     <Button x:Name="btnReconocimientoFacial"
-                            Width="210" Height="200"
-                            Cursor="Hand" Click="BtnReconocimientoFacial_Click">
+                            Style="{StaticResource TarjetaBaseStyle}"
+                            Click="BtnReconocimientoFacial_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="card"
@@ -161,7 +216,8 @@
                                         CornerRadius="14"
                                         BorderBrush="#252840"
                                         BorderThickness="1.5"
-                                        Background="#13161f">
+                                        Background="#13161f"
+                                        SnapsToDevicePixels="True">
                                     <StackPanel VerticalAlignment="Center"
                                                 HorizontalAlignment="Center">
                                         <Border Width="56" Height="56" CornerRadius="14"
@@ -203,31 +259,13 @@
 
                 </StackPanel>
 
+                <!-- Pie -->
                 <Border Grid.Row="2" Background="#0c0e17"
                         BorderBrush="#1a1e30" BorderThickness="0,1,0,0"
                         Padding="26,14">
                     <Button x:Name="btnCerrar" HorizontalAlignment="Right"
-                            Width="115" Height="36"
-                            Cursor="Hand" Click="BtnCerrar_Click">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" Background="Transparent"
-                                        BorderBrush="#2e3350" BorderThickness="1"
-                                        CornerRadius="9" Padding="16,0">
-                                    <TextBlock Text="Cancelar" Foreground="#7880a4"
-                                               FontSize="12"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="#1c2035"/>
-                                        <Setter TargetName="bd" Property="BorderBrush" Value="#3d4470"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                            Style="{StaticResource BotonCancelarStyle}"
+                            Click="BtnCerrar_Click"/>
                 </Border>
 
             </Grid>
