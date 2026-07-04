@@ -716,10 +716,7 @@ namespace Login
 
                 try
                 {
-                    // ⚠️ Ajusta esta línea al método real que uses para iniciar sesión
-                    // (el mismo que se ejecuta cuando alguien entra con correo y contraseña).
-                    // Ejemplo si tienes SesionActual.IniciarSesion(email):
-                    // Login.Clases.SesionActual.IniciarSesion(email);
+                    IniciarSesionCompleta(email);
 
                     var menu = new MenuPrincipal();
                     menu.Show();
@@ -732,6 +729,31 @@ namespace Login
                 }
             };
             temporizadorTransicion.Start();
+        }
+
+        /// <summary>
+        /// Consulta los datos completos del usuario reconocido (nombre, apellido, rol)
+        /// y llena SesionActual exactamente igual que lo haría el login normal con
+        /// correo y contraseña, para que los permisos por rol funcionen igual sin
+        /// importar por qué método se inició sesión.
+        /// </summary>
+        private void IniciarSesionCompleta(string email)
+        {
+            var fila = _db.ObtenerUsuarioPorEmail(email);
+
+            if (fila == null)
+            {
+                RegistrarEnLog($"ADVERTENCIA - Se reconoció el rostro de {email} pero no se encontró su registro en Usuario.");
+                MessageBox.Show("Se verificó tu rostro, pero no se encontró tu usuario en el sistema.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string nombreCompleto = fila["Usuario_Nombre"].ToString();
+            string apellido = fila["Usuario_Apellido"].ToString();
+            string rol = fila["Usuario_Rol"].ToString();
+
+            SesionActual.IniciarSesion(email, nombreCompleto, apellido, rol);
         }
 
         private void AccesoDenegado(string motivo, int labelDetectado, double distancia)
