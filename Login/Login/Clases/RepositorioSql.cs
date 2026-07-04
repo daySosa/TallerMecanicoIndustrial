@@ -1332,6 +1332,25 @@ namespace Login.Clases
             }
         }
 
+        public void ActualizarIntentosFallidos(string correo, int intentos)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                const string query = "UPDATE LOGIN SET IntentosFallidos = @Intentos WHERE Usuario_Email = @Correo";
+                using var cmd = new SqlCommand(query, conexion.SqlC);
+                cmd.Parameters.AddWithValue("@Intentos", intentos);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al actualizar intentos fallidos: " + ex.Message, ex);
+            }
+        }
+
         #endregion
 
         #region CÓDIGOS OTP

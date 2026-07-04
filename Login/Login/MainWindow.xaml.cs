@@ -24,7 +24,6 @@ namespace Login
         private static readonly SolidColorBrush BrushFocus = Pincel("#2563EB");
         private static readonly SolidColorBrush BrushError = Pincel("#f44336");
         private static readonly SolidColorBrush BrushExito = Pincel("#4CAF50");
-        private static readonly SolidColorBrush BrushNormal = Pincel("#FFFFFF", 0.12);
         private static readonly SolidColorBrush BrushVacio = PincelTransparente();
 
         private static SolidColorBrush Pincel(string hex, double? opacidad = null)
@@ -46,7 +45,12 @@ namespace Login
         {
             InitializeComponent();
             CargarCredencialesRecordadas();
-            Closed += (_, _) => DetenerCuentaRegresiva();
+            Closed += async (_, _) =>
+            {
+                DetenerCuentaRegresiva();
+                if (!string.IsNullOrEmpty(_correoActual))
+                    await Task.Run(() => _repositorio.ActualizarIntentosFallidos(_correoActual, 0));
+            };
             _ = VerificarBloqueoAlIniciarAsync();
         }
 
@@ -137,6 +141,8 @@ namespace Login
 
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
+            txtContador.Visibility = Visibility.Collapsed;
+
             if (_procesandoLogin) return;
 
             _correoActual = txtCorreo.Text.Trim();
