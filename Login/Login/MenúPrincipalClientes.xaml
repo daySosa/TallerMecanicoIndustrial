@@ -465,16 +465,16 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Grid.Column="1" Margin="10,0,0,0"
+                                <Button x:Name="btnReportes" Grid.Column="1" Margin="10,0,0,0"
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         Background="#1a3d2b" Foreground="#4CAF50"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         materialDesign:ElevationAssist.Elevation="Dp0"
                                         Height="38" Padding="16,0"
-                                        Click="btnReportes_Click">
+                                        Click="btnReportes_Click">  
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FilePdfBox" Width="16" Height="16"
-                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="13"/>
                                     </StackPanel>
                                 </Button>

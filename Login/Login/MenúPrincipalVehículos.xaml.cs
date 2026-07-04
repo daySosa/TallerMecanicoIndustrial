@@ -47,6 +47,7 @@ namespace Vehículos
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
                 expanderContabilidad.Visibility = Visibility.Collapsed;
+                btnReportes.Visibility = Visibility.Collapsed;
             }
         }
         // ── NAVEGACIÓN ───────────────────────────────────────────────
