@@ -70,6 +70,8 @@ namespace Login
         private void BtnCerrar_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MainWindow());
 
+
+
         /// <summary>
         /// Navega de inmediato a Verificacion2FA. Esa ventana es responsable de
         /// generar y enviar el código OTP inicial (una sola vez, al cargarse),
@@ -98,7 +100,8 @@ namespace Login
                 return;
             }
 
-            Navegar(() => new ReconocimientoFacial());
+            // ✅ Ahora sí se le pasa el correo de la cuenta que se está verificando
+            Navegar(() => new ReconocimientoFacial(_correoUsuario));
         }
     }
 }

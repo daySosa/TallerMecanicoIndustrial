@@ -1649,6 +1649,26 @@ namespace Login.Clases
             }
         }
 
+        public int ContarFotosBiometria(string email)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Usuario_ContarFotosBiometria", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Email", email);
+
+                conexion.Abrir();
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al contar fotos de biometría: " + ex.Message, ex);
+            }
+        }
+
         public bool EliminarBiometria(string email)
         {
             using var conexion = new ClsConexion();
