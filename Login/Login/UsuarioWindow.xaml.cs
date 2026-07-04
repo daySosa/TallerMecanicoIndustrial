@@ -85,7 +85,8 @@ namespace InterfazClientes
                 toggleActivo.IsChecked = fila["Usuario_Activo"] != DBNull.Value
                                           && (bool)fila["Usuario_Activo"];
 
-                txtContrasena.ToolTip = "Deja en blanco para no cambiar la contraseña";
+                txtContrasena.IsEnabled = false;
+                txtContrasena.ToolTip = "La contraseña no se puede modificar desde aquí";
                 tbTituloVentana.Text = "Editar Usuario";
                 tbSubtitulo.Text = "Modifica los datos del empleado";
                 iconAvatar.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountEdit;
@@ -118,9 +119,6 @@ namespace InterfazClientes
                 {
                     _db.ActualizarUsuario(_usuarioEmail, nombre, apellido, telefono, rol);
                     _db.CambiarEstadoUsuario(_usuarioEmail, activo);
-
-                    if (!string.IsNullOrWhiteSpace(password))
-                        _db.CambiarContrasenaUsuario(_usuarioEmail, password);
 
                     _db.RegistrarBitacora(SesionActual.Email, "Usuarios", "Actualizar",
                         $"Usuario {_usuarioEmail} - Rol: {rol}{(activo ? "" : " (Desactivado)")}"
@@ -171,11 +169,7 @@ namespace InterfazClientes
             if (!clsValidacionesUsuarios.ValidarRolSeleccionado(cmbRol.SelectedItem))
             { cmbRol.Focus(); return false; }
 
-            bool contrasenaValida = _esEdicion
-                ? clsValidacionesUsuarios.ValidarContrasenaEdicion(txtContrasena.Password)
-                : clsValidacionesUsuarios.ValidarContrasenaNuevoUsuario(txtContrasena.Password);
-
-            if (!contrasenaValida) { txtContrasena.Focus(); return false; }
+           
 
             return true;
         }
