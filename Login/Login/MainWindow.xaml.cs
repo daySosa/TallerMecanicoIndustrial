@@ -1,57 +1,60 @@
 ﻿using Login.Clases;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Login
 {
     public partial class MainWindow : Window
     {
-        private bool _contrasenaVisible = false;
-        private bool _procesandoLogin = false;
-        private System.Windows.Threading.DispatcherTimer _timerBloqueo;
-        private DateTime _fechaDesbloqueo;
+        private static readonly TimeSpan DuracionTransicion = TimeSpan.FromMilliseconds(150);
+        private const string MensajeExito = "✅ Ya puedes intentar iniciar sesión.";
+
+        private static readonly Color ColorFoco = (Color)ColorConverter.ConvertFromString("#2563EB");
+        private static readonly Color ColorError = (Color)ColorConverter.ConvertFromString("#f44336");
+        private static readonly Color ColorExito = (Color)ColorConverter.ConvertFromString("#4CAF50");
+        private static readonly Color ColorVacio = Colors.Transparent;
+
+        private bool _contrasenaVisible;
+        private bool _procesandoLogin;
         private string _correoActual;
+        private DateTime _fechaDesbloqueo;
+
+        private readonly System.Windows.Threading.DispatcherTimer _timerBloqueo = new()
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
 
         private readonly RepositorioSql _repositorio = new();
 
         private readonly string _archivoRecordar =
-            Path.Combine(Environment.GetFolderPath(
-                Environment.SpecialFolder.ApplicationData), "OSM_remember.json");
-
-        private static readonly SolidColorBrush BrushFocus = Pincel("#2563EB");
-        private static readonly SolidColorBrush BrushError = Pincel("#f44336");
-        private static readonly SolidColorBrush BrushExito = Pincel("#4CAF50");
-        private static readonly SolidColorBrush BrushVacio = PincelTransparente();
-
-        private static SolidColorBrush Pincel(string hex, double? opacidad = null)
-        {
-            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
-            if (opacidad.HasValue) brush.Opacity = opacidad.Value;
-            brush.Freeze();
-            return brush;
-        }
-
-        private static SolidColorBrush PincelTransparente()
-        {
-            var brush = new SolidColorBrush(Colors.Transparent);
-            brush.Freeze();
-            return brush;
-        }
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "OSM_remember.dat");
 
         public MainWindow()
         {
             InitializeComponent();
+            _timerBloqueo.Tick += TimerBloqueo_Tick;
+
             CargarCredencialesRecordadas();
+
             Closed += async (_, _) =>
             {
                 DetenerCuentaRegresiva();
                 if (!string.IsNullOrEmpty(_correoActual))
                     await Task.Run(() => _repositorio.ActualizarIntentosFallidos(_correoActual, 0));
             };
+
             _ = VerificarBloqueoAlIniciarAsync();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            BeginStoryboard((Storyboard)Resources["FadeInVentana"]);
         }
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
@@ -60,22 +63,28 @@ namespace Login
                 DragMove();
         }
 
-        private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e)
-            => SetBorderFocus(borderCorreo, true);
+        private void TxtCorreo_GotFocus(object sender, RoutedEventArgs e) => AnimarBorde(borderCorreo, ColorFoco, 2);
+        private void TxtCorreo_LostFocus(object sender, RoutedEventArgs e) => AnimarBorde(borderCorreo, ColorVacio, 1.5);
+        private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e) => AnimarBorde(borderContrasena, ColorFoco, 2);
+        private void TxtContrasena_LostFocus(object sender, RoutedEventArgs e) => AnimarBorde(borderContrasena, ColorVacio, 1.5);
 
-        private void TxtCorreo_LostFocus(object sender, RoutedEventArgs e)
-            => SetBorderFocus(borderCorreo, false);
-
-        private void TxtContrasena_GotFocus(object sender, RoutedEventArgs e)
-            => SetBorderFocus(borderContrasena, true);
-
-        private void TxtContrasena_LostFocus(object sender, RoutedEventArgs e)
-            => SetBorderFocus(borderContrasena, false);
-
-        private static void SetBorderFocus(System.Windows.Controls.Border border, bool enfocado)
+        /// <summary>
+        /// Anima el color/grosor del borde en vez de reemplazar el Brush,
+        /// para que la transición se vea fluida en lugar de "saltar".
+        /// </summary>
+        private static void AnimarBorde(System.Windows.Controls.Border border, Color color, double grosor)
         {
-            border.BorderBrush = enfocado ? BrushFocus : BrushVacio;
-            border.BorderThickness = new Thickness(enfocado ? 2 : 1.5);
+            if (border.BorderBrush is not SolidColorBrush brush || brush.IsFrozen)
+            {
+                brush = new SolidColorBrush(color);
+                border.BorderBrush = brush;
+            }
+
+            brush.BeginAnimation(SolidColorBrush.ColorProperty,
+                new ColorAnimation(color, DuracionTransicion));
+
+            border.BeginAnimation(System.Windows.Controls.Border.BorderThicknessProperty,
+                new ThicknessAnimation(new Thickness(grosor), DuracionTransicion));
         }
 
         private void BtnVerContrasena_Click(object sender, RoutedEventArgs e)
@@ -108,16 +117,18 @@ namespace Login
         {
             try
             {
-                File.WriteAllText(_archivoRecordar,
-                    JsonSerializer.Serialize(new { Correo = correo, Contrasena = contrasena }));
+                var payload = JsonSerializer.SerializeToUtf8Bytes(new { Correo = correo, Contrasena = contrasena });
+                byte[] cifrado = ProtectedData.Protect(payload, null, DataProtectionScope.CurrentUser);
+                File.WriteAllBytes(_archivoRecordar, cifrado);
             }
-            catch (IOException) { /* No es crítico si falla el guardado local */ }
+            catch (IOException) { }
+            catch (CryptographicException) { }
         }
 
         private void EliminarCredenciales()
         {
             try { if (File.Exists(_archivoRecordar)) File.Delete(_archivoRecordar); }
-            catch (IOException) { /* No es crítico si falla el borrado local */ }
+            catch (IOException) { }
         }
 
         private void CargarCredencialesRecordadas()
@@ -126,17 +137,16 @@ namespace Login
             {
                 if (!File.Exists(_archivoRecordar)) return;
 
-                var datos = JsonSerializer.Deserialize<JsonElement>(
-                    File.ReadAllText(_archivoRecordar));
+                byte[] cifrado = File.ReadAllBytes(_archivoRecordar);
+                byte[] payload = ProtectedData.Unprotect(cifrado, null, DataProtectionScope.CurrentUser);
+                var datos = JsonSerializer.Deserialize<JsonElement>(payload);
 
                 txtCorreo.Text = datos.GetProperty("Correo").GetString() ?? "";
                 txtContrasena.Password = datos.GetProperty("Contrasena").GetString() ?? "";
                 chkRecordar.IsChecked = true;
             }
-            catch (Exception ex) when (ex is IOException or JsonException)
-            {
-                // Archivo corrupto o inaccesible: se ignora y el usuario escribe sus datos de nuevo.
-            }
+            catch (Exception ex) when (ex is IOException or JsonException or CryptographicException)
+            { }
         }
 
         private async void BtnLogin_Click(object sender, RoutedEventArgs e)
@@ -156,11 +166,10 @@ namespace Login
 
             if (errorEnCorreo || errorEnContrasena) return;
 
-            string correo = txtCorreo.Text.Trim();
-            var btnLogin = sender as System.Windows.Controls.Button;
+            string correo = _correoActual;
 
             _procesandoLogin = true;
-            SetCargando(true, btnLogin);
+            SetCargando(true);
 
             try
             {
@@ -172,11 +181,11 @@ namespace Login
             finally
             {
                 _procesandoLogin = false;
-                SetCargando(false, btnLogin);
+                SetCargando(false);
             }
         }
 
-        private static bool MostrarError(
+        private bool MostrarError(
             System.Windows.Controls.TextBlock txtError,
             System.Windows.Controls.Border border,
             string mensaje)
@@ -184,22 +193,25 @@ namespace Login
             bool hayError = mensaje is not null;
             txtError.Text = mensaje ?? string.Empty;
             txtError.Visibility = hayError ? Visibility.Visible : Visibility.Collapsed;
-            border.BorderBrush = hayError ? BrushError : BrushVacio;
+            AnimarBorde(border, hayError ? ColorError : ColorVacio, hayError ? 1.5 : 1.5);
             return hayError;
         }
 
-        private static void SetCargando(bool cargando, System.Windows.Controls.Button boton)
+        private void SetCargando(bool cargando)
         {
-            if (boton is null) return;
-            boton.IsEnabled = !cargando;
-            boton.Content = cargando ? "Verificando..." : "Iniciar Sesión";
+            btnLogin.IsEnabled = !cargando;
+            btnLogin.Content = cargando ? "Verificando..." : new System.Windows.Controls.TextBlock
+            {
+                Text = "Iniciar Sesión",
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold
+            };
         }
 
         private async Task IniciarSesionAsync(string correo, string contrasena)
         {
             try
             {
-                //Verificar bloqueo activo en BD
                 DateTime? fechaBloqueo = await Task.Run(() => _repositorio.ObtenerFechaBloqueo(correo));
 
                 if (fechaBloqueo.HasValue && fechaBloqueo.Value > DateTime.Now)
@@ -210,12 +222,10 @@ namespace Login
                 }
                 else if (fechaBloqueo.HasValue)
                 {
-                    //Bloqueo expirado, solo limpiar fecha, mantener intentos
                     int intentosActuales = await Task.Run(() => _repositorio.ObtenerIntentosFallidos(correo));
                     await Task.Run(() => _repositorio.ActualizarBloqueo(correo, intentosActuales, null));
                 }
 
-                //Validar credenciales
                 bool valido = await Task.Run(() => _repositorio.ValidarLogin(correo, contrasena));
 
                 if (!valido)
@@ -236,14 +246,11 @@ namespace Login
                         int restantes = ValidadorLogin.IntentosRestantesParaBloqueo(intentos);
                         MostrarError(txtErrorContrasena, borderContrasena,
                             $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s).");
-                        borderCorreo.BorderBrush = BrushError;
+                        AnimarBorde(borderCorreo, ColorError, 1.5);
                     }
                     return;
                 }
 
-                //Login exitoso: solo se navega a OpcionSesion. El código OTP se genera y
-                //envía únicamente cuando el usuario elige explícitamente "Código de
-                //verificación" en esa pantalla, no aquí.
                 await Task.Run(() => _repositorio.ActualizarBloqueo(correo, 0, null));
                 DetenerCuentaRegresiva();
 
@@ -259,11 +266,10 @@ namespace Login
 
         private void BtnOlvidoContrasena_Click(object sender, RoutedEventArgs e)
         {
-            var recuperar = new RecuperarContrasenia(this);
-            recuperar.IniciarFlujo();
+            new RecuperarContrasenia(this).IniciarFlujo();
         }
 
-        private void txtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void TxtCorreo_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             if (txtErrorCorreo.Visibility == Visibility.Visible)
                 txtErrorCorreo.Visibility = Visibility.Collapsed;
@@ -291,48 +297,42 @@ namespace Login
 
         private void IniciarCuentaRegresiva()
         {
-            DetenerCuentaRegresiva();
-
-            txtContador.Foreground = BrushError;
             ActualizarContador();
+            AnimarBorde(borderCorreo, ColorError, 1.5);
+            AnimarBorde(borderContrasena, ColorError, 1.5);
 
-            borderCorreo.BorderBrush = BrushError;
-            borderContrasena.BorderBrush = BrushError;
+            if (!_timerBloqueo.IsEnabled)
+                _timerBloqueo.Start();
+        }
 
-            _timerBloqueo = new System.Windows.Threading.DispatcherTimer
+        private void TimerBloqueo_Tick(object sender, EventArgs e)
+        {
+            if ((_fechaDesbloqueo - DateTime.Now).TotalSeconds <= 0)
             {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _timerBloqueo.Tick += (s, e) =>
+                DetenerCuentaRegresiva();
+                txtContador.Text = MensajeExito;
+                txtContador.Foreground = new SolidColorBrush(ColorExito);
+                txtContador.Visibility = Visibility.Visible;
+                AnimarBorde(borderCorreo, ColorVacio, 1.5);
+                AnimarBorde(borderContrasena, ColorVacio, 1.5);
+            }
+            else
             {
-                if ((_fechaDesbloqueo - DateTime.Now).TotalSeconds <= 0)
-                {
-                    DetenerCuentaRegresiva();
-                    txtContador.Text = "✅ Ya puedes intentar iniciar sesión.";
-                    txtContador.Foreground = BrushExito;
-                    txtContador.Visibility = Visibility.Visible;
-                    borderCorreo.BorderBrush = BrushVacio;
-                    borderContrasena.BorderBrush = BrushVacio;
-                }
-                else
-                {
-                    ActualizarContador();
-                }
-            };
-            _timerBloqueo.Start();
+                ActualizarContador();
+            }
         }
 
         private void ActualizarContador()
         {
             TimeSpan restante = _fechaDesbloqueo - DateTime.Now;
+            txtContador.Foreground = new SolidColorBrush(ColorError);
             txtContador.Text = $"⛔ Cuenta bloqueada. Espere {(int)restante.TotalMinutes}:{restante.Seconds:D2} min.";
             txtContador.Visibility = Visibility.Visible;
         }
 
         private void DetenerCuentaRegresiva()
         {
-            _timerBloqueo?.Stop();
-            _timerBloqueo = null;
+            _timerBloqueo.Stop();
             txtContador.Visibility = Visibility.Collapsed;
         }
     }

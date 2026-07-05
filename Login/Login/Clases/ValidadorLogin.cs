@@ -7,13 +7,19 @@
     /// </summary>
     public static class ValidadorLogin
     {
-        private const int PrimerUmbral = 3;
-        private const int SegundoUmbral = 6;
-        private const int TercerUmbral = 9;
+        /// <summary>
+        /// Reglas de bloqueo progresivo: al llegar a "Umbral" intentos fallidos,
+        /// se bloquea por "Minutos" minutos. Única fuente de verdad — agregar o
+        /// modificar un escalón de bloqueo solo requiere tocar esta tabla.
+        /// </summary>
+        private static readonly (int Umbral, int Minutos)[] _reglasBloqueo =
+        [
+            (3, 1),
+            (6, 3),
+            (9, 5),
+        ];
 
-        private const int MinutosPrimerBloqueo = 1;
-        private const int MinutosSegundoBloqueo = 3;
-        private const int MinutosTercerBloqueo = 5;
+        private const int LongitudMinimaContrasena = 6;
 
         public static string ValidarCorreo(string correo)
         {
@@ -31,25 +37,40 @@
             if (!ValidacionesGenerales.EsRequerido(contrasena))
                 return "⚠ Ingresa tu contraseña.";
 
-            if (!ValidacionesGenerales.TieneLongitudMinima(contrasena, 6))
-                return "⚠ La contraseña debe tener al menos 6 caracteres.";
+            if (!ValidacionesGenerales.TieneLongitudMinima(contrasena, LongitudMinimaContrasena))
+                return $"⚠ La contraseña debe tener al menos {LongitudMinimaContrasena} caracteres.";
 
             return null;
         }
 
+        /// <summary>
+        /// Minutos de bloqueo que corresponden exactamente al llegar a "intentos"
+        /// fallidos. Devuelve 0 si "intentos" no coincide con ningún umbral
+        /// (es decir, aún no toca bloquear en este intento).
+        /// </summary>
         public static int MinutosDeBloqueo(int intentos)
         {
-            if (intentos == PrimerUmbral) return MinutosPrimerBloqueo;
-            if (intentos == SegundoUmbral) return MinutosSegundoBloqueo;
-            if (intentos >= TercerUmbral) return MinutosTercerBloqueo;
-            return 0;
+            foreach (var (umbral, minutos) in _reglasBloqueo)
+            {
+                if (intentos == umbral) return minutos;
+            }
+
+            // Superó el último umbral definido: se mantiene el bloqueo más severo.
+            var (ultimoUmbral, ultimosMinutos) = _reglasBloqueo[^1];
+            return intentos > ultimoUmbral ? ultimosMinutos : 0;
         }
 
+        /// <summary>
+        /// Cuántos intentos le quedan al usuario antes de alcanzar el próximo
+        /// umbral de bloqueo.
+        /// </summary>
         public static int IntentosRestantesParaBloqueo(int intentos)
         {
-            if (intentos < 3) return 3 - intentos;
-            if (intentos < 6) return 6 - intentos;
-            if (intentos < 9) return 9 - intentos;
+            foreach (var (umbral, _) in _reglasBloqueo)
+            {
+                if (intentos < umbral) return umbral - intentos;
+            }
+
             return 0;
         }
     }

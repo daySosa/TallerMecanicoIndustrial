@@ -11,7 +11,74 @@
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
-        MouseDown="Window_Drag">
+        Opacity="0"
+        MouseDown="Window_Drag"
+        Loaded="Window_Loaded">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="BrushFondoOverlay" Color="#0B1120" Opacity="0.70"/>
+        <SolidColorBrush x:Key="BrushTarjeta" Color="#03002E" Opacity="0.55"/>
+        <SolidColorBrush x:Key="BrushBordeSutil" Color="#FFFFFF" Opacity="0.12"/>
+        <SolidColorBrush x:Key="BrushInputFondo" Color="#FFFFFF" Opacity="0.07"/>
+        <SolidColorBrush x:Key="BrushAcento" Color="#38BDF8"/>
+        <SolidColorBrush x:Key="BrushTextoSecundario" Color="#94A3B8"/>
+        <SolidColorBrush x:Key="BrushTextoTerciario" Color="#64748B"/>
+        <SolidColorBrush x:Key="BrushPrimario" Color="#02006C"/>
+
+        <Storyboard x:Key="FadeInVentana">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                              From="0" To="1" Duration="0:0:0.25"/>
+        </Storyboard>
+        
+        <Style x:Key="EstiloTextBoxInput" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="materialDesign:HintAssist.Foreground" Value="{StaticResource BrushTextoTerciario}"/>
+        </Style>
+
+        <Style x:Key="EstiloBotonLink" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="TextoBoton"
+                                   Text="{TemplateBinding Content}"
+                                   Foreground="{StaticResource BrushTextoTerciario}"
+                                   FontSize="11" Background="Transparent"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="TextoBoton"
+                                                            Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
+                                                            To="#38BDF8" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="TextoBoton"
+                                                            Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
+                                                            To="#64748B" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                                <Setter TargetName="TextoBoton" Property="TextBlock.TextDecorations" Value="Underline"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Border CornerRadius="0" ClipToBounds="True">
         <Grid>
@@ -20,7 +87,7 @@
                    Stretch="UniformToFill"
                    RenderOptions.BitmapScalingMode="HighQuality"/>
 
-            <Rectangle Fill="#0B1120" Opacity="0.70"/>
+            <Rectangle Fill="{StaticResource BrushFondoOverlay}"/>
 
             <Ellipse Width="1198" Height="900"
                      HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -37,14 +104,10 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     CornerRadius="20"
-                    Padding="40,36">
-                <Border.Background>
-                    <SolidColorBrush Color="#03002E" Opacity="0.55"/>
-                </Border.Background>
-                <Border.BorderBrush>
-                    <SolidColorBrush Color="#FFFFFF" Opacity="0.12"/>
-                </Border.BorderBrush>
-                <Border.BorderThickness>1</Border.BorderThickness>
+                    Padding="40,36"
+                    Background="{StaticResource BrushTarjeta}"
+                    BorderBrush="{StaticResource BrushBordeSutil}"
+                    BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect Color="#000000" Opacity="0.55" BlurRadius="45" ShadowDepth="0"/>
                 </Border.Effect>
@@ -52,7 +115,7 @@
                 <StackPanel>
 
                     <Border Width="78" Height="78" CornerRadius="50"
-                            Background="#03002E" Opacity="0.55"
+                            Background="{StaticResource BrushTarjeta}"
                             HorizontalAlignment="Center" Margin="0,0,0,16">
                         <Image Source="/Imagenes/OSM_LOGO.png"
                                Width="90" Height="90"
@@ -63,19 +126,14 @@
                                Foreground="White" FontSize="22" FontWeight="Bold"
                                HorizontalAlignment="Center" Margin="0,0,0,2"/>
                     <TextBlock Text="Inicia sesión para continuar"
-                               Foreground="#94A3B8" FontSize="12"
+                               Foreground="{StaticResource BrushTextoSecundario}" FontSize="12"
                                HorizontalAlignment="Center" Margin="0,0,0,28"/>
 
                     <Border x:Name="borderCorreo"
                             CornerRadius="10"
                             BorderThickness="1"
-                            Height="46" Margin="0,0,0,4">
-                        <Border.Background>
-                            <SolidColorBrush Color="#FFFFFF" Opacity="0.07"/>
-                        </Border.Background>
-                        <Border.BorderBrush>
-                            <SolidColorBrush Color="#FFFFFF" Opacity="0.12"/>
-                        </Border.BorderBrush>
+                            Height="46" Margin="0,0,0,4"
+                            Background="{StaticResource BrushInputFondo}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="44"/>
@@ -83,31 +141,19 @@
                             </Grid.ColumnDefinitions>
                             <materialDesign:PackIcon Grid.Column="0"
                                                      Kind="EmailOutline"
-                                                     Foreground="#38BDF8"
+                                                     Foreground="{StaticResource BrushAcento}"
                                                      Width="18" Height="18"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
                             <TextBox x:Name="txtCorreo"
                                      AutomationProperties.Name="Correo electrónico"
                                      Grid.Column="1"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="White"
-                                     FontSize="13"
-                                     VerticalContentAlignment="Center"
+                                     Style="{StaticResource EstiloTextBoxInput}"
                                      Padding="0,0,10,0"
-                                     CaretBrush="White"
+                                     materialDesign:HintAssist.Hint="Correo electrónico"
                                      GotFocus="TxtCorreo_GotFocus"
                                      LostFocus="TxtCorreo_LostFocus"
-                                     TextChanged="txtCorreo_TextChanged">
-                                <TextBox.Style>
-                                    <Style TargetType="TextBox"
-                                           BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="Correo electrónico"/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#64748B"/>
-                                    </Style>
-                                </TextBox.Style>
-                            </TextBox>
+                                     TextChanged="TxtCorreo_TextChanged"/>
                         </Grid>
                     </Border>
                     <TextBlock x:Name="txtErrorCorreo" Text=""
@@ -117,14 +163,9 @@
 
                     <Border x:Name="borderContrasena"
                             CornerRadius="10"
-                            Height="46" Margin="0,4,0,4">
-                        <Border.Background>
-                            <SolidColorBrush Color="#FFFFFF" Opacity="0.07"/>
-                        </Border.Background>
-                        <Border.BorderBrush>
-                            <SolidColorBrush Color="#FFFFFF" Opacity="0.12"/>
-                        </Border.BorderBrush>
-                        <Border.BorderThickness>1</Border.BorderThickness>
+                            Height="46" Margin="0,4,0,4"
+                            BorderThickness="1"
+                            Background="{StaticResource BrushInputFondo}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="44"/>
@@ -134,13 +175,13 @@
                             </Grid.ColumnDefinitions>
                             <materialDesign:PackIcon
                                                      Kind="LockOutline"
-                                                     Foreground="#38BDF8"
+                                                     Foreground="{StaticResource BrushAcento}"
                                                      Width="18" Height="18"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>
                             <PasswordBox x:Name="txtContrasena"
                                          AutomationProperties.Name="Contraseña"
-                                         Grid.Column="1"
+                                         Grid.Column="1" Grid.ColumnSpan="2"
                                          Background="Transparent"
                                          BorderThickness="0"
                                          Foreground="White"
@@ -148,39 +189,27 @@
                                          Padding="0"
                                          VerticalContentAlignment="Center"
                                          GotFocus="TxtContrasena_GotFocus"
-                                         LostFocus="TxtContrasena_LostFocus"
-                                         Visibility="Visible" Grid.ColumnSpan="2"/>
+                                         LostFocus="TxtContrasena_LostFocus"/>
                             <TextBox x:Name="txtContrasenaVisible"
                                      AutomationProperties.Name="Contraseña visible"
-                                     Grid.Column="1"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="White"
-                                     FontSize="13"
+                                     Grid.Column="1" Grid.ColumnSpan="2"
+                                     Style="{StaticResource EstiloTextBoxInput}"
                                      Padding="0,0,10,0"
-                                     VerticalContentAlignment="Center"
-                                     CaretBrush="White"
+                                     materialDesign:HintAssist.Hint="••••••••"
                                      Visibility="Collapsed"
                                      GotFocus="TxtContrasena_GotFocus"
-                                     LostFocus="TxtContrasena_LostFocus" Grid.ColumnSpan="2">
-                                <TextBox.Style>
-                                    <Style TargetType="TextBox"
-                                           BasedOn="{StaticResource MaterialDesignTextBox}">
-                                        <Setter Property="materialDesign:HintAssist.Hint" Value="••••••••"/>
-                                        <Setter Property="materialDesign:HintAssist.Foreground" Value="#64748B"/>
-                                    </Style>
-                                </TextBox.Style>
-                            </TextBox>
+                                     LostFocus="TxtContrasena_LostFocus"/>
                             <Button Grid.Column="3"
                                     x:Name="btnVerContrasena"
                                     Style="{StaticResource MaterialDesignIconButton}"
                                     Background="Transparent"
                                     BorderThickness="0"
                                     Cursor="Hand" Width="38" Height="38"
-                                    Click="BtnVerContrasena_Click" Margin="3,3,3,3">
+                                    Margin="3"
+                                    Click="BtnVerContrasena_Click">
                                 <materialDesign:PackIcon x:Name="iconOjo"
                                                          Kind="EyeOutline"
-                                                         Foreground="#94A3B8"
+                                                         Foreground="{StaticResource BrushTextoSecundario}"
                                                          Width="18" Height="18"/>
                             </Button>
                         </Grid>
@@ -209,8 +238,7 @@
                                   Foreground="#CBD5E1" FontSize="11"
                                   VerticalAlignment="Center">
                             <CheckBox.Style>
-                                <Style TargetType="CheckBox"
-                                       BasedOn="{StaticResource MaterialDesignCheckBox}">
+                                <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}">
                                     <Setter Property="materialDesign:CheckBoxAssist.CheckBoxSize" Value="15"/>
                                 </Style>
                             </CheckBox.Style>
@@ -218,51 +246,25 @@
 
                         <Button Grid.Column="1"
                                 Content="¿Olvidó su contraseña?"
+                                Style="{StaticResource EstiloBotonLink}"
                                 Click="BtnOlvidoContrasena_Click"
-                                Cursor="Hand"
-                                HorizontalAlignment="Right">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <TextBlock x:Name="TextoBoton"
-                                                           Text="¿Olvidó su contraseña?"
-                                                           Foreground="#64748B"
-                                                           FontSize="11"
-                                                           Cursor="Hand"
-                                                           Background="Transparent"/>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="TextoBoton" Property="Foreground" Value="#38BDF8"/>
-                                                        <Setter TargetName="TextoBoton" Property="TextBlock.TextDecorations" Value="Underline"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                                HorizontalAlignment="Right"/>
                     </Grid>
 
-                    <Button Height="46"
+                    <Button x:Name="btnLogin"
+                            Height="46"
                             FontSize="14" FontWeight="SemiBold"
                             Cursor="Hand"
                             Click="BtnLogin_Click"
                             materialDesign:ButtonAssist.CornerRadius="10"
                             materialDesign:ElevationAssist.Elevation="Dp0">
                         <Button.Style>
-                            <Style TargetType="Button"
-                                   BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                                <Setter Property="Background" Value="#02006C"/>
+                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                <Setter Property="Background" Value="{StaticResource BrushPrimario}"/>
                                 <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="BorderBrush" Value="#02006C"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource BrushPrimario}"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#02006C"/>
                                         <Setter Property="BorderBrush" Value="#0284C7"/>
                                     </Trigger>
                                 </Style.Triggers>
@@ -272,7 +274,7 @@
                     </Button>
 
                     <TextBlock Text="© 2026 Taller Mecánico"
-                               Foreground="#64748B" FontSize="10"
+                               Foreground="{StaticResource BrushTextoTerciario}" FontSize="10"
                                HorizontalAlignment="Center" Margin="0,22,0,0"/>
 
                 </StackPanel>
@@ -285,7 +287,7 @@
                     VerticalAlignment="Top"
                     Margin="0,18,18,0"
                     FontSize="14"
-                    Foreground="#94A3B8"
+                    Foreground="{StaticResource BrushTextoSecundario}"
                     Cursor="Hand"
                     Click="BtnCerrarApp_Click"
                     Panel.ZIndex="99">
@@ -301,11 +303,15 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="fondo" Property="Background">
-                                                <Setter.Value>
-                                                    <SolidColorBrush Color="#F87171" Opacity="0.15"/>
-                                                </Setter.Value>
-                                            </Setter>
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation Storyboard.TargetName="fondo"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        To="#F87171" Duration="0:0:0.15"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
                                             <Setter Property="Foreground" Value="#F87171"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
