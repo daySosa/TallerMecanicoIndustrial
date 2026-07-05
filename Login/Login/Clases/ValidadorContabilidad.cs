@@ -6,7 +6,7 @@ namespace Login.Clases
     /// Validaciones específicas del módulo de Contabilidad.
     /// Reglas de negocio que solo aplican a egresos, ingresos y pagos.
     /// </summary>
-    class clsValidacionesContabilidad
+    class ValidadorContabilidad
     {
         // ─────────────────────────────────────────────────────────────
         // FORMULARIO VACÍO

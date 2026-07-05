@@ -2,7 +2,7 @@
 
 namespace Login.Clases
 {
-    public static class clsValidacionesUsuarios
+    public static class ValidadorUsuario
     {
         // ─────────────────────────────────────────────────────────────
         // NOMBRE

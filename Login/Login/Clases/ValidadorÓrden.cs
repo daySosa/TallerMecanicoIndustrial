@@ -2,7 +2,7 @@
 
 namespace Login.Clases
 {
-    public class clsValidacionesOrden
+    public class ValidadorÓrden
     {
         // ─────────────────────────────────────────────────────────────
         // FORMULARIO VACÍO
@@ -37,7 +37,7 @@ namespace Login.Clases
         {
             string p = placa.Trim().ToUpper();
 
-            return clsValidacionesVehiculo.ValidarFormatoPlacaSegunTipo(p, string.Empty);
+            return ValidadorVehículo.ValidarFormatoPlacaSegunTipo(p, string.Empty);
         }
 
         public static bool EsCaracterValidoDNI(string texto)

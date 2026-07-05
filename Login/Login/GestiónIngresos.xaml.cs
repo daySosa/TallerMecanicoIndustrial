@@ -72,7 +72,7 @@ namespace Contabilidad
         {
             OcultarMensajeAgregar();
             string dni = txtDNI.Text.Trim();
-            if (!clsValidacionesContabilidad.ValidarDNIBusqueda(dni)) return;
+            if (!ValidadorContabilidad.ValidarDNIBusqueda(dni)) return;
             BuscarClienteAgregar(dni);
         }
 
@@ -221,11 +221,11 @@ namespace Contabilidad
         }
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
-            => txtPrecio.Text = clsValidacionesContabilidad.FormatearPrecioGasto(txtPrecio.Text);
+            => txtPrecio.Text = ValidadorContabilidad.FormatearPrecioGasto(txtPrecio.Text);
 
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio.Text = clsValidacionesContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
+            txtPrecio.Text = ValidadorContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
@@ -239,11 +239,11 @@ namespace Contabilidad
             string dni = txtDNI.Text.Trim();
             string ordenStr = txtOrdenID.Text.Trim();
 
-            if (!clsValidacionesContabilidad.ValidarFormularioVacio(dni, ordenStr)) return;
-            if (!clsValidacionesContabilidad.ValidarClienteBuscado(dni, txtNombre.Text)) return;
+            if (!ValidadorContabilidad.ValidarFormularioVacio(dni, ordenStr)) return;
+            if (!ValidadorContabilidad.ValidarClienteBuscado(dni, txtNombre.Text)) return;
             if (!ValidacionesGenerales.ValidarTextoRequerido(txtNombre.Text,
                     "⚠ Busca un cliente válido antes de guardar.", MostrarMensajeAgregar)) return;
-            if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
+            if (!ValidadorContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
 
             try
             {
@@ -272,13 +272,13 @@ namespace Contabilidad
             string dni = txtDNI_Edit.Text.Trim();
             string ordenStr = txtOrdenID_Edit.Text.Trim();
 
-            if (!clsValidacionesContabilidad.ValidarFormularioVacio(
+            if (!ValidadorContabilidad.ValidarFormularioVacio(
                     dni, ordenStr, txtPrecio.Text)) return;
-            if (!clsValidacionesContabilidad.ValidarDNIPago(dni, MostrarMensajeEditar)) return;
+            if (!ValidadorContabilidad.ValidarDNIPago(dni, MostrarMensajeEditar)) return;
             if (!ValidacionesGenerales.ValidarTextoRequerido(txtNombreCliente.Text,
                     "⚠ Ingresa un DNI válido.", MostrarMensajeEditar)) return;
-            if (!clsValidacionesContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
-            if (!clsValidacionesContabilidad.ValidarMontoPago(txtPrecio.Text, out decimal monto)) return;
+            if (!ValidadorContabilidad.ValidarOrdenId(ordenStr, out int ordenId)) return;
+            if (!ValidadorContabilidad.ValidarMontoPago(txtPrecio.Text, out decimal monto)) return;
 
             try
             {

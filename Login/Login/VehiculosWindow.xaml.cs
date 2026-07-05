@@ -162,7 +162,7 @@ namespace Vehículos
         private void BtnVerificarCliente_Click(object sender, RoutedEventArgs e)
         {
             string dni = txtClienteDNI.Text.Trim();
-            if (!clsValidacionesVehiculo.ValidarFormatoDNICliente(dni))
+            if (!ValidadorVehículo.ValidarFormatoDNICliente(dni))
             {
                 txtClienteDNI.Focus();
                 return;
@@ -219,43 +219,43 @@ namespace Vehículos
         {
             año = 0;
 
-            if (!clsValidacionesVehiculo.ValidarFormularioVacio(
+            if (!ValidadorVehículo.ValidarFormularioVacio(
                 txtPlaca.Text, txtMarca.Text, txtModelo.Text,
                 txtAnio.Text, txtClienteDNI.Text)) return false;
 
-            if (!clsValidacionesVehiculo.ValidarPlacaNoNula(txtPlaca.Text))
+            if (!ValidadorVehículo.ValidarPlacaNoNula(txtPlaca.Text))
             { txtPlaca.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarPlacaSoloAlfanumerico(txtPlaca.Text))
+            if (!ValidadorVehículo.ValidarPlacaSoloAlfanumerico(txtPlaca.Text))
             { txtPlaca.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarLongitudPlaca(txtPlaca.Text))
+            if (!ValidadorVehículo.ValidarLongitudPlaca(txtPlaca.Text))
             { txtPlaca.Focus(); return false; }
 
             string tipoStr = (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
 
-            if (!clsValidacionesVehiculo.ValidarFormatoPlacaSegunTipo(txtPlaca.Text, tipoStr))
+            if (!ValidadorVehículo.ValidarFormatoPlacaSegunTipo(txtPlaca.Text, tipoStr))
             { txtPlaca.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarPlacaNoReservada(txtPlaca.Text))
+            if (!ValidadorVehículo.ValidarPlacaNoReservada(txtPlaca.Text))
             { txtPlaca.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarMarca(txtMarca.Text))
+            if (!ValidadorVehículo.ValidarMarca(txtMarca.Text))
             { txtMarca.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarModelo(txtModelo.Text))
+            if (!ValidadorVehículo.ValidarModelo(txtModelo.Text))
             { txtModelo.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarAnioVehiculo(txtAnio.Text, out año))
+            if (!ValidadorVehículo.ValidarAnioVehiculo(txtAnio.Text, out año))
             { txtAnio.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarTipoVehiculo(cmbTipo.SelectedItem))
+            if (!ValidadorVehículo.ValidarTipoVehiculo(cmbTipo.SelectedItem))
             { cmbTipo.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarObservaciones(txtObservaciones.Text))
+            if (!ValidadorVehículo.ValidarObservaciones(txtObservaciones.Text))
             { txtObservaciones.Focus(); return false; }
 
-            if (!clsValidacionesVehiculo.ValidarClienteDNI(txtClienteDNI.Text, _clienteDNI))
+            if (!ValidadorVehículo.ValidarClienteDNI(txtClienteDNI.Text, _clienteDNI))
             { txtClienteDNI.Focus(); return false; }
 
             return true;
@@ -266,7 +266,7 @@ namespace Vehículos
             año = 0;
             if (!ValidarCamposComunes(out año)) return false;
 
-            if (!clsValidacionesVehiculo.ValidarPlacaNoDuplicada(txtPlaca.Text, p => _db.ExistePlaca(p)))
+            if (!ValidadorVehículo.ValidarPlacaNoDuplicada(txtPlaca.Text, p => _db.ExistePlaca(p)))
             { txtPlaca.Focus(); return false; }
 
             return true;

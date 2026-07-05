@@ -59,11 +59,11 @@ namespace Contabilidad
         }
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
-            => txtPrecio.Text = clsValidacionesContabilidad.FormatearPrecioGasto(txtPrecio.Text);
+            => txtPrecio.Text = ValidadorContabilidad.FormatearPrecioGasto(txtPrecio.Text);
 
         private void txtPrecio_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio.Text = clsValidacionesContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
+            txtPrecio.Text = ValidadorContabilidad.LimpiarPrecioGasto(txtPrecio.Text);
             txtPrecio.CaretIndex = txtPrecio.Text.Length;
         }
 
@@ -117,11 +117,11 @@ namespace Contabilidad
         }
 
         private void txtPrecio_Edit_LostFocus(object sender, RoutedEventArgs e)
-            => txtPrecio_Edit.Text = clsValidacionesContabilidad.FormatearPrecioGasto(txtPrecio_Edit.Text);
+            => txtPrecio_Edit.Text = ValidadorContabilidad.FormatearPrecioGasto(txtPrecio_Edit.Text);
 
         private void txtPrecio_Edit_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtPrecio_Edit.Text = clsValidacionesContabilidad.LimpiarPrecioGasto(txtPrecio_Edit.Text);
+            txtPrecio_Edit.Text = ValidadorContabilidad.LimpiarPrecioGasto(txtPrecio_Edit.Text);
             txtPrecio_Edit.CaretIndex = txtPrecio_Edit.Text.Length;
         }
 
@@ -147,7 +147,7 @@ namespace Contabilidad
                 MostrarMensajeAgregar("⚠ Ingresa el nombre del gasto.");
                 return;
             }
-            if (!clsValidacionesContabilidad.ValidarMontoPago(txtPrecio.Text, out decimal precio))
+            if (!ValidadorContabilidad.ValidarMontoPago(txtPrecio.Text, out decimal precio))
             {
                 MostrarMensajeAgregar("⚠ Ingresa un precio válido.");
                 return;
@@ -186,7 +186,7 @@ namespace Contabilidad
                 MostrarMensajeEditar("⚠ Ingresa el nombre del gasto.");
                 return;
             }
-            if (!clsValidacionesContabilidad.ValidarMontoPago(txtPrecio_Edit.Text, out decimal precio))
+            if (!ValidadorContabilidad.ValidarMontoPago(txtPrecio_Edit.Text, out decimal precio))
             {
                 MostrarMensajeEditar("⚠ Ingresa un precio válido.");
                 return;

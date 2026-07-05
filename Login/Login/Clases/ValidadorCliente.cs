@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace Login.Clases
 {
-    public class clsValidacionesClientes
+    public class ValidadorCliente
     {
         // ─────────────────────────────────────────────────────────────
         // FORMULARIO VACÍO

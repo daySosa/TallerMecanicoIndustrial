@@ -140,18 +140,18 @@ namespace InterfazClientes
 
         private bool ValidarCampos(string dni, string telefonoLimpio, string dniActual = "")
         {
-            if (!clsValidacionesClientes.ValidarFormularioVacio(
+            if (!ValidadorCliente.ValidarFormularioVacio(
                 dni, txtNombre.Text, txtApellido.Text,
                 telefonoLimpio, txtDireccion.Text)) return false;
 
-            if (!clsValidacionesClientes.ValidarDNIHondureño(dni)) return false;
-            if (!clsValidacionesClientes.ValidarLongitudNombre(txtNombre.Text, "nombre")) return false;
-            if (!clsValidacionesClientes.ValidarLongitudNombre(txtApellido.Text, "apellido")) return false;
+            if (!ValidadorCliente.ValidarDNIHondureño(dni)) return false;
+            if (!ValidadorCliente.ValidarLongitudNombre(txtNombre.Text, "nombre")) return false;
+            if (!ValidadorCliente.ValidarLongitudNombre(txtApellido.Text, "apellido")) return false;
             if (!ValidacionesGenerales.Telefono(telefonoLimpio)) return false;
-            if (!clsValidacionesClientes.ValidarLongitudCorreo(txtCorreo.Text)) return false;
-            if (!clsValidacionesClientes.ValidarDireccion(txtDireccion.Text)) return false;
-            if (!clsValidacionesClientes.ValidarDNINoDuplicado(dni, dniActual, db)) return false;
-            if (!clsValidacionesClientes.ValidarTelefonoNoDuplicado(telefonoLimpio, dniActual, db)) return false;
+            if (!ValidadorCliente.ValidarLongitudCorreo(txtCorreo.Text)) return false;
+            if (!ValidadorCliente.ValidarDireccion(txtDireccion.Text)) return false;
+            if (!ValidadorCliente.ValidarDNINoDuplicado(dni, dniActual, db)) return false;
+            if (!ValidadorCliente.ValidarTelefonoNoDuplicado(telefonoLimpio, dniActual, db)) return false;
 
             return true;
         }

@@ -91,8 +91,8 @@ namespace Órdenes_de_Trabajo
         private void TxtBuscar_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = _buscarPorDNI
-                ? !clsValidacionesOrden.EsCaracterValidoDNI(e.Text)
-                : !clsValidacionesOrden.EsCaracterValidoPlaca(e.Text);
+                ? !ValidadorÓrden.EsCaracterValidoDNI(e.Text)
+                : !ValidadorÓrden.EsCaracterValidoPlaca(e.Text);
         }
 
         private void TxtBuscar_Pasting(object sender, DataObjectPastingEventArgs e)
@@ -100,8 +100,8 @@ namespace Órdenes_de_Trabajo
             if (!e.DataObject.GetDataPresent(typeof(string))) { e.CancelCommand(); return; }
             string texto = (string)e.DataObject.GetData(typeof(string));
             bool valido = _buscarPorDNI
-                ? clsValidacionesOrden.EsCaracterValidoDNI(texto)
-                : clsValidacionesOrden.EsCaracterValidoPlaca(texto);
+                ? ValidadorÓrden.EsCaracterValidoDNI(texto)
+                : ValidadorÓrden.EsCaracterValidoPlaca(texto);
             if (!valido) e.CancelCommand();
         }
 
@@ -115,7 +115,7 @@ namespace Órdenes_de_Trabajo
                 var orden = _db.ObtenerOrdenParaEditar(ordenID);
                 if (orden == default) return;
 
-                if (!clsValidacionesOrden.ValidarMesActualizacion(orden.fecha))
+                if (!ValidadorÓrden.ValidarMesActualizacion(orden.fecha))
                 {
                     Close();
                     return;
@@ -212,13 +212,13 @@ namespace Órdenes_de_Trabajo
         {
             string valor = txtBuscar.Text.Trim();
 
-            if (!clsValidacionesOrden.ValidarCampoBusqueda(valor, _buscarPorDNI))
+            if (!ValidadorÓrden.ValidarCampoBusqueda(valor, _buscarPorDNI))
             { txtBuscar.Focus(); return; }
 
-            if (_buscarPorDNI && !clsValidacionesOrden.ValidarFormatoDNIBusqueda(valor))
+            if (_buscarPorDNI && !ValidadorÓrden.ValidarFormatoDNIBusqueda(valor))
             { txtBuscar.Focus(); return; }
 
-            if (!_buscarPorDNI && !clsValidacionesOrden.ValidarFormatoPlacaBusqueda(valor))
+            if (!_buscarPorDNI && !ValidadorÓrden.ValidarFormatoPlacaBusqueda(valor))
             { txtBuscar.Focus(); return; }
 
             LimpiarResultados();
@@ -238,10 +238,10 @@ namespace Órdenes_de_Trabajo
                     return;
                 }
 
-                if (!clsValidacionesOrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
+                if (!ValidadorÓrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
 
                 if (!string.IsNullOrEmpty(r.vehiculoPlaca)
-                    && !clsValidacionesOrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre))
+                    && !ValidadorÓrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre))
                     return;
 
                 _clienteDNI = dni;
@@ -275,8 +275,8 @@ namespace Órdenes_de_Trabajo
                     return;
                 }
 
-                if (!clsValidacionesOrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
-                if (!clsValidacionesOrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre)) return;
+                if (!ValidadorÓrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
+                if (!ValidadorÓrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre)) return;
 
                 _vehiculoPlaca = placa;
                 _clienteDNI = r.clienteDNI;
@@ -300,12 +300,12 @@ namespace Órdenes_de_Trabajo
 
         private void btnAniadir_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidacionesOrden.ValidarFormularioVacio(
+            if (!ValidadorÓrden.ValidarFormularioVacio(
                     _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
 
-            if (!clsValidacionesOrden.ValidarClienteAsignado(_clienteDNI)) return;
+            if (!ValidadorÓrden.ValidarClienteAsignado(_clienteDNI)) return;
 
-            if (!clsValidacionesOrden.ValidarFormularioAñadir(
+            if (!ValidadorÓrden.ValidarFormularioAñadir(
                     _clienteDNI, _vehiculoPlaca,
                     cmbEstado.SelectedItem, cmbPrioridad.SelectedItem,
                     dpFecha.SelectedDate, dpEntrega.SelectedDate,
@@ -345,10 +345,10 @@ namespace Órdenes_de_Trabajo
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            if (!clsValidacionesOrden.ValidarFormularioVacio(
+            if (!ValidadorÓrden.ValidarFormularioVacio(
                     _clienteDNI, _vehiculoPlaca, txtPrecioServicio.Text)) return;
 
-            if (!clsValidacionesOrden.ValidarFormularioActualizar(
+            if (!ValidadorÓrden.ValidarFormularioActualizar(
                     _clienteDNI, _vehiculoPlaca,
                     cmbEstado.SelectedItem, cmbPrioridad.SelectedItem,
                     dpFecha.SelectedDate, dpEntrega.SelectedDate,

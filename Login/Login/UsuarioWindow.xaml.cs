@@ -154,19 +154,19 @@ namespace InterfazClientes
 
         private bool ValidarCampos()
         {
-            if (!clsValidacionesUsuarios.ValidarNombre(txtNombre.Text))
+            if (!ValidadorUsuario.ValidarNombre(txtNombre.Text))
             { txtNombre.Focus(); return false; }
 
-            if (!clsValidacionesUsuarios.ValidarApellido(txtApellido.Text))
+            if (!ValidadorUsuario.ValidarApellido(txtApellido.Text))
             { txtApellido.Focus(); return false; }
 
-            if (!clsValidacionesUsuarios.ValidarCorreo(txtCorreo.Text))
+            if (!ValidadorUsuario.ValidarCorreo(txtCorreo.Text))
             { txtCorreo.Focus(); return false; }
 
-            if (!clsValidacionesUsuarios.ValidarTelefono(txtTelefono.Text))
+            if (!ValidadorUsuario.ValidarTelefono(txtTelefono.Text))
             { txtTelefono.Focus(); return false; }
 
-            if (!clsValidacionesUsuarios.ValidarRolSeleccionado(cmbRol.SelectedItem))
+            if (!ValidadorUsuario.ValidarRolSeleccionado(cmbRol.SelectedItem))
             { cmbRol.Focus(); return false; }
 
            
