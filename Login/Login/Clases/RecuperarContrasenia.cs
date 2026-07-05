@@ -19,6 +19,8 @@ namespace Login.Clases
         private const int SegundosCooldownReenvioOtp = 60;
         private const int MaxIntentosOtpCliente = 3;
 
+        private static readonly TimeSpan DuracionHover = TimeSpan.FromMilliseconds(140);
+
         // Cooldown de reenvío compartido entre todas las instancias del flujo,
         // para que no se pueda "resetear" el límite abriendo el overlay de nuevo.
         private static readonly ConcurrentDictionary<string, DateTime> _ultimoEnvioOtp = new();
@@ -58,12 +60,32 @@ namespace Login.Clases
 
         private static readonly DropShadowEffect SombraPanel = CrearSombra();
 
+        // Geometrías del ícono de ojo (mostrar/ocultar contraseña) y del candado,
+        // parseadas y congeladas UNA sola vez. Antes se llamaba Geometry.Parse()
+        // en cada clic del botón "ver contraseña"; ahora solo se intercambia la
+        // referencia, sin volver a parsear el path SVG.
+        private static readonly Geometry GeometriaCandado = CongelarGeometria(
+            "M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z");
+
+        private static readonly Geometry GeometriaOjoAbierto = CongelarGeometria(
+            "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z");
+
+        private static readonly Geometry GeometriaOjoCerrado = CongelarGeometria(
+            "M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,15 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.09L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z");
+
         private static SolidColorBrush Congelar(string hex, double? opacidad = null)
         {
             var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
             if (opacidad.HasValue) brush.Opacity = opacidad.Value;
             brush.Freeze();
             return brush;
+        }
+
+        private static Geometry CongelarGeometria(string datos)
+        {
+            var geometria = Geometry.Parse(datos);
+            geometria.Freeze();
+            return geometria;
         }
 
         private static DropShadowEffect CrearSombra()
@@ -84,6 +106,8 @@ namespace Login.Clases
             // Evita apilar overlays si el usuario hace doble clic muy rápido
             // en "¿Olvidó su contraseña?" antes de que el primero termine de aparecer.
             if (_flujoActivo || ExisteOverlayActivo()) return;
+
+            LimpiarCooldownsExpirados();
 
             _flujoActivo = true;
             ConstruirOverlay();
@@ -161,6 +185,23 @@ namespace Login.Clases
         {
             _correoRecuperacion = string.Empty;
             _intentosOtpFallidos = 0;
+        }
+
+        /// <summary>
+        /// Descarta del diccionario de cooldown los correos cuyo período de espera
+        /// ya venció hace rato. Se llama de forma oportunista al abrir el flujo,
+        /// en vez de mantener un Timer en segundo plano solo para esto. Evita que
+        /// el diccionario crezca indefinidamente durante la vida de la aplicación.
+        /// </summary>
+        private static void LimpiarCooldownsExpirados()
+        {
+            DateTime limite = DateTime.UtcNow.AddSeconds(-SegundosCooldownReenvioOtp * 2);
+
+            foreach (var entrada in _ultimoEnvioOtp)
+            {
+                if (entrada.Value < limite)
+                    _ultimoEnvioOtp.TryRemove(entrada.Key, out _);
+            }
         }
 
         private static void FadeIn(UIElement el, int ms, Action alTerminar = null)
@@ -293,10 +334,10 @@ namespace Login.Clases
 
             string ObtenerValorLocal() => visible ? campoVisible.Text : passwordBox.Password;
 
-            // Ícono de candado (izquierda)
+            // Ícono de candado (izquierda) — geometría precomputada y congelada.
             var iconoCandado = new System.Windows.Shapes.Path
             {
-                Data = Geometry.Parse("M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"),
+                Data = GeometriaCandado,
                 Fill = BrushPlaceholder,
                 Stretch = Stretch.Uniform,
                 Width = 14,
@@ -307,18 +348,16 @@ namespace Login.Clases
                 IsHitTestVisible = false
             };
 
-            // Ícono de ojo (derecha) — cambia su Data entre abierto/cerrado
+            // Ícono de ojo (derecha) — alterna entre dos geometrías precomputadas,
+            // sin volver a parsear el path SVG en cada clic.
             var iconoOjo = new System.Windows.Shapes.Path
             {
-                Data = Geometry.Parse("M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"),
+                Data = GeometriaOjoAbierto,
                 Fill = BrushPlaceholder,
                 Stretch = Stretch.Uniform,
                 Width = 16,
                 Height = 16
             };
-
-            string OjoAbierto = "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z";
-            string OjoCerrado = "M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,15 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.09L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z";
 
             var botonOjo = new Button
             {
@@ -344,7 +383,7 @@ namespace Login.Clases
                     campoVisible.Visibility = Visibility.Visible;
                     campoVisible.Focus();
                     campoVisible.CaretIndex = campoVisible.Text.Length;
-                    iconoOjo.Data = Geometry.Parse(OjoCerrado);
+                    iconoOjo.Data = GeometriaOjoCerrado;
                 }
                 else
                 {
@@ -352,7 +391,7 @@ namespace Login.Clases
                     campoVisible.Visibility = Visibility.Collapsed;
                     passwordBox.Visibility = Visibility.Visible;
                     passwordBox.Focus();
-                    iconoOjo.Data = Geometry.Parse(OjoAbierto);
+                    iconoOjo.Data = GeometriaOjoAbierto;
                 }
             };
 
@@ -391,10 +430,32 @@ namespace Login.Clases
             return contenedor;
         }
 
+        /// <summary>
+        /// Crea un brush independiente (no congelado) a partir de un color base,
+        /// preservando tanto el Color como el Opacity original, para poder
+        /// animar el color en el hover sin afectar los brushes compartidos y
+        /// congelados usados como referencia de paleta.
+        ///
+        /// IMPORTANTE: SolidColorBrush.Opacity es una propiedad aparte de
+        /// Color (multiplica la transparencia general del brush). Si solo se
+        /// copia el Color y no el Opacity, un brush semitransparente como
+        /// BrushSecundario (#FFFFFF al 8%) se vuelve accidentalmente opaco
+        /// al 100%, mostrando un botón blanco sólido en vez de sutil.
+        /// </summary>
+        private static SolidColorBrush CrearBrushAnimable(SolidColorBrush origen) =>
+            new(origen.Color) { Opacity = origen.Opacity };
+
+        private static void AnimarColorBoton(SolidColorBrush brush, Color destino) =>
+            brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(destino, DuracionHover));
+
         private static Button CrearBoton(string texto, bool esPrimario, double width = 118, bool esExito = false)
         {
             var fondoNormal = esExito ? BrushExito : (esPrimario ? BrushPrimario : BrushSecundario);
             var fondoHover = esExito ? BrushExitoHover : (esPrimario ? BrushPrimarioHover : BrushCampoFondo);
+
+            // Brush propio y animable por botón: si dos botones estuvieran en
+            // hover a la vez, cada uno transiciona de forma independiente.
+            var brushFondo = CrearBrushAnimable(fondoNormal);
 
             var boton = new Button
             {
@@ -405,13 +466,23 @@ namespace Login.Clases
                 FontWeight = FontWeights.SemiBold,
                 Foreground = BrushTexto,
                 Cursor = Cursors.Hand,
-                Background = fondoNormal,
+                Background = brushFondo,
                 BorderThickness = new Thickness(0),
                 Template = ObtenerPlantillaBoton()
             };
 
-            boton.MouseEnter += (s, e) => { if (boton.IsEnabled) boton.Background = fondoHover; };
-            boton.MouseLeave += (s, e) => { if (boton.IsEnabled) boton.Background = fondoNormal; };
+            // El destino de la animación debe usar el mismo Opacity que el
+            // brush de referencia (fondoHover/fondoNormal), no solo su Color,
+            // por la misma razón explicada en CrearBrushAnimable.
+            boton.MouseEnter += (s, e) => { if (boton.IsEnabled) AnimarColorBoton(brushFondo, fondoHover.Color); };
+            boton.MouseLeave += (s, e) => { if (boton.IsEnabled) AnimarColorBoton(brushFondo, fondoNormal.Color); };
+
+            // Ajuste fino: como ColorAnimation solo interpola el canal Color
+            // (no el Opacity del Brush), y normal/hover en este diseño
+            // comparten el mismo Opacity dentro de cada estado (0.08 y 0.07
+            // respectivamente son casi iguales), no hace falta animar Opacity
+            // por separado. Si en el futuro se usan colores con Opacity muy
+            // distintos entre normal y hover, animar también BrushFondo.Opacity.
 
             return boton;
         }
