@@ -256,7 +256,7 @@ namespace Login
         }
 
         private (List<Image<Gray, byte>> Imagenes, List<int> Etiquetas,
-          Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
+   Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
         {
             var imagenes = new List<Image<Gray, byte>>();
             var etiquetas = new List<int>();
@@ -277,71 +277,54 @@ namespace Login
                 throw;
             }
 
-            var fotosPorPersona = new Dictionary<string, (string Nombre, List<byte[]> Fotos)>();
-            foreach (var persona in personas)
+            // ── SOLO nos interesan las fotos de la persona que se está verificando ──
+            var fotosDeLaPersona = personas
+                .Where(p => !string.IsNullOrWhiteSpace(p.Email)
+                         && p.Email.Equals(_correoEsperado, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (fotosDeLaPersona.Count == 0)
             {
-                if (string.IsNullOrWhiteSpace(persona.Email)) continue;
-
-                if (!fotosPorPersona.ContainsKey(persona.Email))
-                    fotosPorPersona[persona.Email] = (persona.Nombre, new List<byte[]>());
-
-                fotosPorPersona[persona.Email].Fotos.Add(persona.Foto);
+                RegistrarEnLog($"ERROR - No hay fotos registradas para {_correoEsperado}");
+                return (imagenes, etiquetas, etiquetasNombres, etiquetasEmails);
             }
 
-            int etiquetaActual = 0;
-            var conteoValidasPorPersona = new Dictionary<string, int>();
+            string nombre = fotosDeLaPersona[0].Nombre;
+            int validas = 0;
 
-            foreach (var persona in fotosPorPersona)
+            foreach (var persona in fotosDeLaPersona)
             {
-                string email = persona.Key;
-                string nombre = persona.Value.Nombre;
-                bool tieneImagenesValidas = false;
-                int validasDeEstaPersona = 0;
-
-                foreach (var datosFoto in persona.Value.Fotos)
+                try
                 {
-                    try
-                    {
-                        using var ms = new MemoryStream(datosFoto);
-                        using var bmp = new System.Drawing.Bitmap(ms);
-                        using var imgColor = bmp.ToImage<Bgr, byte>();
-                        using var imgGris = imgColor.Convert<Gray, byte>();
+                    using var ms = new MemoryStream(persona.Foto);
+                    using var bmp = new System.Drawing.Bitmap(ms);
+                    using var imgColor = bmp.ToImage<Bgr, byte>();
+                    using var imgGris = imgColor.Convert<Gray, byte>();
 
-                        var rostros = _clasificadorRostro.DetectMultiScale(
-                            imgGris, 1.1, 6, System.Drawing.Size.Empty);
+                    var rostros = _clasificadorRostro.DetectMultiScale(
+                        imgGris, 1.1, 6, System.Drawing.Size.Empty);
 
-                        if (rostros.Length == 0) continue;
+                    if (rostros.Length == 0) continue;
 
-                        var rostroRect = rostros.OrderByDescending(r => r.Width * r.Height).First();
-                        using var rostroRecortado = imgGris.Copy(rostroRect);
-                        using var rostroEcualizado = NormalizarIluminacion(rostroRecortado);
-                        var rostroNormalizado = rostroEcualizado.Resize(200, 200, Inter.Cubic);
+                    var rostroRect = rostros.OrderByDescending(r => r.Width * r.Height).First();
+                    using var rostroRecortado = imgGris.Copy(rostroRect);
+                    using var rostroEcualizado = NormalizarIluminacion(rostroRecortado);
+                    var rostroNormalizado = rostroEcualizado.Resize(200, 200, Inter.Cubic);
 
-                        imagenes.Add(rostroNormalizado);
-                        etiquetas.Add(etiquetaActual);
-                        tieneImagenesValidas = true;
-                        validasDeEstaPersona++;
-                    }
-                    catch
-                    {
-
-                    }
+                    imagenes.Add(rostroNormalizado);
+                    etiquetas.Add(0); // única etiqueta posible: la persona esperada
+                    validas++;
                 }
-
-                conteoValidasPorPersona[email] = validasDeEstaPersona;
-
-                if (tieneImagenesValidas)
-                {
-                    etiquetasNombres[etiquetaActual] = nombre;
-                    etiquetasEmails[etiquetaActual] = email;
-                    etiquetaActual++;
-                }
+                catch { }
             }
 
-            var resumen = string.Join(" | ", conteoValidasPorPersona.Select(kv =>
-                $"{kv.Key}: {kv.Value}/{fotosPorPersona[kv.Key].Fotos.Count}"));
-            RegistrarEnLog($"ENTRENAMIENTO - Fotos válidas por persona -> {resumen}");
-            System.Diagnostics.Debug.WriteLine($"[ENTRENAMIENTO] {resumen}");
+            if (validas > 0)
+            {
+                etiquetasNombres[0] = nombre;
+                etiquetasEmails[0] = _correoEsperado;
+            }
+
+            RegistrarEnLog($"ENTRENAMIENTO (1:1) - {_correoEsperado}: {validas}/{fotosDeLaPersona.Count} fotos válidas");
 
             return (imagenes, etiquetas, etiquetasNombres, etiquetasEmails);
         }
@@ -573,7 +556,7 @@ namespace Login
 
             System.Diagnostics.Debug.WriteLine(
                 $"[VERIFICACION] Frame {_historialPredicciones.Count}/{FRAMES_CONSENSO_REQUERIDOS} " +
-                $"| Label: {resultado.Label} | Distancia: {resultado.Distance:F2} | Umbral: {UMBRAL_CONFIANZA_LBPH}");
+                $"| Distancia: {resultado.Distance:F2} | Umbral: {UMBRAL_CONFIANZA_LBPH}");
 
             if (_historialPredicciones.Count < FRAMES_CONSENSO_REQUERIDOS)
             {
@@ -583,45 +566,25 @@ namespace Login
 
             _verificando = true;
 
-            var etiquetaMasComun = _historialPredicciones
-                .GroupBy(p => p.Label)
-                .OrderByDescending(g => g.Count())
-                .First();
+            double distanciaPromedio = _historialPredicciones.Average(p => p.Distance);
+            int framesDentroDelUmbral = _historialPredicciones.Count(p => p.Distance <= UMBRAL_CONFIANZA_LBPH);
 
-            bool consensoSuficiente = etiquetaMasComun.Count() >= FRAMES_CONSENSO_REQUERIDOS - TOLERANCIA_FRAMES_RUIDOSOS;
-            double distanciaPromedio = etiquetaMasComun.Average(p => p.Distance);
-
-            bool coincide = consensoSuficiente &&
-                            etiquetaMasComun.Key >= 0 &&
-                            distanciaPromedio <= UMBRAL_CONFIANZA_LBPH &&
-                            _etiquetasNombres.ContainsKey(etiquetaMasComun.Key) &&
-                            _etiquetasEmails.ContainsKey(etiquetaMasComun.Key);
+            bool coincide = framesDentroDelUmbral >= FRAMES_CONSENSO_REQUERIDOS - TOLERANCIA_FRAMES_RUIDOSOS;
 
             RegistrarEnLog(
-                $"CONSENSO - Etiqueta mayoritaria: {etiquetaMasComun.Key} " +
-                $"({etiquetaMasComun.Count()}/{FRAMES_CONSENSO_REQUERIDOS} frames) " +
-                $"| Distancia promedio: {distanciaPromedio:F2} | Coincide: {coincide}");
+                $"VERIFICACION 1:1 - {_correoEsperado} | Distancia promedio: {distanciaPromedio:F2} " +
+                $"| Frames dentro del umbral: {framesDentroDelUmbral}/{FRAMES_CONSENSO_REQUERIDOS} | Coincide: {coincide}");
 
             _historialPredicciones.Clear();
 
-            string emailDetectado = string.Empty;
-            bool seEncontroEmail = coincide && _etiquetasEmails.TryGetValue(etiquetaMasComun.Key, out emailDetectado);
-
-            if (seEncontroEmail && emailDetectado.Equals(_correoEsperado, StringComparison.OrdinalIgnoreCase))
+            if (coincide && _etiquetasNombres.TryGetValue(0, out string nombre))
             {
-                string nombre = _etiquetasNombres[etiquetaMasComun.Key];
-                AccesoConcedido(nombre, emailDetectado);
-            }
-            else if (seEncontroEmail)
-            {
-                RegistrarEnLog($"RECHAZADO - Rostro pertenece a {emailDetectado}, pero se esperaba {_correoEsperado}");
-                _ = AccesoDenegadoAsync("El rostro no corresponde a la cuenta que intentas verificar",
-                    etiquetaMasComun.Key, distanciaPromedio);
+                AccesoConcedido(nombre, _correoEsperado);
             }
             else
             {
-                _ = AccesoDenegadoAsync("Rostro no coincide con ningún registro (o consenso insuficiente)",
-                    etiquetaMasComun.Key, distanciaPromedio);
+                _ = AccesoDenegadoAsync("Rostro no coincide con la cuenta que intentas verificar",
+                    0, distanciaPromedio);
             }
         }
 
