@@ -1198,31 +1198,25 @@ namespace Login.Clases
 
         #region LOGIN Y SEGURIDAD
 
-        private static string CalcularHashSha512(string texto)
-        {
-            using var sha = System.Security.Cryptography.SHA512.Create();
-            byte[] bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(texto));
-            return BitConverter.ToString(bytes).Replace("-", "");
-        }
-
         public bool ValidarLogin(string correo, string contrasena)
         {
             using var conexion = new ClsConexion();
             try
             {
-                string inputHash = CalcularHashSha512(contrasena);
-
-                const string query = @"
-                    SELECT COUNT(1) FROM LOGIN 
-                    WHERE Usuario_Email = @Correo 
-                    AND Usuario_Contraseña = @Hash";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Login_Validar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Correo", correo);
-                cmd.Parameters.AddWithValue("@Hash", inputHash);
+                cmd.Parameters.AddWithValue("@Contrasena", contrasena);
+
+                var pEsValido = cmd.Parameters.Add("@EsValido", SqlDbType.Bit);
+                pEsValido.Direction = ParameterDirection.Output;
 
                 conexion.Abrir();
-                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+                cmd.ExecuteNonQuery();
+
+                return (bool)pEsValido.Value;
             }
             catch (SqlException ex)
             {
@@ -1235,8 +1229,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT COUNT(1) FROM LOGIN WHERE Usuario_Email = @Correo";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Login_ExisteCorreo", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Correo", correo);
 
                 conexion.Abrir();
@@ -1253,12 +1249,13 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                string hash = CalcularHashSha512(nuevaContrasena);
 
-                const string query = "UPDATE LOGIN SET Usuario_Contraseña = @Hash WHERE Usuario_Email = @Correo";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
-                cmd.Parameters.AddWithValue("@Hash", hash);
-                cmd.Parameters.AddWithValue("@Correo", correo);
+                using var cmd = new SqlCommand("sp_Usuario_CambiarContrasena", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Email", correo);
+                cmd.Parameters.AddWithValue("@NuevaContrasena", nuevaContrasena);
 
                 conexion.Abrir();
                 return cmd.ExecuteNonQuery() > 0;
@@ -1274,8 +1271,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT ISNULL(IntentosFallidos, 0) FROM LOGIN WHERE Usuario_Email = @Correo";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Login_ObtenerIntentosFallidos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Correo", correo);
 
                 conexion.Abrir();
@@ -1293,8 +1292,10 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "SELECT FechaBloqueo FROM LOGIN WHERE Usuario_Email = @Correo";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Login_ObtenerFechaBloqueo", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Correo", correo);
 
                 conexion.Abrir();
@@ -1312,16 +1313,13 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = @"
-                    UPDATE LOGIN 
-                    SET IntentosFallidos = @Intentos,
-                        FechaBloqueo = @FechaBloqueo
-                    WHERE Usuario_Email = @Correo";
-
-                using var cmd = new SqlCommand(query, conexion.SqlC);
+                using var cmd = new SqlCommand("sp_Login_ActualizarBloqueo", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Correo", correo);
                 cmd.Parameters.AddWithValue("@Intentos", intentos);
                 cmd.Parameters.AddWithValue("@FechaBloqueo", fechaBloqueo.HasValue ? fechaBloqueo.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@Correo", correo);
 
                 conexion.Abrir();
                 cmd.ExecuteNonQuery();
@@ -1337,10 +1335,12 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
-                const string query = "UPDATE LOGIN SET IntentosFallidos = @Intentos WHERE Usuario_Email = @Correo";
-                using var cmd = new SqlCommand(query, conexion.SqlC);
-                cmd.Parameters.AddWithValue("@Intentos", intentos);
+                using var cmd = new SqlCommand("sp_Login_ActualizarIntentosFallidos", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@Intentos", intentos);
 
                 conexion.Abrir();
                 cmd.ExecuteNonQuery();
@@ -1363,24 +1363,17 @@ namespace Login.Clases
 
             try
             {
-                conexion.Abrir();
 
-                using (var cmdInvalidar = new SqlCommand(
-                    "UPDATE CodigosOTP SET Usado = 1 WHERE Correo = @Correo AND Usado = 0", conexion.SqlC))
+                using var cmd = new SqlCommand("sp_OTP_Generar", conexion.SqlC)
                 {
-                    cmdInvalidar.Parameters.AddWithValue("@Correo", correo);
-                    cmdInvalidar.ExecuteNonQuery();
-                }
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@Codigo", codigo);
+                cmd.Parameters.AddWithValue("@FechaExpiracion", expiracion);
 
-                const string insertar = @"
-                    INSERT INTO CodigosOTP (Correo, Codigo, FechaExpiracion, Usado, Intentos)
-                    VALUES (@Correo, @Codigo, @Expiracion, 0, 0)";
-
-                using var cmdInsertar = new SqlCommand(insertar, conexion.SqlC);
-                cmdInsertar.Parameters.AddWithValue("@Correo", correo);
-                cmdInsertar.Parameters.AddWithValue("@Codigo", codigo);
-                cmdInsertar.Parameters.AddWithValue("@Expiracion", expiracion);
-                cmdInsertar.ExecuteNonQuery();
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
 
                 return codigo;
             }
@@ -1395,44 +1388,20 @@ namespace Login.Clases
             using var conexion = new ClsConexion();
             try
             {
+                using var cmd = new SqlCommand("sp_OTP_Validar", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@Codigo", codigoIngresado);
+
+                var pEsValido = cmd.Parameters.Add("@EsValido", SqlDbType.Bit);
+                pEsValido.Direction = ParameterDirection.Output;
+
                 conexion.Abrir();
+                cmd.ExecuteNonQuery();
 
-                const string query = @"
-                    SELECT Id FROM CodigosOTP 
-                    WHERE Correo = @Correo 
-                    AND Codigo = @Codigo 
-                    AND Usado = 0 
-                    AND FechaExpiracion > GETUTCDATE()
-                    AND Intentos < 3";
-
-                int? idEncontrado = null;
-                using (var cmd = new SqlCommand(query, conexion.SqlC))
-                {
-                    cmd.Parameters.AddWithValue("@Correo", correo);
-                    cmd.Parameters.AddWithValue("@Codigo", codigoIngresado);
-
-                    using var reader = cmd.ExecuteReader();
-                    if (reader.Read())
-                        idEncontrado = reader.GetInt32(0);
-                }
-
-                if (idEncontrado.HasValue)
-                {
-                    using var cmdUpdate = new SqlCommand(
-                        "UPDATE CodigosOTP SET Usado = 1 WHERE Id = @Id", conexion.SqlC);
-                    cmdUpdate.Parameters.AddWithValue("@Id", idEncontrado.Value);
-                    cmdUpdate.ExecuteNonQuery();
-                    return true;
-                }
-
-                using (var cmdIntentos = new SqlCommand(
-                    "UPDATE CodigosOTP SET Intentos = Intentos + 1 WHERE Correo = @Correo AND Usado = 0", conexion.SqlC))
-                {
-                    cmdIntentos.Parameters.AddWithValue("@Correo", correo);
-                    cmdIntentos.ExecuteNonQuery();
-                }
-
-                return false;
+                return (bool)pEsValido.Value;
             }
             catch (SqlException ex)
             {
