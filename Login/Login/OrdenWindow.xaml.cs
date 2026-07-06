@@ -42,6 +42,11 @@ namespace Órdenes_de_Trabajo
             // Botones modo "nuevo": Añadir habilitado, Actualizar deshabilitado
             SetModoNuevo();
 
+            // Diagrama inicial: sedán/SUV (canvasAuto) visible por defecto
+            canvasAuto.Visibility = Visibility.Visible;
+            canvasPickup.Visibility = Visibility.Collapsed;
+            canvasMoto.Visibility = Visibility.Collapsed;
+
             // Validación de entrada en tiempo real
             txtBuscar.PreviewTextInput += TxtBuscar_PreviewTextInput;
             DataObject.AddPastingHandler(txtBuscar, TxtBuscar_Pasting);
@@ -64,6 +69,38 @@ namespace Órdenes_de_Trabajo
                 txtPrecioServicio.Text = limpio == "0.00" ? "0" : limpio;
                 txtPrecioServicio.SelectAll();
             };
+        }
+
+        // ── VENTANA: TAMAÑO Y POSICIÓN ────────────────────────────────
+
+        /// <summary>
+        /// Ajusta la ventana al área de trabajo disponible y la centra.
+        /// Se ejecuta al cargar y cada vez que la ventana vuelve al
+        /// estado Normal (por ejemplo, tras minimizarla y restaurarla),
+        /// evitando que quede pegada arriba o más grande que la pantalla.
+        /// </summary>
+        private void CentrarYAjustarAPantalla()
+        {
+            var areaTrabajo = SystemParameters.WorkArea;
+
+            if (Height > areaTrabajo.Height)
+                Height = areaTrabajo.Height - 20;
+            if (Width > areaTrabajo.Width)
+                Width = areaTrabajo.Width - 20;
+
+            Left = areaTrabajo.Left + (areaTrabajo.Width - Width) / 2;
+            Top = areaTrabajo.Top + (areaTrabajo.Height - Height) / 2;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            CentrarYAjustarAPantalla();
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Normal)
+                CentrarYAjustarAPantalla();
         }
 
         // ── HELPERS DE MODO ─────────────────────────────────────────
@@ -124,6 +161,8 @@ namespace Órdenes_de_Trabajo
                 _clienteDNI = orden.clienteDNI;
                 _vehiculoPlaca = orden.vehiculoPlaca;
 
+                borderSelectorVehiculo.Visibility = Visibility.Collapsed;
+
                 // Info cliente
                 txtClienteNombre.Text = orden.nombreCompleto;
                 txtClienteTelefono.Text = orden.telefono;
@@ -135,6 +174,9 @@ namespace Órdenes_de_Trabajo
                 txtVehiculoTipo.Text = orden.vehiculoTipo;
                 txtVehiculoPropietario.Text = orden.vehiculoPlaca;
                 borderVehiculoInfo.Visibility = Visibility.Visible;
+
+                // Mostrar el diagrama correspondiente al tipo de vehículo cargado
+                MostrarCanvasPorTipo(orden.vehiculoTipo);
 
                 // Campos de la orden
                 dpFecha.SelectedDate = orden.fecha;
@@ -191,6 +233,7 @@ namespace Órdenes_de_Trabajo
             lblBuscar.Text = "DNI del Cliente";
             txtBuscar.Clear();
             borderError.Visibility = Visibility.Collapsed;
+            borderAutocompletado.Visibility = Visibility.Collapsed;
         }
 
         private void TabPlaca_Click(object sender, MouseButtonEventArgs e)
@@ -204,6 +247,7 @@ namespace Órdenes_de_Trabajo
             lblBuscar.Text = "Placa del Vehículo";
             txtBuscar.Clear();
             borderError.Visibility = Visibility.Collapsed;
+            borderAutocompletado.Visibility = Visibility.Collapsed;
         }
 
         // ── BUSCAR ───────────────────────────────────────────────────
@@ -240,23 +284,32 @@ namespace Órdenes_de_Trabajo
 
                 if (!ValidadorÓrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
 
-                if (!string.IsNullOrEmpty(r.vehiculoPlaca)
-                    && !ValidadorÓrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre))
-                    return;
-
                 _clienteDNI = dni;
                 txtClienteNombre.Text = r.nombreCompleto;
                 txtClienteTelefono.Text = r.telefono;
                 txtClienteEmail.Text = r.email;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
-                if (!string.IsNullOrEmpty(r.vehiculoPlaca))
+                // Obtener TODOS los vehículos del cliente para decidir si mostrar el selector
+                var vehiculos = _db.ObtenerVehiculosDeCliente(dni);
+
+                if (vehiculos.Count == 0)
                 {
-                    _vehiculoPlaca = r.vehiculoPlaca;
-                    txtVehiculoNombre.Text = r.vehiculoNombre;
-                    txtVehiculoTipo.Text = r.vehiculoTipo;
-                    txtVehiculoPropietario.Text = r.vehiculoPlaca;
-                    borderVehiculoInfo.Visibility = Visibility.Visible;
+                    _vehiculoPlaca = string.Empty;
+                    borderVehiculoInfo.Visibility = Visibility.Collapsed;
+                    borderSelectorVehiculo.Visibility = Visibility.Collapsed;
+                    MostrarError("Este cliente no tiene vehículos registrados.");
+                }
+                else if (vehiculos.Count == 1)
+                {
+                    borderSelectorVehiculo.Visibility = Visibility.Collapsed;
+                    SeleccionarVehiculo(vehiculos[0]);
+                }
+                else
+                {
+                    borderVehiculoInfo.Visibility = Visibility.Collapsed;
+                    borderSelectorVehiculo.Visibility = Visibility.Visible;
+                    lstVehiculos.ItemsSource = vehiculos;
                 }
 
                 UpdateLayout();
@@ -278,6 +331,8 @@ namespace Órdenes_de_Trabajo
                 if (!ValidadorÓrden.ValidarClienteActivo(r.activo, r.nombreCompleto)) return;
                 if (!ValidadorÓrden.ValidarVehiculoActivo(r.vehiculoActivo, r.vehiculoNombre)) return;
 
+                borderSelectorVehiculo.Visibility = Visibility.Collapsed;
+
                 _vehiculoPlaca = placa;
                 _clienteDNI = r.clienteDNI;
 
@@ -291,9 +346,36 @@ namespace Órdenes_de_Trabajo
                 borderVehiculoInfo.Visibility = Visibility.Visible;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
+                MostrarCanvasPorTipo(r.vehiculoTipo);
+
                 UpdateLayout();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
+        }
+
+        // ── SELECCIÓN DE VEHÍCULO (cuando el cliente tiene varios) ────
+
+        private void SeleccionarVehiculo(RepositorioSql.VehiculoDeCliente v)
+        {
+            if (!ValidadorÓrden.ValidarVehiculoActivo(v.Activo, v.Descripcion)) return;
+
+            _vehiculoPlaca = v.Placa;
+            txtVehiculoNombre.Text = v.Descripcion;
+            txtVehiculoTipo.Text = v.TipoAño;
+            txtVehiculoPropietario.Text = v.Placa;
+            borderVehiculoInfo.Visibility = Visibility.Visible;
+
+            MostrarCanvasPorTipo(v.Tipo);
+            UpdateLayout();
+        }
+
+        private void lstVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (lstVehiculos.SelectedItem is RepositorioSql.VehiculoDeCliente seleccionado)
+            {
+                SeleccionarVehiculo(seleccionado);
+                borderSelectorVehiculo.Visibility = Visibility.Collapsed;
+            }
         }
 
         // ── GUARDAR ──────────────────────────────────────────────────
@@ -313,6 +395,11 @@ namespace Órdenes_de_Trabajo
                     string.Empty, _repuestos.Count,
                     out decimal precioServicio))
                 return;
+
+            var confirmar = MessageBox.Show(
+                "¿Deseas guardar esta nueva orden de trabajo?",
+                "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirmar != MessageBoxResult.Yes) return;
 
             try
             {
@@ -356,6 +443,11 @@ namespace Órdenes_de_Trabajo
                     string.Empty, _repuestos.Count,
                     out decimal precioServicio))
                 return;
+
+            var confirmar = MessageBox.Show(
+                "¿Deseas guardar los cambios en esta orden?",
+                "Confirmar actualización", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirmar != MessageBoxResult.Yes) return;
 
             try
             {
@@ -403,7 +495,24 @@ namespace Órdenes_de_Trabajo
 
         // ── CANCELAR ─────────────────────────────────────────────────
 
-        private void btnCancelar_Click(object sender, RoutedEventArgs e) => Close();
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            bool hayDatos = !string.IsNullOrWhiteSpace(_clienteDNI)
+                            || !string.IsNullOrWhiteSpace(_vehiculoPlaca)
+                            || _repuestos.Count > 0
+                            || !string.IsNullOrWhiteSpace(txtObservaciones.Text);
+
+            if (hayDatos)
+            {
+                var confirmar = MessageBox.Show(
+                    "¿Seguro que deseas salir? Se perderán los datos ingresados.",
+                    "Confirmar cancelación", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (confirmar != MessageBoxResult.Yes) return;
+            }
+
+            Close();
+        }
 
         // ── CÁLCULO DE PRECIOS ───────────────────────────────────────
 
@@ -453,8 +562,32 @@ namespace Órdenes_de_Trabajo
 
         private void LimpiarDiagnostico_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var rect in canvasVehiculo.Children.OfType<System.Windows.Shapes.Rectangle>())
-                rect.Fill = Brushes.Transparent;
+            var todosLosCanvas = new[] { canvasAuto, canvasPickup, canvasMoto };
+            foreach (var canvas in todosLosCanvas)
+                foreach (var rect in canvas.Children.OfType<System.Windows.Shapes.Rectangle>())
+                    rect.Fill = Brushes.Transparent;
+
+            panelZonasDañadas.Children.Clear();
+            txtSinZonas.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>Muestra el canvas del diagrama según el tipo de vehículo (sedán/suv, pickup, moto/mototaxi).</summary>
+        private void MostrarCanvasPorTipo(string? tipoVehiculo)
+        {
+            string tipo = (tipoVehiculo ?? string.Empty).Trim().ToLowerInvariant();
+
+            canvasAuto.Visibility = Visibility.Collapsed;
+            canvasPickup.Visibility = Visibility.Collapsed;
+            canvasMoto.Visibility = Visibility.Collapsed;
+
+            if (tipo.Contains("pickup"))
+                canvasPickup.Visibility = Visibility.Visible;
+            else if (tipo.Contains("mototaxi") || tipo.Contains("moto"))
+                canvasMoto.Visibility = Visibility.Visible;
+            else
+                canvasAuto.Visibility = Visibility.Visible; // sedán / SUV / por defecto
+
+            // Al cambiar de diagrama se limpia la selección de zonas dañadas
             panelZonasDañadas.Children.Clear();
             txtSinZonas.Visibility = Visibility.Visible;
         }
@@ -474,6 +607,36 @@ namespace Órdenes_de_Trabajo
             // Seleccionar nuevo
             border.Background = BrushActivo;
             _tipoSeleccionado = border;
+
+            string tipo = border.Tag as string ?? "sedan";
+
+            canvasAuto.Visibility = Visibility.Collapsed;
+            canvasPickup.Visibility = Visibility.Collapsed;
+            canvasMoto.Visibility = Visibility.Collapsed;
+
+            switch (tipo)
+            {
+                case "pickup":
+                    canvasPickup.Visibility = Visibility.Visible;
+                    break;
+                case "moto":
+                case "mototaxi":
+                    canvasMoto.Visibility = Visibility.Visible;
+                    break;
+                default: // sedan, suv
+                    canvasAuto.Visibility = Visibility.Visible;
+                    break;
+            }
+
+            // Limpiar la selección de zonas dañadas al cambiar de tipo de vehículo
+            panelZonasDañadas.Children.Clear();
+            txtSinZonas.Visibility = Visibility.Visible;
+            foreach (var rect in canvasAuto.Children.OfType<System.Windows.Shapes.Rectangle>())
+                rect.Fill = Brushes.Transparent;
+            foreach (var rect in canvasPickup.Children.OfType<System.Windows.Shapes.Rectangle>())
+                rect.Fill = Brushes.Transparent;
+            foreach (var rect in canvasMoto.Children.OfType<System.Windows.Shapes.Rectangle>())
+                rect.Fill = Brushes.Transparent;
         }
 
         // ── AUTOCOMPLETADO ───────────────────────────────────────────
@@ -489,8 +652,7 @@ namespace Órdenes_de_Trabajo
             }
             txtContador.Text = $"{txtBuscar.Text.Length} / {limite}";
 
-            // Autocompletado solo en modo DNI
-            if (!_buscarPorDNI || txtBuscar.Text.Length < 2)
+            if (txtBuscar.Text.Length < 2)
             {
                 borderAutocompletado.Visibility = Visibility.Collapsed;
                 return;
@@ -498,18 +660,36 @@ namespace Órdenes_de_Trabajo
 
             try
             {
-                var sugerencias = _db.BuscarClientesPorDNI(txtBuscar.Text.Trim());
-                if (sugerencias.Count == 0)
+                if (_buscarPorDNI)
                 {
-                    borderAutocompletado.Visibility = Visibility.Collapsed;
-                    return;
+                    // Autocompletado por DNI
+                    var sugerencias = _db.BuscarClientesPorDNI(txtBuscar.Text.Trim());
+                    if (sugerencias.Count == 0)
+                    {
+                        borderAutocompletado.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+                    lstAutocompletado.ItemsSource = sugerencias
+                        .Select(s => s.DNI + " — " + s.NombreCompleto)
+                        .ToList();
+                    lstAutocompletado.Tag = sugerencias;
+                    borderAutocompletado.Visibility = Visibility.Visible;
                 }
-                lstAutocompletado.ItemsSource = sugerencias
-                    .Select(s => s.DNI + " — " + s.NombreCompleto)
-                    .ToList();
-                // Guardamos la lista completa para recuperar el DNI al seleccionar
-                lstAutocompletado.Tag = sugerencias;
-                borderAutocompletado.Visibility = Visibility.Visible;
+                else
+                {
+                    // Autocompletado por Placa
+                    var sugerencias = _db.BuscarVehiculosPorPlaca(txtBuscar.Text.Trim().ToUpper());
+                    if (sugerencias.Count == 0)
+                    {
+                        borderAutocompletado.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+                    lstAutocompletado.ItemsSource = sugerencias
+                        .Select(v => v.Placa + " — " + v.Modelo)
+                        .ToList();
+                    lstAutocompletado.Tag = sugerencias;
+                    borderAutocompletado.Visibility = Visibility.Visible;
+                }
             }
             catch
             {
@@ -520,16 +700,24 @@ namespace Órdenes_de_Trabajo
         private void lstAutocompletado_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (lstAutocompletado.SelectedIndex < 0) return;
-            if (lstAutocompletado.Tag is not List<RepositorioSql.ClienteSugerencia> lista) return;
 
-            var seleccionado = lista[lstAutocompletado.SelectedIndex];
-            txtBuscar.Text = seleccionado.DNI;
-            borderAutocompletado.Visibility = Visibility.Collapsed;
-            lstAutocompletado.SelectedIndex = -1;
-            BuscarPorDNI(seleccionado.DNI);
+            if (_buscarPorDNI && lstAutocompletado.Tag is List<RepositorioSql.ClienteSugerencia> listaClientes)
+            {
+                var seleccionado = listaClientes[lstAutocompletado.SelectedIndex];
+                txtBuscar.Text = seleccionado.DNI;
+                borderAutocompletado.Visibility = Visibility.Collapsed;
+                lstAutocompletado.SelectedIndex = -1;
+                BuscarPorDNI(seleccionado.DNI);
+            }
+            else if (!_buscarPorDNI && lstAutocompletado.Tag is List<RepositorioSql.VehiculoSugerencia> listaVehiculos)
+            {
+                var seleccionado = listaVehiculos[lstAutocompletado.SelectedIndex];
+                txtBuscar.Text = seleccionado.Placa;
+                borderAutocompletado.Visibility = Visibility.Collapsed;
+                lstAutocompletado.SelectedIndex = -1;
+                BuscarPorPlaca(seleccionado.Placa);
+            }
         }
-
-        private void lstVehiculos_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
 
         // ── HELPERS ──────────────────────────────────────────────────
 
@@ -543,6 +731,7 @@ namespace Órdenes_de_Trabajo
         {
             borderClienteInfo.Visibility = Visibility.Collapsed;
             borderVehiculoInfo.Visibility = Visibility.Collapsed;
+            borderSelectorVehiculo.Visibility = Visibility.Collapsed;
             borderError.Visibility = Visibility.Collapsed;
             _clienteDNI = string.Empty;
             _vehiculoPlaca = string.Empty;
@@ -565,6 +754,14 @@ namespace Órdenes_de_Trabajo
             LimpiarDiagnostico_Click(this, new RoutedEventArgs());
             SetModoNuevo();
             txtContador.Text = "0 / 13";
+
+            // Reset diagrama a auto por defecto
+            if (_tipoSeleccionado != null)
+                _tipoSeleccionado.Background = BrushInactivo;
+            _tipoSeleccionado = null;
+            canvasAuto.Visibility = Visibility.Visible;
+            canvasPickup.Visibility = Visibility.Collapsed;
+            canvasMoto.Visibility = Visibility.Collapsed;
         }
 
         private static bool ParsePrecio(string texto, out decimal valor)
@@ -586,5 +783,7 @@ namespace Órdenes_de_Trabajo
             if (e.LeftButton == MouseButtonState.Pressed)
                 DragMove();
         }
+
+
     }
 }

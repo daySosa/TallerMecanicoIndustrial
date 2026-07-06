@@ -3,12 +3,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:Órdenes_de_Trabajo"
-        Title="Nueva Orden de Trabajo" Height="1300" Width="1280"
+        Title="Nueva Orden de Trabajo" Height="850" Width="1280"
+        MinHeight="700" MinWidth="1150"
         TextElement.Foreground="White"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
+        ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded"
+        StateChanged="Window_StateChanged"
         MouseDown="Window_MouseDown">
 
     <Window.Resources>
@@ -515,9 +519,9 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="12"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="12"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="12"/>
+                                <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
                             <!-- DETALLE DE LA ORDEN -->
@@ -670,183 +674,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- DIAGNÓSTICO VISUAL -->
-                            <Border Grid.Row="2" Background="#13161f" CornerRadius="12"
-                                    BorderBrush="#1e2235" BorderThickness="1" Padding="16">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" Margin="0,0,0,12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="CarSearch"
-                                                                     Foreground="#4f6ef7" Width="16" Height="16"
-                                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <StackPanel>
-                                                <TextBlock Text="DIAGNÓSTICO VISUAL" Foreground="White"
-                                                           FontSize="13" FontWeight="SemiBold"/>
-                                                <TextBlock Text="Haz clic en las zonas dañadas del vehículo"
-                                                           Foreground="#505880" FontSize="10" Margin="0,1,0,0"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <Button Grid.Column="1" Content="Limpiar selección"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                BorderBrush="#1e2235" Foreground="#505880"
-                                                Height="28" Padding="10,0" FontSize="10"
-                                                materialDesign:ButtonAssist.CornerRadius="6"
-                                                Click="LimpiarDiagnostico_Click"/>
-                                    </Grid>
-                                    <Grid Grid.Row="1">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="14"/>
-                                            <ColumnDefinition Width="150"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Grid.Column="0" Background="#0f1117" CornerRadius="10" Padding="10">
-                                            <StackPanel>
-                                                <TextBlock Text="Vista Superior" Foreground="#505880"
-                                                           FontSize="9" HorizontalAlignment="Center" Margin="0,0,0,6"/>
-                                                <Canvas x:Name="canvasVehiculo" Width="300" Height="300"
-                                                        HorizontalAlignment="Center">
-                                                    <Rectangle Canvas.Left="70" Canvas.Top="35" Width="160" Height="230"
-                                                               Fill="#1e2235" RadiusX="20" RadiusY="20"
-                                                               Stroke="#252840" StrokeThickness="1.5"/>
-                                                    <Path Fill="#13161f" Opacity="0.9"
-                                                          Data="M95,62 L205,62 L193,88 L107,88 Z"/>
-                                                    <Rectangle Canvas.Left="102" Canvas.Top="93" Width="96" Height="110"
-                                                               Fill="#13161f" RadiusX="4" RadiusY="4"/>
-                                                    <Path Fill="#13161f" Opacity="0.9"
-                                                          Data="M107,207 L193,207 L205,230 L95,230 Z"/>
-                                                    <Rectangle Canvas.Left="42" Canvas.Top="60" Width="28" Height="46"
-                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
-                                                               Stroke="#252840" StrokeThickness="1"/>
-                                                    <Rectangle Canvas.Left="230" Canvas.Top="60" Width="28" Height="46"
-                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
-                                                               Stroke="#252840" StrokeThickness="1"/>
-                                                    <Rectangle Canvas.Left="42" Canvas.Top="194" Width="28" Height="46"
-                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
-                                                               Stroke="#252840" StrokeThickness="1"/>
-                                                    <Rectangle Canvas.Left="230" Canvas.Top="194" Width="28" Height="46"
-                                                               Fill="#0a0c14" RadiusX="5" RadiusY="5"
-                                                               Stroke="#252840" StrokeThickness="1"/>
-
-                                                    <Rectangle x:Name="zonaMotor" Canvas.Left="78" Canvas.Top="37"
-                                                               Width="144" Height="52"
-                                                               Fill="Transparent" RadiusX="8" RadiusY="8"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5"
-                                                               StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Motor"/>
-                                                    <TextBlock Canvas.Left="130" Canvas.Top="57" Text="Motor"
-                                                               Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
-                                                               IsHitTestVisible="False"/>
-
-                                                    <Rectangle x:Name="zonaTransmision" Canvas.Left="107" Canvas.Top="95"
-                                                               Width="86" Height="108"
-                                                               Fill="Transparent" RadiusX="5" RadiusY="5"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5"
-                                                               StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Transmisión"/>
-                                                    <TextBlock Canvas.Left="118" Canvas.Top="143" Text="Transm."
-                                                               Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
-                                                               IsHitTestVisible="False"/>
-
-                                                    <Rectangle x:Name="zonaFrenoDI" Canvas.Left="40" Canvas.Top="58"
-                                                               Width="32" Height="50" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Izq."/>
-                                                    <Rectangle x:Name="zonaFrenoDD" Canvas.Left="228" Canvas.Top="58"
-                                                               Width="32" Height="50" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Der."/>
-                                                    <Rectangle x:Name="zonaFrenoTI" Canvas.Left="40" Canvas.Top="192"
-                                                               Width="32" Height="50" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Izq."/>
-                                                    <Rectangle x:Name="zonaFrenoTD" Canvas.Left="228" Canvas.Top="192"
-                                                               Width="32" Height="50" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Der."/>
-
-                                                    <Rectangle x:Name="zonaSuspD" Canvas.Left="70" Canvas.Top="100"
-                                                               Width="34" Height="42" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Suspensión Del."/>
-                                                    <Rectangle x:Name="zonaSuspT" Canvas.Left="70" Canvas.Top="158"
-                                                               Width="34" Height="42" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Suspensión Tras."/>
-
-                                                    <Rectangle x:Name="zonaEscape" Canvas.Left="196" Canvas.Top="100"
-                                                               Width="34" Height="100" Fill="Transparent"
-                                                               RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
-                                                               StrokeThickness="1.5" StrokeDashArray="4,3"
-                                                               Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Sistema de Escape"/>
-
-                                                    <Rectangle x:Name="zonaCajuela" Canvas.Left="78" Canvas.Top="232"
-                                                               Width="144" Height="30"
-                                                               Fill="Transparent" RadiusX="8" RadiusY="8"
-                                                               Stroke="#4f6ef7" StrokeThickness="1.5"
-                                                               StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
-                                                               MouseLeftButtonDown="Zona_Click" Tag="Cajuela / Baúl"/>
-                                                    <TextBlock Canvas.Left="128" Canvas.Top="240" Text="Cajuela"
-                                                               Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
-                                                               IsHitTestVisible="False"/>
-
-                                                    <TextBlock Canvas.Left="126" Canvas.Top="14" Text="▲ FRENTE"
-                                                               Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"/>
-                                                    <TextBlock Canvas.Left="129" Canvas.Top="278" Text="▼ ATRÁS"
-                                                               Foreground="#505880" FontSize="9"/>
-                                                    <TextBlock Canvas.Left="24" Canvas.Top="78" Text="Fr.Izq"
-                                                               Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
-                                                    <TextBlock Canvas.Left="232" Canvas.Top="78" Text="Fr.Der"
-                                                               Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
-                                                    <TextBlock Canvas.Left="18" Canvas.Top="210" Text="Tras.Izq"
-                                                               Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
-                                                    <TextBlock Canvas.Left="232" Canvas.Top="210" Text="Tras.Der"
-                                                               Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
-                                                </Canvas>
-                                            </StackPanel>
-                                        </Border>
-
-                                        <Border Grid.Column="2" Background="#0f1117" CornerRadius="10" Padding="10">
-                                            <StackPanel>
-                                                <TextBlock Text="Zonas dañadas" Foreground="#505880"
-                                                           FontSize="9" FontWeight="Bold"
-                                                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                                    <StackPanel x:Name="panelZonasDañadas"/>
-                                                </ScrollViewer>
-                                                <TextBlock x:Name="txtSinZonas"
-                                                           Text="Ninguna zona&#x0a;seleccionada"
-                                                           Foreground="#353a58" FontSize="10"
-                                                           TextAlignment="Center" Margin="0,16,0,0"
-                                                           Visibility="Visible"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </Grid>
-                                </Grid>
-                            </Border>
-
                             <!-- DETALLE DEL TRABAJO -->
-                            <Border Grid.Row="4" Background="#13161f" CornerRadius="12"
+                            <Border Grid.Row="2" Background="#13161f" CornerRadius="12"
                                     BorderBrush="#1e2235" BorderThickness="1" Padding="16">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -964,6 +793,323 @@
                                                          Background="Transparent" BorderThickness="0"
                                                          IsReadOnly="True" FontWeight="Bold"
                                                          Text="L 0.00" FontSize="15"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <!-- DIAGNÓSTICO VISUAL -->
+                            <Border Grid.Row="4" Background="#13161f" CornerRadius="12"
+                                    BorderBrush="#1e2235" BorderThickness="1" Padding="16">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CarSearch"
+                                                                     Foreground="#4f6ef7" Width="16" Height="16"
+                                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <StackPanel>
+                                                <TextBlock Text="DIAGNÓSTICO VISUAL" Foreground="White"
+                                                           FontSize="13" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Haz clic en las zonas dañadas del vehículo"
+                                                           Foreground="#505880" FontSize="10" Margin="0,1,0,0"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Limpiar selección"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                BorderBrush="#1e2235" Foreground="#505880"
+                                                Height="28" Padding="10,0" FontSize="10"
+                                                materialDesign:ButtonAssist.CornerRadius="6"
+                                                Click="LimpiarDiagnostico_Click"/>
+                                    </Grid>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="170"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Background="#0f1117" CornerRadius="10" Padding="10">
+                                            <StackPanel>
+                                                <TextBlock Text="Vista Superior" Foreground="#505880"
+                                                           FontSize="9" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+
+                                                <!-- Viewbox reducido: antes MaxHeight="700", ahora "260" -->
+                                                <Viewbox Stretch="Uniform" MaxHeight="260">
+                                                    <Grid>
+
+                                                        <!-- ═══ CANVAS AUTO (Sedán / SUV) ═══ -->
+                                                        <Canvas x:Name="canvasAuto" Width="300" Height="300"
+                                                                Visibility="Visible">
+                                                            <Rectangle Canvas.Left="70" Canvas.Top="35" Width="160" Height="230"
+                                                                       Fill="#1e2235" RadiusX="20" RadiusY="20"
+                                                                       Stroke="#252840" StrokeThickness="1.5"/>
+                                                            <Path Fill="#13161f" Opacity="0.9"
+                                                                  Data="M95,62 L205,62 L193,88 L107,88 Z"/>
+                                                            <Rectangle Canvas.Left="102" Canvas.Top="93" Width="96" Height="110"
+                                                                       Fill="#13161f" RadiusX="4" RadiusY="4"/>
+                                                            <Path Fill="#13161f" Opacity="0.9"
+                                                                  Data="M107,207 L193,207 L205,230 L95,230 Z"/>
+                                                            <Rectangle Canvas.Left="42" Canvas.Top="60" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+                                                            <Rectangle Canvas.Left="230" Canvas.Top="60" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+                                                            <Rectangle Canvas.Left="42" Canvas.Top="194" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+                                                            <Rectangle Canvas.Left="230" Canvas.Top="194" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+
+                                                            <Rectangle x:Name="zonaMotor" Canvas.Left="78" Canvas.Top="37"
+                                                                       Width="144" Height="52"
+                                                                       Fill="Transparent" RadiusX="8" RadiusY="8"
+                                                                       Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Motor"/>
+                                                            <TextBlock Canvas.Left="130" Canvas.Top="57" Text="Motor"
+                                                                       Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaTransmision" Canvas.Left="107" Canvas.Top="95"
+                                                                       Width="86" Height="108"
+                                                                       Fill="Transparent" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Transmisión"/>
+                                                            <TextBlock Canvas.Left="118" Canvas.Top="143" Text="Transm."
+                                                                       Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaFrenoDI" Canvas.Left="40" Canvas.Top="58"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Izq."/>
+                                                            <Rectangle x:Name="zonaFrenoDD" Canvas.Left="228" Canvas.Top="58"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Der."/>
+                                                            <Rectangle x:Name="zonaFrenoTI" Canvas.Left="40" Canvas.Top="192"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Izq."/>
+                                                            <Rectangle x:Name="zonaFrenoTD" Canvas.Left="228" Canvas.Top="192"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Der."/>
+
+                                                            <Rectangle x:Name="zonaSuspD" Canvas.Left="70" Canvas.Top="100"
+                                                                       Width="34" Height="42" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Suspensión Del."/>
+                                                            <Rectangle x:Name="zonaSuspT" Canvas.Left="70" Canvas.Top="158"
+                                                                       Width="34" Height="42" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Suspensión Tras."/>
+
+                                                            <Rectangle x:Name="zonaEscape" Canvas.Left="196" Canvas.Top="100"
+                                                                       Width="34" Height="100" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Sistema de Escape"/>
+
+                                                            <Rectangle x:Name="zonaCajuela" Canvas.Left="78" Canvas.Top="232"
+                                                                       Width="144" Height="30"
+                                                                       Fill="Transparent" RadiusX="8" RadiusY="8"
+                                                                       Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Cajuela / Baúl"/>
+                                                            <TextBlock Canvas.Left="128" Canvas.Top="240" Text="Cajuela"
+                                                                       Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <TextBlock Canvas.Left="126" Canvas.Top="14" Text="▲ FRENTE"
+                                                                       Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"/>
+                                                            <TextBlock Canvas.Left="129" Canvas.Top="278" Text="▼ ATRÁS"
+                                                                       Foreground="#505880" FontSize="9"/>
+                                                            <TextBlock Canvas.Left="24" Canvas.Top="78" Text="Fr.Izq"
+                                                                       Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
+                                                            <TextBlock Canvas.Left="232" Canvas.Top="78" Text="Fr.Der"
+                                                                       Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
+                                                            <TextBlock Canvas.Left="18" Canvas.Top="210" Text="Tras.Izq"
+                                                                       Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
+                                                            <TextBlock Canvas.Left="232" Canvas.Top="210" Text="Tras.Der"
+                                                                       Foreground="#505880" FontSize="8" IsHitTestVisible="False"/>
+                                                        </Canvas>
+
+                                                        <!-- ═══ CANVAS PICKUP ═══ -->
+                                                        <Canvas x:Name="canvasPickup" Width="300" Height="300"
+                                                                Visibility="Collapsed">
+                                                            <Rectangle Canvas.Left="70" Canvas.Top="35" Width="160" Height="230"
+                                                                       Fill="#1e2235" RadiusX="20" RadiusY="20"
+                                                                       Stroke="#252840" StrokeThickness="1.5"/>
+                                                            <Path Fill="#13161f" Opacity="0.9"
+                                                                  Data="M95,62 L205,62 L193,88 L107,88 Z"/>
+                                                            <Rectangle Canvas.Left="102" Canvas.Top="93" Width="96" Height="80"
+                                                                       Fill="#13161f" RadiusX="4" RadiusY="4"/>
+                                                            <Rectangle Canvas.Left="90" Canvas.Top="178" Width="120" Height="82"
+                                                                       Fill="#0a0c14" Stroke="#252840" StrokeThickness="1.5"
+                                                                       RadiusX="4" RadiusY="4"/>
+                                                            <Rectangle Canvas.Left="42" Canvas.Top="60" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+                                                            <Rectangle Canvas.Left="230" Canvas.Top="60" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+                                                            <Rectangle Canvas.Left="42" Canvas.Top="194" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+                                                            <Rectangle Canvas.Left="230" Canvas.Top="194" Width="28" Height="46"
+                                                                       Fill="#0a0c14" RadiusX="5" RadiusY="5"
+                                                                       Stroke="#252840" StrokeThickness="1"/>
+
+                                                            <Rectangle x:Name="zonaMotorP" Canvas.Left="78" Canvas.Top="37"
+                                                                       Width="144" Height="52"
+                                                                       Fill="Transparent" RadiusX="8" RadiusY="8"
+                                                                       Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Motor"/>
+                                                            <TextBlock Canvas.Left="130" Canvas.Top="57" Text="Motor"
+                                                                       Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaCaja" Canvas.Left="90" Canvas.Top="178"
+                                                                       Width="120" Height="82"
+                                                                       Fill="Transparent" RadiusX="4" RadiusY="4"
+                                                                       Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Caja de Carga"/>
+                                                            <TextBlock Canvas.Left="125" Canvas.Top="212" Text="Caja"
+                                                                       Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaFrenoDIP" Canvas.Left="40" Canvas.Top="58"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Izq."/>
+                                                            <Rectangle x:Name="zonaFrenoDDP" Canvas.Left="228" Canvas.Top="58"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Del. Der."/>
+                                                            <Rectangle x:Name="zonaFrenoTIP" Canvas.Left="40" Canvas.Top="192"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Izq."/>
+                                                            <Rectangle x:Name="zonaFrenoTDP" Canvas.Left="228" Canvas.Top="192"
+                                                                       Width="32" Height="50" Fill="Transparent"
+                                                                       RadiusX="4" RadiusY="4" Stroke="#4f6ef7"
+                                                                       StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                                       Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Tras. Der."/>
+
+                                                            <TextBlock Canvas.Left="126" Canvas.Top="14" Text="▲ FRENTE"
+                                                                       Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"/>
+                                                            <TextBlock Canvas.Left="129" Canvas.Top="278" Text="▼ ATRÁS"
+                                                                       Foreground="#505880" FontSize="9"/>
+                                                        </Canvas>
+
+                                                        <!-- ═══ CANVAS MOTO (Moto / Mototaxi) ═══ -->
+                                                        <Canvas x:Name="canvasMoto" Width="300" Height="260"
+                                                                Visibility="Collapsed">
+                                                            <Ellipse Canvas.Left="30" Canvas.Top="90" Width="55" Height="55"
+                                                                     Fill="#1e2235" Stroke="#252840" StrokeThickness="2"/>
+                                                            <Ellipse Canvas.Left="215" Canvas.Top="90" Width="55" Height="55"
+                                                                     Fill="#1e2235" Stroke="#252840" StrokeThickness="2"/>
+                                                            <Line X1="57" Y1="60" X2="242" Y2="60" Stroke="#1e2235" StrokeThickness="14"/>
+
+                                                            <Rectangle x:Name="zonaFrenoDelM" Canvas.Left="30" Canvas.Top="90"
+                                                                       Width="55" Height="55"
+                                                                       Fill="Transparent" Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Delantero"/>
+                                                            <TextBlock Canvas.Left="35" Canvas.Top="150" Text="Fr. Del."
+                                                                       Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaFrenoTrasM" Canvas.Left="215" Canvas.Top="90"
+                                                                       Width="55" Height="55"
+                                                                       Fill="Transparent" Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Freno Trasero"/>
+                                                            <TextBlock Canvas.Left="215" Canvas.Top="150" Text="Fr. Tras."
+                                                                       Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaMotorM" Canvas.Left="115" Canvas.Top="40"
+                                                                       Width="70" Height="55"
+                                                                       Fill="Transparent" RadiusX="6" RadiusY="6"
+                                                                       Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Motor"/>
+                                                            <TextBlock Canvas.Left="130" Canvas.Top="60" Text="Motor"
+                                                                       Foreground="#4f6ef7" FontSize="10" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaTransM" Canvas.Left="85" Canvas.Top="95"
+                                                                       Width="130" Height="20"
+                                                                       Fill="Transparent" Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Transmisión / Cadena"/>
+                                                            <TextBlock Canvas.Left="105" Canvas.Top="97" Text="Cadena"
+                                                                       Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Rectangle x:Name="zonaEscapeM" Canvas.Left="185" Canvas.Top="110"
+                                                                       Width="45" Height="20"
+                                                                       Fill="Transparent" Stroke="#4f6ef7" StrokeThickness="1.5"
+                                                                       StrokeDashArray="4,3" Cursor="Hand" Opacity="0.8"
+                                                                       MouseLeftButtonDown="Zona_Click" Tag="Sistema de Escape"/>
+
+                                                            <TextBlock Canvas.Left="115" Canvas.Top="4" Text="▲ FRENTE"
+                                                                       Foreground="#4f6ef7" FontSize="9" FontWeight="Bold"/>
+                                                        </Canvas>
+
+                                                    </Grid>
+                                                </Viewbox>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Grid.Column="2" Background="#0f1117" CornerRadius="10" Padding="10">
+                                            <StackPanel>
+                                                <TextBlock Text="Zonas dañadas" Foreground="#505880"
+                                                           FontSize="9" FontWeight="Bold"
+                                                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                    <StackPanel x:Name="panelZonasDañadas"/>
+                                                </ScrollViewer>
+                                                <TextBlock x:Name="txtSinZonas"
+                                                           Text="Ninguna zona&#x0a;seleccionada"
+                                                           Foreground="#353a58" FontSize="10"
+                                                           TextAlignment="Center" Margin="0,16,0,0"
+                                                           Visibility="Visible"/>
                                             </StackPanel>
                                         </Border>
                                     </Grid>
