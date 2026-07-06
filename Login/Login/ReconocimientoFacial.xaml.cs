@@ -6,7 +6,6 @@ using Emgu.CV.Structure;
 using Login.Clases;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -15,29 +14,7 @@ using System.Windows.Threading;
 
 namespace Login
 {
-    /// <summary>
-    /// Ventana de verificación facial.
-    /// Requiere paquetes NuGet: Emgu.CV, Emgu.CV.runtime.windows (o windows.x64), Emgu.CV.Bitmap
-    /// Requiere los clasificadores Haar Cascade (haarcascade_frontalface_default.xml y
-    /// haarcascade_eye.xml, descargables del repositorio oficial de OpenCV) dentro de
-    /// una carpeta "Recursos" junto al ejecutable.
-    ///
-    /// CAMBIOS EN ESTA VERSIÓN:
-    /// 1. CORRECCIÓN CRÍTICA: el entrenamiento ahora lee de la tabla "ReconocimientoFacial"
-    ///    (la misma en la que VentanaBiometria guarda las fotos vía sp_Usuario_GuardarBiometria).
-    ///    Antes leía de "RostrosRegistrados", una tabla distinta y desconectada, por lo que
-    ///    el reconocedor nunca veía las fotos recién registradas.
-    /// 2. Ahora se guarda también el Usuario_Email de cada persona (no solo el Nombre), para
-    ///    poder iniciar sesión con la cuenta correcta al reconocer un rostro.
-    /// 3. El entrenamiento se ejecuta en segundo plano (Task.Run) para que la ventana no se
-    ///    congele mientras se conecta a la base de datos y entrena el modelo.
-    /// 4. Se aplica CLAHE (ecualización adaptativa) tanto al entrenar como al reconocer,
-    ///    para reducir el efecto de diferencias de iluminación entre fotos y cámara en vivo.
-    /// 5. La decisión de acceso no se toma con un solo frame: se exige consenso de varios
-    ///    frames consecutivos con la misma etiqueta antes de conceder o denegar acceso.
-    /// 6. Los MessageBox de diagnóstico se movieron a Debug.WriteLine y al log, para no
-    ///    bloquear el hilo de UI ni el bucle de la cámara.
-    /// </summary>
+
     public partial class ReconocimientoFacial : Window
     {
         // ---------------------- Configuración general ----------------------
@@ -45,28 +22,14 @@ namespace Login
         private const int MINUTOS_BLOQUEO = 3;
         private readonly RepositorioSql _db = new();
 
-        // Umbral de distancia LBPH: cuanto menor, más estricta la coincidencia.
-        // IMPORTANTE: este valor DEBE recalibrarse con datos reales de tu instalación.
-        // Usa el log/Debug.WriteLine de VerificarIdentidad para recolectar distancias de:
-        //   a) personas SÍ registradas -> anota el rango típico de distancias
-        //   b) personas NO registradas -> anota el rango típico de distancias
-        // El umbral correcto es el punto medio entre ambos rangos.
         private const double UMBRAL_CONFIANZA_LBPH = 65.0;
 
-        // Ventana de frames (a ~30 fps) dentro de la cual se debe superar la prueba de vida.
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
 
-        // Cantidad de frames consecutivos con predicción que se exigen antes de decidir
-        // el acceso. Esto evita que un solo frame con ruido/mala luz decida todo.
         private const int FRAMES_CONSENSO_REQUERIDOS = 5;
-
-        // Tolerancia de frames "ruidosos" dentro de la ventana de consenso (frames que caen
-        // en una etiqueta distinta a la mayoritaria, pero no invalidan el consenso).
         private const int TOLERANCIA_FRAMES_RUIDOSOS = 1;
 
-        private readonly string archivoIntentos =
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seguridad_intentos.json");
         private readonly string archivoLog =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log_accesos.txt");
 
@@ -83,8 +46,10 @@ namespace Login
         private readonly Dictionary<int, string> _etiquetasEmails = new();
         private readonly string _correoEsperado;
 
-        // Evita iniciar la cámara mientras el modelo todavía se está entrenando en segundo plano.
         private bool _modeloListo = false;
+
+        // ---------------------- Estado de bloqueo (ahora respaldado por BD) ----------------------
+        private DateTime? _bloqueadoHasta = null;
 
         // ---------------------- Estado de prueba de vida ----------------------
         private bool _ojosVisiblesFramePrevio = false;
@@ -96,16 +61,12 @@ namespace Login
 
         private int _framesProcesados = 0;
         private bool _pruebaVidaSuperada = false;
-        private bool _verificando = false; // true solo mientras se evalúa la decisión final de acceso
+        private bool _verificando = false;
 
-        // ---------------------- Periodo de gracia al iniciar la cámara ----------------------
         private const int SEGUNDOS_GRACIA = 3;
         private DateTime? _inicioGracia = null;
 
-        // ---------------------- Estado de consenso multi-frame ----------------------
         private readonly List<(int Label, double Distance)> _historialPredicciones = new();
-
-        private RegistroIntentos _registro;
 
         public ReconocimientoFacial(string correoEsperado)
         {
@@ -121,9 +82,7 @@ namespace Login
 
             txtEstado.Text = $"Verificando: {_correoEsperado}";
 
-            CargarRegistroIntentos();
             InicializarClasificadores();
-            ActualizarUIBloqueo();
 
             btnIniciarCamara.IsEnabled = false;
             txtEstado.Text = "Cargando rostros registrados...";
@@ -135,6 +94,8 @@ namespace Login
             try
             {
                 var (imagenes, etiquetas, nombres, emails) = await Task.Run(() => EntrenarReconocedor());
+
+                await ActualizarEstadoBloqueoAsync();
 
                 if (imagenes.Count == 0)
                 {
@@ -161,9 +122,7 @@ namespace Login
 
                 _modeloListo = true;
 
-                bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
-                                      _registro.BloqueadoHasta.Value > DateTime.Now;
-                if (!estaBloqueado)
+                if (_bloqueadoHasta is null)
                 {
                     btnIniciarCamara.IsEnabled = true;
                     txtEstado.Text = "En espera...";
@@ -178,87 +137,67 @@ namespace Login
         }
 
         // ======================================================================
-        //  PERSISTENCIA DE INTENTOS FALLIDOS / BLOQUEO
+        //  BLOQUEO POR INTENTOS FALLIDOS (respaldado por IntentosAccesoFallidos)
         // ======================================================================
 
-        private class RegistroIntentos
-        {
-            public int IntentosFallidos { get; set; } = 0;
-            public DateTime? BloqueadoHasta { get; set; } = null;
-        }
 
-        private void CargarRegistroIntentos()
+        private async Task ActualizarEstadoBloqueoAsync()
         {
+            RepositorioSql.EstadoIntentosFallidos estado;
             try
             {
-                if (File.Exists(archivoIntentos))
-                {
-                    string json = File.ReadAllText(archivoIntentos);
-                    _registro = JsonSerializer.Deserialize<RegistroIntentos>(json) ?? new RegistroIntentos();
-                }
-                else
-                {
-                    _registro = new RegistroIntentos();
-                }
+                estado = await Task.Run(() =>
+                    _db.ContarIntentosFallidosRecientes(_correoEsperado, MINUTOS_BLOQUEO));
             }
-            catch
+            catch (Exception ex)
             {
-                // Si el archivo está corrupto, se reinicia el registro por seguridad.
-                _registro = new RegistroIntentos();
-            }
-        }
 
-        private void GuardarRegistroIntentos()
-        {
-            try
-            {
-                string json = JsonSerializer.Serialize(_registro);
-                File.WriteAllText(archivoIntentos, json);
+                RegistrarEnLog("ERROR AL CONSULTAR INTENTOS FALLIDOS: " + ex.Message);
+                return;
             }
-            catch
-            {
-                // El fallo al guardar no debe interrumpir el flujo de autenticación.
-            }
-        }
 
-        private void RegistrarEnLog(string mensaje)
-        {
-            try
-            {
-                string linea = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensaje}{Environment.NewLine}";
-                File.AppendAllText(archivoLog, linea);
-            }
-            catch
-            {
-                // El registro de log no debe interrumpir el flujo de autenticación.
-            }
-        }
+            bool bloqueado = estado.TotalIntentos >= MAX_INTENTOS_FALLIDOS && estado.UltimoIntento.HasValue;
 
-        private void ActualizarUIBloqueo()
-        {
-            bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
-                                  _registro.BloqueadoHasta.Value > DateTime.Now;
-
-            if (!estaBloqueado)
+            if (!bloqueado)
             {
+                _bloqueadoHasta = null;
+                _timerBloqueo?.Stop();
                 if (_modeloListo) btnIniciarCamara.IsEnabled = true;
                 return;
             }
 
+    
+            _bloqueadoHasta = estado.UltimoIntento.Value.ToLocalTime().AddMinutes(MINUTOS_BLOQUEO);
+
+            if (_bloqueadoHasta.Value <= DateTime.Now)
+            {
+    
+                _bloqueadoHasta = null;
+                if (_modeloListo) btnIniciarCamara.IsEnabled = true;
+                return;
+            }
+
+            IniciarContadorBloqueoUI();
+        }
+
+        private void IniciarContadorBloqueoUI()
+        {
             btnIniciarCamara.IsEnabled = false;
             elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
+            txtEstado.Text = "Bloqueado temporalmente";
 
+            _timerBloqueo?.Stop();
             _timerBloqueo = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timerBloqueo.Tick += (s, e) =>
             {
-                var restante = _registro.BloqueadoHasta.Value - DateTime.Now;
+                if (_bloqueadoHasta is null) { _timerBloqueo.Stop(); return; }
+
+                var restante = _bloqueadoHasta.Value - DateTime.Now;
 
                 if (restante <= TimeSpan.Zero)
                 {
                     _timerBloqueo.Stop();
-                    _registro.BloqueadoHasta = null;
-                    _registro.IntentosFallidos = 0;
-                    GuardarRegistroIntentos();
+                    _bloqueadoHasta = null;
 
                     if (_modeloListo) btnIniciarCamara.IsEnabled = true;
                     txtEstado.Text = "En espera...";
@@ -270,8 +209,19 @@ namespace Login
                 }
             };
             _timerBloqueo.Start();
+        }
 
-            txtEstado.Text = "Bloqueado temporalmente";
+        private void RegistrarEnLog(string mensaje)
+        {
+            try
+            {
+                string linea = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensaje}{Environment.NewLine}";
+                File.AppendAllText(archivoLog, linea);
+            }
+            catch
+            {
+
+            }
         }
 
         // ======================================================================
@@ -298,11 +248,6 @@ namespace Login
             _clasificadorOjos = new CascadeClassifier(rutaOjos);
         }
 
-        /// <summary>
-        /// Aplica ecualización de histograma adaptativa (CLAHE) a un rostro en escala de
-        /// grises. Se usa SIEMPRE en el mismo punto del pipeline (después de recortar el
-        /// rostro, antes de redimensionar) tanto al entrenar como al reconocer.
-        /// </summary>
         private static Image<Gray, byte> NormalizarIluminacion(Image<Gray, byte> imgGris)
         {
             var salida = new Image<Gray, byte>(imgGris.Size);
@@ -310,11 +255,6 @@ namespace Login
             return salida;
         }
 
-        /// <summary>
-        /// Se ejecuta en un hilo de fondo (Task.Run): se conecta a la base de datos, recorta
-        /// y normaliza cada rostro, y devuelve las listas ya listas para entrenar. No toca
-        /// controles de UI directamente (por eso no usa MessageBox/txtEstado aquí).
-        /// </summary>
         private (List<Image<Gray, byte>> Imagenes, List<int> Etiquetas,
           Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
         {
@@ -329,9 +269,6 @@ namespace Login
             List<RepositorioSql.PersonaReconocimiento> personas;
             try
             {
-                // ✅ Usa la misma conexión que el resto de la app (ClsConexion), en vez
-                // de una cadena de conexión propia con credenciales desactualizadas.
-                // Esto es lo que causaba el error "Login failed for user 'DayanaSosa'".
                 personas = _db.ObtenerPersonasReconocimiento();
             }
             catch (Exception ex)
@@ -340,11 +277,10 @@ namespace Login
                 throw;
             }
 
-            // Se agrupan por Usuario_Email para no mezclar personas con el mismo nombre.
             var fotosPorPersona = new Dictionary<string, (string Nombre, List<byte[]> Fotos)>();
             foreach (var persona in personas)
             {
-                if (string.IsNullOrWhiteSpace(persona.Email)) continue; // sin cuenta asociada, se ignora
+                if (string.IsNullOrWhiteSpace(persona.Email)) continue;
 
                 if (!fotosPorPersona.ContainsKey(persona.Email))
                     fotosPorPersona[persona.Email] = (persona.Nombre, new List<byte[]>());
@@ -388,7 +324,7 @@ namespace Login
                     }
                     catch
                     {
-                        // Se ignora una foto corrupta o no procesable y se continúa con el resto.
+                       
                     }
                 }
 
@@ -416,7 +352,7 @@ namespace Login
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
-            if (_registro.BloqueadoHasta.HasValue && _registro.BloqueadoHasta.Value > DateTime.Now)
+            if (_bloqueadoHasta.HasValue && _bloqueadoHasta.Value > DateTime.Now)
             {
                 MessageBox.Show("El acceso está temporalmente bloqueado por intentos fallidos.",
                     "Bloqueado", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -480,8 +416,7 @@ namespace Login
 
             btnDetenerCamara.IsEnabled = false;
 
-            bool estaBloqueado = _registro.BloqueadoHasta.HasValue &&
-                                  _registro.BloqueadoHasta.Value > DateTime.Now;
+            bool estaBloqueado = _bloqueadoHasta.HasValue && _bloqueadoHasta.Value > DateTime.Now;
             if (!estaBloqueado && _modeloListo)
                 btnIniciarCamara.IsEnabled = true;
 
@@ -517,7 +452,6 @@ namespace Login
             using var imgColor = frame.ToImage<Bgr, byte>();
             using var imgGris = imgColor.Convert<Gray, byte>();
 
-            // ---- Periodo de gracia ----
             if (_inicioGracia.HasValue)
             {
                 double restante = SEGUNDOS_GRACIA - (DateTime.Now - _inicioGracia.Value).TotalSeconds;
@@ -675,30 +609,24 @@ namespace Login
 
             if (seEncontroEmail && emailDetectado.Equals(_correoEsperado, StringComparison.OrdinalIgnoreCase))
             {
-                // El rostro coincide Y pertenece a la cuenta que se está verificando.
                 string nombre = _etiquetasNombres[etiquetaMasComun.Key];
                 AccesoConcedido(nombre, emailDetectado);
             }
             else if (seEncontroEmail)
             {
-                // El rostro SÍ coincide con alguien registrado, pero es OTRA cuenta.
                 RegistrarEnLog($"RECHAZADO - Rostro pertenece a {emailDetectado}, pero se esperaba {_correoEsperado}");
-                AccesoDenegado("El rostro no corresponde a la cuenta que intentas verificar",
+                _ = AccesoDenegadoAsync("El rostro no corresponde a la cuenta que intentas verificar",
                     etiquetaMasComun.Key, distanciaPromedio);
             }
             else
             {
-                // No coincidió con ningún rostro registrado.
-                AccesoDenegado("Rostro no coincide con ningún registro (o consenso insuficiente)",
+                _ = AccesoDenegadoAsync("Rostro no coincide con ningún registro (o consenso insuficiente)",
                     etiquetaMasComun.Key, distanciaPromedio);
             }
         }
 
         private void AccesoConcedido(string nombre, string email)
         {
-            _registro.IntentosFallidos = 0;
-            _registro.BloqueadoHasta = null;
-            GuardarRegistroIntentos();
 
             RegistrarEnLog($"ACCESO CONCEDIDO - Usuario: {nombre} ({email})");
 
@@ -731,12 +659,6 @@ namespace Login
             temporizadorTransicion.Start();
         }
 
-        /// <summary>
-        /// Consulta los datos completos del usuario reconocido (nombre, apellido, rol)
-        /// y llena SesionActual exactamente igual que lo haría el login normal con
-        /// correo y contraseña, para que los permisos por rol funcionen igual sin
-        /// importar por qué método se inició sesión.
-        /// </summary>
         private void IniciarSesionCompleta(string email)
         {
             var fila = _db.ObtenerUsuarioPorEmail(email);
@@ -756,40 +678,38 @@ namespace Login
             SesionActual.IniciarSesion(email, nombreCompleto, apellido, rol);
         }
 
-        private void AccesoDenegado(string motivo, int labelDetectado, double distancia)
+        private async Task AccesoDenegadoAsync(string motivo, int labelDetectado, double distancia)
         {
-            _registro.IntentosFallidos++;
-            RegistrarEnLog($"ACCESO DENEGADO - Motivo: {motivo} - Label: {labelDetectado} " +
-                            $"- Distancia: {distancia:F2} - Intento N.{_registro.IntentosFallidos}");
+            RegistrarEnLog($"ACCESO DENEGADO - Motivo: {motivo} - Label: {labelDetectado} - Distancia: {distancia:F2}");
 
-            if (_registro.IntentosFallidos >= MAX_INTENTOS_FALLIDOS)
+            try
             {
-                _registro.BloqueadoHasta = DateTime.Now.AddMinutes(MINUTOS_BLOQUEO);
-                RegistrarEnLog($"CUENTA BLOQUEADA TEMPORALMENTE hasta {_registro.BloqueadoHasta:yyyy-MM-dd HH:mm:ss}");
-                GuardarRegistroIntentos();
+                await Task.Run(() =>
+                    _db.RegistrarIntentoFallidoReconocimiento(_correoEsperado, labelDetectado, distancia));
+            }
+            catch (Exception ex)
+            {
+                RegistrarEnLog("ERROR AL REGISTRAR INTENTO FALLIDO EN BD: " + ex.Message);
+            }
 
-                DetenerCamaraInterno();
+            await ActualizarEstadoBloqueoAsync();
 
+            DetenerCamaraInterno();
+
+            if (_bloqueadoHasta.HasValue)
+            {
                 MessageBox.Show(
                     $"Se superó el número máximo de intentos fallidos ({MAX_INTENTOS_FALLIDOS}).\n" +
                     $"El acceso ha sido bloqueado por {MINUTOS_BLOQUEO} minutos.",
                     "Acceso bloqueado", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                ActualizarUIBloqueo();
                 return;
             }
 
-            GuardarRegistroIntentos();
-            DetenerCamaraInterno();
-
-            txtEstado.Text = $"Rostro no reconocido ({_registro.IntentosFallidos}/{MAX_INTENTOS_FALLIDOS} intentos)";
+            txtEstado.Text = "Rostro no reconocido";
             elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
 
-            int intentosRestantes = MAX_INTENTOS_FALLIDOS - _registro.IntentosFallidos;
-            string plural = intentosRestantes == 1 ? "intento" : "intentos";
-
             var respuesta = MessageBox.Show(
-                $"Intento fallido. ¿Desea intentar de nuevo? (quedan {intentosRestantes} {plural})",
+                "Intento fallido. ¿Desea intentar de nuevo?",
                 "Acceso denegado", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (respuesta == MessageBoxResult.Yes)
@@ -842,9 +762,6 @@ namespace Login
         {
             DetenerCamaraInterno();
             _timerBloqueo?.Stop();
-
-            // Punto de integración: cerrar esta ventana o navegar a la anterior, por ejemplo:
-            // this.Close();
         }
 
         protected override void OnClosed(EventArgs e)

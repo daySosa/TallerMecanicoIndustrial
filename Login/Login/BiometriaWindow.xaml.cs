@@ -338,6 +338,8 @@ namespace InterfazClientes
 
             try
             {
+                _db.EliminarBiometria(_emailSeleccionado);
+
                 foreach (var foto in _fotosCapturadas)
                     _db.GuardarBiometria(_emailSeleccionado, foto);
 

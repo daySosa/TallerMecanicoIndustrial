@@ -1615,27 +1615,6 @@ namespace Login.Clases
             }
         }
 
-        public bool GuardarBiometria(string email, byte[] foto)
-        {
-            using var conexion = new ClsConexion();
-            try
-            {
-                using var cmd = new SqlCommand("sp_Usuario_RegistrarBiometria", conexion.SqlC)
-                {
-                    CommandType = CommandType.StoredProcedure
-                };
-                cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@Foto", foto);
-
-                conexion.Abrir();
-                cmd.ExecuteNonQuery();
-                return true;
-            }
-            catch (SqlException ex)
-            {
-                throw new Exception("Error al guardar biometría: " + ex.Message, ex);
-            }
-        }
 
         public int ContarFotosBiometria(string email)
         {
@@ -1657,26 +1636,6 @@ namespace Login.Clases
             }
         }
 
-        public bool EliminarBiometria(string email)
-        {
-            using var conexion = new ClsConexion();
-            try
-            {
-                using var cmd = new SqlCommand("sp_Usuario_EliminarBiometria", conexion.SqlC)
-                {
-                    CommandType = CommandType.StoredProcedure
-                };
-                cmd.Parameters.AddWithValue("@Email", email);
-
-                conexion.Abrir();
-                cmd.ExecuteNonQuery();
-                return true;
-            }
-            catch (SqlException ex)
-            {
-                throw new Exception("Error al eliminar biometría: " + ex.Message, ex);
-            }
-        }
 
         #endregion
 
@@ -1749,6 +1708,9 @@ namespace Login.Clases
         /// <summary>Datos crudos de una persona registrada para reconocimiento facial.</summary>
         public sealed record PersonaReconocimiento(int Id, string Nombre, string Email, byte[] Foto);
 
+
+        public sealed record EstadoIntentosFallidos(int TotalIntentos, DateTime? UltimoIntento);
+
         public List<PersonaReconocimiento> ObtenerPersonasReconocimiento()
         {
             using var conexion = new ClsConexion();
@@ -1771,7 +1733,7 @@ namespace Login.Clases
                 while (rd.Read())
                 {
                     if (rd.IsDBNull(colId) || rd.IsDBNull(colNombre) || rd.IsDBNull(colFoto))
-                        continue; // fila incompleta; se descarta
+                        continue; 
 
                     string nombre = rd.GetString(colNombre);
                     byte[] foto = (byte[])rd[colFoto];
@@ -1790,6 +1752,49 @@ namespace Login.Clases
             catch (SqlException ex)
             {
                 throw new Exception("Error al cargar personas de reconocimiento facial: " + ex.Message, ex);
+            }
+        }
+
+        public bool GuardarBiometria(string email, byte[] foto)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Usuario_RegistrarBiometria", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@Foto", foto);
+
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al guardar biometría: " + ex.Message, ex);
+            }
+        }
+
+        public bool EliminarBiometria(string email)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Usuario_EliminarBiometria", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Email", email);
+
+                conexion.Abrir();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al eliminar biometría: " + ex.Message, ex);
             }
         }
 
@@ -1815,10 +1820,43 @@ namespace Login.Clases
             }
         }
 
+
+        public EstadoIntentosFallidos ContarIntentosFallidosRecientes(string correo, int minutosVentana)
+        {
+            using var conexion = new ClsConexion();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Biometria_ContarIntentosRecientes", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Correo", correo);
+                cmd.Parameters.AddWithValue("@MinutosVentana", minutosVentana);
+
+                AbrirOThrow(conexion);
+                using var rd = cmd.ExecuteReader();
+
+                if (rd.Read())
+                {
+                    int colTotal = rd.GetOrdinal("TotalIntentos");
+                    int colUltimo = rd.GetOrdinal("UltimoIntento");
+
+                    int total = rd.GetInt32(colTotal);
+                    DateTime? ultimo = rd.IsDBNull(colUltimo) ? null : rd.GetDateTime(colUltimo);
+
+                    return new EstadoIntentosFallidos(total, ultimo);
+                }
+
+                return new EstadoIntentosFallidos(0, null);
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al consultar intentos fallidos: " + ex.Message, ex);
+            }
+        }
+
         /// <summary>
         /// Abre la conexión SQL y lanza una excepción clara si falla.
-        /// Usado por los métodos de reconocimiento facial, que necesitan
-        /// diferenciar un fallo de conexión de un fallo de lectura de datos.
         /// </summary>
         private static void AbrirOThrow(ClsConexion conexion)
         {
@@ -1831,7 +1869,6 @@ namespace Login.Clases
                 throw new Exception("Error al conectar con la base de datos: " + ex.Message, ex);
             }
         }
-
 
         #endregion
         #endregion
