@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Órdenes_de_Trabajo
 {
@@ -16,15 +17,13 @@ namespace Órdenes_de_Trabajo
         private int _ordenIDEditar = 0;
         private readonly ObservableCollection<RepuestoOrden> _repuestos = new();
 
-        // Colores reutilizables
+        // Colores reutilizables (UI 2D: tabs, botones de tipo de vehículo, etc.)
         private static readonly SolidColorBrush BrushActivo =
             new(Color.FromRgb(0x4f, 0x6e, 0xf7));
         private static readonly SolidColorBrush BrushInactivo =
             new(Color.FromRgb(0x1e, 0x22, 0x35));
         private static readonly SolidColorBrush BrushTextoInactivo =
             new(Color.FromRgb(0x50, 0x58, 0x80));
-        private static readonly SolidColorBrush BrushZonaDañada =
-            new(Color.FromArgb(0x22, 0x4f, 0x6e, 0xf7));
 
         public OrdenWindow()
         {
@@ -42,10 +41,8 @@ namespace Órdenes_de_Trabajo
             // Botones modo "nuevo": Añadir habilitado, Actualizar deshabilitado
             SetModoNuevo();
 
-            // Diagrama inicial: sedán/SUV (canvasAuto) visible por defecto
-            canvasAuto.Visibility = Visibility.Visible;
-            canvasPickup.Visibility = Visibility.Collapsed;
-            canvasMoto.Visibility = Visibility.Collapsed;
+            // Vehículo 3D inicial: sedán/SUV por defecto
+            MostrarVehiculo3D("sedan");
 
             // Validación de entrada en tiempo real
             txtBuscar.PreviewTextInput += TxtBuscar_PreviewTextInput;
@@ -73,12 +70,6 @@ namespace Órdenes_de_Trabajo
 
         // ── VENTANA: TAMAÑO Y POSICIÓN ────────────────────────────────
 
-        /// <summary>
-        /// Ajusta la ventana al área de trabajo disponible y la centra.
-        /// Se ejecuta al cargar y cada vez que la ventana vuelve al
-        /// estado Normal (por ejemplo, tras minimizarla y restaurarla),
-        /// evitando que quede pegada arriba o más grande que la pantalla.
-        /// </summary>
         private void CentrarYAjustarAPantalla()
         {
             var areaTrabajo = SystemParameters.WorkArea;
@@ -175,8 +166,8 @@ namespace Órdenes_de_Trabajo
                 txtVehiculoPropietario.Text = orden.vehiculoPlaca;
                 borderVehiculoInfo.Visibility = Visibility.Visible;
 
-                // Mostrar el diagrama correspondiente al tipo de vehículo cargado
-                MostrarCanvasPorTipo(orden.vehiculoTipo);
+                // Mostrar el vehículo 3D correspondiente al tipo cargado
+                MostrarVehiculo3D(orden.vehiculoTipo);
 
                 // Campos de la orden
                 dpFecha.SelectedDate = orden.fecha;
@@ -207,7 +198,6 @@ namespace Órdenes_de_Trabajo
             }
         }
 
-        /// <summary>Selecciona un ComboBoxItem cuyo Content coincida con <paramref name="valor"/>.</summary>
         private static void SeleccionarComboBoxPorContenido(ComboBox combo, string valor)
         {
             foreach (ComboBoxItem item in combo.Items)
@@ -290,7 +280,6 @@ namespace Órdenes_de_Trabajo
                 txtClienteEmail.Text = r.email;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
-                // Obtener TODOS los vehículos del cliente para decidir si mostrar el selector
                 var vehiculos = _db.ObtenerVehiculosDeCliente(dni);
 
                 if (vehiculos.Count == 0)
@@ -346,7 +335,7 @@ namespace Órdenes_de_Trabajo
                 borderVehiculoInfo.Visibility = Visibility.Visible;
                 borderClienteInfo.Visibility = Visibility.Visible;
 
-                MostrarCanvasPorTipo(r.vehiculoTipo);
+                MostrarVehiculo3D(r.vehiculoTipo);
 
                 UpdateLayout();
             }
@@ -365,7 +354,7 @@ namespace Órdenes_de_Trabajo
             txtVehiculoPropietario.Text = v.Placa;
             borderVehiculoInfo.Visibility = Visibility.Visible;
 
-            MostrarCanvasPorTipo(v.Tipo);
+            MostrarVehiculo3D(v.Tipo);
             UpdateLayout();
         }
 
@@ -525,19 +514,133 @@ namespace Órdenes_de_Trabajo
             txtCostoTotal.Text = $"L {(totalRepuestos + servicio):N2}";
         }
 
-        // ── DIAGNÓSTICO VISUAL ───────────────────────────────────────
+        // ══════════════════════════════════════════════════════════════
+        // ── DIAGNÓSTICO VISUAL 3D (vista 360° orbitable) ────────────────
+        // ══════════════════════════════════════════════════════════════
 
-        private void Zona_Click(object sender, MouseButtonEventArgs e)
+        private readonly Dictionary<GeometryModel3D, string> _zonaPorModelo = new();
+        private readonly Dictionary<string, List<GeometryModel3D>> _modelosPorZona = new();
+        private readonly HashSet<string> _zonasSeleccionadas = new();
+
+        private static readonly Material MaterialZonaNormal =
+            CrearMaterialZona(Color.FromArgb(40, 0x4f, 0x6e, 0xf7));
+        private static readonly Material MaterialZonaDañada =
+            CrearMaterialZona(Color.FromArgb(170, 0xff, 0x53, 0x53));
+
+        private static Material CrearMaterialZona(Color color)
         {
-            if (sender is not System.Windows.Shapes.Rectangle rect) return;
-            string zona = rect.Tag as string ?? string.Empty;
-            if (string.IsNullOrEmpty(zona)) return;
+            var grupo = new MaterialGroup();
+            grupo.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            return grupo;
+        }
 
-            bool seleccionada = rect.Fill is SolidColorBrush b && b.Color == BrushZonaDañada.Color;
+        private enum Eje { X, Y, Z }
 
-            if (seleccionada)
+        // ── Cámara orbital ──
+
+        private bool _arrastrando3D = false;
+        private bool _huboArrastreReal = false;
+        private System.Windows.Point _puntoInicioArrastre3D;
+        private double _thetaInicioArrastre, _phiInicioArrastre;
+
+        private double _orbitTheta = 35;   // ángulo horizontal (grados)
+        private double _orbitPhi = 18;     // ángulo de elevación (grados)
+        private double _orbitRadius = 480; // distancia de la cámara
+
+        private void ActualizarCamara()
+        {
+            double thetaRad = _orbitTheta * Math.PI / 180.0;
+            double phiRad = _orbitPhi * Math.PI / 180.0;
+
+            double x = _orbitRadius * Math.Cos(phiRad) * Math.Sin(thetaRad);
+            double y = _orbitRadius * Math.Sin(phiRad) + 40;
+            double z = _orbitRadius * Math.Cos(phiRad) * Math.Cos(thetaRad);
+
+            var posicion = new Point3D(x, y, z);
+            var objetivo = new Point3D(0, 40, 0);
+
+            camaraOrbit.Position = posicion;
+            camaraOrbit.LookDirection = objetivo - posicion;
+        }
+
+        private void Viewport3D_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _arrastrando3D = true;
+            _huboArrastreReal = false;
+            _puntoInicioArrastre3D = e.GetPosition(this);
+            _thetaInicioArrastre = _orbitTheta;
+            _phiInicioArrastre = _orbitPhi;
+            ((UIElement)sender).CaptureMouse();
+        }
+
+        private void Viewport3D_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_arrastrando3D) return;
+
+            var puntoActual = e.GetPosition(this);
+            double deltaX = puntoActual.X - _puntoInicioArrastre3D.X;
+            double deltaY = puntoActual.Y - _puntoInicioArrastre3D.Y;
+
+            if (Math.Abs(deltaX) > 4 || Math.Abs(deltaY) > 4)
+                _huboArrastreReal = true;
+
+            _orbitTheta = _thetaInicioArrastre - deltaX * 0.35;
+            _orbitPhi = Math.Clamp(_phiInicioArrastre + deltaY * 0.25, 4, 80);
+
+            ActualizarCamara();
+        }
+
+        private void Viewport3D_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_arrastrando3D) return;
+
+            _arrastrando3D = false;
+            ((UIElement)sender).ReleaseMouseCapture();
+
+            if (!_huboArrastreReal)
             {
-                rect.Fill = Brushes.Transparent;
+                // No hubo arrastre real: se interpreta como un clic → intentar seleccionar zona
+                var punto = e.GetPosition(viewport3D);
+                var resultado = VisualTreeHelper.HitTest(viewport3D, punto) as RayMeshGeometry3DHitTestResult;
+
+                if (resultado?.ModelHit is GeometryModel3D modelo &&
+                    _zonaPorModelo.TryGetValue(modelo, out string zona))
+                {
+                    AlternarZona3D(zona);
+                }
+            }
+        }
+
+        private void Viewport3D_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (_arrastrando3D)
+            {
+                _arrastrando3D = false;
+                ((UIElement)sender).ReleaseMouseCapture();
+            }
+        }
+
+        private void Viewport3D_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            _orbitRadius = Math.Clamp(_orbitRadius - e.Delta * 0.4, 220, 900);
+            ActualizarCamara();
+        }
+
+        // ── Selección de zonas ──
+
+        private void AlternarZona3D(string zona)
+        {
+            if (string.IsNullOrEmpty(zona) || !_modelosPorZona.TryGetValue(zona, out var modelos))
+                return;
+
+            bool estabaSeleccionada = _zonasSeleccionadas.Contains(zona);
+
+            if (estabaSeleccionada)
+            {
+                _zonasSeleccionadas.Remove(zona);
+                foreach (var modelo in modelos)
+                    modelo.Material = modelo.BackMaterial = MaterialZonaNormal;
+
                 var bloque = panelZonasDañadas.Children
                     .OfType<TextBlock>()
                     .FirstOrDefault(tb => tb.Tag as string == zona);
@@ -545,11 +648,14 @@ namespace Órdenes_de_Trabajo
             }
             else
             {
-                rect.Fill = BrushZonaDañada;
+                _zonasSeleccionadas.Add(zona);
+                foreach (var modelo in modelos)
+                    modelo.Material = modelo.BackMaterial = MaterialZonaDañada;
+
                 panelZonasDañadas.Children.Add(new TextBlock
                 {
                     Text = $"• {zona}",
-                    Tag = zona,           // para poder quitarlo por nombre
+                    Tag = zona,
                     Foreground = Brushes.White,
                     FontSize = 11,
                     Margin = new Thickness(0, 2, 0, 2)
@@ -562,38 +668,283 @@ namespace Órdenes_de_Trabajo
 
         private void LimpiarDiagnostico_Click(object sender, RoutedEventArgs e)
         {
-            var todosLosCanvas = new[] { canvasAuto, canvasPickup, canvasMoto };
-            foreach (var canvas in todosLosCanvas)
-                foreach (var rect in canvas.Children.OfType<System.Windows.Shapes.Rectangle>())
-                    rect.Fill = Brushes.Transparent;
-
+            foreach (var zona in _zonasSeleccionadas.ToList())
+            {
+                if (_modelosPorZona.TryGetValue(zona, out var modelos))
+                    foreach (var modelo in modelos)
+                        modelo.Material = modelo.BackMaterial = MaterialZonaNormal;
+            }
+            _zonasSeleccionadas.Clear();
             panelZonasDañadas.Children.Clear();
             txtSinZonas.Visibility = Visibility.Visible;
         }
 
-        /// <summary>Muestra el canvas del diagrama según el tipo de vehículo (sedán/suv, pickup, moto/mototaxi).</summary>
-        private void MostrarCanvasPorTipo(string? tipoVehiculo)
+        // ── Construcción de modelos 3D por tipo de vehículo ──
+
+        /// <summary>Construye y muestra el modelo 3D según el tipo de vehículo (sedán/suv, pickup, moto/mototaxi).</summary>
+        private void MostrarVehiculo3D(string? tipoVehiculo)
         {
             string tipo = (tipoVehiculo ?? string.Empty).Trim().ToLowerInvariant();
 
-            canvasAuto.Visibility = Visibility.Collapsed;
-            canvasPickup.Visibility = Visibility.Collapsed;
-            canvasMoto.Visibility = Visibility.Collapsed;
-
-            if (tipo.Contains("pickup"))
-                canvasPickup.Visibility = Visibility.Visible;
-            else if (tipo.Contains("mototaxi") || tipo.Contains("moto"))
-                canvasMoto.Visibility = Visibility.Visible;
-            else
-                canvasAuto.Visibility = Visibility.Visible; // sedán / SUV / por defecto
-
-            // Al cambiar de diagrama se limpia la selección de zonas dañadas
+            _zonaPorModelo.Clear();
+            _modelosPorZona.Clear();
+            _zonasSeleccionadas.Clear();
             panelZonasDañadas.Children.Clear();
             txtSinZonas.Visibility = Visibility.Visible;
 
-            // Reiniciar rotación al cambiar de diagrama
-            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
-            rotacionDiagrama.Angle = 0;
+            Model3DGroup nuevoModelo;
+            if (tipo.Contains("pickup"))
+                nuevoModelo = ConstruirPickup();
+            else if (tipo.Contains("mototaxi") || tipo.Contains("moto"))
+                nuevoModelo = ConstruirMoto();
+            else
+                nuevoModelo = ConstruirAuto(); // sedán / SUV / por defecto
+
+            visualVehiculo.Content = nuevoModelo;
+
+            // Reiniciar cámara a la posición inicial
+            _orbitTheta = 35;
+            _orbitPhi = 18;
+            _orbitRadius = 480;
+            ActualizarCamara();
+        }
+
+        private void RegistrarZona(Model3DGroup grupo, GeometryModel3D modelo, string zona)
+        {
+            grupo.Children.Add(modelo);
+            _zonaPorModelo[modelo] = zona;
+
+            if (!_modelosPorZona.TryGetValue(zona, out var lista))
+            {
+                lista = new List<GeometryModel3D>();
+                _modelosPorZona[zona] = lista;
+            }
+            lista.Add(modelo);
+        }
+
+        private Model3DGroup ConstruirAuto()
+        {
+            var grupo = new Model3DGroup();
+
+            var matCarroceria = MaterialSolido(Color.FromRgb(0x2e, 0x32, 0x50));
+            var matCabina = MaterialSolido(Color.FromArgb(215, 0x10, 0x13, 0x1c));
+            var matRueda = MaterialSolido(Color.FromRgb(0x0a, 0x0c, 0x14));
+            var matRin = MaterialSolido(Color.FromRgb(0x4f, 0x6e, 0xf7));
+
+            // Piso de referencia
+            grupo.Children.Add(CrearCilindro(0, -1, 0, 220, 2, MaterialSolido(Color.FromRgb(0x13, 0x16, 0x1f))));
+
+            // Chasis y cabina
+            grupo.Children.Add(CrearCaja(0, 35, 0, 150, 70, 360, matCarroceria));
+            grupo.Children.Add(CrearCaja(0, 97, -20, 108, 54, 170, matCabina));
+
+            // Ruedas + rines
+            double[] xsRueda = { -68, 68 };
+            double[] zsRueda = { 125, -125 };
+            foreach (var x in xsRueda)
+                foreach (var z in zsRueda)
+                {
+                    grupo.Children.Add(CrearCilindro(x, 34, z, 34, 24, matRueda, Eje.X));
+                    grupo.Children.Add(CrearCilindro(x * 0.94, 34, z, 15, 25, matRin, Eje.X));
+                }
+
+            // ── Zonas de diagnóstico ──
+            RegistrarZona(grupo, CrearCaja(0, 55, 140, 140, 60, 80, MaterialZonaNormal), "Motor");
+            RegistrarZona(grupo, CrearCaja(0, 25, 0, 120, 40, 140, MaterialZonaNormal), "Transmisión");
+            RegistrarZona(grupo, CrearCaja(0, 55, -145, 140, 60, 75, MaterialZonaNormal), "Cajuela / Baúl");
+
+            RegistrarZona(grupo, CrearCaja(-68, 34, 125, 46, 46, 46, MaterialZonaNormal), "Freno Del. Izq.");
+            RegistrarZona(grupo, CrearCaja(68, 34, 125, 46, 46, 46, MaterialZonaNormal), "Freno Del. Der.");
+            RegistrarZona(grupo, CrearCaja(-68, 34, -125, 46, 46, 46, MaterialZonaNormal), "Freno Tras. Izq.");
+            RegistrarZona(grupo, CrearCaja(68, 34, -125, 46, 46, 46, MaterialZonaNormal), "Freno Tras. Der.");
+
+            RegistrarZona(grupo, CrearCaja(0, 12, 105, 170, 16, 50, MaterialZonaNormal), "Suspensión Del.");
+            RegistrarZona(grupo, CrearCaja(0, 12, -105, 170, 16, 50, MaterialZonaNormal), "Suspensión Tras.");
+
+            RegistrarZona(grupo, CrearCilindro(60, 14, 0, 9, 170, MaterialZonaNormal, Eje.Z), "Sistema de Escape");
+
+            return grupo;
+        }
+
+        private Model3DGroup ConstruirPickup()
+        {
+            var grupo = new Model3DGroup();
+
+            var matCarroceria = MaterialSolido(Color.FromRgb(0x2e, 0x32, 0x50));
+            var matCabina = MaterialSolido(Color.FromArgb(215, 0x10, 0x13, 0x1c));
+            var matRueda = MaterialSolido(Color.FromRgb(0x0a, 0x0c, 0x14));
+            var matRin = MaterialSolido(Color.FromRgb(0x4f, 0x6e, 0xf7));
+            var matCaja = MaterialSolido(Color.FromRgb(0x22, 0x25, 0x40));
+
+            grupo.Children.Add(CrearCilindro(0, -1, 0, 220, 2, MaterialSolido(Color.FromRgb(0x13, 0x16, 0x1f))));
+
+            // Chasis delantero (motor + cabina)
+            grupo.Children.Add(CrearCaja(0, 35, 60, 150, 70, 220, matCarroceria));
+            grupo.Children.Add(CrearCaja(0, 92, 40, 108, 48, 150, matCabina));
+
+            // Caja de carga (parte trasera abierta)
+            grupo.Children.Add(CrearCaja(0, 45, -110, 150, 50, 160, matCaja));
+
+            double[] xsRueda = { -68, 68 };
+            double[] zsRueda = { 100, -110 };
+            foreach (var x in xsRueda)
+                foreach (var z in zsRueda)
+                {
+                    grupo.Children.Add(CrearCilindro(x, 34, z, 34, 24, matRueda, Eje.X));
+                    grupo.Children.Add(CrearCilindro(x * 0.94, 34, z, 15, 25, matRin, Eje.X));
+                }
+
+            RegistrarZona(grupo, CrearCaja(0, 55, 130, 140, 60, 80, MaterialZonaNormal), "Motor");
+            RegistrarZona(grupo, CrearCaja(0, 55, -110, 158, 60, 168, MaterialZonaNormal), "Caja de Carga");
+
+            RegistrarZona(grupo, CrearCaja(-68, 34, 100, 46, 46, 46, MaterialZonaNormal), "Freno Del. Izq.");
+            RegistrarZona(grupo, CrearCaja(68, 34, 100, 46, 46, 46, MaterialZonaNormal), "Freno Del. Der.");
+            RegistrarZona(grupo, CrearCaja(-68, 34, -110, 46, 46, 46, MaterialZonaNormal), "Freno Tras. Izq.");
+            RegistrarZona(grupo, CrearCaja(68, 34, -110, 46, 46, 46, MaterialZonaNormal), "Freno Tras. Der.");
+
+            return grupo;
+        }
+
+        private Model3DGroup ConstruirMoto()
+        {
+            var grupo = new Model3DGroup();
+
+            var matRueda = MaterialSolido(Color.FromRgb(0x0a, 0x0c, 0x14));
+            var matRin = MaterialSolido(Color.FromRgb(0x4f, 0x6e, 0xf7));
+            var matMarco = MaterialSolido(Color.FromRgb(0x2e, 0x32, 0x50));
+            var matAsiento = MaterialSolido(Color.FromRgb(0x13, 0x16, 0x1f));
+
+            grupo.Children.Add(CrearCilindro(0, -1, 0, 170, 2, MaterialSolido(Color.FromRgb(0x13, 0x16, 0x1f))));
+
+            // Ruedas (delantera y trasera)
+            grupo.Children.Add(CrearCilindro(0, 40, 95, 40, 20, matRueda, Eje.X));
+            grupo.Children.Add(CrearCilindro(0, 40, 95, 16, 21, matRin, Eje.X));
+            grupo.Children.Add(CrearCilindro(0, 40, -95, 40, 20, matRueda, Eje.X));
+            grupo.Children.Add(CrearCilindro(0, 40, -95, 16, 21, matRin, Eje.X));
+
+            // Marco central, asiento y manubrio
+            grupo.Children.Add(CrearCaja(0, 55, 0, 18, 14, 190, matMarco));
+            grupo.Children.Add(CrearCaja(0, 68, -35, 26, 12, 60, matAsiento));
+            grupo.Children.Add(CrearCilindro(0, 85, 90, 4, 60, matMarco, Eje.X));
+
+            // ── Zonas de diagnóstico ──
+            RegistrarZona(grupo, CrearCaja(0, 55, 40, 80, 55, 70, MaterialZonaNormal), "Motor");
+            RegistrarZona(grupo, CrearCaja(0, 45, 0, 30, 20, 150, MaterialZonaNormal), "Transmisión / Cadena");
+            RegistrarZona(grupo, CrearCaja(0, 40, 95, 60, 55, 55, MaterialZonaNormal), "Freno Delantero");
+            RegistrarZona(grupo, CrearCaja(0, 40, -95, 60, 55, 55, MaterialZonaNormal), "Freno Trasero");
+            RegistrarZona(grupo, CrearCilindro(25, 25, -40, 6, 90, MaterialZonaNormal, Eje.Z), "Sistema de Escape");
+
+            return grupo;
+        }
+
+        // ── Helpers de geometría 3D ──
+
+        private static Material MaterialSolido(Color color)
+        {
+            var grupo = new MaterialGroup();
+            grupo.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            grupo.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(90, 255, 255, 255)), 30));
+            return grupo;
+        }
+
+        private static GeometryModel3D CrearCaja(double centroX, double centroY, double centroZ,
+            double ancho, double alto, double profundo, Material material)
+        {
+            var mesh = ObtenerMeshCaja(ancho, alto, profundo);
+            var modelo = new GeometryModel3D(mesh, material) { BackMaterial = material };
+            modelo.Transform = new TranslateTransform3D(centroX, centroY, centroZ);
+            return modelo;
+        }
+
+        private static GeometryModel3D CrearCilindro(double centroX, double centroY, double centroZ,
+            double radio, double altura, Material material, Eje eje = Eje.Y)
+        {
+            var mesh = ObtenerMeshCilindro(radio, altura);
+            var modelo = new GeometryModel3D(mesh, material) { BackMaterial = material };
+
+            var grupoTransform = new Transform3DGroup();
+            switch (eje)
+            {
+                case Eje.X:
+                    grupoTransform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 90)));
+                    break;
+                case Eje.Z:
+                    grupoTransform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), 90)));
+                    break;
+            }
+            grupoTransform.Children.Add(new TranslateTransform3D(centroX, centroY, centroZ));
+            modelo.Transform = grupoTransform;
+            return modelo;
+        }
+
+        private static MeshGeometry3D ObtenerMeshCaja(double dx, double dy, double dz)
+        {
+            double x = dx / 2, y = dy / 2, z = dz / 2;
+            var mesh = new MeshGeometry3D();
+
+            mesh.Positions.Add(new Point3D(-x, -y, -z)); // 0
+            mesh.Positions.Add(new Point3D(x, -y, -z));  // 1
+            mesh.Positions.Add(new Point3D(x, y, -z));   // 2
+            mesh.Positions.Add(new Point3D(-x, y, -z));  // 3
+            mesh.Positions.Add(new Point3D(-x, -y, z));  // 4
+            mesh.Positions.Add(new Point3D(x, -y, z));   // 5
+            mesh.Positions.Add(new Point3D(x, y, z));    // 6
+            mesh.Positions.Add(new Point3D(-x, y, z));   // 7
+
+            int[] tris =
+            {
+                0,1,2, 0,2,3, // atrás
+                5,4,7, 5,7,6, // frente
+                4,0,3, 4,3,7, // izquierda
+                1,5,6, 1,6,2, // derecha
+                3,2,6, 3,6,7, // arriba
+                4,5,1, 4,1,0  // abajo
+            };
+            foreach (var i in tris) mesh.TriangleIndices.Add(i);
+
+            return mesh;
+        }
+
+        private static MeshGeometry3D ObtenerMeshCilindro(double radio, double altura, int segmentos = 16)
+        {
+            var mesh = new MeshGeometry3D();
+            double mitad = altura / 2;
+
+            for (int i = 0; i < segmentos; i++)
+            {
+                double angulo = 2 * Math.PI * i / segmentos;
+                double xx = radio * Math.Cos(angulo);
+                double zz = radio * Math.Sin(angulo);
+                mesh.Positions.Add(new Point3D(xx, -mitad, zz)); // anillo inferior
+                mesh.Positions.Add(new Point3D(xx, mitad, zz));  // anillo superior
+            }
+
+            // Caras laterales
+            for (int i = 0; i < segmentos; i++)
+            {
+                int sig = (i + 1) % segmentos;
+                int b0 = i * 2, t0 = i * 2 + 1, b1 = sig * 2, t1 = sig * 2 + 1;
+                mesh.TriangleIndices.Add(b0); mesh.TriangleIndices.Add(b1); mesh.TriangleIndices.Add(t0);
+                mesh.TriangleIndices.Add(t0); mesh.TriangleIndices.Add(b1); mesh.TriangleIndices.Add(t1);
+            }
+
+            // Tapas
+            int centroInf = mesh.Positions.Count;
+            mesh.Positions.Add(new Point3D(0, -mitad, 0));
+            int centroSup = mesh.Positions.Count;
+            mesh.Positions.Add(new Point3D(0, mitad, 0));
+
+            for (int i = 0; i < segmentos; i++)
+            {
+                int sig = (i + 1) % segmentos;
+                int b0 = i * 2, b1 = sig * 2;
+                mesh.TriangleIndices.Add(centroInf); mesh.TriangleIndices.Add(b0); mesh.TriangleIndices.Add(b1);
+
+                int t0 = i * 2 + 1, t1 = sig * 2 + 1;
+                mesh.TriangleIndices.Add(centroSup); mesh.TriangleIndices.Add(t1); mesh.TriangleIndices.Add(t0);
+            }
+
+            return mesh;
         }
 
         // ── TIPO DE VEHÍCULO ─────────────────────────────────────────
@@ -604,122 +955,14 @@ namespace Órdenes_de_Trabajo
         {
             if (sender is not Border border) return;
 
-            // Deseleccionar anterior
             if (_tipoSeleccionado != null)
                 _tipoSeleccionado.Background = BrushInactivo;
 
-            // Seleccionar nuevo
             border.Background = BrushActivo;
             _tipoSeleccionado = border;
 
             string tipo = border.Tag as string ?? "sedan";
-
-            canvasAuto.Visibility = Visibility.Collapsed;
-            canvasPickup.Visibility = Visibility.Collapsed;
-            canvasMoto.Visibility = Visibility.Collapsed;
-
-            switch (tipo)
-            {
-                case "pickup":
-                    canvasPickup.Visibility = Visibility.Visible;
-                    break;
-                case "moto":
-                case "mototaxi":
-                    canvasMoto.Visibility = Visibility.Visible;
-                    break;
-                default: // sedan, suv
-                    canvasAuto.Visibility = Visibility.Visible;
-                    break;
-            }
-
-            // Limpiar la selección de zonas dañadas al cambiar de tipo de vehículo
-            panelZonasDañadas.Children.Clear();
-            txtSinZonas.Visibility = Visibility.Visible;
-            foreach (var rect in canvasAuto.Children.OfType<System.Windows.Shapes.Rectangle>())
-                rect.Fill = Brushes.Transparent;
-            foreach (var rect in canvasPickup.Children.OfType<System.Windows.Shapes.Rectangle>())
-                rect.Fill = Brushes.Transparent;
-            foreach (var rect in canvasMoto.Children.OfType<System.Windows.Shapes.Rectangle>())
-                rect.Fill = Brushes.Transparent;
-
-            // Reiniciar rotación al cambiar de tipo de vehículo
-            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
-            rotacionDiagrama.Angle = 0;
-        }
-
-        // ── ARRASTRE PARA GIRAR EL DIAGRAMA (estilo configurador 360°) ──
-
-        private bool _arrastrandoDiagrama = false;
-        private double _anguloInicioArrastre;
-        private System.Windows.Point _puntoInicioArrastre;
-
-        private void BorderDiagrama_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // Si el clic fue sobre una zona de diagnóstico (Motor, Transm., etc.),
-            // no iniciamos el arrastre: dejamos que el evento siga su curso normal
-            // hacia Zona_Click.
-            if (e.OriginalSource is System.Windows.Shapes.Rectangle rect &&
-                rect.Tag is string tag && !string.IsNullOrEmpty(tag))
-                return;
-
-            _arrastrandoDiagrama = true;
-            _anguloInicioArrastre = rotacionDiagrama.Angle;
-            _puntoInicioArrastre = e.GetPosition(this);
-
-            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
-            ((UIElement)sender).CaptureMouse();
-        }
-
-        private void BorderDiagrama_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (!_arrastrandoDiagrama) return;
-
-            var puntoActual = e.GetPosition(this);
-            double deltaX = puntoActual.X - _puntoInicioArrastre.X;
-
-            // Sensibilidad del arrastre: pixeles de mouse → grados de giro
-            rotacionDiagrama.Angle = _anguloInicioArrastre + (deltaX * 0.4);
-        }
-
-        private void BorderDiagrama_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (!_arrastrandoDiagrama) return;
-            FinalizarArrastreDiagrama(sender);
-        }
-
-        private void BorderDiagrama_MouseLeave(object sender, MouseEventArgs e)
-        {
-            if (_arrastrandoDiagrama) FinalizarArrastreDiagrama(sender);
-        }
-
-        private void FinalizarArrastreDiagrama(object sender)
-        {
-            _arrastrandoDiagrama = false;
-            ((UIElement)sender).ReleaseMouseCapture();
-
-            double anguloActual = rotacionDiagrama.Angle;
-
-            // Ajustar (snap) al múltiplo de 90° más cercano
-            double anguloSnap = Math.Round(anguloActual / 90.0) * 90.0;
-            anguloSnap %= 360;
-            if (anguloSnap < 0) anguloSnap += 360;
-
-            // Elegir el camino más corto para animar el snap (evita vueltas largas)
-            double diferencia = anguloSnap - anguloActual;
-            while (diferencia > 180) diferencia -= 360;
-            while (diferencia < -180) diferencia += 360;
-
-            var animacion = new System.Windows.Media.Animation.DoubleAnimation
-            {
-                To = anguloActual + diferencia,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = new System.Windows.Media.Animation.QuadraticEase
-                {
-                    EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
-                }
-            };
-            animacion.Completed += (s, ev) => rotacionDiagrama.Angle = anguloSnap;
-            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, animacion);
+            MostrarVehiculo3D(tipo);
         }
 
         // ── AUTOCOMPLETADO ───────────────────────────────────────────
@@ -727,7 +970,6 @@ namespace Órdenes_de_Trabajo
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             int limite = _buscarPorDNI ? 13 : 7;
-            // Truncar si excede
             if (txtBuscar.Text.Length > limite)
             {
                 txtBuscar.Text = txtBuscar.Text[..limite];
@@ -745,7 +987,6 @@ namespace Órdenes_de_Trabajo
             {
                 if (_buscarPorDNI)
                 {
-                    // Autocompletado por DNI
                     var sugerencias = _db.BuscarClientesPorDNI(txtBuscar.Text.Trim());
                     if (sugerencias.Count == 0)
                     {
@@ -760,7 +1001,6 @@ namespace Órdenes_de_Trabajo
                 }
                 else
                 {
-                    // Autocompletado por Placa
                     var sugerencias = _db.BuscarVehiculosPorPlaca(txtBuscar.Text.Trim().ToUpper());
                     if (sugerencias.Count == 0)
                     {
@@ -834,24 +1074,17 @@ namespace Órdenes_de_Trabajo
             txtObservaciones.Clear();
             cmbEstado.SelectedIndex = -1;
             cmbPrioridad.SelectedIndex = -1;
-            LimpiarDiagnostico_Click(this, new RoutedEventArgs());
             SetModoNuevo();
             txtContador.Text = "0 / 13";
 
-            // Reset diagrama a auto por defecto
             if (_tipoSeleccionado != null)
                 _tipoSeleccionado.Background = BrushInactivo;
             _tipoSeleccionado = null;
-            canvasAuto.Visibility = Visibility.Visible;
-            canvasPickup.Visibility = Visibility.Collapsed;
-            canvasMoto.Visibility = Visibility.Collapsed;
 
-            // Reset rotación
-            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
-            rotacionDiagrama.Angle = 0;
+            MostrarVehiculo3D("sedan");
         }
 
-        private static bool ParsePrecio(string texto, out decimal valor)a
+        private static bool ParsePrecio(string texto, out decimal valor)
         {
             string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
             return decimal.TryParse(limpio,
