@@ -22,7 +22,7 @@ namespace Login
         private const int MINUTOS_BLOQUEO = 3;
         private readonly RepositorioSql _db = new();
 
-        private const double UMBRAL_CONFIANZA_LBPH = 90.0;
+        private const double UMBRAL_CONFIANZA_LBPH = 55.0;
 
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;

@@ -23,8 +23,8 @@ namespace InterfazClientes
         // ── CAPTURA MÚLTIPLE ─────────────────────────────────────────
         // Se piden varias fotos (en vez de una sola) para que el modelo de
         // reconocimiento tenga más variación de luz/ángulo y sea más estable.
-        private const int MIN_FOTOS = 3;
-        private const int MAX_FOTOS = 5;
+        private const int MIN_FOTOS = 8;
+        private const int MAX_FOTOS = 12;
         private readonly List<byte[]> _fotosCapturadas = new();
 
         // ── CÁMARA ───────────────────────────────────────────────────
@@ -32,6 +32,7 @@ namespace InterfazClientes
         private VideoCaptureDevice? _camaraActiva;
         private CascadeClassifier? _detectorRostros;
         private bool _rostroDetectadoEnVivo = false;
+        private Drawing.Bitmap? _ultimoFrameLimpio; // frame SIN el rectángulo verde, para capturar sin ruido
 
         public VentanaBiometria()
         {
@@ -163,6 +164,11 @@ namespace InterfazClientes
         {
             using Drawing.Bitmap frame = (Drawing.Bitmap)args.Frame.Clone();
 
+            // Guardamos una copia limpia ANTES de dibujar el rectángulo de detección encima,
+            // para no quemar esa línea verde sobre los píxeles del rostro al capturar.
+            _ultimoFrameLimpio?.Dispose();
+            _ultimoFrameLimpio = (Drawing.Bitmap)frame.Clone();
+
             if (_detectorRostros != null)
             {
                 using var imgEmgu = frame.ToImage<Bgr, byte>();
@@ -204,7 +210,7 @@ namespace InterfazClientes
                     g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
             }
 
-            var src = BitmapToImageSource(frame);
+            var src = BitmapToImageSource(frame); // esta SÍ lleva el rectángulo, solo para mostrar en pantalla
             Dispatcher.Invoke(() =>
             {
                 imgCamara.Source = src;
@@ -245,13 +251,19 @@ namespace InterfazClientes
                 return;
             }
 
+            if (_ultimoFrameLimpio == null)
+            {
+                MessageBox.Show("No hay un frame disponible todavía para capturar. Espera un momento e intenta de nuevo.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                var bitmapSource = (BitmapSource)imgCamara.Source;
+                // Capturamos del frame LIMPIO (sin el rectángulo verde quemado en los píxeles),
+                // no del que se muestra en pantalla (imgCamara.Source), que sí lo tiene dibujado.
                 using MemoryStream ms = new();
-                var encoder = new JpegBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
-                encoder.Save(ms);
+                _ultimoFrameLimpio.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
 
                 _fotosCapturadas.Add(ms.ToArray());
 
@@ -301,6 +313,9 @@ namespace InterfazClientes
                 _camaraActiva.NewFrame -= CamaraActiva_NewFrame;
                 _camaraActiva = null;
             }
+
+            _ultimoFrameLimpio?.Dispose();
+            _ultimoFrameLimpio = null;
         }
 
         private static BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
