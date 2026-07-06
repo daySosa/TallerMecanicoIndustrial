@@ -1,4 +1,5 @@
 ﻿using Login.Clases;
+using System.Data;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -248,6 +249,21 @@ namespace Login
                             $"⚠ Correo o contraseña incorrectos. Te quedan {restantes} intento(s).");
                         AnimarBorde(borderCorreo, ColorError, 1.5);
                     }
+                    return;
+                }
+
+                // ── Verificar que el usuario esté activo antes de dejarlo entrar ──
+                DataRow filaUsuario = await Task.Run(() => _repositorio.ObtenerUsuarioPorEmail(correo));
+
+                bool estaActivo = filaUsuario != null
+                                   && filaUsuario["Usuario_Activo"] != DBNull.Value
+                                   && (bool)filaUsuario["Usuario_Activo"];
+
+                if (!estaActivo)
+                {
+                    MostrarError(txtErrorContrasena, borderContrasena,
+                        "⚠ Esta cuenta está desactivada. Contacta a un administrador.");
+                    AnimarBorde(borderCorreo, ColorError, 1.5);
                     return;
                 }
 
