@@ -851,7 +851,7 @@ namespace Órdenes_de_Trabajo
             rotacionDiagrama.Angle = 0;
         }
 
-        private static bool ParsePrecio(string texto, out decimal valor)
+        private static bool ParsePrecio(string texto, out decimal valor)a
         {
             string limpio = texto.Replace("L", "").Replace(",", "").Replace(" ", "").Trim();
             return decimal.TryParse(limpio,
