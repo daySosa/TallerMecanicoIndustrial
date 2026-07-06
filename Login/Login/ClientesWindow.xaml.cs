@@ -15,6 +15,8 @@ namespace InterfazClientes
         public ClientesWindow()
         {
             InitializeComponent();
+            btnActualizar.Visibility = Visibility.Collapsed;
+            btnAgregar.Visibility = Visibility.Visible;
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
         }
@@ -108,8 +110,8 @@ namespace InterfazClientes
             txtDireccion.Text = c.Cliente_Direccion;
             toggleActivo.IsChecked = c.Cliente_Activo;
 
-            btnAgregar.IsEnabled = false;
-            btnAgregar.Opacity = 0.4;
+            btnAgregar.Visibility = Visibility.Collapsed;
+            btnActualizar.Visibility = Visibility.Visible;
             btnActualizar.IsEnabled = true;
             btnActualizar.Opacity = 1;
         }
