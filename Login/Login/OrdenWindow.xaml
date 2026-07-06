@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:Órdenes_de_Trabajo"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="Nueva Orden de Trabajo" Height="750" Width="1280"
         MinHeight="600" MinWidth="1150"
         TextElement.Foreground="White"
@@ -830,50 +831,22 @@
                                                 <ColumnDefinition Width="170"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <!-- ═══ PANEL 3D DEL VEHÍCULO (vista 360°) ═══ -->
+                                            <!-- ═══ PANEL 3D DEL VEHÍCULO (WebView2 + three.js) ═══ -->
                                             <Border Grid.Column="0" x:Name="borderDiagrama3D"
-                                                    Background="#0f1117" CornerRadius="10" Padding="10"
-                                                    Cursor="Hand"
-                                                    PreviewMouseLeftButtonDown="Viewport3D_PreviewMouseLeftButtonDown"
-                                                    MouseMove="Viewport3D_MouseMove"
-                                                    MouseLeftButtonUp="Viewport3D_MouseLeftButtonUp"
-                                                    MouseLeave="Viewport3D_MouseLeave"
-                                                    MouseWheel="Viewport3D_MouseWheel">
-                                                <StackPanel>
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                                    Background="#0f1117" CornerRadius="10" Padding="10">
+                                                <DockPanel>
+                                                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"
+                                                                HorizontalAlignment="Center" Margin="0,0,0,6">
                                                         <materialDesign:PackIcon Kind="RotateOrbit" Width="12" Height="12"
                                                                                  Foreground="#353a58" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                                         <TextBlock Text="Vista 360° · Arrastra para girar · Rueda para zoom"
                                                                    Foreground="#505880" FontSize="9" VerticalAlignment="Center"/>
                                                     </StackPanel>
-
-                                                    <Viewport3D x:Name="viewport3D" Height="320" ClipToBounds="False">
-                                                        <Viewport3D.Camera>
-                                                            <PerspectiveCamera x:Name="camaraOrbit"
-                                                                Position="180,120,420"
-                                                                LookDirection="-180,-80,-420"
-                                                                UpDirection="0,1,0"
-                                                                FieldOfView="32"/>
-                                                        </Viewport3D.Camera>
-
-                                                        <!-- Luces (fijas, no cambian con el tipo de vehículo) -->
-                                                        <ModelVisual3D>
-                                                            <ModelVisual3D.Content>
-                                                                <Model3DGroup>
-                                                                    <AmbientLight Color="#606060"/>
-                                                                    <DirectionalLight Color="#FFFFFF" Direction="-0.4,-0.6,-0.5"/>
-                                                                    <DirectionalLight Color="#3a3a55" Direction="0.5,0.2,0.8"/>
-                                                                </Model3DGroup>
-                                                            </ModelVisual3D.Content>
-                                                        </ModelVisual3D>
-
-                                                        <!-- Aquí se inserta el modelo 3D del vehículo (auto/pickup/moto) -->
-                                                        <ModelVisual3D x:Name="visualVehiculo"/>
-                                                    </Viewport3D>
-                                                </StackPanel>
+                                                    <wv2:WebView2 x:Name="webView3D"/>
+                                                </DockPanel>
                                             </Border>
 
-                                            <!-- ═══ PANEL LATERAL: ZONAS DAÑADAS (ESTO FALTABA) ═══ -->
+                                            <!-- ═══ PANEL LATERAL: ZONAS DAÑADAS ═══ -->
                                             <Border Grid.Column="2" Background="#0f1117" CornerRadius="10"
                                                     Padding="12" BorderBrush="#1e2235" BorderThickness="1">
                                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
