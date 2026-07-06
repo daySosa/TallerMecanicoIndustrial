@@ -22,7 +22,7 @@ namespace Login
         private const int MINUTOS_BLOQUEO = 3;
         private readonly RepositorioSql _db = new();
 
-        private const double UMBRAL_CONFIANZA_LBPH = 65.0;
+        private const double UMBRAL_CONFIANZA_LBPH = 75.0;
 
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
@@ -166,12 +166,12 @@ namespace Login
                 return;
             }
 
-    
+
             _bloqueadoHasta = estado.UltimoIntento.Value.ToLocalTime().AddMinutes(MINUTOS_BLOQUEO);
 
             if (_bloqueadoHasta.Value <= DateTime.Now)
             {
-    
+
                 _bloqueadoHasta = null;
                 if (_modeloListo) btnIniciarCamara.IsEnabled = true;
                 return;
@@ -324,7 +324,7 @@ namespace Login
                     }
                     catch
                     {
-                       
+
                     }
                 }
 

@@ -53,7 +53,16 @@ namespace Login.Clases
         public static bool ValidarTelefono(string telefono)
         {
             if (!ValidacionesGenerales.ValidarTextoRequerido(telefono, "teléfono")) return false;
-            return ValidacionesGenerales.Telefono(telefono);
+
+            if (!ValidacionesGenerales.Telefono(telefono))
+            {
+                MessageBox.Show(
+                    $"⚠ El teléfono \"{telefono.Trim()}\" no tiene un formato válido.\n\n" +
+                    "Debe tener 8 dígitos, por ejemplo: 9988-7766 o 99887766.",
+                    "Teléfono inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -77,7 +86,10 @@ namespace Login.Clases
 
             if (!ValidacionesGenerales.TieneLongitudMinima(contrasena, 6))
             {
-                MessageBox.Show("⚠ La contraseña debe tener al menos 6 caracteres.",
+                MessageBox.Show(
+                    $"⚠ La contraseña ingresada tiene {contrasena.Length} caracteres; " +
+                    "se requieren al menos 6.\n\n" +
+                    "Agrega algunos caracteres más para continuar.",
                     "Contraseña inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }

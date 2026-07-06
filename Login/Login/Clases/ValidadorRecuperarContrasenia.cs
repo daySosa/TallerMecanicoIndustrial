@@ -50,34 +50,36 @@ namespace Login.Clases
                 return "⚠ Ingresa tu nueva contraseña.";
 
             if (RegexEspacios().IsMatch(contrasena))
-                return "⚠ La contraseña no puede contener espacios.";
+                return "⚠ La contraseña no puede contener espacios en blanco.";
 
             if (contrasena.Length < LongitudMinima)
-                return $"⚠ La contraseña debe tener al menos {LongitudMinima} caracteres.";
+                return $"⚠ Te faltan {LongitudMinima - contrasena.Length} caracter(es). " +
+                       $"La contraseña debe tener al menos {LongitudMinima}.";
 
             if (contrasena.Length > LongitudMaxima)
-                return $"⚠ La contraseña no puede superar los {LongitudMaxima} caracteres.";
+                return $"⚠ La contraseña tiene {contrasena.Length} caracteres; " +
+                       $"el máximo permitido es {LongitudMaxima}.";
 
             if (!RegexMayuscula().IsMatch(contrasena))
-                return "⚠ Debe incluir al menos una letra mayúscula.";
+                return "⚠ Falta al menos una letra mayúscula (A-Z).";
 
             if (!RegexMinuscula().IsMatch(contrasena))
-                return "⚠ Debe incluir al menos una letra minúscula.";
+                return "⚠ Falta al menos una letra minúscula (a-z).";
 
             if (!RegexDigito().IsMatch(contrasena))
-                return "⚠ Debe incluir al menos un número.";
+                return "⚠ Falta al menos un número (0-9).";
 
             if (!RegexEspecial().IsMatch(contrasena))
-                return "⚠ Debe incluir al menos un carácter especial (!@#$%...).";
+                return "⚠ Falta al menos un carácter especial, por ejemplo: ! @ # $ % &";
 
             if (TieneCaracteresRepetidos(contrasena, 3))
-                return "⚠ No repitas el mismo carácter 3 o más veces seguidas.";
+                return "⚠ Tiene un carácter repetido 3 o más veces seguidas (ej: \"aaa\"). Varíalo un poco.";
 
             if (ContieneSecuencia(contrasena, 4))
-                return "⚠ Evita secuencias obvias como \"1234\" o \"qwerty\".";
+                return "⚠ Contiene una secuencia predecible como \"1234\" o \"qwerty\". Elige algo menos obvio.";
 
             if (ContrasenasComunes.Contains(contrasena))
-                return "⚠ Esta contraseña es demasiado común. Elige una más segura.";
+                return "⚠ Esta contraseña aparece en listas de contraseñas comunes filtradas. Elige una distinta.";
 
             if (!string.IsNullOrWhiteSpace(correo))
             {
@@ -85,7 +87,8 @@ namespace Login.Clases
                 if (!string.IsNullOrEmpty(usuario) && usuario.Length >= 3 &&
                     contrasena.Contains(usuario, StringComparison.OrdinalIgnoreCase))
                 {
-                    return "⚠ La contraseña no puede contener tu correo o usuario.";
+                    return "⚠ No uses tu correo o nombre de usuario dentro de la contraseña; " +
+                           "es fácil de adivinar.";
                 }
             }
 

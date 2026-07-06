@@ -54,8 +54,10 @@ namespace Login.Clases
         {
             if (string.IsNullOrWhiteSpace(clienteDNI))
             {
-                MessageBox.Show("⚠ Debes buscar y seleccionar un cliente antes de guardar la orden.\n\n" +
-                                "Ingresa el DNI o la placa del vehículo y presiona 'Buscar'.",
+                MessageBox.Show(
+                    "⚠ Esta orden no tiene un cliente asignado.\n\n" +
+                    "Ingresa el DNI del cliente o la placa de su vehículo y presiona \"Buscar\" " +
+                    "para asignarlo antes de guardar.",
                     "Cliente no asignado", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -66,8 +68,10 @@ namespace Login.Clases
         {
             if (string.IsNullOrWhiteSpace(vehiculoPlaca))
             {
-                MessageBox.Show("⚠ Debes buscar y seleccionar un vehículo antes de guardar la orden.\n\n" +
-                                "El vehículo se asigna automáticamente al buscar por DNI o por placa.",
+                MessageBox.Show(
+                    "⚠ Esta orden no tiene un vehículo asignado.\n\n" +
+                    "El vehículo se asigna automáticamente al buscar por DNI o placa; " +
+                    "si el cliente tiene varios vehículos, selecciona uno de la lista.",
                     "Vehículo no asignado", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -146,7 +150,8 @@ namespace Login.Clases
         {
             if (!fecha.HasValue)
             {
-                MessageBox.Show("⚠ Debes seleccionar la fecha de inicio de la orden.",
+                MessageBox.Show(
+                    "⚠ Selecciona la fecha de inicio; este campo no puede quedar vacío.",
                     "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -156,7 +161,8 @@ namespace Login.Clases
             if (fecha.Value.Date != hoy)
             {
                 MessageBox.Show(
-                    $"⚠ La fecha de inicio debe ser el día de hoy ({hoy:dd/MM/yyyy}).",
+                    $"⚠ Seleccionaste {fecha.Value:dd/MM/yyyy}, pero las órdenes nuevas " +
+                    $"deben iniciar hoy ({hoy:dd/MM/yyyy}).",
                     "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -168,7 +174,8 @@ namespace Login.Clases
         {
             if (!fechaEntrega.HasValue)
             {
-                MessageBox.Show("⚠ Debes seleccionar una fecha de entrega estimada.",
+                MessageBox.Show(
+                    "⚠ Selecciona una fecha estimada de entrega para el cliente.",
                     "Fecha requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -178,7 +185,9 @@ namespace Login.Clases
 
             if (fechaEntrega.Value.Date > DateTime.Today.AddYears(2))
             {
-                MessageBox.Show("⚠ La fecha de entrega no puede ser mayor a 2 años en el futuro.",
+                MessageBox.Show(
+                    $"⚠ La fecha de entrega ({fechaEntrega.Value:dd/MM/yyyy}) está a más de 2 años. " +
+                    "Verifica que no hayas seleccionado el año equivocado.",
                     "Fecha inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -202,7 +211,9 @@ namespace Login.Clases
 
             if (string.IsNullOrWhiteSpace(limpio) || limpio == "0" || limpio == "0.00")
             {
-                MessageBox.Show("⚠ El precio del servicio es obligatorio y debe ser mayor a 0.",
+                MessageBox.Show(
+                    "⚠ El precio del servicio no puede estar vacío ni ser 0.\n\n" +
+                    "Ingresa el costo total a cobrar por la mano de obra, ej: 1500.00",
                     "Precio requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -221,14 +232,18 @@ namespace Login.Clases
                     System.Globalization.CultureInfo.InvariantCulture,
                     out precio) || precio <= 0)
             {
-                MessageBox.Show("⚠ El precio del servicio debe ser un número mayor a 0.\nEjemplo: 1500.50",
+                MessageBox.Show(
+                    $"⚠ \"{texto.Trim()}\" no es un precio válido.\n\n" +
+                    "Ingresa solo números y, si aplica, un punto decimal. Ejemplo: 1500.50",
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             if (precio > 999_999.99m)
             {
-                MessageBox.Show("⚠ El precio del servicio supera el límite permitido (L 999,999.99).",
+                MessageBox.Show(
+                    $"⚠ El precio ingresado (L {precio:N2}) supera el límite permitido de L 999,999.99.\n\n" +
+                    "Si es un trabajo mayor, divídelo en varias órdenes o consulta con administración.",
                     "Precio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -305,8 +320,10 @@ namespace Login.Clases
 
             if (!System.IO.File.Exists(rutaFoto))
             {
-                MessageBox.Show("⚠ El archivo de foto seleccionado ya no existe en la ruta indicada.\n\n" +
-                                $"Ruta: {rutaFoto}",
+                MessageBox.Show(
+                    "⚠ La foto seleccionada ya no se encuentra en su ubicación original.\n\n" +
+                    $"Ruta buscada: {rutaFoto}\n\n" +
+                    "Puede que el archivo haya sido movido o eliminado; selecciona otra foto.",
                     "Foto no encontrada", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -320,8 +337,9 @@ namespace Login.Clases
 
             if (!extensionValida)
             {
-                MessageBox.Show("⚠ El archivo de foto debe ser una imagen válida.\n\n" +
-                                "Formatos permitidos: JPG · JPEG · PNG · BMP",
+                MessageBox.Show(
+                    $"⚠ El archivo tiene extensión \"{ext}\", que no está permitida.\n\n" +
+                    "Formatos aceptados: JPG · JPEG · PNG · BMP",
                     "Formato no permitido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -329,8 +347,9 @@ namespace Login.Clases
             long tamañoBytes = new System.IO.FileInfo(rutaFoto).Length;
             if (tamañoBytes > 5 * 1024 * 1024)
             {
-                MessageBox.Show("⚠ La imagen no puede superar los 5 MB.\n\n" +
-                                $"Tamaño actual: {tamañoBytes / 1024 / 1024:N1} MB",
+                MessageBox.Show(
+                    $"⚠ La imagen pesa {tamañoBytes / 1024.0 / 1024.0:N1} MB; el límite es 5 MB.\n\n" +
+                    "Comprime la imagen o toma la foto con menor resolución.",
                     "Imagen demasiado grande", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }

@@ -24,10 +24,10 @@
         public static string ValidarCorreo(string correo)
         {
             if (!ValidacionesGenerales.EsRequerido(correo))
-                return "⚠ Ingresa tu correo electrónico.";
+                return "⚠ Ingresa tu correo electrónico para iniciar sesión.";
 
             if (!ValidacionesGenerales.EsCorreoValido(correo))
-                return "⚠ El correo no tiene un formato válido.";
+                return $"⚠ \"{correo.Trim()}\" no parece un correo válido. Revisa que tenga el formato usuario@dominio.com.";
 
             return null;
         }
@@ -38,7 +38,8 @@
                 return "⚠ Ingresa tu contraseña.";
 
             if (!ValidacionesGenerales.TieneLongitudMinima(contrasena, LongitudMinimaContrasena))
-                return $"⚠ La contraseña debe tener al menos {LongitudMinimaContrasena} caracteres.";
+                return $"⚠ Faltan {LongitudMinimaContrasena - contrasena.Length} caracter(es); " +
+                       $"la contraseña debe tener al menos {LongitudMinimaContrasena}.";
 
             return null;
         }

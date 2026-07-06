@@ -36,7 +36,8 @@ namespace Login.Clases
             if (placa.Trim().Length < 6)
             {
                 MessageBox.Show(
-                    "⚠ La placa debe tener entre 6 y 7 caracteres.\n\n" +
+                    $"⚠ La placa \"{placa.Trim()}\" tiene {placa.Trim().Length} caracter(es); " +
+                    "debe tener entre 6 y 7.\n\n" +
                     "  • Moto:   6 caracteres (ej: GBA123)\n" +
                     "  • Carro:  7 caracteres (ej: GHA1234)\n" +
                     "  • Camión: 7 caracteres (ej: GCA123A)",
@@ -59,12 +60,12 @@ namespace Login.Clases
                 if (formatoCarro || formatoMoto || formatoCamion) return true;
 
                 string msg = p.Length == 6
-                    ? "⚠ Formato de placa de motocicleta incorrecto.\n\nFormato válido:\n  • 2 letras + 4 dígitos: GBA1234"
+                    ? $"⚠ \"{p}\" no coincide con el formato de placa de motocicleta.\n\nFormato válido:\n  • 2 letras + 4 dígitos: GBA1234"
                     : p.Length == 7 && char.IsDigit(p[6])
-                        ? "⚠ Formato de placa de carro incorrecto.\n\nFormato válido:\n  • 3 letras + 4 dígitos: GHA1234"
+                        ? $"⚠ \"{p}\" no coincide con el formato de placa de carro.\n\nFormato válido:\n  • 3 letras + 4 dígitos: GHA1234"
                         : p.Length == 7 && char.IsLetter(p[6])
-                            ? "⚠ Formato de placa de camión incorrecto.\n\nFormato válido:\n  • 3 letras + 3 dígitos + 1 letra: GCA123A"
-                            : "⚠ Formato de placa no reconocido.\n\nFormatos válidos en Honduras:\n" +
+                            ? $"⚠ \"{p}\" no coincide con el formato de placa de camión.\n\nFormato válido:\n  • 3 letras + 3 dígitos + 1 letra: GCA123A"
+                            : $"⚠ \"{p}\" no coincide con ningún formato de placa reconocido.\n\nFormatos válidos en Honduras:\n" +
                               "  • Carro:  3 letras + 4 dígitos:           GHA1234\n" +
                               "  • Moto:   2 letras + 4 dígitos:           GBA1234\n" +
                               "  • Camión: 3 letras + 3 dígitos + 1 letra: GCA123A";
@@ -80,7 +81,7 @@ namespace Login.Clases
                 case "Camioneta":
                     if (formatoCarro) return true;
                     MessageBox.Show(
-                        $"⚠ Formato de placa incorrecto para {tipo}.\n\nFormato válido:\n  • 3 letras + 4 dígitos: GHA1234",
+                        $"⚠ \"{p}\" no es una placa válida para tipo {tipo}.\n\nFormato válido:\n  • 3 letras + 4 dígitos: GHA1234",
                         "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
 
@@ -88,21 +89,21 @@ namespace Login.Clases
                 case "MotoTaxi":
                     if (formatoMoto) return true;
                     MessageBox.Show(
-                        $"⚠ Formato de placa incorrecto para {tipo}.\n\nFormato válido:\n  • 2 letras + 4 dígitos: GBA1234",
+                        $"⚠ \"{p}\" no es una placa válida para tipo {tipo}.\n\nFormato válido:\n  • 2 letras + 4 dígitos: GBA1234",
                         "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
 
                 case "Camión":
                     if (formatoCamion) return true;
                     MessageBox.Show(
-                        $"⚠ Formato de placa incorrecto para {tipo}.\n\nFormato válido:\n  • 3 letras + 3 dígitos + 1 letra: GCA123A",
+                        $"⚠ \"{p}\" no es una placa válida para tipo {tipo}.\n\nFormato válido:\n  • 3 letras + 3 dígitos + 1 letra: GCA123A",
                         "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
 
                 default:
                     if (formatoCarro || formatoMoto || formatoCamion) return true;
                     MessageBox.Show(
-                        "⚠ Formato de placa no reconocido.\n\nFormatos válidos en Honduras:\n" +
+                        $"⚠ \"{p}\" no coincide con ningún formato de placa reconocido.\n\nFormatos válidos en Honduras:\n" +
                         "  • Carro:  3 letras + 4 dígitos:           GHA1234\n" +
                         "  • Moto:   2 letras + 4 dígitos:           GBA1234\n" +
                         "  • Camión: 3 letras + 3 dígitos + 1 letra: GCA123A",
@@ -121,7 +122,9 @@ namespace Login.Clases
                 if (p.Contains(r))
                 {
                     MessageBox.Show(
-                        $"⚠ La placa '{p}' contiene una combinación reservada o no permitida.",
+                        $"⚠ La placa \"{p}\" no puede registrarse porque contiene \"{r}\", " +
+                        "una palabra reservada para uso oficial.\n\n" +
+                        "Verifica que hayas digitado la placa correctamente.",
                         "Placa inválida", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
@@ -131,10 +134,13 @@ namespace Login.Clases
 
         public static bool ValidarPlacaNoDuplicada(string placa, Func<string, bool> existeEnBD)
         {
-            if (existeEnBD(placa.Trim().ToUpper()))
+            string p = placa.Trim().ToUpper();
+            if (existeEnBD(p))
             {
                 MessageBox.Show(
-                    $"⚠ La placa '{placa.Trim().ToUpper()}' ya está registrada en el sistema.",
+                    $"⚠ Ya existe un vehículo registrado con la placa \"{p}\".\n\n" +
+                    "Usa el buscador para localizarlo en vez de crear un registro nuevo, " +
+                    "o revisa que no hayas transpuesto algún carácter.",
                     "Placa duplicada", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }

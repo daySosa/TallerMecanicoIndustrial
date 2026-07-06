@@ -63,11 +63,6 @@ namespace Login.Clases
         // ORDEN / PAGO
         // ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Valida que el ID de la orden sea un número entero positivo mayor a cero.
-        /// </summary>
-        /// 
-
         public static bool ValidarClienteBuscado(string dni, string nombreCliente)
         {
             return ValidacionesGenerales.ValidarClienteDNI(dni, nombreCliente);
@@ -80,17 +75,22 @@ namespace Login.Clases
 
         public static bool ValidarDNIPago(string dni, Action<string> mostrarMensaje)
         {
-            if (!ValidacionesGenerales.ValidarTextoRequerido(dni, "⚠ El DNI es obligatorio.", mostrarMensaje)) return false;
-            if (!ValidacionesGenerales.ValidarSoloDigitos(dni, "⚠ El DNI solo debe contener números.", mostrarMensaje)) return false;
+            if (!ValidacionesGenerales.ValidarTextoRequerido(dni, "⚠ El DNI es obligatorio para registrar el pago.", mostrarMensaje)) return false;
+            if (!ValidacionesGenerales.ValidarSoloDigitos(dni, "⚠ El DNI solo debe contener números, sin guiones ni espacios.", mostrarMensaje)) return false;
             return true;
         }
 
+        /// <summary>
+        /// Valida que el ID de la orden sea un número entero positivo mayor a cero.
+        /// </summary>
         public static bool ValidarOrdenId(string texto, out int ordenId)
         {
             ordenId = 0;
             if (!int.TryParse(texto.Trim(), out ordenId) || ordenId <= 0)
             {
-                MessageBox.Show("⚠ Selecciona una orden de la lista antes de guardar.",
+                MessageBox.Show(
+                    "⚠ No hay ninguna orden seleccionada.\n\n" +
+                    "Elige una orden de la lista antes de registrar el pago.",
                     "Orden no seleccionada", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -108,7 +108,8 @@ namespace Login.Clases
 
             if (string.IsNullOrWhiteSpace(limpio))
             {
-                MessageBox.Show("⚠ El monto del pago no puede estar vacío.",
+                MessageBox.Show(
+                    "⚠ Ingresa el monto que el cliente está pagando; este campo es obligatorio.",
                     "Campo requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -116,25 +117,22 @@ namespace Login.Clases
             if (!decimal.TryParse(limpio, System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out monto) || monto <= 0)
             {
-                MessageBox.Show("⚠ El monto debe ser un número mayor a 0.",
+                MessageBox.Show(
+                    $"⚠ \"{texto.Trim()}\" no es un monto válido; debe ser un número mayor a 0.",
                     "Monto inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             if (monto > 999_999.99m)
             {
-                MessageBox.Show("⚠ El monto ingresado supera el límite permitido (L 999,999.99).",
+                MessageBox.Show(
+                    $"⚠ El monto ingresado (L {monto:N2}) supera el límite permitido de L 999,999.99.",
                     "Monto inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             return true;
         }
-
-        /// <summary>
-        /// Valida que el monto del pago no supere el total de la orden,
-        /// previniendo pagos parciales o en exceso no autorizados.
-        /// </summary>
 
         public static string FormatearPrecioGasto(string texto)
         {

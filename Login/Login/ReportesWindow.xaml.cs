@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -13,6 +14,18 @@ namespace Login
     {
         private string _modulo;
 
+        // Cultura fija en español (Honduras) para que los reportes nunca
+        // salgan con nombres de días/meses en inglés, sin importar el
+        // idioma del sistema operativo del usuario.
+        private static readonly CultureInfo CulturaES = new CultureInfo("es-HN");
+
+        // ─────────────────────────────────────────────
+        //  DATOS DEL NEGOCIO
+        // ─────────────────────────────────────────────
+        private const string NombreNegocio = "OSM";
+        private const string DireccionNegocio = "Col. 21 de Febrero, Bloque 5, Calle Principal, dos cuadras antes del Cementerio Santa Anita";
+        private const string TelefonoNegocio = "9575-9819"; // Ajusta el formato si hace falta
+
         public ReportesWindow(string modulo)
         {
             InitializeComponent();
@@ -20,7 +33,6 @@ namespace Login
             txtModulo.Text = $"Reporte de {modulo}";
         }
 
-        // ── FIX: método que faltaba ──────────────────────────────────
         private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
 
         private async void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
@@ -34,6 +46,17 @@ namespace Login
                 case "Egresos": await GenerarReporteEgresos(); break;
                 case "Ingresos": await GenerarReporteIngresos(); break;
             }
+        }
+
+        // ─────────────────────────────────────────────
+        //  HELPERS DE FECHA EN ESPAÑOL
+        // ─────────────────────────────────────────────
+        private static string FormatearFechaEs(DateTime fecha, string formato)
+        {
+            string texto = fecha.ToString(formato, CulturaES);
+            return string.IsNullOrEmpty(texto)
+                ? texto
+                : char.ToUpper(texto[0], CulturaES) + texto.Substring(1);
         }
 
         // ─────────────────────────────────────────────
@@ -184,21 +207,21 @@ namespace Login
 
             string logoBase64 = GetLogoBase64();
             string logoHtml = !string.IsNullOrEmpty(logoBase64)
-                ? $"<img src='data:image/png;base64,{logoBase64}' />" : "TM";
+                ? $"<img src='data:image/png;base64,{logoBase64}' />" : "OSM";
 
             return $@"
             <div class='header'>
                 <div class='header-left'>
                     <div class='logo-wrap'>{logoHtml}</div>
                     <div>
-                        <div class='company-name'>Taller Mecánico AutoExpress</div>
-                        <div class='company-sub'>Tegucigalpa, Honduras · Tel: +504 2230-0000</div>
+                        <div class='company-name'>{NombreNegocio}</div>
+                        <div class='company-sub'>{DireccionNegocio} · Tel: {TelefonoNegocio}</div>
                     </div>
                 </div>
                 <div class='header-right'>
                     <div class='header-meta'>
                         <div class='meta-label'>Fecha Emitida</div>
-                        <div class='meta-value'>{DateTime.Now:dd/MM/yyyy}</div>
+                        <div class='meta-value'>{DateTime.Now.ToString("dd/MM/yyyy", CulturaES)}</div>
                     </div>
                     <div class='header-meta'>
                         <div class='meta-label'>Período</div>
@@ -206,7 +229,7 @@ namespace Login
                     </div>
                     <div class='header-meta'>
                         <div class='meta-label'>Hora</div>
-                        <div class='meta-value'>{DateTime.Now:hh:mm tt}</div>
+                        <div class='meta-value'>{DateTime.Now.ToString("hh:mm tt", CulturaES)}</div>
                     </div>
                 </div>
             </div>";
@@ -215,7 +238,8 @@ namespace Login
         private string GetTitleBar(string accentColor, string titulo, string subtitulo = "")
         {
             string sub = string.IsNullOrEmpty(subtitulo)
-                ? $"Generado el {DateTime.Now:dddd, dd 'de' MMMM 'de' yyyy}" : subtitulo;
+                ? $"Generado el {FormatearFechaEs(DateTime.Now, "dddd, dd 'de' MMMM 'de' yyyy")}"
+                : subtitulo;
             return $@"
             <div class='title-bar'>
                 <span class='report-title'>{titulo}</span>
@@ -225,9 +249,9 @@ namespace Login
 
         private string GetFooter() => $@"
             <div class='footer'>
-                <span class='footer-brand'>Taller Mecánico AutoExpress</span>
+                <span class='footer-brand'>{NombreNegocio}</span>
                 <span>Documento confidencial · Uso interno</span>
-                <span>Generado: {DateTime.Now:dd/MM/yyyy} {DateTime.Now:hh:mm tt}</span>
+                <span>Generado: {DateTime.Now.ToString("dd/MM/yyyy", CulturaES)} {DateTime.Now.ToString("hh:mm tt", CulturaES)}</span>
             </div>";
 
         private string BadgeEstado(string estado) => estado switch
@@ -284,6 +308,9 @@ namespace Login
                 bool success = await webView.CoreWebView2.PrintToPdfAsync(dialog.FileName, printSettings);
                 if (!success) throw new Exception("No se pudo generar el PDF.");
 
+                hiddenWindow.Close();
+                hiddenWindow = null;
+
                 MessageBox.Show("✅ Reporte generado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -292,6 +319,8 @@ namespace Login
                     FileName = dialog.FileName,
                     UseShellExecute = true
                 });
+
+                this.Close();
             }
             catch (Exception ex)
             {
@@ -302,7 +331,7 @@ namespace Login
         }
 
         // ─────────────────────────────────────────────
-        //  SELECTOR DE PERÍODO
+        //  SELECTOR DE PERÍODO (Semanal / Mensual / Anual / Todo)
         // ─────────────────────────────────────────────
         private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
         {
@@ -313,8 +342,8 @@ namespace Login
             var ventana = new Window
             {
                 Title = "Seleccionar Período",
-                Width = 340,
-                Height = 200,
+                Width = 380,
+                Height = 340,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = this,
                 ResizeMode = ResizeMode.NoResize,
@@ -322,25 +351,138 @@ namespace Login
                     System.Windows.Media.Color.FromRgb(30, 45, 95))
             };
 
-            var panel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
-            panel.Children.Add(new System.Windows.Controls.Label
+            var panelPrincipal = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
+
+            panelPrincipal.Children.Add(new System.Windows.Controls.Label
             {
-                Content = "Selecciona el período del reporte:",
+                Content = "Tipo de reporte:",
                 Foreground = System.Windows.Media.Brushes.White,
                 FontSize = 13,
-                Margin = new Thickness(0, 0, 0, 10)
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 4)
             });
 
-            var cmb = new System.Windows.Controls.ComboBox { FontSize = 12, Margin = new Thickness(0, 0, 0, 16) };
-            foreach (var op in new[] { "Mes actual", "Mes anterior", "Trimestre actual", "Año actual", "Año anterior", "Todo" })
-                cmb.Items.Add(op);
-            cmb.SelectedIndex = 0;
+            var tipoPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 14)
+            };
 
+            var rbSemanal = new System.Windows.Controls.RadioButton
+            {
+                Content = "Semanal",
+                Foreground = System.Windows.Media.Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0),
+                IsChecked = true,
+                GroupName = "tipoReporte"
+            };
+            var rbMensual = new System.Windows.Controls.RadioButton
+            {
+                Content = "Mensual",
+                Foreground = System.Windows.Media.Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0),
+                GroupName = "tipoReporte"
+            };
+            var rbAnual = new System.Windows.Controls.RadioButton
+            {
+                Content = "Anual",
+                Foreground = System.Windows.Media.Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0),
+                GroupName = "tipoReporte"
+            };
+            var rbTodo = new System.Windows.Controls.RadioButton
+            {
+                Content = "Todo",
+                Foreground = System.Windows.Media.Brushes.White,
+                GroupName = "tipoReporte"
+            };
+            tipoPanel.Children.Add(rbSemanal);
+            tipoPanel.Children.Add(rbMensual);
+            tipoPanel.Children.Add(rbAnual);
+            tipoPanel.Children.Add(rbTodo);
+            panelPrincipal.Children.Add(tipoPanel);
+
+            // ---- Panel Semanal ----
+            var panelSemanal = new System.Windows.Controls.StackPanel { Margin = new Thickness(0, 0, 0, 14) };
+            panelSemanal.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona un día dentro de la semana deseada:",
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 11
+            });
+            var dpSemana = new System.Windows.Controls.DatePicker
+            {
+                SelectedDate = DateTime.Today,
+                FirstDayOfWeek = DayOfWeek.Monday
+            };
+            panelSemanal.Children.Add(dpSemana);
+
+            // ---- Panel Mensual ----
+            var panelMensual = new System.Windows.Controls.StackPanel
+            {
+                Margin = new Thickness(0, 0, 0, 14),
+                Visibility = Visibility.Collapsed
+            };
+            panelMensual.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona el mes y el año:",
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 11
+            });
+            var mesAnioPanel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            var cmbMes = new System.Windows.Controls.ComboBox { Width = 150, Margin = new Thickness(0, 0, 8, 0) };
+            foreach (var nombreMes in CulturaES.DateTimeFormat.MonthNames)
+                if (!string.IsNullOrEmpty(nombreMes))
+                    cmbMes.Items.Add(char.ToUpper(nombreMes[0], CulturaES) + nombreMes.Substring(1));
+            cmbMes.SelectedIndex = DateTime.Today.Month - 1;
+            var cmbAnioMes = new System.Windows.Controls.ComboBox { Width = 90 };
+            int anioActual = DateTime.Today.Year;
+            for (int y = anioActual; y >= anioActual - 10; y--) cmbAnioMes.Items.Add(y);
+            cmbAnioMes.SelectedIndex = 0;
+            mesAnioPanel.Children.Add(cmbMes);
+            mesAnioPanel.Children.Add(cmbAnioMes);
+            panelMensual.Children.Add(mesAnioPanel);
+
+            // ---- Panel Anual ----
+            var panelAnual = new System.Windows.Controls.StackPanel
+            {
+                Margin = new Thickness(0, 0, 0, 14),
+                Visibility = Visibility.Collapsed
+            };
+            panelAnual.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona el año:",
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 11
+            });
+            var cmbAnioSolo = new System.Windows.Controls.ComboBox { Width = 90, HorizontalAlignment = HorizontalAlignment.Left };
+            for (int y = anioActual; y >= anioActual - 10; y--) cmbAnioSolo.Items.Add(y);
+            cmbAnioSolo.SelectedIndex = 0;
+            panelAnual.Children.Add(cmbAnioSolo);
+
+            panelPrincipal.Children.Add(panelSemanal);
+            panelPrincipal.Children.Add(panelMensual);
+            panelPrincipal.Children.Add(panelAnual);
+
+            // ---- Alternar paneles según el tipo elegido ----
+            void ActualizarVisibilidad()
+            {
+                panelSemanal.Visibility = rbSemanal.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                panelMensual.Visibility = rbMensual.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                panelAnual.Visibility = rbAnual.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            }
+            rbSemanal.Checked += (s, e) => ActualizarVisibilidad();
+            rbMensual.Checked += (s, e) => ActualizarVisibilidad();
+            rbAnual.Checked += (s, e) => ActualizarVisibilidad();
+            rbTodo.Checked += (s, e) => ActualizarVisibilidad();
+
+            // ---- Botones ----
             bool confirmado = false;
             var btnPanel = new System.Windows.Controls.StackPanel
             {
                 Orientation = System.Windows.Controls.Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 6, 0, 0)
             };
 
             var btnAceptar = new System.Windows.Controls.Button
@@ -370,49 +512,43 @@ namespace Login
 
             btnPanel.Children.Add(btnAceptar);
             btnPanel.Children.Add(btnCancelarPeriodo);
-            panel.Children.Add(cmb);
-            panel.Children.Add(btnPanel);
-            ventana.Content = panel;
+            panelPrincipal.Children.Add(btnPanel);
+
+            ventana.Content = panelPrincipal;
             ventana.ShowDialog();
 
             if (!confirmado) return false;
 
-            DateTime hoy = DateTime.Today;
-            switch (cmb.SelectedItem?.ToString())
+            if (rbSemanal.IsChecked == true)
             {
-                case "Mes actual":
-                    fechaInicio = new DateTime(hoy.Year, hoy.Month, 1);
-                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
-                    periodoTexto = hoy.ToString("MMMM yyyy");
-                    break;
-                case "Mes anterior":
-                    var mesAnt = hoy.AddMonths(-1);
-                    fechaInicio = new DateTime(mesAnt.Year, mesAnt.Month, 1);
-                    fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
-                    periodoTexto = mesAnt.ToString("MMMM yyyy");
-                    break;
-                case "Trimestre actual":
-                    int trim = (hoy.Month - 1) / 3;
-                    fechaInicio = new DateTime(hoy.Year, trim * 3 + 1, 1);
-                    fechaFin = fechaInicio.AddMonths(3).AddTicks(-1);
-                    periodoTexto = $"Q{trim + 1} {hoy.Year}";
-                    break;
-                case "Año actual":
-                    fechaInicio = new DateTime(hoy.Year, 1, 1);
-                    fechaFin = new DateTime(hoy.Year, 12, 31, 23, 59, 59);
-                    periodoTexto = hoy.Year.ToString();
-                    break;
-                case "Año anterior":
-                    fechaInicio = new DateTime(hoy.Year - 1, 1, 1);
-                    fechaFin = new DateTime(hoy.Year - 1, 12, 31, 23, 59, 59);
-                    periodoTexto = (hoy.Year - 1).ToString();
-                    break;
-                default:
-                    fechaInicio = DateTime.MinValue;
-                    fechaFin = DateTime.MaxValue;
-                    periodoTexto = "Todo";
-                    break;
+                DateTime fechaBase = dpSemana.SelectedDate ?? DateTime.Today;
+                int diasDesdeLunes = ((int)fechaBase.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+                fechaInicio = fechaBase.AddDays(-diasDesdeLunes);
+                fechaFin = fechaInicio.AddDays(7).AddTicks(-1);
+                periodoTexto = $"Semana del {FormatearFechaEs(fechaInicio, "dd MMM")} al {FormatearFechaEs(fechaInicio.AddDays(6), "dd MMM yyyy")}";
             }
+            else if (rbMensual.IsChecked == true)
+            {
+                int mes = cmbMes.SelectedIndex + 1;
+                int anio = (int)cmbAnioMes.SelectedItem;
+                fechaInicio = new DateTime(anio, mes, 1);
+                fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
+                periodoTexto = FormatearFechaEs(fechaInicio, "MMMM yyyy");
+            }
+            else if (rbAnual.IsChecked == true)
+            {
+                int anio = (int)cmbAnioSolo.SelectedItem;
+                fechaInicio = new DateTime(anio, 1, 1);
+                fechaFin = new DateTime(anio, 12, 31, 23, 59, 59);
+                periodoTexto = anio.ToString();
+            }
+            else
+            {
+                fechaInicio = DateTime.MinValue;
+                fechaFin = DateTime.MaxValue;
+                periodoTexto = "Todo";
+            }
+
             return true;
         }
 
@@ -616,6 +752,9 @@ namespace Login
         // ─────────────────────────────────────────────
         private async Task GenerarReporteOrdenes()
         {
+            if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
+                return;
+
             string accent = "#1e2d5f";
             var db = new ClsConexion(); db.Abrir();
             string filas = "";
@@ -623,8 +762,13 @@ namespace Login
             using (var cmd = new SqlCommand(
                 @"SELECT Orden_ID, Cliente_DNI, Vehiculo_Placa, Estado,
                          Fecha, Fecha_Entrega, Servicio_Precio, OrdenPrecio_Total, Observaciones
-                  FROM Orden_Trabajo ORDER BY Fecha DESC", db.SqlC))
-            using (var r = cmd.ExecuteReader())
+                  FROM Orden_Trabajo
+                  WHERE Fecha BETWEEN @FI AND @FF
+                  ORDER BY Fecha DESC", db.SqlC))
+            {
+                cmd.Parameters.AddWithValue("@FI", fechaInicio);
+                cmd.Parameters.AddWithValue("@FF", fechaFin);
+                using var r = cmd.ExecuteReader();
                 while (r.Read())
                 {
                     decimal total = Convert.ToDecimal(r["OrdenPrecio_Total"]);
@@ -633,18 +777,21 @@ namespace Login
                         <td><b>{r["Orden_ID"]}</b></td>
                         <td>{r["Cliente_DNI"]}</td><td>{r["Vehiculo_Placa"]}</td>
                         <td>{BadgeEstado(r["Estado"].ToString())}</td>
-                        <td>{Convert.ToDateTime(r["Fecha"]):dd/MM/yyyy}</td>
-                        <td>{(r["Fecha_Entrega"] == DBNull.Value ? "—" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString("dd/MM/yyyy"))}</td>
+                        <td>{Convert.ToDateTime(r["Fecha"]).ToString("dd/MM/yyyy", CulturaES)}</td>
+                        <td>{(r["Fecha_Entrega"] == DBNull.Value ? "—" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString("dd/MM/yyyy", CulturaES))}</td>
                         <td>L {Convert.ToDecimal(r["Servicio_Precio"]):N2}</td>
                         <td>L {total:N2}</td>
                         <td class='obs'>{(r["Observaciones"] == DBNull.Value ? "—" : r["Observaciones"])}</td>
                     </tr>";
                 }
+                if (string.IsNullOrEmpty(filas))
+                    filas = $"<tr><td colspan='9' style='text-align:center;padding:20px;color:#888;'>Sin órdenes para {periodoTexto}</td></tr>";
+            }
             db.Cerrar();
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent)}
-                {GetTitleBar(accent, "Reporte de Órdenes de Trabajo")}
+                {GetHeader(accent, periodoTexto)}
+                {GetTitleBar(accent, $"Reporte de Órdenes de Trabajo — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -667,7 +814,7 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            await ExportarPDF(html, "Reporte_Ordenes", landscape: true);
+            await ExportarPDF(html, $"Reporte_Ordenes_{periodoTexto.Replace(" ", "_")}", landscape: true);
         }
 
         // ─────────────────────────────────────────────
@@ -675,14 +822,22 @@ namespace Login
         // ─────────────────────────────────────────────
         private async Task GenerarReporteEgresos()
         {
+            if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
+                return;
+
             string accent = "#7f1d1d";
             var db = new ClsConexion(); db.Abrir();
             string filas = "";
             decimal total = 0;
             using (var cmd = new SqlCommand(
                 @"SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto
-                  FROM Contabilidad_Gastos ORDER BY Fecha_Gasto DESC", db.SqlC))
-            using (var r = cmd.ExecuteReader())
+                  FROM Contabilidad_Gastos
+                  WHERE Fecha_Gasto BETWEEN @FI AND @FF
+                  ORDER BY Fecha_Gasto DESC", db.SqlC))
+            {
+                cmd.Parameters.AddWithValue("@FI", fechaInicio);
+                cmd.Parameters.AddWithValue("@FF", fechaFin);
+                using var r = cmd.ExecuteReader();
                 while (r.Read())
                 {
                     decimal precio = r["Precio_Gasto"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Gasto"]);
@@ -692,14 +847,17 @@ namespace Login
                         <td class='left'>{r["Nombre_Gasto"]}</td>
                         <td class='obs'>{(r["Observaciones_Gasto"] == DBNull.Value ? "—" : r["Observaciones_Gasto"])}</td>
                         <td>L {precio:N2}</td>
-                        <td>{Convert.ToDateTime(r["Fecha_Gasto"]):dd/MM/yyyy}</td>
+                        <td>{Convert.ToDateTime(r["Fecha_Gasto"]).ToString("dd/MM/yyyy", CulturaES)}</td>
                     </tr>";
                 }
+                if (string.IsNullOrEmpty(filas))
+                    filas = $"<tr><td colspan='5' style='text-align:center;padding:20px;color:#888;'>Sin egresos para {periodoTexto}</td></tr>";
+            }
             db.Cerrar();
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent)}
-                {GetTitleBar(accent, "Reporte de Egresos")}
+                {GetHeader(accent, periodoTexto)}
+                {GetTitleBar(accent, $"Reporte de Egresos — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -720,7 +878,7 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            await ExportarPDF(html, "Reporte_Egresos");
+            await ExportarPDF(html, $"Reporte_Egresos_{periodoTexto.Replace(" ", "_")}");
         }
 
         // ─────────────────────────────────────────────
@@ -728,6 +886,9 @@ namespace Login
         // ─────────────────────────────────────────────
         private async Task GenerarReporteIngresos()
         {
+            if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
+                return;
+
             string accent = "#1b4332";
             var db = new ClsConexion(); db.Abrir();
             string filas = "";
@@ -735,11 +896,15 @@ namespace Login
             using (var cmd = new SqlCommand(
                 @"SELECT p.Pago_ID,
                          c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                         p.Cliente_DNI, p.Orden_ID, p.Precio_Pago
+                         p.Cliente_DNI, p.Orden_ID, p.Precio_Pago, p.Fecha_Pago
                   FROM Contabilidad_Pago p
                   INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
+                  WHERE p.Fecha_Pago BETWEEN @FI AND @FF
                   ORDER BY p.Pago_ID DESC", db.SqlC))
-            using (var r = cmd.ExecuteReader())
+            {
+                cmd.Parameters.AddWithValue("@FI", fechaInicio);
+                cmd.Parameters.AddWithValue("@FF", fechaFin);
+                using var r = cmd.ExecuteReader();
                 while (r.Read())
                 {
                     decimal monto = r["Precio_Pago"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Pago"]);
@@ -752,11 +917,14 @@ namespace Login
                         <td><span class='badge badge-pagado'>Pagado</span></td>
                     </tr>";
                 }
+                if (string.IsNullOrEmpty(filas))
+                    filas = $"<tr><td colspan='6' style='text-align:center;padding:20px;color:#888;'>Sin ingresos para {periodoTexto}</td></tr>";
+            }
             db.Cerrar();
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent)}
-                {GetTitleBar(accent, "Reporte de Ingresos")}
+                {GetHeader(accent, periodoTexto)}
+                {GetTitleBar(accent, $"Reporte de Ingresos — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -778,7 +946,7 @@ namespace Login
                 {GetFooter()}
             </body></html>";
 
-            await ExportarPDF(html, "Reporte_Ingresos");
+            await ExportarPDF(html, $"Reporte_Ingresos_{periodoTexto.Replace(" ", "_")}");
         }
     }
 }
