@@ -590,6 +590,10 @@ namespace Órdenes_de_Trabajo
             // Al cambiar de diagrama se limpia la selección de zonas dañadas
             panelZonasDañadas.Children.Clear();
             txtSinZonas.Visibility = Visibility.Visible;
+
+            // Reiniciar rotación al cambiar de diagrama
+            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
+            rotacionDiagrama.Angle = 0;
         }
 
         // ── TIPO DE VEHÍCULO ─────────────────────────────────────────
@@ -637,6 +641,85 @@ namespace Órdenes_de_Trabajo
                 rect.Fill = Brushes.Transparent;
             foreach (var rect in canvasMoto.Children.OfType<System.Windows.Shapes.Rectangle>())
                 rect.Fill = Brushes.Transparent;
+
+            // Reiniciar rotación al cambiar de tipo de vehículo
+            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
+            rotacionDiagrama.Angle = 0;
+        }
+
+        // ── ARRASTRE PARA GIRAR EL DIAGRAMA (estilo configurador 360°) ──
+
+        private bool _arrastrandoDiagrama = false;
+        private double _anguloInicioArrastre;
+        private System.Windows.Point _puntoInicioArrastre;
+
+        private void BorderDiagrama_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Si el clic fue sobre una zona de diagnóstico (Motor, Transm., etc.),
+            // no iniciamos el arrastre: dejamos que el evento siga su curso normal
+            // hacia Zona_Click.
+            if (e.OriginalSource is System.Windows.Shapes.Rectangle rect &&
+                rect.Tag is string tag && !string.IsNullOrEmpty(tag))
+                return;
+
+            _arrastrandoDiagrama = true;
+            _anguloInicioArrastre = rotacionDiagrama.Angle;
+            _puntoInicioArrastre = e.GetPosition(this);
+
+            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
+            ((UIElement)sender).CaptureMouse();
+        }
+
+        private void BorderDiagrama_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_arrastrandoDiagrama) return;
+
+            var puntoActual = e.GetPosition(this);
+            double deltaX = puntoActual.X - _puntoInicioArrastre.X;
+
+            // Sensibilidad del arrastre: pixeles de mouse → grados de giro
+            rotacionDiagrama.Angle = _anguloInicioArrastre + (deltaX * 0.4);
+        }
+
+        private void BorderDiagrama_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_arrastrandoDiagrama) return;
+            FinalizarArrastreDiagrama(sender);
+        }
+
+        private void BorderDiagrama_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (_arrastrandoDiagrama) FinalizarArrastreDiagrama(sender);
+        }
+
+        private void FinalizarArrastreDiagrama(object sender)
+        {
+            _arrastrandoDiagrama = false;
+            ((UIElement)sender).ReleaseMouseCapture();
+
+            double anguloActual = rotacionDiagrama.Angle;
+
+            // Ajustar (snap) al múltiplo de 90° más cercano
+            double anguloSnap = Math.Round(anguloActual / 90.0) * 90.0;
+            anguloSnap %= 360;
+            if (anguloSnap < 0) anguloSnap += 360;
+
+            // Elegir el camino más corto para animar el snap (evita vueltas largas)
+            double diferencia = anguloSnap - anguloActual;
+            while (diferencia > 180) diferencia -= 360;
+            while (diferencia < -180) diferencia += 360;
+
+            var animacion = new System.Windows.Media.Animation.DoubleAnimation
+            {
+                To = anguloActual + diferencia,
+                Duration = TimeSpan.FromMilliseconds(180),
+                EasingFunction = new System.Windows.Media.Animation.QuadraticEase
+                {
+                    EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
+                }
+            };
+            animacion.Completed += (s, ev) => rotacionDiagrama.Angle = anguloSnap;
+            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, animacion);
         }
 
         // ── AUTOCOMPLETADO ───────────────────────────────────────────
@@ -762,6 +845,10 @@ namespace Órdenes_de_Trabajo
             canvasAuto.Visibility = Visibility.Visible;
             canvasPickup.Visibility = Visibility.Collapsed;
             canvasMoto.Visibility = Visibility.Collapsed;
+
+            // Reset rotación
+            rotacionDiagrama.BeginAnimation(RotateTransform.AngleProperty, null);
+            rotacionDiagrama.Angle = 0;
         }
 
         private static bool ParsePrecio(string texto, out decimal valor)

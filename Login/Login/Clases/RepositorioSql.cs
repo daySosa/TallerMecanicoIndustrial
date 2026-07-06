@@ -793,6 +793,55 @@ namespace Login.Clases
             }
         }
 
+        public class VehiculoDeCliente
+        {
+            public string Placa { get; set; } = string.Empty;
+            public string Marca { get; set; } = string.Empty;
+            public string Modelo { get; set; } = string.Empty;
+            public int Anio { get; set; }
+            public string Tipo { get; set; } = string.Empty;
+            public bool Activo { get; set; }
+            public string Descripcion => $"{Marca} {Modelo}";
+            public string TipoAño => $"{Tipo} · {Anio}";
+            public string PlacaYModelo => $"{Placa} — {Marca} {Modelo}";
+        }
+
+        public List<VehiculoDeCliente> ObtenerVehiculosDeCliente(string dni)
+        {
+            using var conexion = new ClsConexion();
+            var lista = new List<VehiculoDeCliente>();
+            try
+            {
+                using var cmd = new SqlCommand("sp_ObtenerVehiculosCliente", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@ClienteDNI", dni);
+
+                conexion.Abrir();
+                using var rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new VehiculoDeCliente
+                    {
+                        Placa = rd["Vehiculo_Placa"].ToString()!,
+                        Marca = rd["Vehiculo_Marca"].ToString()!,
+                        Modelo = rd["Vehiculo_Modelo"].ToString()!,
+                        Anio = Convert.ToInt32(rd["Vehiculo_Año"]),
+                        Tipo = rd["Vehiculo_Tipo"].ToString()!,
+                        Activo = rd["Vehiculo_Activo"] != DBNull.Value && Convert.ToBoolean(rd["Vehiculo_Activo"])
+                    });
+                }
+                return lista;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al obtener vehículos del cliente: " + ex.Message, ex);
+            }
+        }
+
+
+
         #endregion
 
         #region ÓRDENES DE TRABAJO
@@ -1004,6 +1053,44 @@ namespace Login.Clases
                 throw new Exception("Error al cargar repuestos de la orden: " + ex.Message, ex);
             }
         }
+
+
+        public class VehiculoSugerencia
+        {
+            public string Placa { get; set; } = string.Empty;
+            public string Modelo { get; set; } = string.Empty;
+        }
+
+        public List<VehiculoSugerencia> BuscarVehiculosPorPlaca(string textoParcial)
+        {
+            using var conexion = new ClsConexion();
+            var lista = new List<VehiculoSugerencia>();
+            try
+            {
+                using var cmd = new SqlCommand("sp_Vehiculo_BuscarSugerencias", conexion.SqlC)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                cmd.Parameters.AddWithValue("@Texto", textoParcial);
+
+                conexion.Abrir();
+                using var rd = cmd.ExecuteReader();
+                while (rd.Read())
+                {
+                    lista.Add(new VehiculoSugerencia
+                    {
+                        Placa = rd["Vehiculo_Placa"].ToString()!,
+                        Modelo = rd["Modelo"].ToString()!
+                    });
+                }
+                return lista;
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Error al buscar vehículos: " + ex.Message, ex);
+            }
+        }
+
 
         #endregion
 
