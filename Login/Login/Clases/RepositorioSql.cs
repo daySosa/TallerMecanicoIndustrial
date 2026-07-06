@@ -1790,6 +1790,9 @@ namespace Login.Clases
             }
         }
 
+
+        #endregion
+
         #region RECONOCIMIENTO FACIAL
 
         /// <summary>Datos crudos de una persona registrada para reconocimiento facial.</summary>
@@ -1820,7 +1823,7 @@ namespace Login.Clases
                 while (rd.Read())
                 {
                     if (rd.IsDBNull(colId) || rd.IsDBNull(colNombre) || rd.IsDBNull(colFoto))
-                        continue; 
+                        continue;
 
                     string nombre = rd.GetString(colNombre);
                     byte[] foto = (byte[])rd[colFoto];
@@ -1957,7 +1960,6 @@ namespace Login.Clases
             }
         }
 
-        #endregion
         #endregion
     }
 

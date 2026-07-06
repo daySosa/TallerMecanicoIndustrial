@@ -160,6 +160,14 @@ namespace InterfazClientes
         {
             btnAgregar.IsEnabled = false;
 
+            if (!SesionActual.HaySesionActiva)
+            {
+                MessageBox.Show("⚠ No hay una sesión activa. Vuelve a iniciar sesión antes de continuar.",
+                    "Sesión no válida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                btnAgregar.IsEnabled = true;
+                return;
+            }
+
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
             if (!ValidarCampos(txtDPI.Text.Trim(), telefonoLimpio, dniActual: ""))
@@ -224,6 +232,13 @@ namespace InterfazClientes
                 return;
             }
 
+            if (!SesionActual.HaySesionActiva)
+            {
+                MessageBox.Show("⚠ No hay una sesión activa. Vuelve a iniciar sesión antes de continuar.",
+                    "Sesión no válida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             string nuevoDni = txtDPI.Text.Trim();
             string telefonoLimpio = txtTelefono.Text.Replace("-", "").Trim();
 
@@ -259,5 +274,5 @@ namespace InterfazClientes
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-       }
+    }
     }
