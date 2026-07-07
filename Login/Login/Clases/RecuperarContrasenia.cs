@@ -16,13 +16,12 @@ namespace Login.Clases
     /// </summary>
     internal class RecuperarContrasenia(MainWindow mainWindow)
     {
+        #region Constantes y estado
+
         private const int SegundosCooldownReenvioOtp = 60;
         private const int MaxIntentosOtpCliente = 3;
 
         private static readonly TimeSpan DuracionHover = TimeSpan.FromMilliseconds(140);
-
-        // Cooldown de reenvío compartido entre todas las instancias del flujo,
-        // para que no se pueda "resetear" el límite abriendo el overlay de nuevo.
         private static readonly ConcurrentDictionary<string, DateTime> _ultimoEnvioOtp = new();
 
         private readonly RepositorioSql _repositorio = new();
@@ -34,6 +33,10 @@ namespace Login.Clases
         private Grid _overlayGrid;
         private Border _panelCentral;
         private StackPanel _contenidoPanel;
+
+        #endregion
+
+        #region Tema visual (brushes, geometrías, sombra)
 
         private static readonly SolidColorBrush BrushFondoOverlay = Congelar("#0B1120", 0.72);
         private static readonly SolidColorBrush BrushPanel = Congelar("#03002E", 0.92);
@@ -51,8 +54,7 @@ namespace Login.Clases
         private static readonly SolidColorBrush BrushExitoHover = Congelar("#15803D");
         private static readonly SolidColorBrush BrushTransparente = Congelar("Transparent");
 
-        // Colores del indicador de fortaleza (precomputados: nada de parsear
-        // strings de color en cada tecla que el usuario escribe).
+
         private static readonly SolidColorBrush BrushFortalezaDebil = BrushError;
         private static readonly SolidColorBrush BrushFortalezaRegular = Congelar("#FBBF24");
         private static readonly SolidColorBrush BrushFortalezaBuena = Congelar("#38BDF8");
@@ -60,10 +62,6 @@ namespace Login.Clases
 
         private static readonly DropShadowEffect SombraPanel = CrearSombra();
 
-        // Geometrías del ícono de ojo (mostrar/ocultar contraseña) y del candado,
-        // parseadas y congeladas UNA sola vez. Antes se llamaba Geometry.Parse()
-        // en cada clic del botón "ver contraseña"; ahora solo se intercambia la
-        // referencia, sin volver a parsear el path SVG.
         private static readonly Geometry GeometriaCandado = CongelarGeometria(
             "M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z");
 
@@ -101,10 +99,12 @@ namespace Login.Clases
             return efecto;
         }
 
+        #endregion
+
+        #region Ciclo de vida del overlay (abrir / cerrar / animaciones)
+
         public void IniciarFlujo()
         {
-            // Evita apilar overlays si el usuario hace doble clic muy rápido
-            // en "¿Olvidó su contraseña?" antes de que el primero termine de aparecer.
             if (_flujoActivo || ExisteOverlayActivo()) return;
 
             LimpiarCooldownsExpirados();
@@ -234,6 +234,61 @@ namespace Login.Clases
             _contenidoPanel.BeginAnimation(UIElement.OpacityProperty, fadeOut);
         }
 
+        #endregion
+
+        #region Helpers de estado de carga y cooldown OTP
+
+        /// <summary>
+        /// Envuelve una operación asíncrona con el patrón repetido en cada paso del
+        /// flujo: evita reentradas por doble clic, deshabilita el botón y cambia su
+        /// texto mientras dura la operación, captura cualquier excepción mostrándola
+        /// en <paramref name="lblError"/>, y siempre restaura el botón al terminar.
+        /// Antes este bloque try/catch/finally estaba copiado en cuatro lugares
+        /// distintos (correo, reenviar, verificar OTP, guardar contraseña); ahora
+        /// vive en un solo sitio.
+        /// </summary>
+        private static async Task EjecutarConEstadoDeCarga(
+            Button boton, TextBlock lblError, string textoEnProgreso, string textoNormal, Func<Task> accion)
+        {
+            if (!boton.IsEnabled) return; // guard anti doble-clic
+
+            boton.IsEnabled = false;
+            boton.Content = textoEnProgreso;
+
+            try
+            {
+                await accion();
+            }
+            catch (Exception ex)
+            {
+                MostrarErrorLocal(lblError, "⚠ " + ex.Message);
+            }
+            finally
+            {
+                boton.IsEnabled = true;
+                boton.Content = textoNormal;
+            }
+        }
+
+        private static bool EstaEnCooldownDeReenvio(string correo, out int segundosRestantes)
+        {
+            segundosRestantes = 0;
+            if (!_ultimoEnvioOtp.TryGetValue(correo, out DateTime ultimoEnvio)) return false;
+
+            double segundosTranscurridos = (DateTime.UtcNow - ultimoEnvio).TotalSeconds;
+            if (segundosTranscurridos >= SegundosCooldownReenvioOtp) return false;
+
+            segundosRestantes = (int)Math.Ceiling(SegundosCooldownReenvioOtp - segundosTranscurridos);
+            return true;
+        }
+
+        private static void RegistrarEnvioOtp(string correo) =>
+            _ultimoEnvioOtp[correo] = DateTime.UtcNow;
+
+        #endregion
+
+        #region Fábrica de controles reutilizables (textos, campos, botones)
+
         private static TextBlock CrearTitulo(string texto) => new()
         {
             Text = texto,
@@ -304,9 +359,9 @@ namespace Login.Clases
         /// cambio de texto (útil para el indicador de fortaleza en vivo).
         /// </summary>
         private static Border CrearContenedorCampoContrasena(
-    out Func<string> obtenerValor,
-    out Action limpiar,
-    Action<string> alCambiar = null)
+            out Func<string> obtenerValor,
+            out Action limpiar,
+            Action<string> alCambiar = null)
         {
             var passwordBox = new PasswordBox
             {
@@ -334,7 +389,6 @@ namespace Login.Clases
 
             string ObtenerValorLocal() => visible ? campoVisible.Text : passwordBox.Password;
 
-            // Ícono de candado (izquierda) — geometría precomputada y congelada.
             var iconoCandado = new System.Windows.Shapes.Path
             {
                 Data = GeometriaCandado,
@@ -348,8 +402,6 @@ namespace Login.Clases
                 IsHitTestVisible = false
             };
 
-            // Ícono de ojo (derecha) — alterna entre dos geometrías precomputadas,
-            // sin volver a parsear el path SVG en cada clic.
             var iconoOjo = new System.Windows.Shapes.Path
             {
                 Data = GeometriaOjoAbierto,
@@ -432,15 +484,11 @@ namespace Login.Clases
 
         /// <summary>
         /// Crea un brush independiente (no congelado) a partir de un color base,
-        /// preservando tanto el Color como el Opacity original, para poder
-        /// animar el color en el hover sin afectar los brushes compartidos y
-        /// congelados usados como referencia de paleta.
-        ///
-        /// IMPORTANTE: SolidColorBrush.Opacity es una propiedad aparte de
-        /// Color (multiplica la transparencia general del brush). Si solo se
-        /// copia el Color y no el Opacity, un brush semitransparente como
-        /// BrushSecundario (#FFFFFF al 8%) se vuelve accidentalmente opaco
-        /// al 100%, mostrando un botón blanco sólido en vez de sutil.
+        /// preservando Color y Opacity, para poder animar el color en el hover sin
+        /// afectar los brushes compartidos y congelados usados como paleta. Nota:
+        /// Opacity es una propiedad aparte del Color; si solo se copiara el Color,
+        /// un brush semitransparente (ej. BrushSecundario al 8%) se volvería
+        /// accidentalmente opaco al 100%.
         /// </summary>
         private static SolidColorBrush CrearBrushAnimable(SolidColorBrush origen) =>
             new(origen.Color) { Opacity = origen.Opacity };
@@ -453,8 +501,6 @@ namespace Login.Clases
             var fondoNormal = esExito ? BrushExito : (esPrimario ? BrushPrimario : BrushSecundario);
             var fondoHover = esExito ? BrushExitoHover : (esPrimario ? BrushPrimarioHover : BrushCampoFondo);
 
-            // Brush propio y animable por botón: si dos botones estuvieran en
-            // hover a la vez, cada uno transiciona de forma independiente.
             var brushFondo = CrearBrushAnimable(fondoNormal);
 
             var boton = new Button
@@ -471,18 +517,8 @@ namespace Login.Clases
                 Template = ObtenerPlantillaBoton()
             };
 
-            // El destino de la animación debe usar el mismo Opacity que el
-            // brush de referencia (fondoHover/fondoNormal), no solo su Color,
-            // por la misma razón explicada en CrearBrushAnimable.
             boton.MouseEnter += (s, e) => { if (boton.IsEnabled) AnimarColorBoton(brushFondo, fondoHover.Color); };
             boton.MouseLeave += (s, e) => { if (boton.IsEnabled) AnimarColorBoton(brushFondo, fondoNormal.Color); };
-
-            // Ajuste fino: como ColorAnimation solo interpola el canal Color
-            // (no el Opacity del Brush), y normal/hover en este diseño
-            // comparten el mismo Opacity dentro de cada estado (0.08 y 0.07
-            // respectivamente son casi iguales), no hace falta animar Opacity
-            // por separado. Si en el futuro se usan colores con Opacity muy
-            // distintos entre normal y hover, animar también BrushFondo.Opacity.
 
             return boton;
         }
@@ -551,9 +587,9 @@ namespace Login.Clases
             });
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // PASO 1: CORREO
-        // ─────────────────────────────────────────────────────────────
+        #endregion
+
+        #region Paso 1: Correo
 
         private void ConstruirPasoCorreo()
         {
@@ -570,8 +606,6 @@ namespace Login.Clases
 
             btnSiguiente.Click += async (s, e) =>
             {
-                if (!btnSiguiente.IsEnabled) return; // guard anti doble-clic
-
                 string correo = txtCorreo.Text.Trim().ToLowerInvariant();
                 OcultarErrorLocal(lblError);
 
@@ -594,10 +628,7 @@ namespace Login.Clases
                     return;
                 }
 
-                btnSiguiente.IsEnabled = false;
-                btnSiguiente.Content = "Verificando...";
-
-                try
+                await EjecutarConEstadoDeCarga(btnSiguiente, lblError, "Verificando...", "Siguiente", async () =>
                 {
                     bool existe = await Task.Run(() => _repositorio.ExisteCorreoLogin(correo));
                     if (!existe)
@@ -622,16 +653,7 @@ namespace Login.Clases
                     _correoRecuperacion = correo;
                     _intentosOtpFallidos = 0;
                     TransicionarA(ConstruirPasoOTP);
-                }
-                catch (Exception ex)
-                {
-                    MostrarErrorLocal(lblError, "⚠ " + ex.Message);
-                }
-                finally
-                {
-                    btnSiguiente.IsEnabled = true;
-                    btnSiguiente.Content = "Siguiente";
-                }
+                });
             };
 
             var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
@@ -648,24 +670,9 @@ namespace Login.Clases
             txtCorreo.Focus();
         }
 
-        private static bool EstaEnCooldownDeReenvio(string correo, out int segundosRestantes)
-        {
-            segundosRestantes = 0;
-            if (!_ultimoEnvioOtp.TryGetValue(correo, out DateTime ultimoEnvio)) return false;
+        #endregion
 
-            double segundosTranscurridos = (DateTime.UtcNow - ultimoEnvio).TotalSeconds;
-            if (segundosTranscurridos >= SegundosCooldownReenvioOtp) return false;
-
-            segundosRestantes = (int)Math.Ceiling(SegundosCooldownReenvioOtp - segundosTranscurridos);
-            return true;
-        }
-
-        private static void RegistrarEnvioOtp(string correo) =>
-            _ultimoEnvioOtp[correo] = DateTime.UtcNow;
-
-        // ─────────────────────────────────────────────────────────────
-        // PASO 2: CÓDIGO OTP
-        // ─────────────────────────────────────────────────────────────
+        #region Paso 2: Código OTP
 
         private void ConstruirPasoOTP()
         {
@@ -687,8 +694,6 @@ namespace Login.Clases
 
             btnReenviar.Click += async (s, e) =>
             {
-                if (!btnReenviar.IsEnabled) return;
-
                 OcultarErrorLocal(lblError);
 
                 if (EstaEnCooldownDeReenvio(_correoRecuperacion, out int segundosRestantes))
@@ -697,10 +702,7 @@ namespace Login.Clases
                     return;
                 }
 
-                btnReenviar.IsEnabled = false;
-                btnReenviar.Content = "Enviando...";
-
-                try
+                await EjecutarConEstadoDeCarga(btnReenviar, lblError, "Enviando...", "Reenviar código", async () =>
                 {
                     bool enviado = await Task.Run(() =>
                     {
@@ -718,22 +720,11 @@ namespace Login.Clases
                     {
                         MostrarErrorLocal(lblError, "⚠ No se pudo reenviar el código. Intenta nuevamente.");
                     }
-                }
-                catch (Exception ex)
-                {
-                    MostrarErrorLocal(lblError, "⚠ " + ex.Message);
-                }
-                finally
-                {
-                    btnReenviar.IsEnabled = true;
-                    btnReenviar.Content = "Reenviar código";
-                }
+                });
             };
 
             btnVerificar.Click += async (s, e) =>
             {
-                if (!btnVerificar.IsEnabled) return;
-
                 string otp = txtOTP.Text.Trim();
                 OcultarErrorLocal(lblError);
 
@@ -755,10 +746,7 @@ namespace Login.Clases
                     return;
                 }
 
-                btnVerificar.IsEnabled = false;
-                btnVerificar.Content = "Verificando...";
-
-                try
+                await EjecutarConEstadoDeCarga(btnVerificar, lblError, "Verificando...", "Verificar", async () =>
                 {
                     bool valido = await Task.Run(() => _repositorio.ValidarCodigoOTP(_correoRecuperacion, otp));
                     if (!valido)
@@ -773,16 +761,7 @@ namespace Login.Clases
 
                     _intentosOtpFallidos = 0;
                     TransicionarA(ConstruirPasoNuevaContrasena);
-                }
-                catch (Exception ex)
-                {
-                    MostrarErrorLocal(lblError, "⚠ " + ex.Message);
-                }
-                finally
-                {
-                    btnVerificar.IsEnabled = true;
-                    btnVerificar.Content = "Verificar";
-                }
+                });
             };
 
             var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
@@ -800,16 +779,14 @@ namespace Login.Clases
             txtOTP.Focus();
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // PASO 3: NUEVA CONTRASEÑA
-        // ─────────────────────────────────────────────────────────────
+        #endregion
+
+        #region Paso 3: Nueva contraseña
 
         private void ConstruirPasoNuevaContrasena()
         {
             _contenidoPanel.Children.Clear();
 
-            // Indicador de fortaleza: 4 barras + etiqueta descriptiva, se actualiza
-            // en vivo mientras el usuario escribe (sin crear brushes en cada tecla).
             var indicadorFortaleza = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -887,8 +864,6 @@ namespace Login.Clases
 
             btnGuardar.Click += async (s, e) =>
             {
-                if (!btnGuardar.IsEnabled) return;
-
                 string nueva = obtenerNueva();
                 string confirmar = obtenerConfirmar();
                 OcultarErrorLocal(lblError);
@@ -912,13 +887,9 @@ namespace Login.Clases
                     return;
                 }
 
-                btnGuardar.IsEnabled = false;
-                btnGuardar.Content = "Validando...";
-
-                try
+                await EjecutarConEstadoDeCarga(btnGuardar, lblError, "Validando...", "Guardar", async () =>
                 {
-                    // La nueva contraseña no puede ser igual a la actual: si "loguea"
-                    // con la contraseña nueva, es porque es idéntica a la guardada.
+
                     bool esIgualALaActual = await Task.Run(
                         () => _repositorio.ValidarLogin(_correoRecuperacion, nueva));
 
@@ -942,16 +913,7 @@ namespace Login.Clases
                     limpiarNueva();
                     limpiarConfirmar();
                     TransicionarA(ConstruirExito);
-                }
-                catch (Exception ex)
-                {
-                    MostrarErrorLocal(lblError, "⚠ " + ex.Message);
-                }
-                finally
-                {
-                    btnGuardar.IsEnabled = true;
-                    btnGuardar.Content = "Guardar";
-                }
+                });
             };
 
             var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
@@ -971,9 +933,9 @@ namespace Login.Clases
             _contenidoPanel.Children.Add(btnRow);
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // PASO 4: ÉXITO
-        // ─────────────────────────────────────────────────────────────
+        #endregion
+
+        #region Paso 4: Éxito
 
         private void ConstruirExito()
         {
@@ -997,5 +959,7 @@ namespace Login.Clases
             _contenidoPanel.Children.Add(CrearMensaje("Ya puedes iniciar sesión con tu nueva contraseña."));
             _contenidoPanel.Children.Add(btnCerrar);
         }
+
+        #endregion
     }
 }

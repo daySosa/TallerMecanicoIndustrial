@@ -9,8 +9,11 @@ namespace Login.Clases
     /// </summary>
     internal static partial class ValidadorRecuperarContrasenia
     {
+        #region Constantes y datos precomputados
+
         public const int LongitudMinima = 8;
         public const int LongitudMaxima = 64;
+        private const int LongitudSecuencia = 4;
 
         // Contraseñas triviales/mas usadas. Comparación case-insensitive.
         private static readonly HashSet<string> ContrasenasComunes = new(
@@ -26,6 +29,32 @@ namespace Login.Clases
             "0123456789", "qwertyuiop", "asdfghjkl", "zxcvbnm"
         ];
 
+        /// <summary>
+        /// Todas las sub-secuencias de <see cref="LongitudSecuencia"/> caracteres
+        /// (y sus reversos) derivadas de <see cref="SecuenciasBase"/>, precomputadas
+        /// una única vez al cargar la clase. Antes, la validación generaba estas
+        /// mismas sub-cadenas y las buscaba con <c>string.Contains</c> en cada
+        /// llamada; ahora es una búsqueda O(1) por cada ventana de la contraseña.
+        /// </summary>
+        private static readonly HashSet<string> SecuenciasProhibidas = ConstruirSecuenciasProhibidas();
+
+        private static HashSet<string> ConstruirSecuenciasProhibidas()
+        {
+            var conjunto = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var secuencia in SecuenciasBase)
+            {
+                for (int i = 0; i <= secuencia.Length - LongitudSecuencia; i++)
+                {
+                    string sub = secuencia.Substring(i, LongitudSecuencia);
+                    conjunto.Add(sub);
+                    conjunto.Add(new string([.. sub.Reverse()]));
+                }
+            }
+
+            return conjunto;
+        }
+
         [GeneratedRegex(@"[A-ZÁÉÍÓÚÑ]")]
         private static partial Regex RegexMayuscula();
 
@@ -40,6 +69,10 @@ namespace Login.Clases
 
         [GeneratedRegex(@"\s")]
         private static partial Regex RegexEspacios();
+
+        #endregion
+
+        #region Validación principal
 
         /// <summary>
         /// Valida la contraseña y devuelve el primer error encontrado, o null si es válida.
@@ -75,7 +108,7 @@ namespace Login.Clases
             if (TieneCaracteresRepetidos(contrasena, 3))
                 return "⚠ Tiene un carácter repetido 3 o más veces seguidas (ej: \"aaa\"). Varíalo un poco.";
 
-            if (ContieneSecuencia(contrasena, 4))
+            if (ContieneSecuencia(contrasena))
                 return "⚠ Contiene una secuencia predecible como \"1234\" o \"qwerty\". Elige algo menos obvio.";
 
             if (ContrasenasComunes.Contains(contrasena))
@@ -95,6 +128,10 @@ namespace Login.Clases
             return null;
         }
 
+        #endregion
+
+        #region Reglas auxiliares (repetición, secuencias)
+
         private static bool TieneCaracteresRepetidos(string texto, int cantidad)
         {
             int repetidos = 1;
@@ -106,23 +143,30 @@ namespace Login.Clases
             return false;
         }
 
-        private static bool ContieneSecuencia(string texto, int longitudMinima)
+        /// <summary>
+        /// Recorre la contraseña con una ventana deslizante de <see cref="LongitudSecuencia"/>
+        /// caracteres y verifica, con una búsqueda O(1) por ventana, si coincide con alguna
+        /// secuencia predecible conocida (o su reverso). Un solo recorrido de la contraseña,
+        /// en vez de un recorrido completo por cada una de las ~28 sub-cadenas candidatas.
+        /// </summary>
+        private static bool ContieneSecuencia(string texto)
         {
+            if (texto.Length < LongitudSecuencia) return false;
+
             string textoLower = texto.ToLowerInvariant();
 
-            foreach (var secuencia in SecuenciasBase)
+            for (int i = 0; i <= textoLower.Length - LongitudSecuencia; i++)
             {
-                for (int i = 0; i <= secuencia.Length - longitudMinima; i++)
-                {
-                    string sub = secuencia.Substring(i, longitudMinima);
-                    if (textoLower.Contains(sub)) return true;
-
-                    string subInvertida = new string([.. sub.Reverse()]);
-                    if (textoLower.Contains(subInvertida)) return true;
-                }
+                if (SecuenciasProhibidas.Contains(textoLower.Substring(i, LongitudSecuencia)))
+                    return true;
             }
+
             return false;
         }
+
+        #endregion
+
+        #region Indicador de fortaleza
 
         /// <summary>
         /// Puntaje de fortaleza de 0 (vacío) a 4 (muy fuerte), para indicador visual.
@@ -140,5 +184,7 @@ namespace Login.Clases
 
             return Math.Min(puntaje, 4);
         }
+
+        #endregion
     }
 }
