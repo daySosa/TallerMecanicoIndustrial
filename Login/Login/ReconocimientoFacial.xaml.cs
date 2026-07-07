@@ -28,9 +28,9 @@ namespace Login
 
         private const int MAX_INTENTOS_FALLIDOS = 5;
         private const int MINUTOS_BLOQUEO = 3;
-        private const int ANCHO_MINIMO_ROSTRO_PX = 150;
+        private const int ANCHO_MINIMO_ROSTRO_PX = 100;
 
-        private const double UMBRAL_CONFIANZA_LBPH = 50.0;
+        private const double UMBRAL_CONFIANZA_LBPH = 55.0;
 
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
