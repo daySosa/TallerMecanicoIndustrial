@@ -22,7 +22,6 @@
                           BlurRadius="48" ShadowDepth="0" Opacity="0.7"
                           RenderingBias="Performance"/>
 
-        <!-- Estilo compartido: botón "X" de cerrar en la cabecera -->
         <Style x:Key="BotonCerrarXStyle" TargetType="Button">
             <Setter Property="Width" Value="30"/>
             <Setter Property="Height" Value="30"/>
@@ -52,7 +51,6 @@
             </Setter>
         </Style>
 
-        <!-- Estilo compartido: botón "Cancelar" del pie de ventana -->
         <Style x:Key="BotonCancelarStyle" TargetType="Button">
             <Setter Property="Width" Value="115"/>
             <Setter Property="Height" Value="36"/>
@@ -80,8 +78,6 @@
             </Setter>
         </Style>
 
-        <!-- Estilo base compartido por AMBAS tarjetas: mismos triggers hover/pressed,
-             cada botón solo aporta su propio ControlTemplate.VisualTree vía BasedOn -->
         <Style x:Key="TarjetaBaseStyle" TargetType="Button">
             <Setter Property="Width" Value="210"/>
             <Setter Property="Height" Value="200"/>
@@ -98,8 +94,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-
-                <!-- Cabecera -->
+                
                 <Border Grid.Row="0" Background="#13161f"
                         BorderBrush="#1e2235" BorderThickness="0,0,0,1"
                         Padding="26,18">
@@ -136,7 +131,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Tarjetas de opción -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Margin="26,0">
@@ -256,10 +250,8 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-
                 </StackPanel>
 
-                <!-- Pie -->
                 <Border Grid.Row="2" Background="#0c0e17"
                         BorderBrush="#1a1e30" BorderThickness="0,1,0,0"
                         Padding="26,14">
@@ -267,7 +259,7 @@
                             Style="{StaticResource BotonCancelarStyle}"
                             Click="BtnCerrar_Click"/>
                 </Border>
-
+                
             </Grid>
         </Border>
     </Border>

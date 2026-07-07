@@ -6,8 +6,14 @@ namespace Login
 {
     public partial class OpcionSesion : Window
     {
+        #region Campos
+
         private readonly string _correoUsuario;
         private bool _navegando;
+
+        #endregion
+
+        #region Constructor
 
         public OpcionSesion(string correo)
         {
@@ -22,12 +28,20 @@ namespace Login
             }
         }
 
+        #endregion
+
+        #region Ventana sin borde (arrastre)
+
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
             try { DragMove(); }
-            catch (InvalidOperationException) { /* Soltó el botón antes de iniciar el arrastre */ }
+            catch (InvalidOperationException) { }
         }
+
+        #endregion
+
+        #region Navegación entre ventanas
 
         /// <summary>
         /// Crea la siguiente ventana y cierra la actual de forma INMEDIATA, sin
@@ -64,13 +78,34 @@ namespace Login
         {
             if (ventana is null) return;
             try { ventana.Close(); }
-            catch { /* La ventana ya pudo haberse cerrado o nunca llegó a mostrarse */ }
+            catch { }
         }
+
+        #endregion
+
+        #region Validación de correo disponible
+
+        /// <summary>
+        /// Verifica que haya un correo asociado a la sesión antes de continuar con
+        /// cualquiera de los dos métodos de verificación. Si no lo hay, muestra el
+        /// mensaje de aviso correspondiente y devuelve false para que el llamador
+        /// corte el flujo. Centraliza la validación que antes estaba duplicada en
+        /// ambos manejadores de clic, cada uno con su propio texto de aviso.
+        /// </summary>
+        private bool HayCorreoDisponible(string mensajeSiFalta)
+        {
+            if (_correoUsuario.Length > 0) return true;
+
+            MessageBox.Show(mensajeSiFalta, "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        #endregion
+
+        #region Manejadores de botones
 
         private void BtnCerrar_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MainWindow());
-
-
 
         /// <summary>
         /// Navega de inmediato a Verificacion2FA. Esa ventana es responsable de
@@ -79,29 +114,20 @@ namespace Login
         /// </summary>
         private void BtnCodigoVerificacion_Click(object sender, RoutedEventArgs e)
         {
-            if (_correoUsuario.Length == 0)
-            {
-                MessageBox.Show(
-                    "No es posible continuar: no hay un correo asociado a esta sesión.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!HayCorreoDisponible("No es posible continuar: no hay un correo asociado a esta sesión."))
                 return;
-            }
 
             Navegar(() => new Verificacion2FA(_correoUsuario));
         }
 
         private void BtnReconocimientoFacial_Click(object sender, RoutedEventArgs e)
         {
-            if (_correoUsuario.Length == 0)
-            {
-                MessageBox.Show(
-                    "No es posible iniciar el reconocimiento facial: no hay un correo asociado a esta sesión.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!HayCorreoDisponible("No es posible iniciar el reconocimiento facial: no hay un correo asociado a esta sesión."))
                 return;
-            }
 
-            // ✅ Ahora sí se le pasa el correo de la cuenta que se está verificando
             Navegar(() => new ReconocimientoFacial(_correoUsuario));
         }
+
+        #endregion
     }
 }
