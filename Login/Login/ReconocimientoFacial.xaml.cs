@@ -28,8 +28,9 @@ namespace Login
 
         private const int MAX_INTENTOS_FALLIDOS = 5;
         private const int MINUTOS_BLOQUEO = 3;
+        private const int ANCHO_MINIMO_ROSTRO_PX = 150;
 
-        private const double UMBRAL_CONFIANZA_LBPH = 55.0;
+        private const double UMBRAL_CONFIANZA_LBPH = 50.0;
 
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
@@ -110,6 +111,18 @@ namespace Login
         private DateTime? _inicioGracia = null;
 
         private readonly List<(int Label, double Distance)> _historialPredicciones = new();
+
+        #endregion
+
+        #region Precarga del menú principal (transición fluida tras acceso concedido)
+
+        /// <summary>
+        /// Instancia de <see cref="MenuPrincipal"/> precargada oculta (Opacity = 0)
+        /// mientras se muestra la insignia de éxito, para que la construcción de la
+        /// ventana (constructor, carga inicial de datos) no se note como un freeze
+        /// justo al final de la transición.
+        /// </summary>
+        private MenuPrincipal _menuPrincipalPrecargado;
 
         #endregion
 
@@ -600,6 +613,15 @@ namespace Login
             }
 
             var rostroRect = rostros.OrderByDescending(r => r.Width * r.Height).First();
+
+            if (rostroRect.Width < ANCHO_MINIMO_ROSTRO_PX)
+            {
+                imgColor.Draw(rostroRect, new Bgr(System.Drawing.Color.Orange), 2);
+                ActualizarEstadoUI("Acércate un poco más a la cámara...", BrushAlerta);
+                MostrarFrame(imgColor);
+                return;
+            }
+
             imgColor.Draw(rostroRect, new Bgr(System.Drawing.Color.LimeGreen), 2);
 
             if (!_pruebaVidaSuperada)
@@ -726,9 +748,10 @@ namespace Login
         }
 
         /// <summary>
-        /// Maneja el flujo de éxito: detiene la cámara SIN limpiar el último frame
-        /// (para que la transición visual muestre el rostro reconocido junto a la
-        /// insignia de éxito), y programa la navegación hacia el menú principal.
+        /// Maneja el flujo de éxito: inicia la sesión, detiene la cámara sin limpiar el
+        /// último frame (para que la transición muestre el rostro reconocido junto a la
+        /// insignia de éxito), y precarga <see cref="MenuPrincipal"/> mientras se muestra
+        /// dicha insignia, para que la transición hacia el menú sea fluida (crossfade).
         /// </summary>
         private void AccesoConcedido(string nombre, string email)
         {
@@ -736,51 +759,91 @@ namespace Login
 
             DetenerCamaraInterno(mostrarPanelSinCamara: false);
 
+            if (!IniciarSesionCompleta(email))
+            {
+                ActualizarEstadoUI("En espera...", BrushEspera);
+                bdNombreReconocido.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             ActualizarEstadoUI("Identidad verificada", BrushExito);
             txtNombreReconocido.Text = nombre;
             bdNombreReconocido.Visibility = Visibility.Visible;
+
+            PrecargarMenuPrincipal();
 
             var temporizadorTransicion = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
             temporizadorTransicion.Tick += (s, e) =>
             {
                 temporizadorTransicion.Stop();
-                AbrirMenuPrincipalConFade(email);
+                AbrirMenuPrincipalConFade();
             };
             temporizadorTransicion.Start();
         }
 
-        /// <summary>Transición de fade-out antes de abrir el menú principal tras un acceso concedido.</summary>
-        private void AbrirMenuPrincipalConFade(string email)
+        /// <summary>
+        /// Crea la ventana del menú principal por adelantado, oculta (Opacity = 0),
+        /// marcando que el origen del ingreso fue reconocimiento facial para que
+        /// <see cref="MenuPrincipal"/> no aplique su propio fade-in de entrada
+        /// (el crossfade lo controla esta ventana).
+        /// </summary>
+        private void PrecargarMenuPrincipal()
         {
+            try
+            {
+                _menuPrincipalPrecargado = new MenuPrincipal(OrigenIngreso.ReconocimientoFacial) { Opacity = 0 };
+            }
+            catch (Exception ex)
+            {
+                RegistrarEnLog("ERROR AL PRECARGAR MENU PRINCIPAL: " + ex.Message);
+                _menuPrincipalPrecargado = null;
+            }
+        }
+
+        /// <summary>
+        /// Realiza un crossfade real entre esta ventana y <see cref="MenuPrincipal"/>:
+        /// ambas animaciones corren en paralelo (una se apaga mientras la otra se
+        /// enciende), en vez de esperar a que termine el fade-out para recién crear
+        /// la ventana nueva. Si la precarga falló, se crea aquí como respaldo.
+        /// </summary>
+        private void AbrirMenuPrincipalConFade()
+        {
+            var menu = _menuPrincipalPrecargado;
+
+            try
+            {
+                menu ??= new MenuPrincipal(OrigenIngreso.ReconocimientoFacial);
+                menu.Opacity = 0;
+                menu.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("No se pudo abrir el menú principal: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Close();
+                return;
+            }
+
+            var fadeIn = new DoubleAnimation(0d, 1d, DuracionFade)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            menu.BeginAnimation(OpacityProperty, fadeIn);
+
             var fadeOut = new DoubleAnimation(1d, 0d, DuracionFade)
             {
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
             };
-
-            fadeOut.Completed += (s, e) =>
-            {
-                try
-                {
-                    IniciarSesionCompleta(email);
-
-                    var menu = new MenuPrincipal();
-                    menu.Show();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("No se pudo abrir el menú principal: " + ex.Message,
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                finally
-                {
-                    Close();
-                }
-            };
-
+            fadeOut.Completed += (s, e) => Close();
             BeginAnimation(OpacityProperty, fadeOut);
         }
 
-        private void IniciarSesionCompleta(string email)
+        /// <summary>
+        /// Inicia la sesión del usuario verificado. Devuelve <c>false</c> si no se
+        /// encontró su registro en la tabla Usuario (caso poco común: rostro
+        /// reconocido pero cuenta inconsistente en base de datos).
+        /// </summary>
+        private bool IniciarSesionCompleta(string email)
         {
             var fila = _db.ObtenerUsuarioPorEmail(email);
 
@@ -789,7 +852,7 @@ namespace Login
                 RegistrarEnLog($"ADVERTENCIA - Se reconoció el rostro de {email} pero no se encontró su registro en Usuario.");
                 MessageBox.Show("Se verificó tu rostro, pero no se encontró tu usuario en el sistema.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                return false;
             }
 
             string nombreCompleto = fila["Usuario_Nombre"].ToString();
@@ -797,6 +860,7 @@ namespace Login
             string rol = fila["Usuario_Rol"].ToString();
 
             SesionActual.IniciarSesion(email, nombreCompleto, apellido, rol);
+            return true;
         }
 
         private async Task AccesoDenegadoAsync(string motivo, int labelDetectado, double distancia)

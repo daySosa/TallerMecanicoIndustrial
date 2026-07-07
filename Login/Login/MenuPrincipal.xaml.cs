@@ -1,4 +1,5 @@
-﻿using Contabilidad;
+﻿#nullable enable
+using Contabilidad;
 using InterfazClientes;
 using InterfazInventario;
 using LiveCharts;
@@ -9,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Vehículos;
 
 namespace Dasboard_Prueba
@@ -31,9 +33,26 @@ namespace Dasboard_Prueba
         public bool Leida { get; set; }
     }
 
+    /// <summary>
+    /// Indica qué ventana originó la apertura de <see cref="MenuPrincipal"/>,
+    /// para decidir qué tipo de transición de entrada corresponde:
+    /// <list type="bullet">
+    /// <item><see cref="CorreoYContrasena"/>: MenuPrincipal anima su propio fade-in simple.</item>
+    /// <item><see cref="ReconocimientoFacial"/>: la ventana de origen ya precarga MenuPrincipal
+    /// oculto (Opacity = 0) y controla un crossfade manual; MenuPrincipal NO debe animarse
+    /// a sí mismo para evitar una doble animación.</item>
+    /// </list>
+    /// </summary>
+    public enum OrigenIngreso
+    {
+        CorreoYContrasena,
+        ReconocimientoFacial
+    }
+
     public partial class MenuPrincipal : Window
     {
-        // ── Mapas estáticos: evita duplicar switch/if en varios métodos ──
+        #region Mapas y constantes estáticas (evitan duplicar switch/if en varios métodos)
+
         private static readonly Dictionary<string, string> ColorPorEstado = new()
         {
             ["En Espera"] = "#F0A500",
@@ -51,34 +70,70 @@ namespace Dasboard_Prueba
         private const string NotifColorDefault = "#4A9EFF";
         private const string NotifIconoDefault = "Bell";
 
-        private static readonly string[] DiasSemana = { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
+        private static readonly string[] DiasSemana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
         private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
         private static readonly Dictionary<string, Color> _cacheColores = new();
 
-        // ── Estado interno ──────────────────────────────────────────
+        /// <summary>Duración del fade-in de entrada cuando el acceso fue por correo y contraseña.</summary>
+        private static readonly Duration DuracionFadeEntrada = new(TimeSpan.FromMilliseconds(220));
+
+        #endregion
+
+        #region Estado interno
+
         private RepositorioSql? _db;
         private readonly CancellationTokenSource _cts = new();
         private bool _navegando;
 
+        /// <summary>
+        /// Reemplaza el uso de <see cref="Window.IsLoaded"/> para saber si la ventana
+        /// sigue "viva" y puede recibir actualizaciones de UI. IsLoaded solo se vuelve
+        /// true después de que la ventana pasa por su ciclo de carga visual (que solo
+        /// ocurre tras Show() o al agregarse al árbol visual). Cuando esta ventana se
+        /// precarga oculta (Opacity = 0) sin Show() inmediato -como hace
+        /// ReconocimientoFacial-, IsLoaded se queda en false mientras los datos de la
+        /// BD ya llegaron, provocando que se descarten silenciosamente. Esta bandera,
+        /// en cambio, solo se activa cuando la ventana realmente se cierra.
+        /// </summary>
+        private volatile bool _ventanaCerrada;
+
         private DateTime _mesActual = new(DateTime.Today.Year, DateTime.Today.Month, 1);
-        private List<NotificacionItem> _notificaciones = new();
-        private List<OrdenReciente> _ordenes = new();
+        private List<NotificacionItem> _notificaciones = [];
+        private List<OrdenReciente> _ordenes = [];
         private int _mesesRango = 6;
 
-        // ── Bindings de las gráficas ─────────────────────────────────
+        /// <summary>Origen que abrió esta ventana; determina el tipo de transición de entrada.</summary>
+        private readonly OrigenIngreso _origenIngreso;
+
+        #endregion
+
+        #region Bindings de las gráficas
+
         public ChartValues<double> BalanceValues { get; } = new();
         public ChartValues<double> OrderValues { get; } = new();
         public ChartValues<double> GastosValues { get; } = new();
         public ChartValues<double> IngresosSemanalValues { get; } = new();
-        public string[] IngresosSemanalLabels { get; set; } = Array.Empty<string>();
+        public string[] IngresosSemanalLabels { get; set; } = [];
 
-        // ════════════════════════════════════════════════════════════
-        // CONSTRUCTOR
-        // ════════════════════════════════════════════════════════════
+        #endregion
 
-        public MenuPrincipal()
+        #region Constructor y ciclo de vida
+
+        /// <summary>Constructor por defecto: asume acceso por correo y contraseña.</summary>
+        public MenuPrincipal() : this(OrigenIngreso.CorreoYContrasena)
         {
+        }
+
+        /// <param name="origenIngreso">
+        /// Ventana que originó la apertura. Controla si <see cref="MenuPrincipal"/> anima su
+        /// propio fade-in de entrada (correo y contraseña) o si permanece pasivo porque la
+        /// ventana de origen ya está controlando un crossfade externo (reconocimiento facial).
+        /// </param>
+        public MenuPrincipal(OrigenIngreso origenIngreso)
+        {
+            _origenIngreso = origenIngreso;
+
             DataContext = this;
             InitializeComponent();
 
@@ -103,9 +158,9 @@ namespace Dasboard_Prueba
             GenerarEncabezadoCalendario();
             GenerarCalendario();
 
-            Closed += (_, _) => LiberarRecursos();
+            Loaded += Window_Loaded;
+            Closed += (_, _) => { _ventanaCerrada = true; LiberarRecursos(); };
 
-            // Carga todo en segundo plano; la ventana ya queda pintada y responde de inmediato
             _ = InicializarDashboardAsync();
         }
 
@@ -118,7 +173,6 @@ namespace Dasboard_Prueba
             }
             catch (InvalidOperationException)
             {
-                // DragMove puede fallar si el estado del mouse cambió a mitad del gesto; se ignora.
             }
         }
 
@@ -132,13 +186,34 @@ namespace Dasboard_Prueba
             }
             catch
             {
-                // La ventana se está cerrando; no hay más que hacer con estos errores.
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // PERMISOS SEGÚN ROL
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Transición de entrada
+
+        /// <summary>
+        /// Aplica el fade-in de entrada solo cuando corresponde. Si el acceso fue por
+        /// reconocimiento facial, la ventana de origen ya precargó esta instancia oculta
+        /// (Opacity = 0) y controla su propio crossfade; animar aquí también duplicaría
+        /// la transición y podría verse entrecortada.
+        /// </summary>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_origenIngreso != OrigenIngreso.CorreoYContrasena)
+                return;
+
+            var fadeIn = new DoubleAnimation(0d, 1d, DuracionFadeEntrada)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        #endregion
+
+        #region Permisos según rol
 
         private void AplicarPermisos()
         {
@@ -158,22 +233,36 @@ namespace Dasboard_Prueba
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // INFO DEL USUARIO LOGUEADO
-        // ════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Info del usuario logueado
+
+        /// <summary>
+        /// Carga en el sidebar y en el header el nombre completo (nombre + apellido)
+        /// y el rol real de la sesión activa.
+        /// </summary>
         private void CargarInfoUsuario()
         {
             try
             {
-                string nombre = string.IsNullOrWhiteSpace(SesionActual.Nombre) ? "Usuario" : SesionActual.Nombre.Trim();
-                string rol = SesionActual.EsAdministrador ? "Administrador" : "Empleado";
+                string nombre = string.IsNullOrWhiteSpace(SesionActual.Nombre)
+                    ? "Usuario" : SesionActual.Nombre.Trim();
 
-                txtNombreUsuario.Text = nombre;
+                string apellido = string.IsNullOrWhiteSpace(SesionActual.Apellido)
+                    ? string.Empty : SesionActual.Apellido.Trim();
+
+                string nombreCompleto = string.IsNullOrEmpty(apellido)
+                    ? nombre
+                    : $"{nombre} {apellido}";
+
+                string rol = string.IsNullOrWhiteSpace(SesionActual.Rol)
+                    ? (SesionActual.EsAdministrador ? "Administrador" : "Empleado")
+                    : SesionActual.Rol.Trim();
+
+                txtNombreUsuario.Text = nombreCompleto;
                 txtRolUsuario.Text = rol;
-                string primerNombre = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? nombre;
-                txtSaludoHeader.Text = $"Hola, {primerNombre}";
-                txtInicialesAvatar.Text = ObtenerIniciales(nombre);
+                txtSaludoHeader.Text = $"Hola, {nombre}";
+                txtInicialesAvatar.Text = ObtenerIniciales(nombreCompleto);
             }
             catch (Exception ex)
             {
@@ -193,16 +282,14 @@ namespace Dasboard_Prueba
             return "US";
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CARGA ASÍNCRONA DEL DASHBOARD
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Carga asíncrona del dashboard
 
         private async Task InicializarDashboardAsync()
         {
             if (_db is null) return;
 
-            // Corren en paralelo; cada una maneja sus propios errores
-            // para que una falla no tumbe a las demás.
             await Task.WhenAll(
                 CargarDatosAsync(),
                 CargarGraficasAsync(),
@@ -217,9 +304,9 @@ namespace Dasboard_Prueba
                 var (ordenes, balanceTotal, gastosTotal) = await Task.Run(
                     () => _db.ObtenerDatosDashboard(), _cts.Token);
 
-                if (_cts.IsCancellationRequested || !IsLoaded) return;
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
 
-                _ordenes = ordenes ?? new List<OrdenReciente>();
+                _ordenes = ordenes ?? [];
                 dgOrdenes.ItemsSource = _ordenes;
                 tbTotalOrdenes.Text = $"{_ordenes.Count} órdenes";
                 txtTotalOrdenes.Text = _ordenes.Count.ToString();
@@ -230,19 +317,18 @@ namespace Dasboard_Prueba
             }
             catch (OperationCanceledException)
             {
-                // La ventana se cerró antes de terminar la carga; no es un error real.
             }
             catch (Exception ex)
             {
-                if (IsLoaded)
+                if (!_ventanaCerrada)
                     MessageBox.Show("Error al cargar datos:\n" + ex.Message,
                         "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // GRÁFICAS
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Gráficas
 
         private async void cmbRango_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -282,7 +368,7 @@ namespace Dasboard_Prueba
 
                 await Task.WhenAll(balTask, ordTask, gasTask);
 
-                if (_cts.IsCancellationRequested || !IsLoaded) return;
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
 
                 var (balVals, balLabels) = balTask.Result;
                 var (ordVals, _) = ordTask.Result;
@@ -293,15 +379,14 @@ namespace Dasboard_Prueba
                 Actualizar(GastosValues, gasVals);
                 Actualizar(IngresosSemanalValues, balVals);
 
-                IngresosSemanalLabels = (balLabels is { Count: > 0 }) ? balLabels.ToArray() : new[] { "-" };
+                IngresosSemanalLabels = (balLabels is { Count: > 0 }) ? [.. balLabels] : ["-"];
             }
             catch (OperationCanceledException)
             {
-                // Cancelado por cierre de ventana; no es un error real.
             }
             catch (Exception ex)
             {
-                if (IsLoaded)
+                if (!_ventanaCerrada)
                     MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
                         "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -315,9 +400,9 @@ namespace Dasboard_Prueba
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // NOTIFICACIONES
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Notificaciones
 
         private async Task CargarNotificacionesAsync()
         {
@@ -325,8 +410,8 @@ namespace Dasboard_Prueba
             try
             {
                 var resultado = await Task.Run(() => _db.ObtenerTodasNotificaciones(), _cts.Token);
-                if (_cts.IsCancellationRequested || !IsLoaded) return;
-                _notificaciones = resultado ?? new List<NotificacionItem>();
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
+                _notificaciones = resultado ?? [];
             }
             catch (OperationCanceledException)
             {
@@ -334,10 +419,10 @@ namespace Dasboard_Prueba
             }
             catch
             {
-                _notificaciones = new List<NotificacionItem>();
+                _notificaciones = [];
             }
 
-            if (IsLoaded)
+            if (!_ventanaCerrada)
                 ActualizarPanelNotificaciones();
         }
 
@@ -379,7 +464,7 @@ namespace Dasboard_Prueba
             {
                 await Task.Run(() => _db.MarcarNotificacionLeida(id), _cts.Token);
                 var n = _notificaciones.FirstOrDefault(x => x.Notificacion_ID == id);
-                if (n != null) n.Leida = true;
+                n?.Leida = true;
                 ActualizarPanelNotificaciones();
             }
             catch (OperationCanceledException) { }
@@ -442,16 +527,16 @@ namespace Dasboard_Prueba
                     CornerRadius = new CornerRadius(16),
                     Background = new SolidColorBrush(Color.FromArgb(40, iconColor.R, iconColor.G, iconColor.B)),
                     VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, 2, 8, 0)
-                };
-                iconBorder.Child = new MaterialDesignThemes.Wpf.PackIcon
-                {
-                    Kind = ParseIconKind(icon),
-                    Foreground = new SolidColorBrush(iconColor),
-                    Width = 16,
-                    Height = 16,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
+                    Margin = new Thickness(0, 2, 8, 0),
+                    Child = new MaterialDesignThemes.Wpf.PackIcon
+                    {
+                        Kind = ParseIconKind(icon),
+                        Foreground = new SolidColorBrush(iconColor),
+                        Width = 16,
+                        Height = 16,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    }
                 };
                 Grid.SetColumn(iconBorder, 0);
 
@@ -496,9 +581,9 @@ namespace Dasboard_Prueba
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // CALENDARIO CON ÓRDENES
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Calendario con órdenes
 
         private void GenerarEncabezadoCalendario()
         {
@@ -552,11 +637,9 @@ namespace Dasboard_Prueba
                 txtMesAnio.Text = char.ToUpper(titulo[0]) + titulo[1..];
                 gridDias.Children.Clear();
 
-                // Limpia el detalle al cambiar de mes
                 panelOrdenesDia.Children.Clear();
                 txtTituloOrdenesDia.Text = "Selecciona un día con órdenes";
 
-                // Órdenes del mes indexadas por día
                 var ordenesPorDia = _ordenes
                     .Where(o => o.Fecha.Year == _mesActual.Year && o.Fecha.Month == _mesActual.Month)
                     .GroupBy(o => o.Fecha.Day)
@@ -612,7 +695,6 @@ namespace Dasboard_Prueba
                 Cursor = tieneOrdenes ? Cursors.Hand : Cursors.Arrow
             };
 
-            // Círculo principal del número del día
             var circulo = new Border
             {
                 Width = 28,
@@ -626,23 +708,21 @@ namespace Dasboard_Prueba
                         ? Pincel("#1a2060")
                         : Brushes.Transparent,
                 BorderThickness = new Thickness(tieneOrdenes && !esHoy ? 1.5 : 0),
-                BorderBrush = tieneOrdenes && !esHoy ? Pincel("#4f6ef7") : Brushes.Transparent
-            };
-
-            circulo.Child = new TextBlock
-            {
-                Text = dia.ToString(),
-                FontSize = 12,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                FontWeight = tieneOrdenes || esHoy ? FontWeights.SemiBold : FontWeights.Normal,
-                Foreground = esHoy ? Brushes.White
-                            : esDelMes ? Brushes.White
-                            : Pincel("#4A5568")
+                BorderBrush = tieneOrdenes && !esHoy ? Pincel("#4f6ef7") : Brushes.Transparent,
+                Child = new TextBlock
+                {
+                    Text = dia.ToString(),
+                    FontSize = 12,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontWeight = tieneOrdenes || esHoy ? FontWeights.SemiBold : FontWeights.Normal,
+                    Foreground = esHoy ? Brushes.White
+                                : esDelMes ? Brushes.White
+                                : Pincel("#4A5568")
+                }
             };
             celda.Children.Add(circulo);
 
-            // Badge circular con el número de órdenes, estilo indicador de notificación
             if (tieneOrdenes)
             {
                 var badge = new Border
@@ -655,16 +735,16 @@ namespace Dasboard_Prueba
                     BorderThickness = new Thickness(1.5),
                     HorizontalAlignment = HorizontalAlignment.Right,
                     VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, -2, -2, 0)
-                };
-                badge.Child = new TextBlock
-                {
-                    Text = cantOrdenes > 9 ? "9+" : cantOrdenes.ToString(),
-                    Foreground = Brushes.White,
-                    FontSize = 8,
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
+                    Margin = new Thickness(0, -2, -2, 0),
+                    Child = new TextBlock
+                    {
+                        Text = cantOrdenes > 9 ? "9+" : cantOrdenes.ToString(),
+                        Foreground = Brushes.White,
+                        FontSize = 8,
+                        FontWeight = FontWeights.Bold,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    }
                 };
                 celda.Children.Add(badge);
 
@@ -683,9 +763,9 @@ namespace Dasboard_Prueba
             return celda;
         }
 
-        // ════════════════════════════════════════════════════════════
-        // DETALLE DE ÓRDENES DEL DÍA SELECCIONADO
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Detalle de órdenes del día seleccionado
 
         private void MostrarOrdenesDelDia(int dia, List<OrdenReciente> ordenesDelDia)
         {
@@ -740,14 +820,14 @@ namespace Dasboard_Prueba
                         Background = new SolidColorBrush(Color.FromArgb(40, colorEstado.R, colorEstado.G, colorEstado.B)),
                         CornerRadius = new CornerRadius(6),
                         Padding = new Thickness(8, 3, 8, 3),
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    badgeEstado.Child = new TextBlock
-                    {
-                        Text = o.Estado,
-                        Foreground = new SolidColorBrush(colorEstado),
-                        FontSize = 10,
-                        FontWeight = FontWeights.SemiBold
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Child = new TextBlock
+                        {
+                            Text = o.Estado,
+                            Foreground = new SolidColorBrush(colorEstado),
+                            FontSize = 10,
+                            FontWeight = FontWeights.SemiBold
+                        }
                     };
                     Grid.SetColumn(badgeEstado, 1);
 
@@ -767,13 +847,13 @@ namespace Dasboard_Prueba
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // NAVEGACIÓN
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Navegación
 
         private void Navegar<T>(Func<T> crear) where T : Window
         {
-            if (_navegando) return; // evita abrir dos ventanas por doble clic accidental
+            if (_navegando) return;
             _navegando = true;
             try
             {
@@ -831,9 +911,9 @@ namespace Dasboard_Prueba
             }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // HELPERS
-        // ════════════════════════════════════════════════════════════
+        #endregion
+
+        #region Helpers
 
         private static SolidColorBrush Pincel(string hex)
         {
@@ -841,7 +921,7 @@ namespace Dasboard_Prueba
                 return existente;
 
             var brush = new SolidColorBrush(ObtenerColor(hex));
-            brush.Freeze(); // WPF puede compartirlo entre hilos y se salta el chequeo de cambios en cada frame
+            brush.Freeze();
             _cachePinceles[hex] = brush;
             return brush;
         }
@@ -858,7 +938,7 @@ namespace Dasboard_Prueba
             }
             catch
             {
-                color = Colors.Gray; // valor seguro por si llega un hex inválido de la BD
+                color = Colors.Gray;
             }
             _cacheColores[hex] = color;
             return color;
@@ -867,5 +947,7 @@ namespace Dasboard_Prueba
         private static MaterialDesignThemes.Wpf.PackIconKind ParseIconKind(string nombre)
             => Enum.TryParse<MaterialDesignThemes.Wpf.PackIconKind>(nombre, out var k)
                ? k : MaterialDesignThemes.Wpf.PackIconKind.Bell;
+
+        #endregion
     }
 }

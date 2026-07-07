@@ -815,13 +815,10 @@
                                             </StackPanel>
                                         </Grid>
 
-                                        <!-- Encabezados fijos (Lun, Mar, ...) generados UNA sola vez en el constructor -->
                                         <UniformGrid x:Name="gridDiasHeader" Columns="7" Margin="0,0,0,4"/>
 
-                                        <!-- Días del mes: se regeneran al cambiar de mes -->
                                         <UniformGrid x:Name="gridDias" Columns="7"/>
 
-                                        <!-- Detalle de órdenes del día seleccionado -->
                                         <Rectangle Height="1" Fill="#1e2235" Margin="0,12,0,10"/>
                                         <TextBlock x:Name="txtTituloOrdenesDia" Text="Selecciona un día con órdenes"
                                                    Foreground="#505880" FontSize="11" Margin="0,0,0,8"/>
