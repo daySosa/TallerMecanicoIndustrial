@@ -243,9 +243,6 @@ namespace Login.Clases
         /// flujo: evita reentradas por doble clic, deshabilita el botón y cambia su
         /// texto mientras dura la operación, captura cualquier excepción mostrándola
         /// en <paramref name="lblError"/>, y siempre restaura el botón al terminar.
-        /// Antes este bloque try/catch/finally estaba copiado en cuatro lugares
-        /// distintos (correo, reenviar, verificar OTP, guardar contraseña); ahora
-        /// vive en un solo sitio.
         /// </summary>
         private static async Task EjecutarConEstadoDeCarga(
             Button boton, TextBlock lblError, string textoEnProgreso, string textoNormal, Func<Task> accion)
@@ -485,10 +482,7 @@ namespace Login.Clases
         /// <summary>
         /// Crea un brush independiente (no congelado) a partir de un color base,
         /// preservando Color y Opacity, para poder animar el color en el hover sin
-        /// afectar los brushes compartidos y congelados usados como paleta. Nota:
-        /// Opacity es una propiedad aparte del Color; si solo se copiara el Color,
-        /// un brush semitransparente (ej. BrushSecundario al 8%) se volvería
-        /// accidentalmente opaco al 100%.
+        /// afectar los brushes compartidos y congelados usados como paleta.
         /// </summary>
         private static SolidColorBrush CrearBrushAnimable(SolidColorBrush origen) =>
             new(origen.Color) { Opacity = origen.Opacity };
@@ -889,7 +883,6 @@ namespace Login.Clases
 
                 await EjecutarConEstadoDeCarga(btnGuardar, lblError, "Validando...", "Guardar", async () =>
                 {
-
                     bool esIgualALaActual = await Task.Run(
                         () => _repositorio.ValidarLogin(_correoRecuperacion, nueva));
 
@@ -906,8 +899,14 @@ namespace Login.Clases
 
                     if (!actualizado)
                     {
-                        MostrarErrorLocal(lblError, "⚠ Error al guardar. Intenta nuevamente.");
-                        return;
+                        bool yaQuedoAplicada = await Task.Run(
+                            () => _repositorio.ValidarLogin(_correoRecuperacion, nueva));
+
+                        if (!yaQuedoAplicada)
+                        {
+                            MostrarErrorLocal(lblError, "⚠ Error al guardar. Intenta nuevamente.");
+                            return;
+                        }
                     }
 
                     limpiarNueva();

@@ -9,6 +9,8 @@
         WindowStyle="None"
         AllowsTransparency="True"
         ResizeMode="NoResize"
+        Opacity="0"
+        Loaded="Window_Loaded"
         MouseDown="Window_Drag">
 
     <Window.Resources>
@@ -107,6 +109,7 @@
                                            Foreground="#505880" FontSize="11" Margin="0,2,0,0"/>
                             </StackPanel>
                         </StackPanel>
+
                         <Button Grid.Column="1" Width="30" Height="30"
                                 BorderThickness="0" Background="Transparent"
                                 Cursor="Hand" Click="btnCerrar_Click">
@@ -221,7 +224,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-
+                        
                         <Button x:Name="btnRegresar" Style="{StaticResource BtnGhost}"
                                 HorizontalAlignment="Left"
                                 Width="115" Padding="16,0"

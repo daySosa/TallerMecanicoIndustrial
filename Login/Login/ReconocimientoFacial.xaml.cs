@@ -9,18 +9,25 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace Login
 {
-
+    /// <summary>
+    /// Ventana de verificación facial 1:1: compara el rostro capturado en vivo
+    /// únicamente contra las fotos registradas de la cuenta que se está autenticando
+    /// (no hace identificación abierta contra toda la base de datos).
+    /// Incluye prueba de vida (parpadeo + movimiento de cabeza) y bloqueo temporal
+    /// tras varios intentos fallidos, respaldado en base de datos.
+    /// </summary>
     public partial class ReconocimientoFacial : Window
     {
-        // ---------------------- Configuración general ----------------------
+        #region Configuración general
+
         private const int MAX_INTENTOS_FALLIDOS = 5;
         private const int MINUTOS_BLOQUEO = 3;
-        private readonly RepositorioSql _db = new();
 
         private const double UMBRAL_CONFIANZA_LBPH = 55.0;
 
@@ -30,10 +37,41 @@ namespace Login
         private const int FRAMES_CONSENSO_REQUERIDOS = 5;
         private const int TOLERANCIA_FRAMES_RUIDOSOS = 1;
 
+        private const int SEGUNDOS_GRACIA = 3;
+
+        /// <summary>Duración de las transiciones de fade al navegar entre ventanas.</summary>
+        private static readonly Duration DuracionFade = new(TimeSpan.FromMilliseconds(220));
+
         private readonly string archivoLog =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log_accesos.txt");
 
-        // ---------------------- Cámara y clasificadores ----------------------
+        private readonly RepositorioSql _db = new();
+
+        #endregion
+
+        #region Brushes congelados (recursos de UI reutilizables)
+
+        private static readonly SolidColorBrush BrushEspera = CrearBrushCongelado(0x2d, 0x30, 0x50);
+        private static readonly SolidColorBrush BrushAlerta = CrearBrushCongelado(0xf5, 0xa6, 0x23);
+        private static readonly SolidColorBrush BrushExito = CrearBrushCongelado(0x2E, 0xCC, 0x71);
+        private static readonly SolidColorBrush BrushError = CrearBrushCongelado(0x7b, 0x1f, 0x1f);
+        private static readonly SolidColorBrush BrushInfo = CrearBrushCongelado(0x4f, 0x6e, 0xf7);
+
+        /// <summary>
+        /// Crea un <see cref="SolidColorBrush"/> ya congelado (Freeze) para evitar
+        /// el costo de hacerlo en cada uso y permitir su acceso seguro entre hilos.
+        /// </summary>
+        private static SolidColorBrush CrearBrushCongelado(byte r, byte g, byte b)
+        {
+            var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
+            brush.Freeze();
+            return brush;
+        }
+
+        #endregion
+
+        #region Cámara y clasificadores
+
         private VideoCapture _camara;
         private DispatcherTimer _timer;
         private DispatcherTimer _timerBloqueo;
@@ -48,10 +86,16 @@ namespace Login
 
         private bool _modeloListo = false;
 
-        // ---------------------- Estado de bloqueo (ahora respaldado por BD) ----------------------
+        #endregion
+
+        #region Estado de bloqueo (respaldado en tabla IntentosAccesoFallidos)
+
         private DateTime? _bloqueadoHasta = null;
 
-        // ---------------------- Estado de prueba de vida ----------------------
+        #endregion
+
+        #region Estado de prueba de vida
+
         private bool _ojosVisiblesFramePrevio = false;
         private bool _esperandoReaperturaOjos = false;
         private int _parpadeosDetectados = 0;
@@ -63,11 +107,18 @@ namespace Login
         private bool _pruebaVidaSuperada = false;
         private bool _verificando = false;
 
-        private const int SEGUNDOS_GRACIA = 3;
         private DateTime? _inicioGracia = null;
 
         private readonly List<(int Label, double Distance)> _historialPredicciones = new();
 
+        #endregion
+
+        #region Constructor
+
+        /// <param name="correoEsperado">
+        /// Correo de la cuenta que se está verificando. La comparación es 1:1
+        /// contra las fotos de este correo, no una identificación abierta.
+        /// </param>
         public ReconocimientoFacial(string correoEsperado)
         {
             InitializeComponent();
@@ -89,11 +140,64 @@ namespace Login
             _ = CargarYEntrenarAsync();
         }
 
+        #endregion
+
+        #region Transiciones y navegación entre ventanas
+
+        /// <summary>Aplica un fade-in suave cuando la ventana termina de cargar.</summary>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var fadeIn = new DoubleAnimation(0d, 1d, DuracionFade)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        /// <summary>
+        /// Navega hacia la ventana de selección de sesión (<c>OpcionSesion</c>)
+        /// con un fade-out fluido, pasándole el correo que se estaba verificando.
+        /// </summary>
+        private void IrAOpcionSesion()
+        {
+            DetenerCamaraInterno();
+            _timerBloqueo?.Stop();
+
+            var fadeOut = new DoubleAnimation(1d, 0d, DuracionFade)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+            };
+
+            fadeOut.Completed += (s, e) =>
+            {
+                try
+                {
+                    var opcionSesion = new OpcionSesion(_correoEsperado);
+                    opcionSesion.Show();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("No se pudo abrir la ventana de sesión: " + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    Close();
+                }
+            };
+
+            BeginAnimation(OpacityProperty, fadeOut);
+        }
+
+        #endregion
+
+        #region Carga y entrenamiento del modelo LBPH
+
         private async Task CargarYEntrenarAsync()
         {
             try
             {
-                var (imagenes, etiquetas, nombres, emails) = await Task.Run(() => EntrenarReconocedor());
+                var (imagenes, etiquetas, nombres, emails) = await Task.Run(EntrenarReconocedor);
 
                 await ActualizarEstadoBloqueoAsync();
 
@@ -105,13 +209,14 @@ namespace Login
 
                 _reconocedor = new LBPHFaceRecognizer(1, 8, 8, 8, double.MaxValue);
 
-                using var vectorImagenes = new Emgu.CV.Util.VectorOfMat();
-                foreach (var img in imagenes)
-                    vectorImagenes.Push(img.Mat);
+                using (var vectorImagenes = new Emgu.CV.Util.VectorOfMat())
+                using (var vectorEtiquetas = new Emgu.CV.Util.VectorOfInt(etiquetas.ToArray()))
+                {
+                    foreach (var img in imagenes)
+                        vectorImagenes.Push(img.Mat);
 
-                using var vectorEtiquetas = new Emgu.CV.Util.VectorOfInt(etiquetas.ToArray());
-
-                await Task.Run(() => _reconocedor.Train(vectorImagenes, vectorEtiquetas));
+                    await Task.Run(() => _reconocedor.Train(vectorImagenes, vectorEtiquetas));
+                }
 
                 foreach (var img in imagenes) img.Dispose();
 
@@ -125,7 +230,7 @@ namespace Login
                 if (_bloqueadoHasta is null)
                 {
                     btnIniciarCamara.IsEnabled = true;
-                    txtEstado.Text = "En espera...";
+                    ActualizarEstadoUI("En espera...", BrushEspera);
                 }
             }
             catch (Exception ex)
@@ -136,10 +241,9 @@ namespace Login
             }
         }
 
-        // ======================================================================
-        //  BLOQUEO POR INTENTOS FALLIDOS (respaldado por IntentosAccesoFallidos)
-        // ======================================================================
+        #endregion
 
+        #region Bloqueo por intentos fallidos (respaldado por IntentosAccesoFallidos)
 
         private async Task ActualizarEstadoBloqueoAsync()
         {
@@ -151,7 +255,6 @@ namespace Login
             }
             catch (Exception ex)
             {
-
                 RegistrarEnLog("ERROR AL CONSULTAR INTENTOS FALLIDOS: " + ex.Message);
                 return;
             }
@@ -166,12 +269,10 @@ namespace Login
                 return;
             }
 
-
-            _bloqueadoHasta = estado.UltimoIntento.Value.ToLocalTime().AddMinutes(MINUTOS_BLOQUEO);
+            _bloqueadoHasta = estado.UltimoIntento!.Value.ToLocalTime().AddMinutes(MINUTOS_BLOQUEO);
 
             if (_bloqueadoHasta.Value <= DateTime.Now)
             {
-
                 _bloqueadoHasta = null;
                 if (_modeloListo) btnIniciarCamara.IsEnabled = true;
                 return;
@@ -183,8 +284,7 @@ namespace Login
         private void IniciarContadorBloqueoUI()
         {
             btnIniciarCamara.IsEnabled = false;
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
-            txtEstado.Text = "Bloqueado temporalmente";
+            ActualizarEstadoUI("Bloqueado temporalmente", BrushError);
 
             _timerBloqueo?.Stop();
             _timerBloqueo = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -200,8 +300,7 @@ namespace Login
                     _bloqueadoHasta = null;
 
                     if (_modeloListo) btnIniciarCamara.IsEnabled = true;
-                    txtEstado.Text = "En espera...";
-                    elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                    ActualizarEstadoUI("En espera...", BrushEspera);
                 }
                 else
                 {
@@ -220,13 +319,18 @@ namespace Login
             }
             catch
             {
-
             }
         }
 
-        // ======================================================================
-        //  INICIALIZACIÓN DE CLASIFICADORES Y ENTRENAMIENTO
-        // ======================================================================
+        private void ActualizarEstadoUI(string texto, SolidColorBrush color)
+        {
+            txtEstado.Text = texto;
+            elipseEstado.Fill = color;
+        }
+
+        #endregion
+
+        #region Inicialización de clasificadores y entrenamiento
 
         private void InicializarClasificadores()
         {
@@ -248,6 +352,7 @@ namespace Login
             _clasificadorOjos = new CascadeClassifier(rutaOjos);
         }
 
+        /// <summary>Aplica ecualización adaptativa (CLAHE) para reducir el impacto de la iluminación.</summary>
         private static Image<Gray, byte> NormalizarIluminacion(Image<Gray, byte> imgGris)
         {
             var salida = new Image<Gray, byte>(imgGris.Size);
@@ -256,7 +361,7 @@ namespace Login
         }
 
         private (List<Image<Gray, byte>> Imagenes, List<int> Etiquetas,
-   Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
+            Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
         {
             var imagenes = new List<Image<Gray, byte>>();
             var etiquetas = new List<int>();
@@ -277,7 +382,6 @@ namespace Login
                 throw;
             }
 
-            // ── SOLO nos interesan las fotos de la persona que se está verificando ──
             var fotosDeLaPersona = personas
                 .Where(p => !string.IsNullOrWhiteSpace(p.Email)
                          && p.Email.Equals(_correoEsperado, StringComparison.OrdinalIgnoreCase))
@@ -312,10 +416,12 @@ namespace Login
                     var rostroNormalizado = rostroEcualizado.Resize(200, 200, Inter.Cubic);
 
                     imagenes.Add(rostroNormalizado);
-                    etiquetas.Add(0); // única etiqueta posible: la persona esperada
+                    etiquetas.Add(0);
                     validas++;
                 }
-                catch { }
+                catch
+                {
+                }
             }
 
             if (validas > 0)
@@ -329,9 +435,9 @@ namespace Login
             return (imagenes, etiquetas, etiquetasNombres, etiquetasEmails);
         }
 
-        // ======================================================================
-        //  CONTROL DE CÁMARA
-        // ======================================================================
+        #endregion
+
+        #region Control de cámara
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
@@ -370,8 +476,7 @@ namespace Login
             btnDetenerCamara.IsEnabled = true;
             bdNombreReconocido.Visibility = Visibility.Collapsed;
 
-            txtEstado.Text = $"Prepárate, colócate frente a la cámara... {SEGUNDOS_GRACIA}";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0xf5, 0xa6, 0x23));
+            ActualizarEstadoUI($"Prepárate, colócate frente a la cámara... {SEGUNDOS_GRACIA}", BrushAlerta);
 
             _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
             _timer.Tick += Timer_Tick;
@@ -381,18 +486,49 @@ namespace Login
         private void btnDetenerCamara_Click(object sender, RoutedEventArgs e)
         {
             DetenerCamaraInterno();
-            txtEstado.Text = "En espera...";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+            ActualizarEstadoUI("En espera...", BrushEspera);
             bdNombreReconocido.Visibility = Visibility.Collapsed;
         }
 
-        private void DetenerCamaraInterno()
+        /// <summary>
+        /// Detiene el timer y libera la referencia a la cámara.
+        /// IMPORTANTE: <see cref="VideoCapture.Dispose"/> puede tardar (el driver
+        /// necesita liberar el dispositivo físico) y si se llama en el hilo de UI
+        /// congela la ventana durante ese lapso — que es justo el efecto de
+        /// "cámara pegada" al aceptar el acceso. Por eso el Dispose real se hace
+        /// en un hilo de fondo (fire-and-forget) mientras la UI sigue respondiendo
+        /// de inmediato (oculta el feed, habilita botones, navega, etc.).
+        /// </summary>
+        /// <param name="mostrarPanelSinCamara">
+        /// Si es <c>true</c> (valor por defecto), vuelve a mostrar el panel
+        /// "Presiona Iniciar cámara..." y limpia el último frame. Se pasa
+        /// <c>false</c> desde <see cref="AccesoConcedido"/> para mantener visible
+        /// el último frame congelado (con el rostro reconocido) detrás de la
+        /// insignia de éxito durante la transición hacia el menú principal.
+        /// </param>
+        private void DetenerCamaraInterno(bool mostrarPanelSinCamara = true)
         {
             _timer?.Stop();
             _timer = null;
 
-            _camara?.Dispose();
+            var camaraALiberar = _camara;
             _camara = null;
+
+            if (camaraALiberar != null)
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        camaraALiberar.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        RegistrarEnLog("ERROR AL LIBERAR LA CÁMARA: " + ex.Message);
+                    }
+                });
+            }
+
             _verificando = false;
             _inicioGracia = null;
             _historialPredicciones.Clear();
@@ -403,8 +539,11 @@ namespace Login
             if (!estaBloqueado && _modeloListo)
                 btnIniciarCamara.IsEnabled = true;
 
-            pnlSinCamara.Visibility = Visibility.Visible;
-            imgCamara.Source = null;
+            if (mostrarPanelSinCamara)
+            {
+                pnlSinCamara.Visibility = Visibility.Visible;
+                imgCamara.Source = null;
+            }
         }
 
         private void ReiniciarEstadoPruebaVida()
@@ -421,9 +560,9 @@ namespace Login
             _historialPredicciones.Clear();
         }
 
-        // ======================================================================
-        //  PROCESAMIENTO DE CADA FRAME
-        // ======================================================================
+        #endregion
+
+        #region Procesamiento de cada frame
 
         private void Timer_Tick(object sender, EventArgs e)
         {
@@ -455,8 +594,7 @@ namespace Login
 
             if (rostros.Length == 0)
             {
-                txtEstado.Text = "No se detecta ningún rostro...";
-                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                ActualizarEstadoUI("No se detecta ningún rostro...", BrushEspera);
                 MostrarFrame(imgColor);
                 return;
             }
@@ -471,8 +609,7 @@ namespace Login
 
                 if (_pruebaVidaSuperada)
                 {
-                    txtEstado.Text = "Prueba de vida superada. Verificando identidad...";
-                    elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x4f, 0x6e, 0xf7));
+                    ActualizarEstadoUI("Prueba de vida superada. Verificando identidad...", BrushInfo);
                 }
                 return;
             }
@@ -485,9 +622,9 @@ namespace Login
             MostrarFrame(imgColor);
         }
 
-        // ======================================================================
-        //  PRUEBA DE VIDA: PARPADEO + MOVIMIENTO DE CABEZA
-        // ======================================================================
+        #endregion
+
+        #region Prueba de vida: parpadeo + movimiento de cabeza
 
         private void ProcesarPruebaDeVida(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
@@ -541,9 +678,9 @@ namespace Login
             }
         }
 
-        // ======================================================================
-        //  COMPARACIÓN DE ROSTRO Y DECISIÓN DE ACCESO (con consenso multi-frame)
-        // ======================================================================
+        #endregion
+
+        #region Comparación de rostro y decisión de acceso (consenso multi-frame)
 
         private void VerificarIdentidad(Image<Gray, byte> imgGris, System.Drawing.Rectangle rostroRect)
         {
@@ -588,15 +725,18 @@ namespace Login
             }
         }
 
+        /// <summary>
+        /// Maneja el flujo de éxito: detiene la cámara SIN limpiar el último frame
+        /// (para que la transición visual muestre el rostro reconocido junto a la
+        /// insignia de éxito), y programa la navegación hacia el menú principal.
+        /// </summary>
         private void AccesoConcedido(string nombre, string email)
         {
-
             RegistrarEnLog($"ACCESO CONCEDIDO - Usuario: {nombre} ({email})");
 
-            DetenerCamaraInterno();
+            DetenerCamaraInterno(mostrarPanelSinCamara: false);
 
-            txtEstado.Text = "Identidad verificada";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2E, 0xCC, 0x71));
+            ActualizarEstadoUI("Identidad verificada", BrushExito);
             txtNombreReconocido.Text = nombre;
             bdNombreReconocido.Visibility = Visibility.Visible;
 
@@ -604,22 +744,40 @@ namespace Login
             temporizadorTransicion.Tick += (s, e) =>
             {
                 temporizadorTransicion.Stop();
+                AbrirMenuPrincipalConFade(email);
+            };
+            temporizadorTransicion.Start();
+        }
 
+        /// <summary>Transición de fade-out antes de abrir el menú principal tras un acceso concedido.</summary>
+        private void AbrirMenuPrincipalConFade(string email)
+        {
+            var fadeOut = new DoubleAnimation(1d, 0d, DuracionFade)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+            };
+
+            fadeOut.Completed += (s, e) =>
+            {
                 try
                 {
                     IniciarSesionCompleta(email);
 
                     var menu = new MenuPrincipal();
                     menu.Show();
-                    this.Close();
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("No se pudo abrir el menú principal: " + ex.Message,
                         "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+                finally
+                {
+                    Close();
+                }
             };
-            temporizadorTransicion.Start();
+
+            BeginAnimation(OpacityProperty, fadeOut);
         }
 
         private void IniciarSesionCompleta(string email)
@@ -668,8 +826,7 @@ namespace Login
                 return;
             }
 
-            txtEstado.Text = "Rostro no reconocido";
-            elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x7b, 0x1f, 0x1f));
+            ActualizarEstadoUI("Rostro no reconocido", BrushError);
 
             var respuesta = MessageBox.Show(
                 "Intento fallido. ¿Desea intentar de nuevo?",
@@ -681,14 +838,13 @@ namespace Login
             }
             else
             {
-                txtEstado.Text = "En espera...";
-                elipseEstado.Fill = new SolidColorBrush(Color.FromRgb(0x2d, 0x30, 0x50));
+                ActualizarEstadoUI("En espera...", BrushEspera);
             }
         }
 
-        // ======================================================================
-        //  UTILIDADES: RENDER DE FRAME, ARRASTRE DE VENTANA, NAVEGACIÓN
-        // ======================================================================
+        #endregion
+
+        #region Utilidades: render de frame, arrastre de ventana, navegación
 
         private void MostrarFrame(Image<Bgr, byte> imagen)
         {
@@ -712,8 +868,9 @@ namespace Login
             }
         }
 
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
+        [LibraryImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool DeleteObject(IntPtr hObject);
 
         private void Window_Drag(object sender, MouseButtonEventArgs e)
         {
@@ -723,8 +880,7 @@ namespace Login
 
         private void btnRegresar_Click(object sender, RoutedEventArgs e)
         {
-            DetenerCamaraInterno();
-            _timerBloqueo?.Stop();
+            IrAOpcionSesion();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -736,9 +892,9 @@ namespace Login
 
         private void btnCerrar_Click(object sender, RoutedEventArgs e)
         {
-            DetenerCamaraInterno();
-            _timerBloqueo?.Stop();
-            this.Close();
+            IrAOpcionSesion();
         }
+
+        #endregion
     }
 }

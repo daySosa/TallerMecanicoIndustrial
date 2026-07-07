@@ -3,11 +3,13 @@ using Drawing = System.Drawing;
 
 namespace Login.Clases
 {
-
+    /// <summary>
+    /// Validaciones puras (sin dependencias de UI ni de BD) usadas en los flujos
+    /// de registro y verificación de reconocimiento facial.
+    /// </summary>
     public static partial class ValidadorReconocimientoFacial
     {
-        // ── Umbral de reconocimiento ──────────────────────────────────────────────
-
+        /// <summary>Distancia LBPH máxima aceptada como coincidencia válida.</summary>
         public const double UmbralReconocimiento = 115.0;
 
         public static bool EsReconocimientoValido(int label, double distance, int labelEsperado) =>
