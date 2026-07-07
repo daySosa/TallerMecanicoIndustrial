@@ -12,6 +12,8 @@ namespace Login
 {
     public partial class Verificacion2FA : Window
     {
+        #region Constantes y estado
+
         private const int MaxIntentosFallidos = 5;
         private const int SegundosIniciales = 300;
 
@@ -27,6 +29,10 @@ namespace Login
         private bool _verificando;
         private bool _disposed;
         private bool _codigoInicialEnviado;
+
+        #endregion
+
+        #region Constructor y ciclo de vida de la ventana
 
         public Verificacion2FA(string correo)
         {
@@ -70,7 +76,7 @@ namespace Login
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
             try { DragMove(); }
-            catch (InvalidOperationException) { /* soltó el botón antes de iniciar el arrastre */ }
+            catch (InvalidOperationException) { }
         }
 
         /// <summary>
@@ -95,9 +101,28 @@ namespace Login
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // ENVÍO DEL CÓDIGO INICIAL (con estado de carga)
-        // ─────────────────────────────────────────────────────────────
+        protected override void OnClosed(EventArgs e)
+        {
+            LiberarRecursos();
+            base.OnClosed(e);
+        }
+
+        #endregion
+
+        #region Envío del código OTP (inicial y reenvío)
+
+        /// <summary>
+        /// Genera un nuevo código OTP y lo envía por correo, en un hilo de fondo
+        /// y respetando la cancelación de la ventana. Único punto donde se llama
+        /// a <c>GenerarCodigoOTP</c> + <c>EnviarCorreoOTP</c>; antes esta pareja de
+        /// llamadas estaba duplicada en el envío inicial y en el reenvío manual.
+        /// </summary>
+        private Task<bool> GenerarYEnviarCodigoOtpAsync() =>
+            Task.Run(() =>
+            {
+                string codigo = _db.GenerarCodigoOTP(_correoUsuario);
+                return _db.EnviarCorreoOTP(_correoUsuario, codigo);
+            }, _cts.Token);
 
         private async Task EnviarCodigoInicialAsync()
         {
@@ -109,11 +134,7 @@ namespace Login
 
             try
             {
-                bool enviado = await Task.Run(() =>
-                {
-                    string codigo = _db.GenerarCodigoOTP(_correoUsuario);
-                    return _db.EnviarCorreoOTP(_correoUsuario, codigo);
-                }, _cts.Token);
+                bool enviado = await GenerarYEnviarCodigoOtpAsync();
 
                 if (_cts.IsCancellationRequested || !IsLoaded) return;
 
@@ -124,7 +145,6 @@ namespace Login
             }
             catch (OperationCanceledException)
             {
-                // Ventana cerrada mientras se enviaba el primer código; nada que hacer.
             }
             catch (Exception ex)
             {
@@ -160,9 +180,66 @@ namespace Login
             await EnviarCodigoInicialAsync();
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // CAJAS DE DÍGITOS
-        // ─────────────────────────────────────────────────────────────
+        /// <summary>
+        /// Reenvío explícito solicitado por el usuario (botón "Reenviar ahora").
+        /// Independiente del envío inicial automático de EnviarCodigoInicialAsync.
+        /// </summary>
+        private async void BtnReenviar_Click(object sender, RoutedEventArgs e)
+        {
+            if (_correoUsuario.Length == 0)
+            {
+                MessageBox.Show("No hay un correo válido para reenviar el código.",
+                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            btnReenviar.IsEnabled = false;
+
+            try
+            {
+                bool enviado = await GenerarYEnviarCodigoOtpAsync();
+
+                if (_cts.IsCancellationRequested || !IsLoaded) return;
+
+                if (enviado)
+                {
+                    _timer.Stop();
+                    _segundos = SegundosIniciales;
+                    _intentosFallidos = 0;
+                    runTimer.Text = "05:00";
+                    btnVerificar.IsEnabled = true;
+                    _timer.Start();
+
+                    LimpiarCajas();
+                    OcultarError();
+
+                    MessageBox.Show("✅ Código reenviado a tu correo.", "Código enviado",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MostrarError("⚠ No se pudo reenviar el código. Intenta de nuevo.");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                if (IsLoaded)
+                    MessageBox.Show("⚠ No se pudo reenviar el código: " + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (IsLoaded)
+                    btnReenviar.IsEnabled = true;
+            }
+        }
+
+        #endregion
+
+        #region Cajas de dígitos
 
         private void ConfigurarCajas()
         {
@@ -203,8 +280,6 @@ namespace Login
                     DistribuirCodigoEnCajas(texto);
             }
 
-            // Siempre se cancela el pegado por defecto: o ya se distribuyó
-            // manualmente, o el contenido no era válido.
             e.CancelCommand();
         }
 
@@ -232,8 +307,6 @@ namespace Login
 
             var caja = (TextBox)sender;
 
-            // Defensa adicional: si por cualquier vía llegara más de 1 carácter,
-            // se recorta al primero en vez de confiar únicamente en MaxLength del XAML.
             if (caja.Text.Length > 1)
             {
                 caja.Text = caja.Text[..1];
@@ -295,9 +368,9 @@ namespace Login
             }
         }
 
-        // ─────────────────────────────────────────────────────────────
-        // VERIFICACIÓN DEL CÓDIGO
-        // ─────────────────────────────────────────────────────────────
+        #endregion
+
+        #region Verificación del código
 
         private async void BtnVerificar_Click(object sender, RoutedEventArgs e)
         {
@@ -348,12 +421,10 @@ namespace Login
                     return;
                 }
 
-                _timer.Stop();
                 AbrirDashboardYCerrar();
             }
             catch (OperationCanceledException)
             {
-                // Ventana cerrada mientras la verificación estaba en curso; nada que hacer.
             }
             catch (Exception ex)
             {
@@ -427,86 +498,44 @@ namespace Login
             return valor is null or DBNull ? string.Empty : valor.ToString() ?? string.Empty;
         }
 
-        private void AbrirDashboardYCerrar()
+        #endregion
+
+        #region Navegación (dashboard / regresar)
+
+        /// <summary>
+        /// Ejecuta el patrón común de navegación: evita reentradas concurrentes,
+        /// crea la ventana destino, la muestra y cierra la actual. Si algo falla,
+        /// cierra de forma segura la ventana a medio crear y reporta el error con
+        /// el callback proporcionado. Antes este bloque estaba duplicado entre
+        /// "ir al dashboard" y "regresar a OpcionSesion", cada uno con su propio
+        /// try/catch casi idéntico.
+        /// </summary>
+        private void EjecutarNavegacion<T>(Func<T> crear, Action<string> alFallar) where T : Window
         {
             if (_navegando) return;
             _navegando = true;
 
-            Dasboard_Prueba.MenuPrincipal? dashboard = null;
+            T? ventanaNueva = null;
             try
             {
-                dashboard = new Dasboard_Prueba.MenuPrincipal();
-                dashboard.Show();
+                ventanaNueva = crear();
+                ventanaNueva.Show();
                 Close();
             }
             catch (Exception ex)
             {
-                CerrarSiPosible(dashboard);
+                CerrarSiPosible(ventanaNueva);
                 _navegando = false;
-                MostrarError("⚠ No se pudo abrir el panel principal: " + ex.Message);
+                alFallar(ex.Message);
             }
         }
 
-        /// <summary>
-        /// Reenvío explícito solicitado por el usuario (botón "Reenviar ahora").
-        /// Independiente del envío inicial automático de EnviarCodigoInicialAsync.
-        /// </summary>
-        private async void BtnReenviar_Click(object sender, RoutedEventArgs e)
+        private void AbrirDashboardYCerrar()
         {
-            if (_correoUsuario.Length == 0)
-            {
-                MessageBox.Show("No hay un correo válido para reenviar el código.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            btnReenviar.IsEnabled = false;
-
-            try
-            {
-                bool enviado = await Task.Run(() =>
-                {
-                    string codigo = _db.GenerarCodigoOTP(_correoUsuario);
-                    return _db.EnviarCorreoOTP(_correoUsuario, codigo);
-                }, _cts.Token);
-
-                if (_cts.IsCancellationRequested || !IsLoaded) return;
-
-                if (enviado)
-                {
-                    _timer.Stop();
-                    _segundos = SegundosIniciales;
-                    _intentosFallidos = 0;
-                    runTimer.Text = "05:00";
-                    btnVerificar.IsEnabled = true;
-                    _timer.Start();
-
-                    LimpiarCajas();
-                    OcultarError();
-
-                    MessageBox.Show("✅ Código reenviado a tu correo.", "Código enviado",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MostrarError("⚠ No se pudo reenviar el código. Intenta de nuevo.");
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Ventana cerrada mientras se reenviaba; nada que hacer.
-            }
-            catch (Exception ex)
-            {
-                if (IsLoaded)
-                    MessageBox.Show("⚠ No se pudo reenviar el código: " + ex.Message,
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                if (IsLoaded)
-                    btnReenviar.IsEnabled = true;
-            }
+            _timer.Stop();
+            EjecutarNavegacion(
+                () => new Dasboard_Prueba.MenuPrincipal(),
+                msg => MostrarError("⚠ No se pudo abrir el panel principal: " + msg));
         }
 
         /// <summary>
@@ -514,33 +543,23 @@ namespace Login
         /// </summary>
         private void BtnRegresar_Click(object sender, RoutedEventArgs e)
         {
-            if (_navegando) return;
-            _navegando = true;
-
             _timer.Stop();
-
-            OpcionSesion? anterior = null;
-            try
-            {
-                anterior = new OpcionSesion(_correoUsuario);
-                anterior.Show();
-                Close();
-            }
-            catch (Exception ex)
-            {
-                CerrarSiPosible(anterior);
-                _navegando = false;
-                MessageBox.Show("No se pudo regresar a la pantalla anterior:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            EjecutarNavegacion(
+                () => new OpcionSesion(_correoUsuario),
+                msg => MessageBox.Show("No se pudo regresar a la pantalla anterior:\n" + msg,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error));
         }
 
         private static void CerrarSiPosible(Window? ventana)
         {
             if (ventana is null) return;
             try { ventana.Close(); }
-            catch { /* La ventana ya pudo haberse cerrado o nunca llegó a mostrarse */ }
+            catch { }
         }
+
+        #endregion
+
+        #region Mensajes de error en pantalla
 
         private void MostrarError(string msg)
         {
@@ -551,10 +570,6 @@ namespace Login
         private void OcultarError()
             => txtErrorCodigo.Visibility = Visibility.Collapsed;
 
-        protected override void OnClosed(EventArgs e)
-        {
-            LiberarRecursos();
-            base.OnClosed(e);
-        }
+        #endregion
     }
 }

@@ -228,8 +228,6 @@
 
                     <Grid>
 
-                        <!-- Estado inicial: enviando el código por primera vez.
-                             Se oculta en cuanto el envío se confirma exitoso. -->
                         <StackPanel x:Name="panelEnvioInicial"
                                     HorizontalAlignment="Center"
                                     Margin="0,26,0,26">
@@ -257,7 +255,6 @@
                                     Click="BtnReintentarEnvio_Click"/>
                         </StackPanel>
 
-                        <!-- Estado listo: el código ya se envió, se puede ingresar. -->
                         <StackPanel x:Name="panelContenidoCodigo" Visibility="Collapsed">
 
                             <TextBlock Text="INGRESA EL CÓDIGO"

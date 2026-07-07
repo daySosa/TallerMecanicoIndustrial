@@ -8,12 +8,18 @@ namespace Login.Clases
     /// </summary>
     public static class Validador2FA
     {
+        #region Constantes
+
         /// <summary>Longitud exacta que debe tener el código OTP.</summary>
         public const int LongitudCodigo = 6;
 
         private const string MsgVacio = "⚠ Ingresa el código de verificación.";
         private const string MsgCaracteresInvalidos = "⚠ El código solo debe contener números.";
         private const string MsgLongitudInvalida = "⚠ El código debe tener exactamente 6 dígitos.";
+
+        #endregion
+
+        #region Validación
 
         /// <summary>
         /// Valida que el código cumpla con el formato esperado: no vacío,
@@ -54,5 +60,7 @@ namespace Login.Clases
             }
             return true;
         }
+
+        #endregion
     }
 }
