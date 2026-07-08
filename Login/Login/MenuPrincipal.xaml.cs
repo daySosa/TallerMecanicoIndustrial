@@ -78,6 +78,9 @@ namespace Dasboard_Prueba
         /// <summary>Duración del fade-in/fade-out de entrada y salida de esta ventana.</summary>
         private static readonly Duration DuracionFadeEntrada = new(TimeSpan.FromMilliseconds(220));
 
+        /// <summary>Título estándar para los cuadros de diálogo de error.</summary>
+        private const string TituloError = "Error";
+
         #endregion
 
         #region Estado interno
@@ -98,7 +101,7 @@ namespace Dasboard_Prueba
         /// </summary>
         private volatile bool _ventanaCerrada;
 
-        private DateTime _mesActual = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+        private DateTime _mesActual = new(DateTime.Today.Year, DateTime.Today.Month, 1, 0, 0, 0, DateTimeKind.Local);
         private List<NotificacionItem> _notificaciones = [];
         private List<OrdenReciente> _ordenes = [];
         private int _mesesRango = 6;
@@ -137,17 +140,11 @@ namespace Dasboard_Prueba
             DataContext = this;
             InitializeComponent();
 
-            try
-            {
-                _db = new RepositorioSql();
-            }
-            catch (Exception ex)
-            {
-                _db = null;
-                MessageBox.Show(
-                    "No se pudo conectar con la base de datos. Algunas funciones estarán deshabilitadas.\n\n" + ex.Message,
-                    "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            // OJO: la conexión a la BD ya NO se abre aquí de forma sincrónica.
+            // Antes "_db = new RepositorioSql();" bloqueaba el constructor completo
+            // (y por lo tanto Show()/el fade-out de la ventana anterior) mientras
+            // se conectaba a SQL. Ahora se abre en background dentro de
+            // InicializarDashboardAsync, después de que la ventana ya es visible.
 
             AplicarPermisos();
             CargarInfoUsuario();
@@ -173,6 +170,8 @@ namespace Dasboard_Prueba
             }
             catch (InvalidOperationException)
             {
+                // DragMove() puede lanzar si el botón ya no está presionado al momento
+                // de procesarse el evento; se ignora intencionalmente.
             }
         }
 
@@ -186,6 +185,7 @@ namespace Dasboard_Prueba
             }
             catch
             {
+                // Liberación best-effort al cerrar la ventana; no debe interrumpir el cierre.
             }
         }
 
@@ -229,7 +229,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al aplicar permisos:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -255,9 +255,11 @@ namespace Dasboard_Prueba
                     ? nombre
                     : $"{nombre} {apellido}";
 
-                string rol = string.IsNullOrWhiteSpace(SesionActual.Rol)
-                    ? (SesionActual.EsAdministrador ? "Administrador" : "Empleado")
-                    : SesionActual.Rol.Trim();
+                string rol;
+                if (!string.IsNullOrWhiteSpace(SesionActual.Rol))
+                    rol = SesionActual.Rol.Trim();
+                else
+                    rol = SesionActual.EsAdministrador ? "Administrador" : "Empleado";
 
                 txtNombreUsuario.Text = nombreCompleto;
                 txtRolUsuario.Text = rol;
@@ -288,7 +290,27 @@ namespace Dasboard_Prueba
 
         private async Task InicializarDashboardAsync()
         {
-            if (_db is null) return;
+            // Abrir la conexión aquí, en background, en vez de en el constructor.
+            // Esto es lo que hace que Show() + fade-in/fade-out arranquen sin demora.
+            try
+            {
+                _db = await Task.Run(() => new RepositorioSql(), _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _db = null;
+                if (!_ventanaCerrada)
+                    MessageBox.Show(
+                        "No se pudo conectar con la base de datos. Algunas funciones estarán deshabilitadas.\n\n" + ex.Message,
+                        "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_db is null || _ventanaCerrada) return;
 
             await Task.WhenAll(
                 CargarDatosAsync(),
@@ -317,12 +339,13 @@ namespace Dasboard_Prueba
             }
             catch (OperationCanceledException)
             {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
             }
             catch (Exception ex)
             {
                 if (!_ventanaCerrada)
                     MessageBox.Show("Error al cargar datos:\n" + ex.Message,
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -349,7 +372,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cambiar el rango de la gráfica:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -360,7 +383,7 @@ namespace Dasboard_Prueba
             {
                 DateTime desde = _mesesRango > 0
                     ? DateTime.Today.AddMonths(-_mesesRango + 1).AddDays(1 - DateTime.Today.Day)
-                    : new DateTime(2000, 1, 1);
+                    : new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Local);
 
                 var balTask = Task.Run(() => _db.ObtenerDatosGraficaOrdenes(desde), _cts.Token);
                 var ordTask = Task.Run(() => _db.ObtenerDatosGraficaCantidadOrdenes(desde), _cts.Token);
@@ -383,12 +406,13 @@ namespace Dasboard_Prueba
             }
             catch (OperationCanceledException)
             {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
             }
             catch (Exception ex)
             {
                 if (!_ventanaCerrada)
                     MessageBox.Show("Error al cargar gráficas:\n" + ex.Message,
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             static void Actualizar(ChartValues<double> chart, List<double>? vals)
@@ -436,7 +460,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al abrir notificaciones:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -449,15 +473,18 @@ namespace Dasboard_Prueba
                 foreach (var n in _notificaciones) n.Leida = true;
                 ActualizarPanelNotificaciones();
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al marcar notificaciones como leídas:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private async void MarcarComoLeida(int id)
+        private async Task MarcarComoLeida(int id)
         {
             if (_db is null) return;
             try
@@ -467,7 +494,10 @@ namespace Dasboard_Prueba
                 n?.Leida = true;
                 ActualizarPanelNotificaciones();
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Error al marcar notificación como leída: " + ex.Message);
@@ -479,106 +509,124 @@ namespace Dasboard_Prueba
             panelNotificaciones.Children.Clear();
             int noLeidas = _notificaciones.Count(n => !n.Leida);
 
+            ActualizarBadgesContador(noLeidas);
+
+            if (_notificaciones.Count == 0)
+            {
+                panelNotificaciones.Children.Add(CrearMensajeSinNotificaciones());
+                return;
+            }
+
+            foreach (var notif in _notificaciones)
+                panelNotificaciones.Children.Add(CrearTarjetaNotificacion(notif));
+        }
+
+        private void ActualizarBadgesContador(int noLeidas)
+        {
             badgeNotificaciones.Visibility = noLeidas > 0 ? Visibility.Visible : Visibility.Collapsed;
             txtContadorNotificaciones.Text = noLeidas > 99 ? "99+" : noLeidas.ToString();
             badgeContadorPopup.Visibility = noLeidas > 0 ? Visibility.Visible : Visibility.Collapsed;
             txtContadorPopup.Text = noLeidas > 99 ? "99+" : noLeidas.ToString();
             btnMarcarTodas.Visibility = noLeidas > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
 
-            if (_notificaciones.Count == 0)
+        private static TextBlock CrearMensajeSinNotificaciones() => new()
+        {
+            Text = "Sin notificaciones pendientes",
+            Foreground = Pincel("#6B7280"),
+            FontSize = 13,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 20, 0, 20)
+        };
+
+        private Border CrearTarjetaNotificacion(NotificacionItem notif)
+        {
+            var (hex, icon) = InfoPorTipoNotificacion.TryGetValue(notif.Tipo_Notificacion ?? string.Empty, out var info)
+                ? info
+                : (NotifColorDefault, NotifIconoDefault);
+
+            Color iconColor = ObtenerColor(hex);
+
+            var card = new Border
             {
-                panelNotificaciones.Children.Add(new TextBlock
-                {
-                    Text = "Sin notificaciones pendientes",
-                    Foreground = Pincel("#6B7280"),
-                    FontSize = 13,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Margin = new Thickness(0, 20, 0, 20)
-                });
-                return;
-            }
+                Background = notif.Leida ? Pincel("#1E2130") : Pincel("#1A2A3D"),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(12, 10, 12, 10),
+                Margin = new Thickness(0, 0, 0, 8),
+                Cursor = Cursors.Hand
+            };
 
-            foreach (var notif in _notificaciones)
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(36) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var iconBorder = CrearIconoNotificacion(icon, iconColor);
+            Grid.SetColumn(iconBorder, 0);
+
+            var texto = CrearTextoNotificacion(notif, iconColor);
+            Grid.SetColumn(texto, 1);
+
+            var punto = new Border
             {
-                var (hex, icon) = InfoPorTipoNotificacion.TryGetValue(notif.Tipo_Notificacion ?? string.Empty, out var info)
-                    ? info
-                    : (NotifColorDefault, NotifIconoDefault);
+                Width = 8,
+                Height = 8,
+                CornerRadius = new CornerRadius(4),
+                Background = Pincel("#3D7EFF"),
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(8, 4, 0, 0),
+                Visibility = notif.Leida ? Visibility.Collapsed : Visibility.Visible
+            };
+            Grid.SetColumn(punto, 2);
 
-                Color iconColor = ObtenerColor(hex);
+            grid.Children.Add(iconBorder);
+            grid.Children.Add(texto);
+            grid.Children.Add(punto);
+            card.Child = grid;
 
-                var card = new Border
-                {
-                    Background = notif.Leida ? Pincel("#1E2130") : Pincel("#1A2A3D"),
-                    CornerRadius = new CornerRadius(8),
-                    Padding = new Thickness(12, 10, 12, 10),
-                    Margin = new Thickness(0, 0, 0, 8),
-                    Cursor = Cursors.Hand
-                };
+            int nid = notif.Notificacion_ID;
+            card.MouseLeftButtonDown += async (s, e) => await MarcarComoLeida(nid);
+            return card;
+        }
 
-                var grid = new Grid();
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(36) });
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-                var iconBorder = new Border
-                {
-                    Width = 32,
-                    Height = 32,
-                    CornerRadius = new CornerRadius(16),
-                    Background = new SolidColorBrush(Color.FromArgb(40, iconColor.R, iconColor.G, iconColor.B)),
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, 2, 8, 0),
-                    Child = new MaterialDesignThemes.Wpf.PackIcon
-                    {
-                        Kind = ParseIconKind(icon),
-                        Foreground = new SolidColorBrush(iconColor),
-                        Width = 16,
-                        Height = 16,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        VerticalAlignment = VerticalAlignment.Center
-                    }
-                };
-                Grid.SetColumn(iconBorder, 0);
-
-                var texto = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-                texto.Children.Add(new TextBlock
-                {
-                    Text = (notif.Tipo_Notificacion ?? string.Empty).Replace("_", " "),
-                    Foreground = new SolidColorBrush(iconColor),
-                    FontSize = 11,
-                    FontWeight = FontWeights.SemiBold,
-                    Margin = new Thickness(0, 0, 0, 2)
-                });
-                texto.Children.Add(new TextBlock
-                {
-                    Text = notif.Mensaje,
-                    Foreground = notif.Leida ? Pincel("#8B9BB4") : new SolidColorBrush(Colors.White),
-                    FontSize = 12,
-                    TextWrapping = TextWrapping.Wrap
-                });
-                Grid.SetColumn(texto, 1);
-
-                var punto = new Border
-                {
-                    Width = 8,
-                    Height = 8,
-                    CornerRadius = new CornerRadius(4),
-                    Background = Pincel("#3D7EFF"),
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(8, 4, 0, 0),
-                    Visibility = notif.Leida ? Visibility.Collapsed : Visibility.Visible
-                };
-                Grid.SetColumn(punto, 2);
-
-                grid.Children.Add(iconBorder);
-                grid.Children.Add(texto);
-                grid.Children.Add(punto);
-                card.Child = grid;
-
-                int nid = notif.Notificacion_ID;
-                card.MouseLeftButtonDown += (s, e) => MarcarComoLeida(nid);
-                panelNotificaciones.Children.Add(card);
+        private static Border CrearIconoNotificacion(string icon, Color iconColor) => new()
+        {
+            Width = 32,
+            Height = 32,
+            CornerRadius = new CornerRadius(16),
+            Background = new SolidColorBrush(Color.FromArgb(40, iconColor.R, iconColor.G, iconColor.B)),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 2, 8, 0),
+            Child = new MaterialDesignThemes.Wpf.PackIcon
+            {
+                Kind = ParseIconKind(icon),
+                Foreground = new SolidColorBrush(iconColor),
+                Width = 16,
+                Height = 16,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
             }
+        };
+
+        private static StackPanel CrearTextoNotificacion(NotificacionItem notif, Color iconColor)
+        {
+            var texto = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            texto.Children.Add(new TextBlock
+            {
+                Text = (notif.Tipo_Notificacion ?? string.Empty).Replace("_", " "),
+                Foreground = new SolidColorBrush(iconColor),
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 2)
+            });
+            texto.Children.Add(new TextBlock
+            {
+                Text = notif.Mensaje,
+                Foreground = notif.Leida ? Pincel("#8B9BB4") : new SolidColorBrush(Colors.White),
+                FontSize = 12,
+                TextWrapping = TextWrapping.Wrap
+            });
+            return texto;
         }
 
         #endregion
@@ -610,7 +658,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cambiar de mes:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -624,7 +672,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cambiar de mes:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -673,7 +721,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al generar el calendario:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -695,18 +743,38 @@ namespace Dasboard_Prueba
                 Cursor = tieneOrdenes ? Cursors.Hand : Cursors.Arrow
             };
 
-            var circulo = new Border
+            celda.Children.Add(CrearCirculoDia(dia, esDelMes, esHoy, tieneOrdenes));
+
+            if (tieneOrdenes)
+            {
+                celda.Children.Add(CrearBadgeCantidad(cantOrdenes));
+
+                if (ordenesDelDia != null)
+                    ConfigurarInteraccionDia(celda, dia, ordenesDelDia);
+            }
+
+            return celda;
+        }
+
+        private static Border CrearCirculoDia(int dia, bool esDelMes, bool esHoy, bool tieneOrdenes)
+        {
+            Brush fondoCirculo;
+            if (esHoy) fondoCirculo = Pincel("#FF4757");
+            else if (tieneOrdenes) fondoCirculo = Pincel("#1a2060");
+            else fondoCirculo = Brushes.Transparent;
+
+            Brush colorTexto;
+            if (esHoy || esDelMes) colorTexto = Brushes.White;
+            else colorTexto = Pincel("#4A5568");
+
+            return new Border
             {
                 Width = 28,
                 Height = 28,
                 CornerRadius = new CornerRadius(14),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                Background = esHoy
-                    ? Pincel("#FF4757")
-                    : tieneOrdenes
-                        ? Pincel("#1a2060")
-                        : Brushes.Transparent,
+                Background = fondoCirculo,
                 BorderThickness = new Thickness(tieneOrdenes && !esHoy ? 1.5 : 0),
                 BorderBrush = tieneOrdenes && !esHoy ? Pincel("#4f6ef7") : Brushes.Transparent,
                 Child = new TextBlock
@@ -716,51 +784,42 @@ namespace Dasboard_Prueba
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     FontWeight = tieneOrdenes || esHoy ? FontWeights.SemiBold : FontWeights.Normal,
-                    Foreground = esHoy ? Brushes.White
-                                : esDelMes ? Brushes.White
-                                : Pincel("#4A5568")
+                    Foreground = colorTexto
                 }
             };
-            celda.Children.Add(circulo);
+        }
 
-            if (tieneOrdenes)
+        private static Border CrearBadgeCantidad(int cantOrdenes) => new()
+        {
+            Width = 16,
+            Height = 16,
+            CornerRadius = new CornerRadius(8),
+            Background = Pincel("#4f6ef7"),
+            BorderBrush = Pincel("#0f1117"),
+            BorderThickness = new Thickness(1.5),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, -2, -2, 0),
+            Child = new TextBlock
             {
-                var badge = new Border
-                {
-                    Width = 16,
-                    Height = 16,
-                    CornerRadius = new CornerRadius(8),
-                    Background = Pincel("#4f6ef7"),
-                    BorderBrush = Pincel("#0f1117"),
-                    BorderThickness = new Thickness(1.5),
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, -2, -2, 0),
-                    Child = new TextBlock
-                    {
-                        Text = cantOrdenes > 9 ? "9+" : cantOrdenes.ToString(),
-                        Foreground = Brushes.White,
-                        FontSize = 8,
-                        FontWeight = FontWeights.Bold,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        VerticalAlignment = VerticalAlignment.Center
-                    }
-                };
-                celda.Children.Add(badge);
-
-                if (ordenesDelDia != null)
-                {
-                    var sb = new System.Text.StringBuilder();
-                    foreach (var o in ordenesDelDia)
-                        sb.AppendLine($"#{o.Orden_ID} — {o.Cliente_NombreCompleto} ({o.Estado})");
-                    celda.ToolTip = sb.ToString().TrimEnd();
-
-                    var ordenesCapturadas = ordenesDelDia;
-                    celda.MouseLeftButtonDown += (s, e) => MostrarOrdenesDelDia(dia, ordenesCapturadas);
-                }
+                Text = cantOrdenes > 9 ? "9+" : cantOrdenes.ToString(),
+                Foreground = Brushes.White,
+                FontSize = 8,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
             }
+        };
 
-            return celda;
+        private void ConfigurarInteraccionDia(Grid celda, int dia, List<OrdenReciente> ordenesDelDia)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var o in ordenesDelDia)
+                sb.AppendLine($"#{o.Orden_ID} — {o.Cliente_NombreCompleto} ({o.Estado})");
+            celda.ToolTip = sb.ToString().TrimEnd();
+
+            var ordenesCapturadas = ordenesDelDia;
+            celda.MouseLeftButtonDown += (s, e) => MostrarOrdenesDelDia(dia, ordenesCapturadas);
         }
 
         #endregion
@@ -843,7 +902,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al mostrar las órdenes del día:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -881,7 +940,7 @@ namespace Dasboard_Prueba
                 BeginAnimation(OpacityProperty, null);
                 Opacity = 1;
                 MessageBox.Show("No se pudo abrir la ventana:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -923,7 +982,7 @@ namespace Dasboard_Prueba
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cerrar sesión:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

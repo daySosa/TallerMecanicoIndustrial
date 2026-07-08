@@ -22,7 +22,6 @@ namespace InterfazInventario
         private const double OpacidadCampoBloqueado = 0.55;
         private const int LongitudMaximaNombre = 100;
         private const int LongitudMaximaMarca = 50;
-        private const int LongitudMaximaModelo = 80;
 
         #endregion
 
@@ -113,7 +112,7 @@ namespace InterfazInventario
                     txtNombre.Text.Trim(),
                     ObtenerCategoriaSeleccionada(),
                     txtMarca.Text.Trim(),
-                    txtModelo.Text.Trim(),
+                    string.Empty,
                     precio,
                     cantidad);
 
@@ -158,7 +157,7 @@ namespace InterfazInventario
                     txtNombre.Text.Trim(),
                     ObtenerCategoriaSeleccionada(),
                     txtMarca.Text.Trim(),
-                    txtModelo.Text.Trim(),
+                    string.Empty,
                     precio,
                     cantidadAgregar);
 
@@ -193,7 +192,6 @@ namespace InterfazInventario
 
             txtNombre.Text = producto.Producto_Nombre;
             txtMarca.Text = producto.Producto_Marca;
-            txtModelo.Text = producto.Producto_Modelo == "—" ? string.Empty : producto.Producto_Modelo;
             txtPrecio.Text = "L " + producto.Producto_Precio.ToString("N2");
             txtCantidad.Text = "0";
             txtStockActual.Text = producto.Producto_Cantidad_Actual.ToString();
@@ -247,7 +245,7 @@ namespace InterfazInventario
 
         /// <summary>
         /// Valida todos los campos del formulario (nombre, categoría, marca,
-        /// modelo, precio, cantidad mínima y cantidad a agregar) en un único
+        /// precio, cantidad mínima y cantidad a agregar) en un único
         /// punto, evitando duplicar la lógica entre Agregar y Actualizar.
         /// </summary>
         /// <param name="cantidadDebeSerPositiva">
@@ -264,10 +262,6 @@ namespace InterfazInventario
 
             if (!ValidarCampoTexto(txtNombre, "nombre del producto", LongitudMaximaNombre)) return false;
             if (!ValidarCampoTexto(txtMarca, "marca", LongitudMaximaMarca)) return false;
-
-            if (!string.IsNullOrWhiteSpace(txtModelo.Text) &&
-                !ValidarCampoTexto(txtModelo, "modelo", LongitudMaximaModelo))
-                return false;
 
             if (!ValidacionesGenerales.ValidarPrecio(txtPrecio.Text, out precio))
             {

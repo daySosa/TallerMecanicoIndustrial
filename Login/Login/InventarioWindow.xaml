@@ -205,11 +205,7 @@
 
                                 <TextBlock Text="MARCA" Foreground="#505880"
                                            FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                                <TextBox x:Name="txtMarca" Style="{StaticResource DarkTextBox}" Margin="0,0,0,14"/>
-
-                                <TextBlock Text="MODELO (opcional)" Foreground="#505880"
-                                           FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                                <TextBox x:Name="txtModelo" Style="{StaticResource DarkTextBox}" Margin="0,0,0,14"/>
+                                <TextBox x:Name="txtMarca" Style="{StaticResource DarkTextBox}" Margin="0,0,0,2"/>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

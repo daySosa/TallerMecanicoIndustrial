@@ -30,11 +30,18 @@ namespace InterfazInventario
         /// <summary>Caché de pinceles ya congelados, para no crear un SolidColorBrush nuevo en cada render.</summary>
         private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
 
+        /// <summary>Título estándar para los cuadros de diálogo de error.</summary>
+        private const string TituloError = "Error";
+
         #endregion
 
         #region Estado interno
 
-        private readonly RepositorioSql _db = new();
+        // Antes era "private readonly RepositorioSql _db = new();" -> se ejecutaba de forma
+        // sincrónica ANTES del constructor, bloqueando el hilo de UI justo cuando Navegar<T>
+        // está creando esta ventana (antes de Show() y del fade-out). Ahora se inicializa de
+        // forma asíncrona en el Loaded, para que Show() y las animaciones arranquen al instante.
+        private RepositorioSql? _db;
         private readonly ObservableCollection<ValidadorInventario> _listaRepuestos = new();
         private readonly CancellationTokenSource _cts = new();
 
@@ -70,6 +77,27 @@ namespace InterfazInventario
 
         private async void MenúPrincipalInventario_Loaded(object sender, RoutedEventArgs e)
         {
+            // La conexión a la BD se abre aquí, ya con la ventana visible y su fade-in
+            // corriendo. Así el clic que originó la navegación se siente instantáneo.
+            try
+            {
+                _db = await Task.Run(() => new RepositorioSql(), _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _db = null;
+                if (!_ventanaCerrada)
+                    MessageBox.Show(
+                        "No se pudo conectar con la base de datos. Algunas funciones estarán deshabilitadas.\n\n" + ex.Message,
+                        "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            if (_ventanaCerrada) return;
+
             await CargarDatosAsync();
             await CargarNotificacionesAsync();
         }
@@ -85,6 +113,7 @@ namespace InterfazInventario
             }
             catch
             {
+                // Liberación best-effort al cerrar la ventana; no debe interrumpir el cierre.
             }
         }
 
@@ -97,6 +126,8 @@ namespace InterfazInventario
             }
             catch (InvalidOperationException)
             {
+                // DragMove() puede lanzar si el botón ya no está presionado al momento
+                // de procesarse el evento; se ignora intencionalmente.
             }
         }
 
@@ -145,7 +176,7 @@ namespace InterfazInventario
                 BeginAnimation(OpacityProperty, null);
                 Opacity = 1;
                 MessageBox.Show("No se pudo abrir la ventana:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -187,9 +218,11 @@ namespace InterfazInventario
                     ? nombre
                     : $"{nombre} {apellido}";
 
-                string rol = string.IsNullOrWhiteSpace(SesionActual.Rol)
-                    ? (SesionActual.EsAdministrador ? "Administrador" : "Empleado")
-                    : SesionActual.Rol.Trim();
+                string rol;
+                if (!string.IsNullOrWhiteSpace(SesionActual.Rol))
+                    rol = SesionActual.Rol.Trim();
+                else
+                    rol = SesionActual.EsAdministrador ? "Administrador" : "Empleado";
 
                 txtNombreUsuario.Text = nombreCompleto;
                 txtRolUsuario.Text = rol;
@@ -251,6 +284,7 @@ namespace InterfazInventario
         /// </summary>
         private async Task CargarDatosAsync()
         {
+            if (_db is null) return;
             if (_cargandoDatos) return;
             _cargandoDatos = true;
             Mouse.OverrideCursor = Cursors.Wait;
@@ -268,7 +302,6 @@ namespace InterfazInventario
                             Producto_Nombre = p.Producto_Nombre,
                             Producto_Categoria = p.Producto_Categoria,
                             Producto_Marca = p.Producto_Marca,
-                            Producto_Modelo = p.Producto_Modelo,
                             Producto_Cantidad_Minima = p.Producto_Cantidad_Minima,
                             Producto_Precio = p.Producto_Precio,
                             Producto_Cantidad_Actual = p.Producto_Cantidad_Actual
@@ -299,12 +332,13 @@ namespace InterfazInventario
             }
             catch (OperationCanceledException)
             {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
             }
             catch (Exception ex)
             {
                 if (!_ventanaCerrada)
                     MessageBox.Show("Error al cargar inventario:\n" + ex.Message,
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -347,8 +381,7 @@ namespace InterfazInventario
                 bool coincide =
                     (r.Producto_Nombre ?? "").ToLowerInvariant().Contains(texto) ||
                     (r.Producto_Categoria ?? "").ToLowerInvariant().Contains(texto) ||
-                    (r.Producto_Marca ?? "").ToLowerInvariant().Contains(texto) ||
-                    (r.Producto_Modelo ?? "").ToLowerInvariant().Contains(texto);
+                    (r.Producto_Marca ?? "").ToLowerInvariant().Contains(texto);
                 if (!coincide) return false;
             }
 
@@ -452,6 +485,7 @@ namespace InterfazInventario
         /// <summary>Actualiza el badge de notificaciones pendientes en el header (contador rápido).</summary>
         private async Task CargarNotificacionesAsync()
         {
+            if (_db is null) return;
             try
             {
                 int cantidad = await Task.Run(() => _db.ContarNotificacionesPendientes(), _cts.Token);
@@ -462,6 +496,7 @@ namespace InterfazInventario
             }
             catch (OperationCanceledException)
             {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
             }
             catch (Exception ex)
             {
@@ -480,6 +515,7 @@ namespace InterfazInventario
         /// <summary>Carga el detalle completo de notificaciones pendientes dentro del popup.</summary>
         private async Task CargarNotificacionesEnPopupAsync()
         {
+            if (_db is null) return;
             panelNotificaciones.Children.Clear();
             try
             {
@@ -506,11 +542,12 @@ namespace InterfazInventario
             }
             catch (OperationCanceledException)
             {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar notificaciones: " + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -592,6 +629,7 @@ namespace InterfazInventario
             };
             btnLeida.Click += async (s, _) =>
             {
+                if (_db is null) return;
                 try
                 {
                     int notifId = (int)((Button)s).Tag;
@@ -629,6 +667,7 @@ namespace InterfazInventario
 
         private async void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
+            if (_db is null) return;
             try
             {
                 await Task.Run(() => _db.MarcarNotificacionLeida(null));
