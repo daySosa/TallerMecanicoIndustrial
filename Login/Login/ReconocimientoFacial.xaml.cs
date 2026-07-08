@@ -28,9 +28,9 @@ namespace Login
 
         private const int MAX_INTENTOS_FALLIDOS = 5;
         private const int MINUTOS_BLOQUEO = 3;
-        private const int ANCHO_MINIMO_ROSTRO_PX = 100;
+        private const int ANCHO_MINIMO_ROSTRO_PX = 250;
 
-        private const double UMBRAL_CONFIANZA_LBPH = 55.0;
+        private const double UMBRAL_CONFIANZA_LBPH = 44.5;
 
         private const int FRAMES_PRUEBA_VIDA = 90;
         private const int UMBRAL_MOVIMIENTO_PX = 8;
@@ -39,6 +39,11 @@ namespace Login
         private const int TOLERANCIA_FRAMES_RUIDOSOS = 1;
 
         private const int SEGUNDOS_GRACIA = 3;
+
+        /// <summary>Varianza mínima del Laplaciano para considerar un frame "nítido" (no borroso).
+        /// Cámaras de baja calidad producen más motion blur/ruido, por lo que frames por debajo
+        /// de este umbral se descartan del consenso de verificación.</summary>
+        private const double UMBRAL_NITIDEZ_MINIMA = 40;
 
         /// <summary>Duración de las transiciones de fade al navegar entre ventanas.</summary>
         private static readonly Duration DuracionFade = new(TimeSpan.FromMilliseconds(220));
@@ -365,13 +370,46 @@ namespace Login
             _clasificadorOjos = new CascadeClassifier(rutaOjos);
         }
 
-        /// <summary>Aplica ecualización adaptativa (CLAHE) para reducir el impacto de la iluminación.</summary>
+        /// <summary>
+        /// Normaliza la iluminación del rostro para hacerlo más robusto ante cambios
+        /// de luz y ruido de cámaras de baja calidad. Pipeline:
+        /// 1) Filtro bilateral: reduce ruido/grano de cámara conservando bordes.
+        /// 2) CLAHE: ecualización adaptativa de contraste local (ilumina sombras
+        ///    sin "quemar" zonas claras).
+        /// </summary>
         private static Image<Gray, byte> NormalizarIluminacion(Image<Gray, byte> imgGris)
         {
-            var salida = new Image<Gray, byte>(imgGris.Size);
-            CvInvoke.CLAHE(imgGris, 2.0, new System.Drawing.Size(8, 8), 256, salida);
+            var denoised = new Image<Gray, byte>(imgGris.Size);
+            CvInvoke.BilateralFilter(imgGris, denoised, 5, 50, 50);
+
+            var salida = new Image<Gray, byte>(denoised.Size);
+            CvInvoke.CLAHE(denoised, 2.0, new System.Drawing.Size(8, 8), 256, salida);
+
+            denoised.Dispose();
             return salida;
         }
+
+        /// <summary>
+        /// Calcula la nitidez de una imagen usando la varianza del Laplaciano.
+        /// Valores bajos indican una imagen borrosa (motion blur, desenfoque de
+        /// autoenfoque, etc.), algo común en cámaras de baja calidad. Los frames
+        /// por debajo de <see cref="UMBRAL_NITIDEZ_MINIMA"/> se descartan del
+        /// consenso de verificación para no contaminar el promedio de distancia.
+        /// </summary>
+        private static double CalcularNitidez(Image<Gray, byte> img)
+        {
+            using var laplaciano = new Mat();
+            CvInvoke.Laplacian(img, laplaciano, DepthType.Cv64F);
+
+            using var mean = new Mat();
+            using var stdDev = new Mat();
+            CvInvoke.MeanStdDev(laplaciano, mean, stdDev);
+
+            double[,] valores = (double[,])stdDev.GetData();
+            double desviacion = valores[0, 0];
+            return desviacion * desviacion;
+        }
+
 
         private (List<Image<Gray, byte>> Imagenes, List<int> Etiquetas,
             Dictionary<int, string> Nombres, Dictionary<int, string> Emails) EntrenarReconocedor()
@@ -473,6 +511,16 @@ namespace Login
             try
             {
                 _camara = new VideoCapture(0);
+
+                try
+                {
+                    _camara.Set(CapProp.FrameWidth, 1280);
+                    _camara.Set(CapProp.FrameHeight, 720);
+                    _camara.Set(CapProp.Autofocus, 0);
+                }
+                catch
+                {
+                }
             }
             catch (Exception ex)
             {
@@ -710,12 +758,19 @@ namespace Login
             using var rostroEcualizado = NormalizarIluminacion(rostroRecortado);
             using var rostroNormalizado = rostroEcualizado.Resize(200, 200, Inter.Cubic);
 
+            double nitidez = CalcularNitidez(rostroNormalizado);
+            if (nitidez < UMBRAL_NITIDEZ_MINIMA)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VERIFICACION] Frame descartado por baja nitidez ({nitidez:F1})");
+                return;
+            }
+
             var resultado = _reconocedor.Predict(rostroNormalizado);
             _historialPredicciones.Add((resultado.Label, resultado.Distance));
 
             System.Diagnostics.Debug.WriteLine(
                 $"[VERIFICACION] Frame {_historialPredicciones.Count}/{FRAMES_CONSENSO_REQUERIDOS} " +
-                $"| Distancia: {resultado.Distance:F2} | Umbral: {UMBRAL_CONFIANZA_LBPH}");
+                $"| Distancia: {resultado.Distance:F2} | Umbral: {UMBRAL_CONFIANZA_LBPH} | Nitidez: {nitidez:F1}");
 
             if (_historialPredicciones.Count < FRAMES_CONSENSO_REQUERIDOS)
             {

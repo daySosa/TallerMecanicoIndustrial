@@ -11,28 +11,62 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace InterfazInventario
 {
+    /// <summary>
+    /// Ventana principal del módulo de Inventario. Permite ver, buscar, filtrar
+    /// y administrar los repuestos registrados, además de mostrar notificaciones
+    /// relacionadas (stock bajo, órdenes finalizadas, etc.).
+    /// </summary>
     public partial class MenúPrincipalInventario : Window
     {
+        #region Constantes y caché estática
+
+        /// <summary>Duración de las transiciones de entrada/salida de la ventana.</summary>
+        private static readonly Duration DuracionTransicion = new(TimeSpan.FromMilliseconds(200));
+
+        /// <summary>Caché de pinceles ya congelados, para no crear un SolidColorBrush nuevo en cada render.</summary>
+        private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
+
+        #endregion
+
+        #region Estado interno
+
         private readonly RepositorioSql _db = new();
         private readonly ObservableCollection<ValidadorInventario> _listaRepuestos = new();
+        private readonly CancellationTokenSource _cts = new();
+
         private ICollectionView? _vistaRepuestos;
-
-        private string? _filtroCategoria = null;
-        private decimal _filtroPrecioMin = 0;
+        private string? _filtroCategoria;
+        private decimal _filtroPrecioMin;
         private decimal _filtroPrecioMax = decimal.MaxValue;
-        private bool _filtroStockBajo = false;
+        private bool _filtroStockBajo;
 
-        private bool _cargandoDatos = false;
+        private bool _cargandoDatos;
+        private bool _navegando;
+
+        /// <summary>
+        /// Indica si la ventana ya fue cerrada. Se usa para evitar tocar controles
+        /// de UI desde continuaciones async que terminan después del cierre.
+        /// </summary>
+        private volatile bool _ventanaCerrada;
+
+        #endregion
 
         public MenúPrincipalInventario()
         {
             InitializeComponent();
+
             AplicarPermisos();
+            CargarInfoUsuario();
+
             Loaded += MenúPrincipalInventario_Loaded;
+            Closed += (_, _) => { _ventanaCerrada = true; LiberarRecursos(); };
         }
+
+        #region Ciclo de vida
 
         private async void MenúPrincipalInventario_Loaded(object sender, RoutedEventArgs e)
         {
@@ -40,18 +74,86 @@ namespace InterfazInventario
             await CargarNotificacionesAsync();
         }
 
-        // ── MOVER VENTANA ────────────────────────────────────────────
+        /// <summary>Libera los recursos propios (token de cancelación, repositorio) al cerrar la ventana.</summary>
+        private void LiberarRecursos()
+        {
+            try
+            {
+                _cts.Cancel();
+                _cts.Dispose();
+                (_db as IDisposable)?.Dispose();
+            }
+            catch
+            {
+            }
+        }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
-                DragMove();
+            try
+            {
+                if (e.LeftButton == MouseButtonState.Pressed)
+                    DragMove();
+            }
+            catch (InvalidOperationException)
+            {
+            }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // PERMISOS SEGÚN ROL
-        // ════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Transición de entrada/salida
+
+        /// <summary>Aplica un fade-in suave al mostrar la ventana (entra con Opacity="0" desde XAML).</summary>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var fadeIn = new DoubleAnimation(0d, 1d, DuracionTransicion)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        /// <summary>
+        /// Navega a otra ventana con un crossfade real: la ventana nueva se crea y
+        /// se muestra de inmediato (con su propio fade-in), mientras esta ventana
+        /// hace fade-out en paralelo y recién se cierra al terminar su animación.
+        /// Evita navegaciones duplicadas si el usuario hace doble clic en el sidebar.
+        /// </summary>
+        /// <typeparam name="T">Tipo de la ventana destino.</typeparam>
+        /// <param name="crear">Función que construye la ventana destino.</param>
+        private void Navegar<T>(Func<T> crear) where T : Window
+        {
+            if (_navegando) return;
+            _navegando = true;
+
+            try
+            {
+                var ventana = crear();
+                ventana.Show();
+
+                var fadeOut = new DoubleAnimation(1d, 0d, DuracionTransicion)
+                {
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+                };
+                fadeOut.Completed += (_, _) => Close();
+                BeginAnimation(OpacityProperty, fadeOut);
+            }
+            catch (Exception ex)
+            {
+                _navegando = false;
+                BeginAnimation(OpacityProperty, null);
+                Opacity = 1;
+                MessageBox.Show("No se pudo abrir la ventana:\n" + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+
+        #region Permisos según rol
+
+        /// <summary>Oculta las opciones exclusivas de administrador si el usuario no lo es.</summary>
         private void AplicarPermisos()
         {
             if (!SesionActual.EsAdministrador)
@@ -63,13 +165,46 @@ namespace InterfazInventario
             }
         }
 
-        // ── NAVEGACIÓN ───────────────────────────────────────────────
+        #endregion
 
-        private void Navegar<T>(Func<T> crear) where T : Window
+        #region Info del usuario logueado
+
+        /// <summary>
+        /// Carga en el sidebar el nombre completo (nombre + apellido) y el rol
+        /// del usuario con la sesión activa, tomados de <see cref="SesionActual"/>.
+        /// </summary>
+        private void CargarInfoUsuario()
         {
-            crear().Show();
-            this.Close();
+            try
+            {
+                string nombre = string.IsNullOrWhiteSpace(SesionActual.Nombre)
+                    ? "Usuario" : SesionActual.Nombre.Trim();
+
+                string apellido = string.IsNullOrWhiteSpace(SesionActual.Apellido)
+                    ? string.Empty : SesionActual.Apellido.Trim();
+
+                string nombreCompleto = string.IsNullOrEmpty(apellido)
+                    ? nombre
+                    : $"{nombre} {apellido}";
+
+                string rol = string.IsNullOrWhiteSpace(SesionActual.Rol)
+                    ? (SesionActual.EsAdministrador ? "Administrador" : "Empleado")
+                    : SesionActual.Rol.Trim();
+
+                txtNombreUsuario.Text = nombreCompleto;
+                txtRolUsuario.Text = rol;
+            }
+            catch (Exception ex)
+            {
+                txtNombreUsuario.Text = "Usuario";
+                txtRolUsuario.Text = "—";
+                System.Diagnostics.Debug.WriteLine("Error al cargar info del usuario: " + ex.Message);
+            }
         }
+
+        #endregion
+
+        #region Navegación del sidebar
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MenuPrincipal());
@@ -105,11 +240,14 @@ namespace InterfazInventario
             }
         }
 
-        // ── DATOS ────────────────────────────────────────────────────
+        #endregion
+
+        #region Carga de datos del inventario
 
         /// <summary>
-        /// Carga el inventario desde la base de datos sin bloquear la interfaz.
-        /// Se protege contra ejecuciones simultáneas con _cargandoDatos.
+        /// Carga el inventario desde la base de datos en un hilo secundario y
+        /// actualiza la grilla sin bloquear la interfaz. Protegida contra
+        /// ejecuciones simultáneas con <see cref="_cargandoDatos"/>.
         /// </summary>
         private async Task CargarDatosAsync()
         {
@@ -137,7 +275,9 @@ namespace InterfazInventario
                         });
                     }
                     return lista;
-                });
+                }, _cts.Token);
+
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
 
                 _listaRepuestos.Clear();
                 foreach (var p in productos)
@@ -157,10 +297,14 @@ namespace InterfazInventario
                 ActualizarCategorias(productos);
                 ActualizarContador();
             }
+            catch (OperationCanceledException)
+            {
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar inventario:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!_ventanaCerrada)
+                    MessageBox.Show("Error al cargar inventario:\n" + ex.Message,
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -192,27 +336,30 @@ namespace InterfazInventario
                 : categorias[0];
         }
 
+        /// <summary>Predicado usado por la vista de colección para aplicar búsqueda y filtros combinados.</summary>
         private bool AplicarFiltros(object item)
         {
             if (item is not ValidadorInventario r) return false;
 
-            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+            string texto = txtBuscar.Text?.Trim().ToLowerInvariant() ?? string.Empty;
             if (!string.IsNullOrEmpty(texto))
             {
                 bool coincide =
-                    (r.Producto_Nombre ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Categoria ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Marca ?? "").ToLower().Contains(texto) ||
-                    (r.Producto_Modelo ?? "").ToLower().Contains(texto);
+                    (r.Producto_Nombre ?? "").ToLowerInvariant().Contains(texto) ||
+                    (r.Producto_Categoria ?? "").ToLowerInvariant().Contains(texto) ||
+                    (r.Producto_Marca ?? "").ToLowerInvariant().Contains(texto) ||
+                    (r.Producto_Modelo ?? "").ToLowerInvariant().Contains(texto);
                 if (!coincide) return false;
             }
 
-            if (_filtroCategoria != null && _filtroCategoria != "Todas")
-                if (r.Producto_Categoria != _filtroCategoria) return false;
+            if (_filtroCategoria != null && _filtroCategoria != "Todas" && r.Producto_Categoria != _filtroCategoria)
+                return false;
 
-            if (r.Producto_Precio < _filtroPrecioMin) return false;
-            if (r.Producto_Precio > _filtroPrecioMax) return false;
-            if (_filtroStockBajo && !r.StockBajo) return false;
+            if (r.Producto_Precio < _filtroPrecioMin || r.Producto_Precio > _filtroPrecioMax)
+                return false;
+
+            if (_filtroStockBajo && !r.StockBajo)
+                return false;
 
             return true;
         }
@@ -223,7 +370,9 @@ namespace InterfazInventario
             tbTotalItems.Text = $"{total} item{(total != 1 ? "s" : "")}";
         }
 
-        // ── BÚSQUEDA Y FILTROS ───────────────────────────────────────
+        #endregion
+
+        #region Búsqueda y filtros
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -244,6 +393,7 @@ namespace InterfazInventario
             _filtroPrecioMin = pMin;
             _filtroPrecioMax = pMax;
             _filtroStockBajo = chkStockBajo.IsChecked == true;
+
             popupFiltros.IsOpen = false;
             _vistaRepuestos?.Refresh();
             ActualizarContador();
@@ -268,7 +418,9 @@ namespace InterfazInventario
             ActualizarContador();
         }
 
-        // ── DATAGRID ─────────────────────────────────────────────────
+        #endregion
+
+        #region DataGrid: agregar / editar / reportes
 
         private async void dgInventario_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -293,7 +445,29 @@ namespace InterfazInventario
         private void btnReportes_Click(object sender, RoutedEventArgs e)
             => new ReportesWindow("Inventario").ShowDialog();
 
-        // ── NOTIFICACIONES ───────────────────────────────────────────
+        #endregion
+
+        #region Notificaciones
+
+        /// <summary>Actualiza el badge de notificaciones pendientes en el header (contador rápido).</summary>
+        private async Task CargarNotificacionesAsync()
+        {
+            try
+            {
+                int cantidad = await Task.Run(() => _db.ContarNotificacionesPendientes(), _cts.Token);
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
+
+                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
+                txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error al cargar notificaciones: " + ex.Message);
+            }
+        }
 
         private async void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
@@ -303,54 +477,18 @@ namespace InterfazInventario
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
-        private async Task CargarNotificacionesAsync()
-        {
-            try
-            {
-                int cantidad = await Task.Run(() => _db.ContarNotificacionesPendientes());
-                badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
-                txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Error al cargar notificaciones: " + ex.Message);
-            }
-        }
-
+        /// <summary>Carga el detalle completo de notificaciones pendientes dentro del popup.</summary>
         private async Task CargarNotificacionesEnPopupAsync()
         {
             panelNotificaciones.Children.Clear();
             try
             {
-                DataTable dt = await Task.Run(() => _db.ObtenerNotificacionesPendientes());
+                DataTable dt = await Task.Run(() => _db.ObtenerNotificacionesPendientes(), _cts.Token);
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
 
                 if (dt.Rows.Count == 0)
                 {
-                    var vacio = new StackPanel
-                    {
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 20, 0, 20)
-                    };
-                    vacio.Children.Add(new Label
-                    {
-                        Content = "🎉",
-                        FontSize = 32,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        HorizontalContentAlignment = HorizontalAlignment.Center,
-                        Foreground = Brushes.White,
-                        Padding = new Thickness(0)
-                    });
-                    vacio.Children.Add(new TextBlock
-                    {
-                        Text = "Sin notificaciones pendientes",
-                        Foreground = Pincel("#6B7280"),
-                        FontSize = 12,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 8, 0, 0)
-                    });
-                    panelNotificaciones.Children.Add(vacio);
-                    badgeContadorPopup.Visibility = Visibility.Collapsed;
-                    btnMarcarTodas.Visibility = Visibility.Collapsed;
+                    MostrarSinNotificaciones();
                     return;
                 }
 
@@ -361,17 +499,51 @@ namespace InterfazInventario
                 foreach (DataRow row in dt.Rows)
                 {
                     int id = Convert.ToInt32(row["Notificacion_ID"]);
-                    string tipo = row["Tipo_Notificacion"].ToString() ?? "";
-                    string msg = row["Mensaje"].ToString() ?? "";
+                    string tipo = row["Tipo_Notificacion"].ToString() ?? string.Empty;
+                    string msg = row["Mensaje"].ToString() ?? string.Empty;
                     panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
                 }
             }
+            catch (OperationCanceledException)
+            {
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
+                MessageBox.Show("Error al cargar notificaciones: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
+        private void MostrarSinNotificaciones()
+        {
+            var vacio = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 20, 0, 20)
+            };
+            vacio.Children.Add(new Label
+            {
+                Content = "🎉",
+                FontSize = 32,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                Foreground = Brushes.White,
+                Padding = new Thickness(0)
+            });
+            vacio.Children.Add(new TextBlock
+            {
+                Text = "Sin notificaciones pendientes",
+                Foreground = Pincel("#6B7280"),
+                FontSize = 12,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+            panelNotificaciones.Children.Add(vacio);
+            badgeContadorPopup.Visibility = Visibility.Collapsed;
+            btnMarcarTodas.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>Construye la tarjeta visual de una notificación individual dentro del popup.</summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -424,6 +596,8 @@ namespace InterfazInventario
                 {
                     int notifId = (int)((Button)s).Tag;
                     await Task.Run(() => _db.MarcarNotificacionLeida(notifId));
+                    if (_ventanaCerrada) return;
+
                     await CargarNotificacionesEnPopupAsync();
                     await CargarNotificacionesAsync();
                 }
@@ -458,6 +632,8 @@ namespace InterfazInventario
             try
             {
                 await Task.Run(() => _db.MarcarNotificacionLeida(null));
+                if (_ventanaCerrada) return;
+
                 await CargarNotificacionesEnPopupAsync();
                 await CargarNotificacionesAsync();
             }
@@ -467,9 +643,25 @@ namespace InterfazInventario
             }
         }
 
-        // ── HELPER ───────────────────────────────────────────────────
+        #endregion
 
-        private static SolidColorBrush Pincel(string hex) =>
-            new((Color)ColorConverter.ConvertFromString(hex));
+        #region Helpers
+
+        /// <summary>
+        /// Devuelve un <see cref="SolidColorBrush"/> congelado para el color hex indicado,
+        /// reutilizándolo desde caché en vez de crear una instancia nueva en cada llamada.
+        /// </summary>
+        private static SolidColorBrush Pincel(string hex)
+        {
+            if (_cachePinceles.TryGetValue(hex, out var existente))
+                return existente;
+
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            brush.Freeze();
+            _cachePinceles[hex] = brush;
+            return brush;
+        }
+
+        #endregion
     }
 }

@@ -75,7 +75,7 @@ namespace Dasboard_Prueba
         private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
         private static readonly Dictionary<string, Color> _cacheColores = new();
 
-        /// <summary>Duración del fade-in de entrada cuando el acceso fue por correo y contraseña.</summary>
+        /// <summary>Duración del fade-in/fade-out de entrada y salida de esta ventana.</summary>
         private static readonly Duration DuracionFadeEntrada = new(TimeSpan.FromMilliseconds(220));
 
         #endregion
@@ -851,19 +851,35 @@ namespace Dasboard_Prueba
 
         #region Navegación
 
+        /// <summary>
+        /// Navega a otra ventana con un crossfade real: la ventana nueva se crea y
+        /// se muestra de inmediato (con su propio fade-in), mientras esta ventana
+        /// hace fade-out en paralelo y recién se cierra al terminar su animación.
+        /// Así ambas transiciones corren al mismo tiempo y se ven fluidas, sin
+        /// pausa entre el cierre de una y la aparición de la otra.
+        /// </summary>
         private void Navegar<T>(Func<T> crear) where T : Window
         {
             if (_navegando) return;
             _navegando = true;
+
             try
             {
                 var ventana = crear();
                 ventana.Show();
-                this.Close();
+
+                var fadeOut = new DoubleAnimation(1d, 0d, DuracionFadeEntrada)
+                {
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+                };
+                fadeOut.Completed += (_, _) => Close();
+                BeginAnimation(OpacityProperty, fadeOut);
             }
             catch (Exception ex)
             {
                 _navegando = false;
+                BeginAnimation(OpacityProperty, null);
+                Opacity = 1;
                 MessageBox.Show("No se pudo abrir la ventana:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }

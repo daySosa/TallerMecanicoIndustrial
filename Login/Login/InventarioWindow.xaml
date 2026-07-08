@@ -8,7 +8,8 @@
         AllowsTransparency="True"
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
-        MouseDown="Window_MouseDown">
+        MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
@@ -40,6 +41,10 @@
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush"     Value="#4f6ef7"/>
                                 <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                            <Trigger Property="IsReadOnly" Value="True">
+                                <Setter TargetName="border" Property="Background"  Value="#171a26"/>
+                                <Setter Property="Foreground" Value="#8890b5"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -75,6 +80,10 @@
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="FontSize"      Value="15"/>
             <Setter Property="FontWeight"    Value="SemiBold"/>
+            <Setter Property="IsReadOnly"    Value="True"/>
+            <Setter Property="Focusable"     Value="False"/>
+            <Setter Property="IsUndoEnabled" Value="False"/>
+            <Setter Property="Cursor"        Value="Arrow"/>
         </Style>
 
         <Style x:Key="CounterButton" TargetType="Button"
@@ -90,7 +99,12 @@
         </Style>
     </Window.Resources>
 
-    <Border CornerRadius="14" Effect="{StaticResource WinShadow}">
+    <Border x:Name="RootBorder" CornerRadius="14" Effect="{StaticResource WinShadow}"
+            Opacity="0" RenderTransformOrigin="0.5,0.5">
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="RootScale" ScaleX="0.92" ScaleY="0.92"/>
+        </Border.RenderTransform>
+
         <Border CornerRadius="14" ClipToBounds="True">
             <Grid Background="#0f1117">
                 <Grid.RowDefinitions>
@@ -239,8 +253,7 @@
                                                    FontWeight="Bold" VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBox x:Name="txtPrecio" Grid.Column="1"
-                                             Style="{StaticResource DarkTextBoxNoBorderLeft}"
-                                             TextChanged="txtPrecio_TextChanged"/>
+                                             Style="{StaticResource DarkTextBoxNoBorderLeft}"/>
                                 </Grid>
 
                                 <TextBlock Text="STOCK ACTUAL" Foreground="#505880"

@@ -9,7 +9,9 @@
         AllowsTransparency="True"
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
-        MouseDown="Window_MouseDown">
+        Opacity="0"
+        MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
@@ -145,12 +147,12 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource SidebarButton}" Margin="0,2">
+                                <Button Style="{StaticResource SidebarButtonActive}" Margin="0,2" IsHitTestVisible="False">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="PackageVariant" Foreground="#8890b5"
-                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Inventario" Foreground="#8890b5"
-                                                    FontSize="13" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Kind="PackageVariant" Foreground="White"
+                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Inventario" Foreground="White"
+                                                   FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
@@ -183,7 +185,6 @@
                                                    FontSize="13" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-
 
                                 <Button x:Name="btnUsuarios" Style="{StaticResource SidebarButton}" Margin="0,2" Click="btnUsuarios_Click">
                                     <StackPanel Orientation="Horizontal">
@@ -234,7 +235,7 @@
                                         </Button>
                                     </StackPanel>
                                 </Expander>
-                                
+
                             </StackPanel>
 
                             <Rectangle DockPanel.Dock="Bottom" Height="1" Fill="#1e2235" Margin="16,0,16,0"/>
@@ -260,12 +261,12 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    
+
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock x:Name="txtNombreUsuario" Text="Oscar Sosa"
+                                        <TextBlock x:Name="txtNombreUsuario" Text="Cargando..."
                                                    Foreground="White" FontSize="12" FontWeight="Medium"
                                                    TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock x:Name="txtRolUsuario" Text="Propietario"
+                                        <TextBlock x:Name="txtRolUsuario" Text="—"
                                                    Foreground="#4f6ef7" FontSize="10"/>
                                     </StackPanel>
                                     <Ellipse Grid.Column="2" Width="8" Height="8"
@@ -689,7 +690,7 @@
                 </Grid>
             </Border>
         </Border>
-
+        
         <Popup x:Name="popupFiltros"
                PlacementTarget="{Binding ElementName=btnFiltrar}"
                Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
