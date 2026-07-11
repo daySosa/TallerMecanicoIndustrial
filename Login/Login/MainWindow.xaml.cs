@@ -326,6 +326,10 @@ namespace Login
                 await Task.Run(() => _repositorio.ActualizarBloqueo(correo, 0, null), token);
                 DetenerCuentaRegresiva();
 
+
+                RegistrarBitacoraSilenciosa(correo, "Login", "Inicio de sesión",
+                    "Inicio de sesión exitoso");
+
                 new OpcionSesion(correo).Show();
                 Close();
             }
@@ -347,6 +351,10 @@ namespace Login
         {
             int intentos = await Task.Run(() => _repositorio.ObtenerIntentosFallidos(correo), token) + 1;
             int minutos = ValidadorLogin.MinutosDeBloqueo(intentos);
+
+
+            RegistrarBitacoraSilenciosa(correo, "Login", "Intento fallido",
+                $"Intento fallido de inicio de sesión (N.{intentos})");
 
             if (minutos > 0)
             {
@@ -449,6 +457,25 @@ namespace Login
             _timerBloqueo.Stop();
             txtContador.Visibility = Visibility.Collapsed;
         }
+
+        /// <summary>
+        /// Registra un evento en la bitácora sin interrumpir el flujo de login si falla.
+        /// sp_Bitacora_Registrar exige que el correo pertenezca a un Usuario real (por la
+        /// Foreign Key); si alguien se equivoca al escribir su correo, ese INSERT fallaría
+        /// — y eso está bien, no debe tumbar la pantalla de login por eso.
+        /// </summary>
+        private void RegistrarBitacoraSilenciosa(string correo, string modulo, string accion, string descripcion)
+        {
+            try
+            {
+                _repositorio.RegistrarBitacora(correo, modulo, accion, descripcion);
+            }
+            catch
+            {
+                
+            }
+        }
+
 
         #endregion
     }

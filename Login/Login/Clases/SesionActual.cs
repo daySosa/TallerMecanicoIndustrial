@@ -14,6 +14,9 @@
         public static bool EsAdministrador => Rol == "Administrador";
         public static bool HaySesionActiva => !string.IsNullOrEmpty(Email);
 
+
+        private static readonly RepositorioSql _db = new();
+
         public static void IniciarSesion(string email, string nombre, string apellido, string rol)
         {
             Email = email;
@@ -24,12 +27,23 @@
 
         public static void CerrarSesion()
         {
+            if (!string.IsNullOrEmpty(Email))
+            {
+                try
+                {
+                    _db.RegistrarBitacora(Email, "Sesión", "Cerrar sesión",
+                        $"{Nombre} {Apellido} cerró sesión");
+                }
+                catch
+                {
+
+                }
+            }
+
             Email = null;
             Nombre = null;
             Apellido = null;
             Rol = null;
         }
-
-
     }
 }
