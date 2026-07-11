@@ -10,8 +10,28 @@
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
         MouseDown="Window_MouseDown">
+    
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.25"/>
+                    <ThicknessAnimation Storyboard.TargetName="RootBorder"
+                                        Storyboard.TargetProperty="Margin"
+                                        From="0,18,0,0" To="0"
+                                        Duration="0:0:0.28">
+                        <ThicknessAnimation.EasingFunction>
+                            <QuadraticEase EasingMode="EaseOut"/>
+                        </ThicknessAnimation.EasingFunction>
+                    </ThicknessAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
 
     <Window.Resources>
+
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
 
         <Style x:Key="DarkTextBox" TargetType="TextBox">
@@ -22,7 +42,7 @@
             <Setter Property="BorderThickness"          Value="1"/>
             <Setter Property="Height"                   Value="38"/>
             <Setter Property="Padding"                  Value="10,0"/>
-            <Setter Property="FontSize"                 Value="13"/> 
+            <Setter Property="FontSize"                 Value="13"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -39,8 +59,30 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush"     Value="#4f6ef7"/>
-                                <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="border"
+                                                            Storyboard.TargetProperty="BorderBrush.Color"
+                                                            To="#4f6ef7" Duration="0:0:0.15"/>
+                                            <ThicknessAnimation Storyboard.TargetName="border"
+                                                                Storyboard.TargetProperty="BorderThickness"
+                                                                To="2" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="border"
+                                                            Storyboard.TargetProperty="BorderBrush.Color"
+                                                            To="#252840" Duration="0:0:0.15"/>
+                                            <ThicknessAnimation Storyboard.TargetName="border"
+                                                                Storyboard.TargetProperty="BorderThickness"
+                                                                To="1" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -57,16 +99,16 @@
         </Style>
 
         <Style x:Key="AutoCompleteItem" TargetType="ListBoxItem">
-            <Setter Property="Background"   Value="Transparent"/>
-            <Setter Property="Foreground"   Value="White"/>
-            <Setter Property="Padding"      Value="12,9"/>
-            <Setter Property="Cursor"       Value="Hand"/>
-            <Setter Property="FontSize"     Value="13"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding"    Value="12,9"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+            <Setter Property="FontSize"   Value="13"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="itemBorder"
-                                Background="{TemplateBinding Background}"
+                                Background="Transparent"
                                 BorderBrush="#1e2235"
                                 BorderThickness="0,0,0,1"
                                 Padding="{TemplateBinding Padding}">
@@ -74,7 +116,24 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="itemBorder" Property="Background" Value="#1e2235"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="itemBorder"
+                                                            Storyboard.TargetProperty="Background.Color"
+                                                            To="#1e2235" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="itemBorder"
+                                                            Storyboard.TargetProperty="Background.Color"
+                                                            To="Transparent" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="itemBorder" Property="Background" Value="#252840"/>
@@ -84,9 +143,89 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="AutoCompletePopupBorder" TargetType="Border">
+            <Setter Property="Opacity" Value="0"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsVisible, RelativeSource={RelativeSource Self}}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 To="1" Duration="0:0:0.15"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="AnimatedToggleSwitch" TargetType="ToggleButton">
+            <Setter Property="Width"  Value="50"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <Border x:Name="switchBg" Background="#4CAF50"
+                                    CornerRadius="14" Width="50" Height="28"/>
+                            <Border x:Name="switchThumb" Background="White"
+                                    CornerRadius="11" Width="22" Height="22"
+                                    HorizontalAlignment="Left" Margin="25,0,0,0">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" Opacity="0.2"
+                                                      BlurRadius="4" ShadowDepth="1"/>
+                                </Border.Effect>
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="thumbTransform" X="0"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="switchBg"
+                                                            Storyboard.TargetProperty="Background.Color"
+                                                            To="#252840" Duration="0:0:0.18"/>
+                                            <DoubleAnimation Storyboard.TargetName="thumbTransform"
+                                                             Storyboard.TargetProperty="X"
+                                                             To="-22" Duration="0:0:0.18">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="switchBg"
+                                                            Storyboard.TargetProperty="Background.Color"
+                                                            To="#4CAF50" Duration="0:0:0.18"/>
+                                            <DoubleAnimation Storyboard.TargetName="thumbTransform"
+                                                             Storyboard.TargetProperty="X"
+                                                             To="0" Duration="0:0:0.18">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
-    <Border CornerRadius="14" Effect="{StaticResource WinShadow}">
+    <Border x:Name="RootBorder" CornerRadius="14" Effect="{StaticResource WinShadow}">
         <Border CornerRadius="14" ClipToBounds="True">
             <Grid Background="#0f1117">
                 <Grid.RowDefinitions>
@@ -107,9 +246,9 @@
                             <Border Background="#1e2235" CornerRadius="8"
                                     Width="36" Height="36" Margin="0,0,14,0">
                                 <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" Foreground="#4f6ef7"
-                                                         Width="20" Height="20"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center"/>
+                                                          Width="20" Height="20"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Vehículo" Foreground="White"
@@ -141,13 +280,14 @@
                         <ScrollViewer VerticalScrollBarVisibility="Hidden"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
+
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                     <Border Background="#1e2235" CornerRadius="8"
                                             Width="34" Height="34" Margin="0,0,12,0">
                                         <materialDesign:PackIcon Kind="CarSportsUtilityVehicle" Foreground="#4f6ef7"
-                                                                 Width="18" Height="18"
-                                                                 HorizontalAlignment="Center"
-                                                                 VerticalAlignment="Center"/>
+                                                                  Width="18" Height="18"
+                                                                  HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="Datos del Vehículo" Foreground="White"
@@ -222,13 +362,14 @@
                         <ScrollViewer VerticalScrollBarVisibility="Hidden"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
+
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                     <Border Background="#1e2235" CornerRadius="8"
                                             Width="34" Height="34" Margin="0,0,12,0">
                                         <materialDesign:PackIcon Kind="NoteTextOutline" Foreground="#4f6ef7"
-                                                                 Width="18" Height="18"
-                                                                 HorizontalAlignment="Center"
-                                                                 VerticalAlignment="Center"/>
+                                                                  Width="18" Height="18"
+                                                                  HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="Detalles Adicionales" Foreground="White"
@@ -265,12 +406,13 @@
                                                StaysOpen="False"
                                                AllowsTransparency="True"
                                                Focusable="False"
-                                               PopupAnimation="None"
+                                               PopupAnimation="Fade"
                                                Width="{Binding ActualWidth, ElementName=txtClienteDNI}">
                                             <Border Background="#13161f"
                                                     BorderBrush="#4f6ef7"
                                                     BorderThickness="1"
-                                                    CornerRadius="0,0,8,8">
+                                                    CornerRadius="0,0,8,8"
+                                                    Style="{StaticResource AutoCompletePopupBorder}">
                                                 <Border.Effect>
                                                     <DropShadowEffect Color="#000000" BlurRadius="16"
                                                                       ShadowDepth="4" Opacity="0.5"/>
@@ -322,13 +464,23 @@
                                         BorderBrush="#1a3d2b" BorderThickness="1"
                                         Padding="12,10" Margin="0,0,0,14"
                                         Visibility="Collapsed">
+                                    <Border.Triggers>
+                                        <EventTrigger RoutedEvent="Border.Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0" To="1" Duration="0:0:0.2"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Border.Triggers>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon x:Name="iconClienteEstado"
-                                                                 Kind="AccountCheck"
-                                                                 Foreground="#4CAF50"
-                                                                 Width="18" Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Margin="0,0,8,0"/>
+                                                                  Kind="AccountCheck"
+                                                                  Foreground="#4CAF50"
+                                                                  Width="18" Height="18"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="0,0,8,0"/>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock x:Name="txtClienteNombre" Foreground="White"
                                                        FontSize="13" FontWeight="Medium"/>
@@ -355,11 +507,11 @@
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                                                 <materialDesign:PackIcon Kind="CheckCircleOutline"
-                                                                         x:Name="iconEstado"
-                                                                         Foreground="#4CAF50"
-                                                                         Width="15" Height="15"
-                                                                         VerticalAlignment="Center"
-                                                                         Margin="0,0,6,0"/>
+                                                                          x:Name="iconEstado"
+                                                                          Foreground="#4CAF50"
+                                                                          Width="15" Height="15"
+                                                                          VerticalAlignment="Center"
+                                                                          Margin="0,0,6,0"/>
                                                 <TextBlock Text="Estado del Vehículo"
                                                            Foreground="White" FontSize="12" FontWeight="Medium"/>
                                             </StackPanel>
@@ -367,44 +519,13 @@
                                                        Text="El vehículo está activo"
                                                        Foreground="#4CAF50" FontSize="11"/>
                                         </StackPanel>
+
                                         <ToggleButton x:Name="toggleActivo"
                                                       Grid.Column="1" IsChecked="True"
+                                                      Style="{StaticResource AnimatedToggleSwitch}"
                                                       Checked="ToggleActivo_Checked"
                                                       Unchecked="ToggleActivo_Unchecked"
-                                                      VerticalAlignment="Center">
-                                            <ToggleButton.Style>
-                                                <Style TargetType="ToggleButton">
-                                                    <Setter Property="Width" Value="50"/>
-                                                    <Setter Property="Height" Value="28"/>
-                                                    <Setter Property="Cursor" Value="Hand"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="ToggleButton">
-                                                                <Grid>
-                                                                    <Border x:Name="switchBg" Background="#4CAF50"
-                                                                            CornerRadius="14" Width="50" Height="28"/>
-                                                                    <Border x:Name="switchThumb" Background="White"
-                                                                            CornerRadius="11" Width="22" Height="22"
-                                                                            HorizontalAlignment="Right" Margin="0,0,3,0">
-                                                                        <Border.Effect>
-                                                                            <DropShadowEffect Color="Black" Opacity="0.2"
-                                                                                              BlurRadius="4" ShadowDepth="1"/>
-                                                                        </Border.Effect>
-                                                                    </Border>
-                                                                </Grid>
-                                                                <ControlTemplate.Triggers>
-                                                                    <Trigger Property="IsChecked" Value="False">
-                                                                        <Setter TargetName="switchBg" Property="Background" Value="#252840"/>
-                                                                        <Setter TargetName="switchThumb" Property="HorizontalAlignment" Value="Left"/>
-                                                                        <Setter TargetName="switchThumb" Property="Margin" Value="3,0,0,0"/>
-                                                                    </Trigger>
-                                                                </ControlTemplate.Triggers>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </ToggleButton.Style>
-                                        </ToggleButton>
+                                                      VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
 
@@ -424,8 +545,8 @@
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="InformationOutline" Foreground="#505880"
-                                                     Width="15" Height="15"
-                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                      Width="15" Height="15"
+                                                      VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBlock Text="Verifica el DNI del cliente antes de guardar"
                                        Foreground="#505880" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -460,7 +581,7 @@
                                 </Button.Style>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16"
-                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                              VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Guardar Vehículo" VerticalAlignment="Center" FontSize="13"/>
                                 </StackPanel>
                             </Button>

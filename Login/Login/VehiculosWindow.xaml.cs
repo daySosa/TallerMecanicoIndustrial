@@ -1,4 +1,5 @@
-﻿using Login.Clases;
+﻿#nullable enable
+using Login.Clases;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -31,6 +32,14 @@ namespace Vehículos
         private string _placaSeleccionada = string.Empty;
         private string _clienteDNI = string.Empty;
 
+        // ── REGEX GENERADOS EN TIEMPO DE COMPILACIÓN (SYSLIB1042/SYSLIB10) ──
+
+        [GeneratedRegex(@"^\d+$")]
+        private static partial Regex SoloDigitosRegex();
+
+        [GeneratedRegex(@"^[a-zA-Z0-9]+$")]
+        private static partial Regex SoloAlfanumericoRegex();
+
         public VehiWindow()
         {
             InitializeComponent();
@@ -49,13 +58,13 @@ namespace Vehículos
         // ── RESTRICCIONES DE ENTRADA ─────────────────────────────────
 
         private void txtAnio_PreviewTextInput(object sender, TextCompositionEventArgs e)
-            => e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+            => e.Handled = !SoloDigitosRegex().IsMatch(e.Text);
 
         private void txtClienteDNI_PreviewTextInput(object sender, TextCompositionEventArgs e)
-            => e.Handled = !Regex.IsMatch(e.Text, @"^\d+$");
+            => e.Handled = !SoloDigitosRegex().IsMatch(e.Text);
 
         private void txtPlaca_PreviewTextInput(object sender, TextCompositionEventArgs e)
-            => e.Handled = !Regex.IsMatch(e.Text, @"^[a-zA-Z0-9]+$");
+            => e.Handled = !SoloAlfanumericoRegex().IsMatch(e.Text);
 
         private void txtPlaca_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -89,7 +98,12 @@ namespace Vehículos
                         return;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    // Se ignora intencionalmente: un fallo al buscar sugerencias de autocompletado
+                    // no debe interrumpir la escritura del usuario. Se deja registro para depuración.
+                    System.Diagnostics.Debug.WriteLine($"Error al buscar sugerencias de cliente: {ex.Message}");
+                }
             }
             popupAutoComplete.IsOpen = false;
         }
@@ -174,11 +188,14 @@ namespace Vehículos
         {
             try
             {
-                var res = _db.VerificarClienteDNI(dni);
-                if (res.existe)
+                // Acceso por NOMBRE de miembro (no posicional): evita errores de tipo
+                // si el orden de los campos de la tupla cambia en RepositorioSql.
+                var resultado = _db.VerificarClienteDNI(dni);
+
+                if (resultado.existe)
                 {
                     _clienteDNI = dni;
-                    MostrarClienteOk(res.nombre);
+                    MostrarClienteOk(resultado.nombre);
                 }
                 else
                 {
@@ -339,10 +356,13 @@ namespace Vehículos
             catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
 
-
         // ── CANCELAR ─────────────────────────────────────────────────
 
-        private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
+        private void BtnCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            LimpiarFormulario();
+            this.Close();
+        }
 
         // ── TOGGLE ESTADO ────────────────────────────────────────────
 
@@ -355,9 +375,13 @@ namespace Vehículos
         private void SetEstado(string texto, string color)
         {
             if (txtEstadoLabel == null) return;
+
+            SolidColorBrush brocha = Pincel(color);
             txtEstadoLabel.Text = texto;
-            txtEstadoLabel.Foreground = Pincel(color);
-            if (iconEstado != null) iconEstado.Foreground = Pincel(color);
+            txtEstadoLabel.Foreground = brocha;
+
+            if (iconEstado != null)
+                iconEstado.Foreground = brocha;
         }
 
         // ── CARGAR PARA EDITAR ───────────────────────────────────────
