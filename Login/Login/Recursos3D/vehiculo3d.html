@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
+    <title>Diagnóstico Visual 3D - Vehículo</title>
     <style>
         html, body {
             margin: 0;
@@ -47,12 +48,14 @@
         import { RoomEnvironment } from "three/addons/RoomEnvironment.js";
         import { GLTFLoader } from "three/addons/GLTFLoader.js";
 
+        THREE.Cache.enabled = true;
+
         const contenedor = document.getElementById("contenedor3d");
         const elCargando = document.getElementById("cargando");
 
         // ── Render / escena / cámara ──────────────────────────────
         const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -92,7 +95,7 @@
         const luzPrincipal = new THREE.DirectionalLight(0xffffff, 2.4);
         luzPrincipal.position.set(-3, 4, 3);
         luzPrincipal.castShadow = true;
-        luzPrincipal.shadow.mapSize.set(2048, 2048);
+        luzPrincipal.shadow.mapSize.set(1024, 1024);
         luzPrincipal.shadow.camera.left = -3;
         luzPrincipal.shadow.camera.right = 3;
         luzPrincipal.shadow.camera.top = 3;
@@ -115,9 +118,58 @@
         piso.receiveShadow = true;
         escena.add(piso);
 
-        // ── Materiales para zonas de diagnóstico ──────────────────
-        const materialZonaNormal = new THREE.MeshBasicMaterial({ color: 0x4f6ef7, transparent: true, opacity: 0.12, depthWrite: false });
-        const materialZonaDañada = new THREE.MeshBasicMaterial({ color: 0xff5353, transparent: true, opacity: 0.62, depthWrite: false });
+        // ── Textura de círculo suave (para los marcadores de zona) ──
+        function crearTexturaCirculo() {
+            const size = 128;
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext("2d");
+
+            const gradiente = ctx.createRadialGradient(
+                size / 2, size / 2, 0,
+                size / 2, size / 2, size / 2
+            );
+            gradiente.addColorStop(0, "rgba(255,255,255,1)");
+            gradiente.addColorStop(0.72, "rgba(255,255,255,1)");
+            gradiente.addColorStop(0.85, "rgba(255,255,255,0.55)");
+            gradiente.addColorStop(1, "rgba(255,255,255,0)");
+
+            ctx.fillStyle = gradiente;
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            const textura = new THREE.CanvasTexture(canvas);
+            textura.colorSpace = THREE.SRGBColorSpace;
+            return textura;
+        }
+
+        const texturaPunto = crearTexturaCirculo();
+
+        const materialPuntoNormal = new THREE.SpriteMaterial({
+            map: texturaPunto,
+            color: 0xffffff,
+            depthTest: false,
+            transparent: true,
+            sizeAttenuation: true,
+        });
+        const materialPuntoHover = new THREE.SpriteMaterial({
+            map: texturaPunto,
+            color: 0xc9d2ff,
+            depthTest: false,
+            transparent: true,
+            sizeAttenuation: true,
+        });
+        const materialPuntoActivo = new THREE.SpriteMaterial({
+            map: texturaPunto,
+            color: 0xff5353,
+            depthTest: false,
+            transparent: true,
+            sizeAttenuation: true,
+        });
+
+        const TAMAÑO_PUNTO = 0.16;
 
         let zonasPorNombre = {};
         const zonasSeleccionadas = new Set();
@@ -128,143 +180,271 @@
             suv: "./modelos/suv.glb",
             pickup: "./modelos/pickup.glb",
             moto: "./modelos/moto.glb",
-            mototaxi: "./modelos/moto.glb", // reemplazar cuando tengas un modelo propio
+            mototaxi: "./modelos/moto.glb",
         };
 
-        // ── Zonas de diagnóstico por tipo, en coordenadas RELATIVAS ──
-        // (fracción del tamaño total normalizado: x,y,z entre -0.5 y 0.5 aprox, y de 0 a 1 en alto)
+        // ── Zonas de diagnóstico por tipo ──────────────────────────
+        // Cada zona define DESDE DÓNDE y HACIA DÓNDE se dispara un rayo para
+        // encontrar la superficie real del modelo (ver ubicarPuntoZona más abajo):
+        //   lado: "arriba"     → rayo desde arriba hacia abajo (capó, baúl, techo)
+        //         "izquierda"/"derecha" → rayo horizontal desde ese costado
+        //         "frente"/"atras"      → rayo horizontal desde ese extremo
+        //   fx, fz: posición horizontal como fracción del ancho/largo (-1 a 1, 0 = centro)
+        //   fy: altura como fracción de la altura total (0 = piso, 1 = techo)
+        // Esto hace que el punto SIEMPRE quede pegado a la carrocería real,
+        // sin importar las proporciones exactas de cada modelo .glb.
         const zonasPorTipo = {
             sedan: [
-                { nombre: "Motor", size: [0.42, 0.28, 0.22], pos: [0, 0.30, 0.38] },
-                { nombre: "Transmisión", size: [0.35, 0.18, 0.4], pos: [0, 0.12, 0] },
-                { nombre: "Cajuela / Baúl", size: [0.42, 0.28, 0.2], pos: [0, 0.30, -0.40] },
-                { nombre: "Freno Del. Izq.", size: [0.14, 0.14, 0.14], pos: [-0.42, 0.14, 0.34] },
-                { nombre: "Freno Del. Der.", size: [0.14, 0.14, 0.14], pos: [0.42, 0.14, 0.34] },
-                { nombre: "Freno Tras. Izq.", size: [0.14, 0.14, 0.14], pos: [-0.42, 0.14, -0.34] },
-                { nombre: "Freno Tras. Der.", size: [0.14, 0.14, 0.14], pos: [0.42, 0.14, -0.34] },
-                { nombre: "Sistema de Escape", size: [0.5, 0.06, 0.06], pos: [0.2, 0.05, 0] },
+                { nombre: "Motor", lado: "arriba", fx: 0, fz: 0.5 },
+                { nombre: "Transmisión", lado: "izquierda", fy: 0.12, fz: 0 },
+                { nombre: "Cajuela / Baúl", lado: "arriba", fx: 0, fz: -0.5 },
+                { nombre: "Freno Del. Izq.", lado: "izquierda", fy: 0.12, fz: 0.42 },
+                { nombre: "Freno Del. Der.", lado: "derecha", fy: 0.12, fz: 0.42 },
+                { nombre: "Freno Tras. Izq.", lado: "izquierda", fy: 0.12, fz: -0.42 },
+                { nombre: "Freno Tras. Der.", lado: "derecha", fy: 0.12, fz: -0.42 },
+                { nombre: "Sistema de Escape", lado: "derecha", fy: 0.08, fz: -0.25 },
             ],
             suv: [
-                { nombre: "Motor", size: [0.42, 0.3, 0.24], pos: [0, 0.32, 0.4] },
-                { nombre: "Transmisión", size: [0.36, 0.2, 0.42], pos: [0, 0.14, 0] },
-                { nombre: "Baúl", size: [0.42, 0.32, 0.22], pos: [0, 0.32, -0.42] },
-                { nombre: "Freno Del. Izq.", size: [0.16, 0.16, 0.16], pos: [-0.44, 0.16, 0.36] },
-                { nombre: "Freno Del. Der.", size: [0.16, 0.16, 0.16], pos: [0.44, 0.16, 0.36] },
-                { nombre: "Freno Tras. Izq.", size: [0.16, 0.16, 0.16], pos: [-0.44, 0.16, -0.36] },
-                { nombre: "Freno Tras. Der.", size: [0.16, 0.16, 0.16], pos: [0.44, 0.16, -0.36] },
+                { nombre: "Motor", lado: "arriba", fx: 0, fz: 0.48 },
+                { nombre: "Transmisión", lado: "izquierda", fy: 0.14, fz: 0 },
+                { nombre: "Baúl", lado: "arriba", fx: 0, fz: -0.48 },
+                { nombre: "Freno Del. Izq.", lado: "izquierda", fy: 0.14, fz: 0.44 },
+                { nombre: "Freno Del. Der.", lado: "derecha", fy: 0.14, fz: 0.44 },
+                { nombre: "Freno Tras. Izq.", lado: "izquierda", fy: 0.14, fz: -0.44 },
+                { nombre: "Freno Tras. Der.", lado: "derecha", fy: 0.14, fz: -0.44 },
             ],
             pickup: [
-                { nombre: "Motor", size: [0.4, 0.3, 0.22], pos: [0, 0.32, 0.35] },
-                { nombre: "Caja de Carga", size: [0.42, 0.3, 0.4], pos: [0, 0.32, -0.25] },
-                { nombre: "Freno Del. Izq.", size: [0.16, 0.16, 0.16], pos: [-0.42, 0.16, 0.32] },
-                { nombre: "Freno Del. Der.", size: [0.16, 0.16, 0.16], pos: [0.42, 0.16, 0.32] },
-                { nombre: "Freno Tras. Izq.", size: [0.16, 0.16, 0.16], pos: [-0.42, 0.16, -0.32] },
-                { nombre: "Freno Tras. Der.", size: [0.16, 0.16, 0.16], pos: [0.42, 0.16, -0.32] },
+                { nombre: "Motor", lado: "arriba", fx: 0, fz: 0.45 },
+                { nombre: "Caja de Carga", lado: "arriba", fx: 0, fz: -0.3 },
+                { nombre: "Freno Del. Izq.", lado: "izquierda", fy: 0.14, fz: 0.4 },
+                { nombre: "Freno Del. Der.", lado: "derecha", fy: 0.14, fz: 0.4 },
+                { nombre: "Freno Tras. Izq.", lado: "izquierda", fy: 0.14, fz: -0.4 },
+                { nombre: "Freno Tras. Der.", lado: "derecha", fy: 0.14, fz: -0.4 },
             ],
             moto: [
-                { nombre: "Motor", size: [0.3, 0.24, 0.24], pos: [0, 0.24, 0.05] },
-                { nombre: "Transmisión / Cadena", size: [0.14, 0.14, 0.5], pos: [0, 0.12, -0.1] },
-                { nombre: "Freno Delantero", size: [0.22, 0.22, 0.22], pos: [0, 0.16, 0.4] },
-                { nombre: "Freno Trasero", size: [0.22, 0.22, 0.22], pos: [0, 0.16, -0.4] },
-                { nombre: "Sistema de Escape", size: [0.5, 0.1, 0.1], pos: [0.15, 0.14, -0.25] },
+                { nombre: "Motor", lado: "izquierda", fy: 0.25, fz: 0 },
+                { nombre: "Transmisión / Cadena", lado: "derecha", fy: 0.15, fz: -0.15 },
+                { nombre: "Freno Delantero", lado: "frente", fy: 0.3, fx: 0 },
+                { nombre: "Freno Trasero", lado: "atras", fy: 0.3, fx: 0 },
+                { nombre: "Sistema de Escape", lado: "derecha", fy: 0.15, fz: -0.3 },
             ],
         };
         zonasPorTipo.mototaxi = zonasPorTipo.moto;
 
-        function caja(w, h, d, x, y, z) {
-            const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), materialZonaNormal.clone());
-            m.position.set(x, y, z);
-            return m;
+        function crearPuntoZona(nombre, x, y, z) {
+            const sprite = new THREE.Sprite(materialPuntoNormal);
+            sprite.position.set(x, y, z);
+            sprite.scale.set(TAMAÑO_PUNTO, TAMAÑO_PUNTO, 1);
+            sprite.userData.zona = nombre;
+            sprite.renderOrder = 999;
+            return sprite;
         }
+
+        // ── Ubicación de zonas por raycasting sobre el modelo real ──
+        const rayoColocacion = new THREE.Raycaster();
+
+        function ubicarPuntoZona(contenedor, caja, zona) {
+            const centro = caja.getCenter(new THREE.Vector3());
+            const tam = caja.getSize(new THREE.Vector3());
+            const margen = Math.max(tam.x, tam.y, tam.z) * 0.6; // garantiza que el rayo empiece fuera del modelo
+
+            let origen, direccion;
+
+            switch (zona.lado) {
+                case "izquierda":
+                    origen = new THREE.Vector3(caja.min.x - margen, caja.min.y + (zona.fy ?? 0.15) * tam.y, centro.z + (zona.fz ?? 0) * tam.z * 0.5);
+                    direccion = new THREE.Vector3(1, 0, 0);
+                    break;
+                case "derecha":
+                    origen = new THREE.Vector3(caja.max.x + margen, caja.min.y + (zona.fy ?? 0.15) * tam.y, centro.z + (zona.fz ?? 0) * tam.z * 0.5);
+                    direccion = new THREE.Vector3(-1, 0, 0);
+                    break;
+                case "frente":
+                    origen = new THREE.Vector3(centro.x + (zona.fx ?? 0) * tam.x * 0.5, caja.min.y + (zona.fy ?? 0.3) * tam.y, caja.max.z + margen);
+                    direccion = new THREE.Vector3(0, 0, -1);
+                    break;
+                case "atras":
+                    origen = new THREE.Vector3(centro.x + (zona.fx ?? 0) * tam.x * 0.5, caja.min.y + (zona.fy ?? 0.3) * tam.y, caja.min.z - margen);
+                    direccion = new THREE.Vector3(0, 0, 1);
+                    break;
+                default: // "arriba"
+                    origen = new THREE.Vector3(centro.x + (zona.fx ?? 0) * tam.x * 0.5, caja.max.y + margen, centro.z + (zona.fz ?? 0) * tam.z * 0.5);
+                    direccion = new THREE.Vector3(0, -1, 0);
+            }
+
+            rayoColocacion.set(origen, direccion);
+            const impactos = rayoColocacion.intersectObject(contenedor, true);
+
+            if (impactos.length > 0) {
+                const impacto = impactos[0];
+                const normal = impacto.face
+                    ? impacto.face.normal.clone().transformDirection(impacto.object.matrixWorld)
+                    : direccion.clone().negate();
+                return impacto.point.clone().add(normal.multiplyScalar(0.02));
+            }
+
+            // Respaldo si el rayo no chocó con nada (ej. zona sobre una ventana o hueco):
+            // se ubica de forma aproximada para que la zona nunca desaparezca del todo.
+            return new THREE.Vector3(
+                centro.x + (zona.fx ?? 0) * tam.x * 0.4,
+                centro.y + ((zona.fy ?? 0.3) - 0.5) * tam.y * 0.6,
+                centro.z + (zona.fz ?? 0) * tam.z * 0.4
+            );
+        }
+
+        function crearGrupoZonas(tipo, contenedor) {
+            contenedor.updateMatrixWorld(true);
+            const caja = new THREE.Box3().setFromObject(contenedor);
+
+            const grupo = new THREE.Group();
+            const porNombre = {};
+            (zonasPorTipo[tipo] || []).forEach((z) => {
+                const posicion = ubicarPuntoZona(contenedor, caja, z);
+                const punto = crearPuntoZona(z.nombre, posicion.x, posicion.y, posicion.z);
+                grupo.add(punto);
+                (porNombre[z.nombre] ??= []).push(punto);
+            });
+            return { grupo, porNombre };
+        }
+
+        function reiniciarMaterialesZonas(grupo) {
+            if (!grupo) return;
+            grupo.children.forEach((sprite) => { sprite.material = materialPuntoNormal; });
+        }
+
+        // ── Caché de modelos ya procesados ──────────────────────────
+        const modelosCache = {};
 
         let grupoZonas = null;
-
-        function crearZonasParaTipo(tipo, escalaModelo) {
-            grupoZonas = new THREE.Group();
-            zonasPorNombre = {};
-            (zonasPorTipo[tipo] || []).forEach((z) => {
-                const mesh = caja(
-                    z.size[0] * escalaModelo, z.size[1] * escalaModelo, z.size[2] * escalaModelo,
-                    z.pos[0] * escalaModelo, z.pos[1] * escalaModelo, z.pos[2] * escalaModelo
-                );
-                mesh.userData.zona = z.nombre;
-                grupoZonas.add(mesh);
-                (zonasPorNombre[z.nombre] ??= []).push(mesh);
-            });
-            escena.add(grupoZonas);
-        }
-
-        // ── Carga y normalización automática de escala/centro ─────
         const loader = new GLTFLoader();
         let modeloActual = null;
-        let tokenCarga = 0; // se incrementa en cada llamada para invalidar cargas viejas en curso
+        let tokenCarga = 0;
         const TAMAÑO_OBJETIVO = 3.4;
 
-        window.setVehicleType = function (tipo) {
-            const t = (tipo || "sedan").toLowerCase();
+        function procesarGltf(gltf) {
+            const modelo = gltf.scene;
+
+            const caja3D = new THREE.Box3().setFromObject(modelo);
+            const centro = caja3D.getCenter(new THREE.Vector3());
+            const tamaño = caja3D.getSize(new THREE.Vector3());
+            const ladoMayor = Math.max(tamaño.x, tamaño.y, tamaño.z);
+            const escala = ladoMayor > 0 ? TAMAÑO_OBJETIVO / ladoMayor : 1;
+
+            modelo.position.sub(centro);
+            const contenedor = new THREE.Group();
+            contenedor.add(modelo);
+            contenedor.scale.setScalar(escala);
+
+            const cajaFinal = new THREE.Box3().setFromObject(contenedor);
+            contenedor.position.y -= cajaFinal.min.y;
+
+            contenedor.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            return contenedor;
+        }
+
+        function cargarTipo(t, mostrar) {
+            if (modelosCache[t]) {
+                if (mostrar) mostrarDesdeCache(t);
+                return;
+            }
+
             const ruta = rutasModelos[t] || rutasModelos.sedan;
-
             tokenCarga++;
-            const miToken = tokenCarga; // "número de ticket" de esta llamada específica
-
-            elCargando.style.display = "flex";
-            zonasSeleccionadas.clear();
-
-            if (modeloActual) { escena.remove(modeloActual); modeloActual = null; }
-            if (grupoZonas) { escena.remove(grupoZonas); grupoZonas = null; }
+            const miToken = tokenCarga;
 
             loader.load(
                 ruta,
                 (gltf) => {
-                    // Si mientras esto cargaba ya se pidió otro vehículo distinto, se descarta este resultado
-                    if (miToken !== tokenCarga) return;
+                    if (mostrar && miToken !== tokenCarga) return;
 
-                    const modelo = gltf.scene;
+                    const contenedor = procesarGltf(gltf);
+                    const { grupo, porNombre } = crearGrupoZonas(t, contenedor);
+                    modelosCache[t] = { contenedor, grupo, porNombre };
 
-                    const caja3D = new THREE.Box3().setFromObject(modelo);
-                    const centro = caja3D.getCenter(new THREE.Vector3());
-                    const tamaño = caja3D.getSize(new THREE.Vector3());
-                    const ladoMayor = Math.max(tamaño.x, tamaño.y, tamaño.z);
-                    const escala = ladoMayor > 0 ? TAMAÑO_OBJETIVO / ladoMayor : 1;
-
-                    modelo.position.sub(centro);
-                    const contenedor = new THREE.Group();
-                    contenedor.add(modelo);
-                    contenedor.scale.setScalar(escala);
-
-                    const cajaFinal = new THREE.Box3().setFromObject(contenedor);
-                    contenedor.position.y -= cajaFinal.min.y;
-
-                    contenedor.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-
-                    // Por si en el tiempo que tardó esto en procesarse llegó OTRA carga y ya agregó su modelo:
-                    if (modeloActual) escena.remove(modeloActual);
-                    if (grupoZonas) escena.remove(grupoZonas);
-
-                    modeloActual = contenedor;
-                    escena.add(modeloActual);
-
-                    crearZonasParaTipo(t, TAMAÑO_OBJETIVO);
-
-                    elCargando.style.display = "none";
+                    if (mostrar) mostrarDesdeCache(t);
                 },
-                undefined,
+                (evento) => {
+                    // Progreso real de descarga: mejora la sensación de espera aunque
+                    // no acelera la carga en sí (eso depende del peso del .glb).
+                    if (mostrar && miToken === tokenCarga && evento.total) {
+                        const porcentaje = Math.round((evento.loaded / evento.total) * 100);
+                        elCargando.textContent = `Cargando modelo... ${porcentaje}%`;
+                    }
+                },
                 (error) => {
-                    if (miToken !== tokenCarga) return;
-                    console.error("Error cargando modelo:", error);
-                    elCargando.textContent = "Error al cargar el modelo";
+                    console.error("Error cargando modelo:", t, error);
+                    if (mostrar && miToken === tokenCarga) {
+                        elCargando.textContent = "Error al cargar el modelo";
+                    }
                 }
             );
+        }
+
+        function mostrarDesdeCache(t) {
+            const entrada = modelosCache[t];
+            if (!entrada) return;
+
+            if (modeloActual) escena.remove(modeloActual);
+            if (grupoZonas) escena.remove(grupoZonas);
+
+            reiniciarMaterialesZonas(entrada.grupo);
+            zonasSeleccionadas.clear();
+
+            modeloActual = entrada.contenedor;
+            grupoZonas = entrada.grupo;
+            zonasPorNombre = entrada.porNombre;
+
+            escena.add(modeloActual);
+            escena.add(grupoZonas);
+            elCargando.style.display = "none";
+        }
+
+        /** Precarga en segundo plano los demás tipos. Se retrasa un poco más y se
+         *  espacia más entre cada uno para no competir por CPU/red con el primer
+         *  modelo mientras el usuario ya está interactuando con él. */
+        function precargarRestantesEnSegundoPlano(tipoYaMostrado) {
+            const pendientes = Object.keys(rutasModelos).filter(
+                (t) => t !== tipoYaMostrado && !modelosCache[t]
+            );
+            let i = 0;
+            function siguiente() {
+                if (i >= pendientes.length) return;
+                const t = pendientes[i++];
+                cargarTipo(t, false);
+                setTimeout(siguiente, 800);
+            }
+            setTimeout(siguiente, 1500);
+        }
+
+        let yaSePrecargó = false;
+
+        window.setVehicleType = function (tipo) {
+            const t = (tipo || "sedan").toLowerCase();
+
+            if (modelosCache[t]) {
+                elCargando.style.display = "none";
+                mostrarDesdeCache(t);
+            } else {
+                elCargando.style.display = "flex";
+                elCargando.textContent = "Cargando modelo...";
+                cargarTipo(t, true);
+            }
+
+            if (!yaSePrecargó) {
+                yaSePrecargó = true;
+                precargarRestantesEnSegundoPlano(t);
+            }
         };
 
         window.clearZones = function () {
             zonasSeleccionadas.forEach((nombre) => {
-                (zonasPorNombre[nombre] || []).forEach((m) => (m.material = materialZonaNormal));
+                (zonasPorNombre[nombre] || []).forEach((m) => (m.material = materialPuntoNormal));
             });
             zonasSeleccionadas.clear();
         };
@@ -273,14 +453,38 @@
             const activa = !zonasSeleccionadas.has(nombre);
             if (activa) zonasSeleccionadas.add(nombre); else zonasSeleccionadas.delete(nombre);
 
-            (zonasPorNombre[nombre] || []).forEach((m) => (m.material = activa ? materialZonaDañada : materialZonaNormal));
+            (zonasPorNombre[nombre] || []).forEach(
+                (m) => (m.material = activa ? materialPuntoActivo : materialPuntoNormal)
+            );
 
             if (window.chrome?.webview) {
                 window.chrome.webview.postMessage(JSON.stringify({ tipo: "zona", zona: nombre, activa }));
             }
         }
 
-        // ── Clic vs arrastre (4px de tolerancia) ──
+        // ── Hover ──
+        let puntoConHover = null;
+
+        function actualizarHover(clientX, clientY) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            puntero.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            puntero.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+            rayo.setFromCamera(puntero, camara);
+            const intersecciones = rayo.intersectObjects(grupoZonas ? grupoZonas.children : [], false);
+            const impacto = intersecciones.find((i) => i.object.userData.zona);
+            const nuevoPunto = impacto ? impacto.object : null;
+
+            if (puntoConHover && puntoConHover !== nuevoPunto && !zonasSeleccionadas.has(puntoConHover.userData.zona)) {
+                puntoConHover.material = materialPuntoNormal;
+            }
+            if (nuevoPunto && !zonasSeleccionadas.has(nuevoPunto.userData.zona)) {
+                nuevoPunto.material = materialPuntoHover;
+            }
+            puntoConHover = nuevoPunto;
+            renderer.domElement.style.cursor = nuevoPunto ? "pointer" : "grab";
+        }
+
+        // ── Clic vs arrastre ──
         const rayo = new THREE.Raycaster();
         const puntero = new THREE.Vector2();
         let bajadaX = 0, bajadaY = 0, huboArrastre = false;
@@ -292,6 +496,7 @@
             if (e.buttons === 1 && (Math.abs(e.clientX - bajadaX) > 4 || Math.abs(e.clientY - bajadaY) > 4)) {
                 huboArrastre = true;
             }
+            actualizarHover(e.clientX, e.clientY);
         });
         renderer.domElement.addEventListener("pointerup", (e) => {
             if (huboArrastre) return;

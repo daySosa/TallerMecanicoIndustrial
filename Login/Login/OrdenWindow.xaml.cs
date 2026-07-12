@@ -1,4 +1,6 @@
-﻿using Login.Clases;
+﻿#nullable enable
+
+using Login.Clases;
 using Microsoft.Web.WebView2.Core;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -12,6 +14,18 @@ namespace Órdenes_de_Trabajo
 {
     public partial class OrdenWindow : Window
     {
+        // ── Constantes (S1192) ──
+        private const string PrecioCeroTexto = "L 0.00";
+        private const string TipoVehiculoDefault = "sedan";
+
+        // S1075: URL local de WebView2 (virtual host, no es un endpoint externo configurable)
+        private const string UrlVisorHtml3D = "https://appassets.local/vehiculo3d.html"; // NOSONAR: virtual host local fijo, no aplica configuración externa
+
+        // Deserialización case-insensitive: el JS manda "zona"/"activa" en minúscula,
+        // la clase MensajeZona3D usa PascalCase. Sin esta opción, System.Text.Json
+        // descarta el mensaje silenciosamente porque no hace match de nombres.
+        private static readonly JsonSerializerOptions OpcionesJson = new() { PropertyNameCaseInsensitive = true };
+
         private readonly RepositorioSql _db = new();
         private string _clienteDNI = string.Empty;
         private string _vehiculoPlaca = string.Empty;
@@ -29,7 +43,7 @@ namespace Órdenes_de_Trabajo
 
         // ── Visor 3D (WebView2 + three.js) ──
         private bool _webViewListo = false;
-        private string _tipoVehiculoActual = "sedan";
+        private string _tipoVehiculoActual = TipoVehiculoDefault;
         private readonly HashSet<string> _zonasSeleccionadas = new();
 
         public OrdenWindow()
@@ -63,7 +77,7 @@ namespace Órdenes_de_Trabajo
                 if (ParsePrecio(txtPrecioServicio.Text, out decimal v))
                     txtPrecioServicio.Text = $"L {v:N2}";
                 else
-                    txtPrecioServicio.Text = "L 0.00";
+                    txtPrecioServicio.Text = PrecioCeroTexto;
             };
 
             txtPrecioServicio.GotFocus += (s, e) =>
@@ -530,7 +544,6 @@ namespace Órdenes_de_Trabajo
             try
             {
                 await webView3D.EnsureCoreWebView2Async();
-                webView3D.CoreWebView2.OpenDevToolsWindow();
 
                 string carpeta3D = Path.Combine(AppContext.BaseDirectory, "Recursos3D");
                 webView3D.CoreWebView2.SetVirtualHostNameToFolderMapping(
@@ -544,7 +557,7 @@ namespace Órdenes_de_Trabajo
                     await MostrarVehiculo3D(_tipoVehiculoActual);
                 };
 
-                webView3D.CoreWebView2.Navigate("https://appassets.local/vehiculo3d.html");
+                webView3D.CoreWebView2.Navigate(UrlVisorHtml3D);
             }
             catch (Exception ex)
             {
@@ -555,7 +568,7 @@ namespace Órdenes_de_Trabajo
         /// <summary>Cambia el modelo 3D mostrado según el tipo de vehículo y limpia el panel de zonas.</summary>
         private async Task MostrarVehiculo3D(string? tipoVehiculo)
         {
-            string tipo = (tipoVehiculo ?? "sedan").Trim().ToLowerInvariant();
+            string tipo = (tipoVehiculo ?? TipoVehiculoDefault).Trim().ToLowerInvariant();
             _tipoVehiculoActual = tipo;
 
             _zonasSeleccionadas.Clear();
@@ -582,7 +595,7 @@ namespace Órdenes_de_Trabajo
                 string? json = e.TryGetWebMessageAsString();
                 if (string.IsNullOrEmpty(json)) return;
 
-                var mensaje = JsonSerializer.Deserialize<MensajeZona3D>(json);
+                var mensaje = JsonSerializer.Deserialize<MensajeZona3D>(json, OpcionesJson);
                 if (mensaje == null || string.IsNullOrEmpty(mensaje.Zona)) return;
 
                 Dispatcher.Invoke(() =>
@@ -632,7 +645,7 @@ namespace Órdenes_de_Trabajo
         {
             public string Tipo { get; set; } = string.Empty;
             public string Zona { get; set; } = string.Empty;
-            public bool Activa { get; set; }
+            public bool Activa { get; set; } = false; // NOSONAR: se asigna vía JsonSerializer.Deserialize (reflexión), Sonar no lo detecta
         }
 
         // ── TIPO DE VEHÍCULO ─────────────────────────────────────────
@@ -649,7 +662,7 @@ namespace Órdenes_de_Trabajo
             border.Background = BrushActivo;
             _tipoSeleccionado = border;
 
-            string tipo = border.Tag as string ?? "sedan";
+            string tipo = border.Tag as string ?? TipoVehiculoDefault;
             _ = MostrarVehiculo3D(tipo);
         }
 
@@ -681,9 +694,8 @@ namespace Órdenes_de_Trabajo
                         borderAutocompletado.Visibility = Visibility.Collapsed;
                         return;
                     }
-                    lstAutocompletado.ItemsSource = sugerencias
-                        .Select(s => s.DNI + " — " + s.NombreCompleto)
-                        .ToList();
+                    List<string> textos = [.. sugerencias.Select(s => s.DNI + " — " + s.NombreCompleto)];
+                    lstAutocompletado.ItemsSource = textos;
                     lstAutocompletado.Tag = sugerencias;
                     borderAutocompletado.Visibility = Visibility.Visible;
                 }
@@ -695,9 +707,8 @@ namespace Órdenes_de_Trabajo
                         borderAutocompletado.Visibility = Visibility.Collapsed;
                         return;
                     }
-                    lstAutocompletado.ItemsSource = sugerencias
-                        .Select(v => v.Placa + " — " + v.Modelo)
-                        .ToList();
+                    List<string> textos = [.. sugerencias.Select(v => v.Placa + " — " + v.Modelo)];
+                    lstAutocompletado.ItemsSource = textos;
                     lstAutocompletado.Tag = sugerencias;
                     borderAutocompletado.Visibility = Visibility.Visible;
                 }
@@ -754,9 +765,9 @@ namespace Órdenes_de_Trabajo
             txtBuscar.Clear();
             _repuestos.Clear();
             _ordenIDEditar = 0;
-            txtPrecioRepuesto.Text = "L 0.00";
-            txtPrecioServicio.Text = "L 0.00";
-            txtCostoTotal.Text = "L 0.00";
+            txtPrecioRepuesto.Text = PrecioCeroTexto;
+            txtPrecioServicio.Text = PrecioCeroTexto;
+            txtCostoTotal.Text = PrecioCeroTexto;
             dpFecha.SelectedDate = DateTime.Today;
             dpEntrega.SelectedDate = null;
             txtObservaciones.Clear();
@@ -769,7 +780,7 @@ namespace Órdenes_de_Trabajo
                 _tipoSeleccionado.Background = BrushInactivo;
             _tipoSeleccionado = null;
 
-            _ = MostrarVehiculo3D("sedan");
+            _ = MostrarVehiculo3D(TipoVehiculoDefault);
         }
 
         private static bool ParsePrecio(string texto, out decimal valor)
