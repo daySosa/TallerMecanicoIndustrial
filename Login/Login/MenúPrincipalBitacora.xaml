@@ -782,7 +782,7 @@
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
-                                            <DataGridTemplateColumn Header="Acción" Width="110">
+                                            <DataGridTemplateColumn Header="Acción" Width="130">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Border CornerRadius="6" Padding="10,4"

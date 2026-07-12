@@ -13,6 +13,7 @@ namespace Login
     public partial class ReportesWindow : Window
     {
         private string _modulo;
+        private readonly RepositorioSql _db = new();
 
         // Cultura fija en español (Honduras) para que los reportes nunca
         // salgan con nombres de días/meses en inglés, sin importar el
@@ -313,6 +314,17 @@ namespace Login
 
                 MessageBox.Show("✅ Reporte generado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
+
+                try
+                {
+                    _db.RegistrarBitacora(SesionActual.Email, "Reportes", "Generar reporte",
+                        $"Reporte de {_modulo} generado ({Path.GetFileName(dialog.FileName)})");
+                }
+                catch
+                {
+
+                }
 
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
