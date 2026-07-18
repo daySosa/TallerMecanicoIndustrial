@@ -1,4 +1,5 @@
-﻿using Dasboard_Prueba;
+﻿#nullable enable
+using Dasboard_Prueba;
 using Login;
 using Login.Clases;
 using System.Collections.ObjectModel;
@@ -6,42 +7,177 @@ using System.ComponentModel;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace InterfazClientes
 {
+    /// <summary>
+    /// Ventana principal del módulo de Clientes. Permite ver, buscar, filtrar
+    /// y administrar los clientes registrados, además de mostrar notificaciones
+    /// relacionadas (stock bajo, órdenes finalizadas, etc.).
+    /// </summary>
     public partial class MenúPrincipalClientes : Window
     {
-        private readonly RepositorioSql _db = new();
-        private readonly ObservableCollection<clsCliente> _listaClientes = new();
-        private ICollectionView? _vistaClientes;
+        #region Constantes y caché estática
 
-        private bool _filtroSoloActivos = false;
+        /// <summary>Duración de las transiciones de entrada/salida de la ventana.</summary>
+        private static readonly Duration DuracionTransicion = new(TimeSpan.FromMilliseconds(200));
+
+        /// <summary>Caché de pinceles ya congelados, para no crear un SolidColorBrush nuevo en cada render.</summary>
+        private static readonly Dictionary<string, SolidColorBrush> _cachePinceles = new();
+
+        /// <summary>Título estándar para los cuadros de diálogo de error.</summary>
+        private const string TituloError = "Error";
+
+        #endregion
+
+        #region Estado interno
+
+        private RepositorioSql? _db;
+        private readonly ObservableCollection<clsCliente> _listaClientes = new();
+        private readonly CancellationTokenSource _cts = new();
+
+        private ICollectionView? _vistaClientes;
+        private bool _filtroSoloActivos;
+
+        private bool _cargandoDatos;
+        private bool _navegando;
+
+        /// <summary>
+        /// Indica si la ventana ya fue cerrada. Se usa para evitar tocar controles
+        /// de UI desde continuaciones async que terminan después del cierre.
+        /// </summary>
+        private volatile bool _ventanaCerrada;
+
+        #endregion
 
         public MenúPrincipalClientes()
         {
             InitializeComponent();
+
             AplicarPermisos();
-            CargarDatos();
-            CargarNotificaciones();
+            CargarInfoUsuario();
+
+            Loaded += MenúPrincipalClientes_Loaded;
+            Closed += (_, _) => { _ventanaCerrada = true; LiberarRecursos(); };
         }
 
-        // ── MOVER VENTANA ────────────────────────────────────────────
+        #region Ciclo de vida
+
+        private async void MenúPrincipalClientes_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _db = await Task.Run(() => new RepositorioSql(), _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _db = null;
+                if (!_ventanaCerrada)
+                    MessageBox.Show(
+                        "No se pudo conectar con la base de datos. Algunas funciones estarán deshabilitadas.\n\n" + ex.Message,
+                        "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            if (_ventanaCerrada) return;
+
+            await CargarDatosAsync();
+            await CargarNotificacionesAsync();
+        }
+
+        /// <summary>Libera los recursos propios (token de cancelación, repositorio) al cerrar la ventana.</summary>
+        private void LiberarRecursos()
+        {
+            try
+            {
+                _cts.Cancel();
+                _cts.Dispose();
+                (_db as IDisposable)?.Dispose();
+            }
+            catch
+            {
+                // Liberación best-effort al cerrar la ventana; no debe interrumpir el cierre.
+            }
+        }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
-                DragMove();
+            try
+            {
+                if (e.LeftButton == MouseButtonState.Pressed)
+                    DragMove();
+            }
+            catch (InvalidOperationException)
+            {
+                // DragMove() puede lanzar si el botón ya no está presionado al momento
+                // de procesarse el evento; se ignora intencionalmente.
+            }
         }
 
-        // ════════════════════════════════════════════════════════════
-        // PERMISOS SEGÚN ROL
-        // ════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Transición de entrada/salida
+
+        /// <summary>Aplica un fade-in suave al mostrar la ventana (requiere Opacity="0" en el XAML).</summary>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var fadeIn = new DoubleAnimation(0d, 1d, DuracionTransicion)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        /// <summary>
+        /// Navega a otra ventana con un crossfade real: la ventana nueva se crea y
+        /// se muestra de inmediato (con su propio fade-in), mientras esta ventana
+        /// hace fade-out en paralelo y recién se cierra al terminar su animación.
+        /// Evita navegaciones duplicadas si el usuario hace doble clic en el sidebar.
+        /// </summary>
+        /// <typeparam name="T">Tipo de la ventana destino.</typeparam>
+        /// <param name="crear">Función que construye la ventana destino.</param>
+        private void Navegar<T>(Func<T> crear) where T : Window
+        {
+            if (_navegando) return;
+            _navegando = true;
+
+            try
+            {
+                var ventana = crear();
+                ventana.Show();
+
+                var fadeOut = new DoubleAnimation(1d, 0d, DuracionTransicion)
+                {
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+                };
+                fadeOut.Completed += (_, _) => Close();
+                BeginAnimation(OpacityProperty, fadeOut);
+            }
+            catch (Exception ex)
+            {
+                _navegando = false;
+                BeginAnimation(OpacityProperty, null);
+                Opacity = 1;
+                MessageBox.Show("No se pudo abrir la ventana:\n" + ex.Message,
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+
+        #region Permisos según rol
+
+        /// <summary>Oculta las opciones exclusivas de administrador si el usuario no lo es.</summary>
         private void AplicarPermisos()
         {
-            if (!Login.Clases.SesionActual.EsAdministrador)
+            if (!SesionActual.EsAdministrador)
             {
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnBitacora.Visibility = Visibility.Collapsed;
@@ -50,13 +186,48 @@ namespace InterfazClientes
             }
         }
 
-        // ── NAVEGACIÓN ───────────────────────────────────────────────
+        #endregion
 
-        private void Navegar<T>(Func<T> crear) where T : Window
+        #region Info del usuario logueado
+
+        /// <summary>
+        /// Carga en el sidebar el nombre completo (nombre + apellido) y el rol
+        /// del usuario con la sesión activa, tomados de <see cref="SesionActual"/>.
+        /// </summary>
+        private void CargarInfoUsuario()
         {
-            crear().Show();
-            this.Close();
+            try
+            {
+                string nombre = string.IsNullOrWhiteSpace(SesionActual.Nombre)
+                    ? "Usuario" : SesionActual.Nombre.Trim();
+
+                string apellido = string.IsNullOrWhiteSpace(SesionActual.Apellido)
+                    ? string.Empty : SesionActual.Apellido.Trim();
+
+                string nombreCompleto = string.IsNullOrEmpty(apellido)
+                    ? nombre
+                    : $"{nombre} {apellido}";
+
+                string rol;
+                if (!string.IsNullOrWhiteSpace(SesionActual.Rol))
+                    rol = SesionActual.Rol.Trim();
+                else
+                    rol = SesionActual.EsAdministrador ? "Administrador" : "Empleado";
+
+                txtNombreUsuario.Text = nombreCompleto;
+                txtRolUsuario.Text = rol;
+            }
+            catch (Exception ex)
+            {
+                txtNombreUsuario.Text = "Usuario";
+                txtRolUsuario.Text = "—";
+                System.Diagnostics.Debug.WriteLine("Error al cargar info del usuario: " + ex.Message);
+            }
         }
+
+        #endregion
+
+        #region Navegación del sidebar
 
         private void btnHome_Click(object sender, RoutedEventArgs e)
             => Navegar(() => new MenuPrincipal());
@@ -90,25 +261,41 @@ namespace InterfazClientes
             if (MessageBox.Show("¿Deseas cerrar sesión?", "Cerrar Sesión",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                Login.Clases.SesionActual.CerrarSesion();
+                SesionActual.CerrarSesion();
                 Navegar(() => new Login.MainWindow());
             }
         }
 
-        // ── DATOS ────────────────────────────────────────────────────
+        #endregion
 
-        public void CargarDatos()
+        #region Carga de datos de clientes
+
+        /// <summary>
+        /// Carga los clientes desde la base de datos en un hilo secundario y
+        /// actualiza la grilla sin bloquear la interfaz. Protegida contra
+        /// ejecuciones simultáneas con <see cref="_cargandoDatos"/>.
+        /// </summary>
+        private async Task CargarDatosAsync()
         {
-            _listaClientes.Clear();
+            if (_db is null) return;
+            if (_cargandoDatos) return;
+            _cargandoDatos = true;
+            Mouse.OverrideCursor = Cursors.Wait;
+
             try
             {
-                foreach (var c in _db.ObtenerClientes())
+                List<clsCliente> clientes = await Task.Run(
+                    () => _db.ObtenerClientes().ToList(), _cts.Token);
+
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
+
+                _listaClientes.Clear();
+                foreach (var c in clientes)
                     _listaClientes.Add(c);
 
                 if (_vistaClientes == null)
                 {
-                    _vistaClientes = System.Windows.Data.CollectionViewSource
-                        .GetDefaultView(_listaClientes);
+                    _vistaClientes = CollectionViewSource.GetDefaultView(_listaClientes);
                     _vistaClientes.Filter = AplicarFiltros;
                     dgClientes.ItemsSource = _vistaClientes;
                 }
@@ -119,26 +306,37 @@ namespace InterfazClientes
 
                 ActualizarContador();
             }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar clientes:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!_ventanaCerrada)
+                    MessageBox.Show("Error al cargar clientes:\n" + ex.Message,
+                        TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                _cargandoDatos = false;
             }
         }
 
+        /// <summary>Predicado usado por la vista de colección para aplicar búsqueda y filtros combinados.</summary>
         private bool AplicarFiltros(object item)
         {
             if (item is not clsCliente c) return false;
 
-            string texto = txtBuscar.Text?.Trim().ToLower() ?? "";
+            string texto = txtBuscar.Text?.Trim().ToLowerInvariant() ?? string.Empty;
             if (!string.IsNullOrEmpty(texto))
             {
                 bool coincide =
-                    (c.Cliente_DPI ?? "").ToLower().Contains(texto) ||
-                    (c.Cliente_Nombre ?? "").ToLower().Contains(texto) ||
-                    (c.Cliente_Apellido ?? "").ToLower().Contains(texto) ||
-                    (c.Cliente_Telefono ?? "").ToLower().Contains(texto) ||
-                    (c.Cliente_Correo ?? "").ToLower().Contains(texto);
+                    (c.Cliente_DPI ?? "").ToLowerInvariant().Contains(texto) ||
+                    (c.Cliente_Nombre ?? "").ToLowerInvariant().Contains(texto) ||
+                    (c.Cliente_Apellido ?? "").ToLowerInvariant().Contains(texto) ||
+                    (c.Cliente_Telefono ?? "").ToLowerInvariant().Contains(texto) ||
+                    (c.Cliente_Correo ?? "").ToLowerInvariant().Contains(texto);
                 if (!coincide) return false;
             }
 
@@ -153,7 +351,9 @@ namespace InterfazClientes
             tbTotalItems.Text = $"{total} cliente{(total != 1 ? "s" : "")}";
         }
 
-        // ── BÚSQUEDA Y FILTROS ───────────────────────────────────────
+        #endregion
+
+        #region Búsqueda y filtros
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -181,84 +381,81 @@ namespace InterfazClientes
             ActualizarContador();
         }
 
-        // ── DATAGRID ─────────────────────────────────────────────────
+        #endregion
 
-        private void dgClientes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        #region DataGrid: agregar / editar / reportes
+
+        private async void dgClientes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (dgClientes.SelectedItem is clsCliente seleccionado)
-            {
-                var ventana = new ClientesWindow();
-                ventana.CargarClienteParaEditar(seleccionado);
-                if (ventana.ShowDialog() == true)
-                    CargarDatos();
-                dgClientes.SelectedItem = null;
-            }
+            if (dgClientes.SelectedItem is not clsCliente seleccionado) return;
+
+            var ventana = new ClientesWindow();
+            ventana.CargarClienteParaEditar(seleccionado);
+            bool guardado = ventana.ShowDialog() == true;
+
+            dgClientes.SelectedItem = null;
+
+            if (guardado)
+                await CargarDatosAsync();
         }
 
-        private void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
+        private async void btnAgregarCliente_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new ClientesWindow();
             if (ventana.ShowDialog() == true)
-                CargarDatos();
+                await CargarDatosAsync();
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
             => new ReportesWindow("Clientes").ShowDialog();
 
-        // ── NOTIFICACIONES ───────────────────────────────────────────
+        #endregion
 
-        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
-        {
-            if (!popupNotificaciones.IsOpen)
-                CargarNotificacionesEnPopup();
-            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
-        }
+        #region Notificaciones
 
-        public void CargarNotificaciones()
+        /// <summary>Actualiza el badge de notificaciones pendientes en el header (contador rápido).</summary>
+        private async Task CargarNotificacionesAsync()
         {
+            if (_db is null) return;
             try
             {
-                int cantidad = _db.ContarNotificacionesPendientes();
+                int cantidad = await Task.Run(() => _db.ContarNotificacionesPendientes(), _cts.Token);
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
+
                 badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
                 txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
-            catch { }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error al cargar notificaciones: " + ex.Message);
+            }
         }
 
-        private void CargarNotificacionesEnPopup()
+        private async void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
+            if (!popupNotificaciones.IsOpen)
+                await CargarNotificacionesEnPopupAsync();
+
+            popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
+        }
+
+        /// <summary>Carga el detalle completo de notificaciones pendientes dentro del popup.</summary>
+        private async Task CargarNotificacionesEnPopupAsync()
+        {
+            if (_db is null) return;
             panelNotificaciones.Children.Clear();
             try
             {
-                DataTable dt = _db.ObtenerNotificacionesPendientes();
+                DataTable dt = await Task.Run(() => _db.ObtenerNotificacionesPendientes(), _cts.Token);
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
 
                 if (dt.Rows.Count == 0)
                 {
-                    var vacio = new StackPanel
-                    {
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 20, 0, 20)
-                    };
-                    vacio.Children.Add(new Label
-                    {
-                        Content = "🎉",
-                        FontSize = 32,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        HorizontalContentAlignment = HorizontalAlignment.Center,
-                        Foreground = Brushes.White,
-                        Padding = new Thickness(0)
-                    });
-                    vacio.Children.Add(new TextBlock
-                    {
-                        Text = "Sin notificaciones pendientes",
-                        Foreground = Pincel("#6B7280"),
-                        FontSize = 12,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 8, 0, 0)
-                    });
-                    panelNotificaciones.Children.Add(vacio);
-                    badgeContadorPopup.Visibility = Visibility.Collapsed;
-                    btnMarcarTodas.Visibility = Visibility.Collapsed;
+                    MostrarSinNotificaciones();
                     return;
                 }
 
@@ -269,17 +466,52 @@ namespace InterfazClientes
                 foreach (DataRow row in dt.Rows)
                 {
                     int id = Convert.ToInt32(row["Notificacion_ID"]);
-                    string tipo = row["Tipo_Notificacion"].ToString() ?? "";
-                    string msg = row["Mensaje"].ToString() ?? "";
+                    string tipo = row["Tipo_Notificacion"].ToString() ?? string.Empty;
+                    string msg = row["Mensaje"].ToString() ?? string.Empty;
                     panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
                 }
             }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar notificaciones: " + ex.Message);
+                MessageBox.Show("Error al cargar notificaciones: " + ex.Message,
+                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
+        private void MostrarSinNotificaciones()
+        {
+            var vacio = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 20, 0, 20)
+            };
+            vacio.Children.Add(new Label
+            {
+                Content = "🎉",
+                FontSize = 32,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                Foreground = Brushes.White,
+                Padding = new Thickness(0)
+            });
+            vacio.Children.Add(new TextBlock
+            {
+                Text = "Sin notificaciones pendientes",
+                Foreground = Pincel("#6B7280"),
+                FontSize = 12,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+            panelNotificaciones.Children.Add(vacio);
+            badgeContadorPopup.Visibility = Visibility.Collapsed;
+            btnMarcarTodas.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>Construye la tarjeta visual de una notificación individual dentro del popup.</summary>
         private Border CrearTarjeta(int id, string tipo, string mensaje)
         {
             bool esStock = tipo == "STOCK_BAJO";
@@ -287,23 +519,23 @@ namespace InterfazClientes
             string colorFondo = esStock ? "#1A1500" : "#0D1A2E";
             string labelTipo = esStock ? "Stock Bajo" : "Orden Finalizada";
 
-            var contenido = new StackPanel();
-
             var badge = new Border
             {
                 Background = Pincel(colorBorde + "33"),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(6, 2, 6, 2),
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(0, 0, 0, 5)
+                Margin = new Thickness(0, 0, 0, 5),
+                Child = new TextBlock
+                {
+                    Text = labelTipo,
+                    Foreground = Pincel(colorBorde),
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold
+                }
             };
-            badge.Child = new TextBlock
-            {
-                Text = labelTipo,
-                Foreground = Pincel(colorBorde),
-                FontSize = 10,
-                FontWeight = FontWeights.SemiBold
-            };
+
+            var contenido = new StackPanel();
             contenido.Children.Add(badge);
             contenido.Children.Add(new TextBlock
             {
@@ -326,11 +558,22 @@ namespace InterfazClientes
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
-            btnLeida.Click += (s, _) =>
+            btnLeida.Click += async (s, _) =>
             {
-                _db.MarcarNotificacionLeida((int)((Button)s).Tag);
-                CargarNotificacionesEnPopup();
-                CargarNotificaciones();
+                if (_db is null) return;
+                try
+                {
+                    int notifId = (int)((Button)s).Tag;
+                    await Task.Run(() => _db.MarcarNotificacionLeida(notifId));
+                    if (_ventanaCerrada) return;
+
+                    await CargarNotificacionesEnPopupAsync();
+                    await CargarNotificacionesAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al marcar como leída: " + ex.Message);
+                }
             };
 
             var grid = new Grid();
@@ -353,17 +596,42 @@ namespace InterfazClientes
             };
         }
 
-        private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
+        private async void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
-            _db.MarcarNotificacionLeida(null);
-            CargarNotificacionesEnPopup();
-            CargarNotificaciones();
+            if (_db is null) return;
+            try
+            {
+                await Task.Run(() => _db.MarcarNotificacionLeida(null));
+                if (_ventanaCerrada) return;
+
+                await CargarNotificacionesEnPopupAsync();
+                await CargarNotificacionesAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al marcar notificaciones: " + ex.Message);
+            }
         }
 
+        #endregion
 
-        // ── HELPER ───────────────────────────────────────────────────
+        #region Helpers
 
-        private static SolidColorBrush Pincel(string hex) =>
-            new((Color)ColorConverter.ConvertFromString(hex));
+        /// <summary>
+        /// Devuelve un <see cref="SolidColorBrush"/> congelado para el color hex indicado,
+        /// reutilizándolo desde caché en vez de crear una instancia nueva en cada llamada.
+        /// </summary>
+        private static SolidColorBrush Pincel(string hex)
+        {
+            if (_cachePinceles.TryGetValue(hex, out var existente))
+                return existente;
+
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            brush.Freeze();
+            _cachePinceles[hex] = brush;
+            return brush;
+        }
+
+        #endregion
     }
 }
