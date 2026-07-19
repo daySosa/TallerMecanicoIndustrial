@@ -12,10 +12,25 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
+        Opacity="0"
+        Loaded="Window_Loaded"
         MouseDown="Window_MouseDown">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="40" ShadowDepth="0" Opacity="0.75"/>
+
+        <Style x:Key="EtiquetaCampo" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#353a58"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="CajaCampo" TargetType="Border">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Height" Value="38"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -51,10 +66,9 @@
 
                     <StackPanel Grid.Row="1" Margin="20,18,20,20">
 
-                        <TextBlock Text="PRODUCTO" Foreground="#353a58"
-                                   FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
-                        <Border Background="#1e2235" CornerRadius="8"
-                                BorderBrush="#252840" BorderThickness="1" Height="38" Margin="0,0,0,14">
+                        <TextBlock Text="PRODUCTO" Style="{StaticResource EtiquetaCampo}"/>
+                        <Border Background="#1e2235" BorderBrush="#252840" Height="38"
+                                CornerRadius="8" BorderThickness="1" Margin="0,0,0,16">
                             <ComboBox x:Name="cmbProducto"
                                       Background="Transparent" Foreground="White"
                                       BorderThickness="0" Padding="10,0"
@@ -81,7 +95,7 @@
                             </ComboBox>
                         </Border>
 
-                        <Grid Margin="0,0,0,14">
+                        <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="12"/>
@@ -91,70 +105,74 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="CATEGORÍA" Foreground="#353a58"
-                                           FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <Border Background="#13161f" BorderBrush="#1e2235"
-                                        BorderThickness="1" CornerRadius="8" Padding="10,9">
+                                <TextBlock Text="CATEGORÍA" Style="{StaticResource EtiquetaCampo}"/>
+                                <Border Style="{StaticResource CajaCampo}"
+                                        Background="#13161f" BorderBrush="#1e2235">
                                     <TextBox x:Name="txtCategoria"
                                              Foreground="#505880" Background="Transparent"
                                              BorderThickness="0" IsReadOnly="True"
+                                             VerticalContentAlignment="Center" Padding="10,0"
                                              Text="-" FontSize="12"/>
                                 </Border>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="PRECIO UNIT." Foreground="#353a58"
-                                           FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <Border Background="#13161f" BorderBrush="#1e2235"
-                                        BorderThickness="1" CornerRadius="8" Padding="10,9">
+                                <TextBlock Text="PRECIO UNIT." Style="{StaticResource EtiquetaCampo}"/>
+                                <Border Style="{StaticResource CajaCampo}"
+                                        Background="#13161f" BorderBrush="#1e2235">
                                     <TextBox x:Name="txtPrecioUnitario"
                                              Foreground="#505880" Background="Transparent"
                                              BorderThickness="0" IsReadOnly="True"
+                                             VerticalContentAlignment="Center" Padding="10,0"
                                              Text="L 0.00" FontSize="12"/>
                                 </Border>
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="STOCK" Foreground="#353a58"
-                                           FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <Border x:Name="borderStock" Background="#13161f" BorderBrush="#1e2235"
-                                        BorderThickness="1" CornerRadius="8" Padding="10,9">
+                                <TextBlock Text="STOCK" Style="{StaticResource EtiquetaCampo}"/>
+                                <Border x:Name="borderStock" Style="{StaticResource CajaCampo}"
+                                        Background="#13161f" BorderBrush="#1e2235">
                                     <TextBox x:Name="txtStock"
                                              Foreground="#505880" Background="Transparent"
                                              BorderThickness="0" IsReadOnly="True"
+                                             VerticalContentAlignment="Center" Padding="10,0"
                                              Text="0" FontSize="12"/>
                                 </Border>
                             </StackPanel>
                         </Grid>
-                        
+
                         <Grid Margin="0,0,0,24">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="CANTIDAD" Foreground="#353a58"
-                                           FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <Border Background="#1e2235" BorderBrush="#252840"
-                                        BorderThickness="1" CornerRadius="8" Padding="10,9">
+                                <TextBlock Text="CANTIDAD" Style="{StaticResource EtiquetaCampo}"/>
+                                <Border Style="{StaticResource CajaCampo}"
+                                        Background="#1e2235" BorderBrush="#252840">
                                     <TextBox x:Name="txtCantidad"
                                              Foreground="White" Background="Transparent"
                                              BorderThickness="0" Text="1"
-                                             CaretBrush="White"
-                                             FontSize="13" TextChanged="txtCantidad_TextChanged"/>
+                                             CaretBrush="White" MaxLength="4"
+                                             VerticalContentAlignment="Center" Padding="10,0"
+                                             FontSize="13"
+                                             PreviewTextInput="txtCantidad_PreviewTextInput"
+                                             TextChanged="txtCantidad_TextChanged"/>
                                 </Border>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="SUBTOTAL" Foreground="#353a58"
-                                           FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <Border Background="#1a1d35" BorderBrush="#4f6ef7"
-                                        BorderThickness="1" CornerRadius="8" Padding="10,9">
+                            <StackPanel Grid.Column="2" Grid.ColumnSpan="3">
+                                <TextBlock Text="SUBTOTAL" Style="{StaticResource EtiquetaCampo}"/>
+                                <Border x:Name="borderSubtotal" Style="{StaticResource CajaCampo}"
+                                        Background="#1a1d35" BorderBrush="#4f6ef7">
                                     <TextBox x:Name="txtSubtotal"
                                              Foreground="#4f6ef7" Background="Transparent"
                                              BorderThickness="0" IsReadOnly="True"
+                                             VerticalContentAlignment="Center" Padding="10,0"
                                              FontWeight="Bold" Text="L 0.00" FontSize="13"/>
                                 </Border>
                             </StackPanel>
@@ -173,7 +191,7 @@
                                     materialDesign:ButtonAssist.CornerRadius="8"
                                     Height="38"
                                     Click="btnCancelar_Click">
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <materialDesign:PackIcon Kind="Close" Width="15" Height="15"
                                                              VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Cancelar" VerticalAlignment="Center" FontSize="12"/>
@@ -192,7 +210,7 @@
                                         <Setter Property="BorderBrush" Value="#4f6ef7"/>
                                     </Style>
                                 </Button.Style>
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <materialDesign:PackIcon Kind="Plus" Width="15" Height="15"
                                                              VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Agregar Repuesto" VerticalAlignment="Center" FontSize="12"/>

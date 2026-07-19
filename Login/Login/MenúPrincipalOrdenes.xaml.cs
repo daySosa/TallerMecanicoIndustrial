@@ -60,27 +60,82 @@ namespace Órdenes_de_Trabajo
 
         #region Estado interno
 
-        private readonly RepositorioSql _db = new();
+        // La conexión a la BD se abre en el Loaded, de forma asíncrona, para no
+        // bloquear el hilo de UI justo cuando Navegar<T> está creando esta ventana
+        // (antes de Show() y del fade-in).
+        private RepositorioSql? _db;
         private readonly ObservableCollection<OrdenTrabajo> _listaOrdenes = new();
-        private ICollectionView? _vistaOrdenes;
+        private readonly CancellationTokenSource _cts = new();
 
+        private ICollectionView? _vistaOrdenes;
         private string _filtroCliente = string.Empty;
         private string _filtroEstado = FiltroEstadoTodos;
 
-        /// <summary>Evita navegaciones duplicadas si el usuario hace doble clic en el sidebar.</summary>
+        private bool _cargandoDatos;
         private bool _navegando;
+
+        /// <summary>
+        /// Indica si la ventana ya fue cerrada. Se usa para evitar tocar controles
+        /// de UI desde continuaciones async que terminan después del cierre.
+        /// </summary>
+        private volatile bool _ventanaCerrada;
 
         #endregion
 
         public MenúPrincipalOrdenes()
         {
             InitializeComponent();
+
             AplicarPermisos();
-            CargarDatosDesdeDB();
-            CargarNotificaciones();
+            CargarInfoUsuario();
+
+            Loaded += MenúPrincipalOrdenes_Loaded;
+            Closed += (_, _) => { _ventanaCerrada = true; LiberarRecursos(); };
         }
 
-        #region Ciclo de vida y transición
+        #region Ciclo de vida
+
+        private async void MenúPrincipalOrdenes_Loaded(object sender, RoutedEventArgs e)
+        {
+            // La conexión a la BD se abre aquí, ya con la ventana visible y su fade-in
+            // corriendo. Así el clic que originó la navegación se siente instantáneo.
+            try
+            {
+                _db = await Task.Run(() => new RepositorioSql(), _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _db = null;
+                if (!_ventanaCerrada)
+                    MessageBox.Show(
+                        "No se pudo conectar con la base de datos. Algunas funciones estarán deshabilitadas.\n\n" + ex.Message,
+                        "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            if (_ventanaCerrada) return;
+
+            await CargarDatosAsync();
+            await CargarNotificacionesAsync();
+        }
+
+        /// <summary>Libera los recursos propios (token de cancelación, repositorio) al cerrar la ventana.</summary>
+        private void LiberarRecursos()
+        {
+            try
+            {
+                _cts.Cancel();
+                _cts.Dispose();
+                (_db as IDisposable)?.Dispose();
+            }
+            catch
+            {
+                // Liberación best-effort al cerrar la ventana; no debe interrumpir el cierre.
+            }
+        }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -96,6 +151,10 @@ namespace Órdenes_de_Trabajo
             }
         }
 
+        #endregion
+
+        #region Transición de entrada/salida
+
         /// <summary>Aplica un fade-in suave al mostrar la ventana (entra con Opacity="0" desde XAML).</summary>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -110,6 +169,7 @@ namespace Órdenes_de_Trabajo
         /// Navega a otra ventana con un crossfade real: la ventana nueva se crea y
         /// se muestra de inmediato (con su propio fade-in), mientras esta ventana
         /// hace fade-out en paralelo y recién se cierra al terminar su animación.
+        /// Evita navegaciones duplicadas si el usuario hace doble clic en el sidebar.
         /// </summary>
         private void Navegar<T>(Func<T> crear) where T : Window
         {
@@ -142,6 +202,7 @@ namespace Órdenes_de_Trabajo
 
         #region Permisos según rol
 
+        /// <summary>Oculta las opciones exclusivas de administrador si el usuario no lo es.</summary>
         private void AplicarPermisos()
         {
             if (!SesionActual.EsAdministrador)
@@ -150,6 +211,45 @@ namespace Órdenes_de_Trabajo
                 btnBitacora.Visibility = Visibility.Collapsed;
                 expanderContabilidad.Visibility = Visibility.Collapsed;
                 btnReportes.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        #endregion
+
+        #region Info del usuario logueado
+
+        /// <summary>
+        /// Carga en el sidebar el nombre completo (nombre + apellido) y el rol
+        /// del usuario con la sesión activa, tomados de <see cref="SesionActual"/>.
+        /// </summary>
+        private void CargarInfoUsuario()
+        {
+            try
+            {
+                string nombre = string.IsNullOrWhiteSpace(SesionActual.Nombre)
+                    ? "Usuario" : SesionActual.Nombre.Trim();
+
+                string apellido = string.IsNullOrWhiteSpace(SesionActual.Apellido)
+                    ? string.Empty : SesionActual.Apellido.Trim();
+
+                string nombreCompleto = string.IsNullOrEmpty(apellido)
+                    ? nombre
+                    : $"{nombre} {apellido}";
+
+                string rol;
+                if (!string.IsNullOrWhiteSpace(SesionActual.Rol))
+                    rol = SesionActual.Rol.Trim();
+                else
+                    rol = SesionActual.EsAdministrador ? "Administrador" : "Empleado";
+
+                txtNombreUsuario.Text = nombreCompleto;
+                txtRolUsuario.Text = rol;
+            }
+            catch (Exception ex)
+            {
+                txtNombreUsuario.Text = "Usuario";
+                txtRolUsuario.Text = "—";
+                System.Diagnostics.Debug.WriteLine("Error al cargar info del usuario: " + ex.Message);
             }
         }
 
@@ -193,14 +293,29 @@ namespace Órdenes_de_Trabajo
 
         #endregion
 
-        #region Carga de datos
+        #region Carga de datos de órdenes
 
-        private void CargarDatosDesdeDB()
+        /// <summary>
+        /// Carga las órdenes desde la base de datos en un hilo secundario y
+        /// actualiza la grilla sin bloquear la interfaz. Protegida contra
+        /// ejecuciones simultáneas con <see cref="_cargandoDatos"/>.
+        /// </summary>
+        private async Task CargarDatosAsync()
         {
-            _listaOrdenes.Clear();
+            if (_db is null) return;
+            if (_cargandoDatos) return;
+            _cargandoDatos = true;
+            Mouse.OverrideCursor = Cursors.Wait;
+
             try
             {
-                foreach (var o in _db.ObtenerOrdenes())
+                List<OrdenTrabajo> ordenes = await Task.Run(
+                    () => _db.ObtenerOrdenes().ToList(), _cts.Token);
+
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
+
+                _listaOrdenes.Clear();
+                foreach (var o in ordenes)
                     _listaOrdenes.Add(o);
 
                 if (_vistaOrdenes == null)
@@ -216,13 +331,24 @@ namespace Órdenes_de_Trabajo
 
                 ActualizarContador();
             }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar órdenes:\n" + ex.Message,
-                    TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!_ventanaCerrada)
+                    MessageBox.Show("Error al cargar órdenes:\n" + ex.Message,
+                        TituloError, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                _cargandoDatos = false;
             }
         }
 
+        /// <summary>Predicado usado por la vista de colección para aplicar búsqueda y filtros combinados.</summary>
         private bool AplicarFiltros(object item)
         {
             if (item is not OrdenTrabajo o) return false;
@@ -292,7 +418,7 @@ namespace Órdenes_de_Trabajo
 
         #endregion
 
-        #region DataGrid
+        #region DataGrid: agregar / editar / reportes
 
         private async void dgOrdenes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -300,21 +426,23 @@ namespace Órdenes_de_Trabajo
             dgOrdenes.SelectedItem = null;
 
             var ventana = new OrdenWindow();
-            ventana.Closed += (_, _) =>
+            ventana.Closed += async (_, _) =>
             {
-                CargarDatosDesdeDB();
-                CargarNotificaciones();
+                if (_ventanaCerrada) return;
+                await CargarDatosAsync();
+                await CargarNotificacionesAsync();
             };
             ventana.Show();
             await ventana.CargarOrdenParaEditar(seleccionada.Orden_ID);
         }
 
-        private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
+        private async void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new OrdenWindow();
             ventana.ShowDialog();
-            CargarDatosDesdeDB();
-            CargarNotificaciones();
+
+            await CargarDatosAsync();
+            await CargarNotificacionesAsync();
         }
 
         private void btnReportes_Click(object sender, RoutedEventArgs e)
@@ -325,36 +453,44 @@ namespace Órdenes_de_Trabajo
         #region Notificaciones
 
         /// <summary>Actualiza el badge de notificaciones pendientes en el header (contador rápido).</summary>
-        public void CargarNotificaciones()
+        private async Task CargarNotificacionesAsync()
         {
+            if (_db is null) return;
             try
             {
-                int cantidad = _db.ContarNotificacionesPendientes();
+                int cantidad = await Task.Run(() => _db.ContarNotificacionesPendientes(), _cts.Token);
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
+
                 badgeNotificaciones.Visibility = cantidad > 0 ? Visibility.Visible : Visibility.Collapsed;
                 txtContadorNotificaciones.Text = cantidad > 99 ? "99+" : cantidad.ToString();
             }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
+            }
             catch (Exception ex)
             {
-                // Se ignora intencionalmente: un fallo al refrescar el contador de
-                // notificaciones no debe interrumpir el uso normal de la ventana.
                 System.Diagnostics.Debug.WriteLine("Error al cargar notificaciones: " + ex.Message);
             }
         }
 
-        private void btnNotificaciones_Click(object sender, RoutedEventArgs e)
+        private async void btnNotificaciones_Click(object sender, RoutedEventArgs e)
         {
             if (!popupNotificaciones.IsOpen)
-                CargarNotificacionesEnPopup();
+                await CargarNotificacionesEnPopupAsync();
+
             popupNotificaciones.IsOpen = !popupNotificaciones.IsOpen;
         }
 
         /// <summary>Carga el detalle completo de notificaciones pendientes dentro del popup.</summary>
-        private void CargarNotificacionesEnPopup()
+        private async Task CargarNotificacionesEnPopupAsync()
         {
+            if (_db is null) return;
             panelNotificaciones.Children.Clear();
             try
             {
-                DataTable dt = _db.ObtenerNotificacionesPendientes();
+                DataTable dt = await Task.Run(() => _db.ObtenerNotificacionesPendientes(), _cts.Token);
+                if (_cts.IsCancellationRequested || _ventanaCerrada) return;
 
                 if (dt.Rows.Count == 0)
                 {
@@ -373,6 +509,10 @@ namespace Órdenes_de_Trabajo
                     string msg = row["Mensaje"].ToString() ?? string.Empty;
                     panelNotificaciones.Children.Add(CrearTarjeta(id, tipo, msg));
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancelación esperada por cierre de ventana; no requiere acción.
             }
             catch (Exception ex)
             {
@@ -457,14 +597,17 @@ namespace Órdenes_de_Trabajo
                 ToolTip = "Marcar como leída",
                 Tag = id
             };
-            btnLeida.Click += (s, _) =>
+            btnLeida.Click += async (s, _) =>
             {
+                if (_db is null) return;
                 try
                 {
                     int notifId = (int)((Button)s).Tag;
-                    _db.MarcarNotificacionLeida(notifId);
-                    CargarNotificacionesEnPopup();
-                    CargarNotificaciones();
+                    await Task.Run(() => _db.MarcarNotificacionLeida(notifId));
+                    if (_ventanaCerrada) return;
+
+                    await CargarNotificacionesEnPopupAsync();
+                    await CargarNotificacionesAsync();
                 }
                 catch (Exception ex)
                 {
@@ -493,13 +636,16 @@ namespace Órdenes_de_Trabajo
             };
         }
 
-        private void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
+        private async void btnMarcarTodas_Click(object sender, RoutedEventArgs e)
         {
+            if (_db is null) return;
             try
             {
-                _db.MarcarNotificacionLeida(null);
-                CargarNotificacionesEnPopup();
-                CargarNotificaciones();
+                await Task.Run(() => _db.MarcarNotificacionLeida(null));
+                if (_ventanaCerrada) return;
+
+                await CargarNotificacionesEnPopupAsync();
+                await CargarNotificacionesAsync();
             }
             catch (Exception ex)
             {

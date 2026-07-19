@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Órdenes_de_Trabajo
 {
@@ -19,7 +20,9 @@ namespace Órdenes_de_Trabajo
         private const string TipoVehiculoDefault = "sedan";
 
         // S1075: URL local de WebView2 (virtual host, no es un endpoint externo configurable)
-        private const string UrlVisorHtml3D = "https://appassets.local/vehiculo3d.html"; // NOSONAR: virtual host local fijo, no aplica configuración externa
+#pragma warning disable S1075 // Virtual host local fijo (appassets.local), no es un endpoint externo configurable
+        private const string UrlVisorHtml3D = "https://appassets.local/vehiculo3d.html";
+#pragma warning restore S1075
 
         // Deserialización case-insensitive: el JS manda "zona"/"activa" en minúscula,
         // la clase MensajeZona3D usa PascalCase. Sin esta opción, System.Text.Json
@@ -107,6 +110,15 @@ namespace Órdenes_de_Trabajo
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             CentrarYAjustarAPantalla();
+
+            var fadeIn = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromMilliseconds(220),
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
         }
 
         private void Window_StateChanged(object sender, EventArgs e)
@@ -637,8 +649,8 @@ namespace Órdenes_de_Trabajo
             panelZonasDañadas.Children.Clear();
             txtSinZonas.Visibility = Visibility.Visible;
 
-            if (_webViewListo && webView3D.CoreWebView2 != null)
-                _ = webView3D.CoreWebView2.ExecuteScriptAsync("window.clearZones()");
+            if (_webViewListo)
+                _ = webView3D.CoreWebView2?.ExecuteScriptAsync("window.clearZones()");
         }
 
         private sealed class MensajeZona3D
@@ -656,8 +668,7 @@ namespace Órdenes_de_Trabajo
         {
             if (sender is not Border border) return;
 
-            if (_tipoSeleccionado != null)
-                _tipoSeleccionado.Background = BrushInactivo;
+            _tipoSeleccionado?.Background = BrushInactivo;
 
             border.Background = BrushActivo;
             _tipoSeleccionado = border;
@@ -776,8 +787,7 @@ namespace Órdenes_de_Trabajo
             SetModoNuevo();
             txtContador.Text = "0 / 13";
 
-            if (_tipoSeleccionado != null)
-                _tipoSeleccionado.Background = BrushInactivo;
+            _tipoSeleccionado?.Background = BrushInactivo;
             _tipoSeleccionado = null;
 
             _ = MostrarVehiculo3D(TipoVehiculoDefault);

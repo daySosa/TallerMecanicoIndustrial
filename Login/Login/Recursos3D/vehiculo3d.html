@@ -54,7 +54,10 @@
         const elCargando = document.getElementById("cargando");
 
         // ── Render / escena / cámara ──────────────────────────────
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        // powerPreference: "high-performance" le pide al navegador/GPU priorizar
+        // rendimiento sobre ahorro de energía; relevante porque este visor corre
+        // embebido dentro de WebView2, compitiendo por GPU con el resto de la app.
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
         renderer.shadowMap.enabled = true;
@@ -62,6 +65,7 @@
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.05;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.domElement.style.touchAction = "none"; // evita gestos del sistema al arrastrar en pantallas táctiles
         contenedor.appendChild(renderer.domElement);
 
         const escena = new THREE.Scene();
@@ -88,6 +92,11 @@
         // ── Entorno (reflejos realistas en pintura/metal) ─────────
         const pmrem = new THREE.PMREMGenerator(renderer);
         escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        // dispose() libera los recursos internos usados para generar el mapa de
+        // entorno (render targets temporales); la textura ya generada sigue
+        // siendo válida y usable en la escena. Sin esto se queda memoria de GPU
+        // reservada innecesariamente durante toda la sesión del visor.
+        pmrem.dispose();
 
         // ── Luces ──────────────────────────────────────────────────
         escena.add(new THREE.HemisphereLight(0x8899cc, 0x11131c, 0.55));
@@ -510,8 +519,11 @@
         });
 
         // ── Resize ──
+        // Se ignoran mediciones de 0x0 (contenedor aún no visible/layout en curso):
+        // asignarlas rompería la cámara (aspect = Infinity/NaN) y el render target.
         new ResizeObserver(() => {
             const w = contenedor.clientWidth, h = contenedor.clientHeight;
+            if (w === 0 || h === 0) return;
             camara.aspect = w / h;
             camara.updateProjectionMatrix();
             renderer.setSize(w, h);
@@ -524,6 +536,14 @@
             renderer.render(escena, camara);
         }
         animar();
+
+        // ── Limpieza al cerrar/descargar la página ──────────────────
+        // Libera recursos de GPU (buffers, shaders) si el WebView2 recarga o
+        // navega fuera de esta página; sin esto la GPU puede quedar reteniendo
+        // memoria hasta que el proceso completo de WebView2 termine.
+        window.addEventListener("beforeunload", () => {
+            renderer.dispose();
+        });
 
     </script>
 </body>
