@@ -9,7 +9,9 @@
         AllowsTransparency="True"
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
-        MouseDown="Window_MouseDown">
+        Opacity="0"
+        MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
@@ -221,13 +223,14 @@
                                 <Button x:Name="btnUsuarios" Style="{StaticResource SidebarButtonActive}" Margin="0,2">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="AccountCogOutline" Foreground="White"
-                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                         <TextBlock Text="Usuarios" Foreground="White"
                                                    FontSize="13" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
-                                <Button x:Name="btnBitacora" Style="{StaticResource SidebarButton}" Margin="0,2"  Click="btnBitacora_Click">
+                                <Button x:Name="btnBitacora" Style="{StaticResource SidebarButton}" Margin="0,2"
+                                        Click="btnBitacora_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
                                                                  Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -300,15 +303,15 @@
                                                 <GradientStop Color="#1c2455" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Border.Background>
-                                        <TextBlock Text="OS" Foreground="#7986f7"
-                                                   FontSize="13" FontWeight="Bold"
+                                        <TextBlock x:Name="txtIniciales" Text=""
+                                                   Foreground="#7986f7" FontSize="13" FontWeight="Bold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock x:Name="txtNombreUsuario" Text="Oscar Sosa"
+                                        <TextBlock x:Name="txtNombreUsuario" Text=""
                                                    Foreground="White" FontSize="12" FontWeight="Medium"
                                                    TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock x:Name="txtRolUsuario" Text="Propietario"
+                                        <TextBlock x:Name="txtRolUsuario" Text=""
                                                    Foreground="#4f6ef7" FontSize="10"/>
                                     </StackPanel>
                                     <Ellipse Grid.Column="2" Width="8" Height="8"
@@ -524,25 +527,24 @@
                                         </Grid>
                                     </Border>
                                     <DataGrid Grid.Row="1" x:Name="dgUsuarios"
-          AutoGenerateColumns="False" CanUserAddRows="False"
-          CanUserDeleteRows="False" CanUserResizeRows="False"
-          CanUserReorderColumns="False" CanUserResizeColumns="False"
-          IsReadOnly="True" SelectionMode="Single"
-          SelectionChanged="dgUsuarios_SelectionChanged"
-          MouseDoubleClick="dgUsuarios_MouseDoubleClick"
-          GridLinesVisibility="Horizontal"
-          HorizontalGridLinesBrush="#1e2235"
-          Background="Transparent" Foreground="White"
-          BorderThickness="0" RowBackground="Transparent"
-          AlternatingRowBackground="#0d1020"
-          ColumnHeaderHeight="38" RowHeight="52"
-          EnableRowVirtualization="True"
-          EnableColumnVirtualization="True"
-          VirtualizingPanel.IsVirtualizing="True"
-          VirtualizingPanel.VirtualizationMode="Recycling"
-          VirtualizingPanel.ScrollUnit="Pixel"
-          materialDesign:DataGridAssist.CellPadding="0"
-          materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
+                                        AutoGenerateColumns="False" CanUserAddRows="False"
+                                        CanUserDeleteRows="False" CanUserResizeRows="False"
+                                        CanUserReorderColumns="False" CanUserResizeColumns="False"
+                                        IsReadOnly="True" SelectionMode="Single"
+                                        MouseDoubleClick="dgUsuarios_MouseDoubleClick"
+                                        GridLinesVisibility="Horizontal"
+                                        HorizontalGridLinesBrush="#1e2235"
+                                        Background="Transparent" Foreground="White"
+                                        BorderThickness="0" RowBackground="Transparent"
+                                        AlternatingRowBackground="#0d1020"
+                                        ColumnHeaderHeight="38" RowHeight="52"
+                                        EnableRowVirtualization="True"
+                                        EnableColumnVirtualization="True"
+                                        VirtualizingPanel.IsVirtualizing="True"
+                                        VirtualizingPanel.VirtualizationMode="Recycling"
+                                        VirtualizingPanel.ScrollUnit="Pixel"
+                                        materialDesign:DataGridAssist.CellPadding="0"
+                                        materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
                                         <DataGrid.ColumnHeaderStyle>
                                             <Style TargetType="DataGridColumnHeader">
@@ -596,16 +598,16 @@
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
                                                             <Border Width="32" Height="32" CornerRadius="16"
-                                Background="#1e2235" Margin="0,0,10,0">
+                                                                    Background="#1e2235" Margin="0,0,10,0">
                                                                 <materialDesign:PackIcon Kind="Account" Foreground="#4f6ef7"
-                                                     Width="16" Height="16"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center"/>
+                                                                     Width="16" Height="16"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"/>
                                                             </Border>
                                                             <TextBlock Text="{Binding Usuario_Nombre}"
-                                   Foreground="White" FontSize="12" FontWeight="Medium"
-                                   VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="110"/>
+                                                                   Foreground="White" FontSize="12" FontWeight="Medium"
+                                                                   VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" MaxWidth="110"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -626,11 +628,11 @@
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Border CornerRadius="6" Padding="10,4"
-                            Background="#1a1d35"
-                            HorizontalAlignment="Left"
-                            Margin="12,0" VerticalAlignment="Center">
+                                                            Background="#1a1d35"
+                                                            HorizontalAlignment="Left"
+                                                            Margin="12,0" VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding Usuario_Rol}"
-                                   Foreground="#4f6ef7" FontSize="11" FontWeight="Medium"/>
+                                                                   Foreground="#4f6ef7" FontSize="11" FontWeight="Medium"/>
                                                         </Border>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -641,10 +643,10 @@
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
                                                             <materialDesign:PackIcon Kind="Phone" Foreground="#4f6ef7"
-                                                 Width="14" Height="14"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                 Width="14" Height="14"
+                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                                                             <TextBlock Text="{Binding Usuario_Telefono}"
-                                   Foreground="#8890b5" FontSize="12" VerticalAlignment="Center"/>
+                                                                   Foreground="#8890b5" FontSize="12" VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -655,11 +657,11 @@
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
                                                             <materialDesign:PackIcon Kind="Email" Foreground="#4f6ef7"
-                                                 Width="14" Height="14"
-                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                 Width="14" Height="14"
+                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
                                                             <TextBlock Text="{Binding Usuario_Email}"
-                                   Foreground="#8890b5" FontSize="12" VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                                                                   Foreground="#8890b5" FontSize="12" VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" MaxWidth="140"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -669,8 +671,8 @@
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Border CornerRadius="6" Padding="10,4"
-                            HorizontalAlignment="Left"
-                            Margin="12,0" VerticalAlignment="Center">
+                                                            HorizontalAlignment="Left"
+                                                            Margin="12,0" VerticalAlignment="Center">
                                                             <Border.Style>
                                                                 <Style TargetType="Border">
                                                                     <Setter Property="Background" Value="#0d1f15"/>
@@ -683,8 +685,8 @@
                                                             </Border.Style>
                                                             <StackPanel Orientation="Horizontal">
                                                                 <materialDesign:PackIcon Kind="Fingerprint"
-                                                     Width="13" Height="13"
-                                                     VerticalAlignment="Center" Margin="0,0,5,0">
+                                                                     Width="13" Height="13"
+                                                                     VerticalAlignment="Center" Margin="0,0,5,0">
                                                                     <materialDesign:PackIcon.Style>
                                                                         <Style TargetType="materialDesign:PackIcon">
                                                                             <Setter Property="Foreground" Value="#4CAF50"/>
@@ -720,8 +722,8 @@
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Border CornerRadius="6" Padding="10,4"
-                            HorizontalAlignment="Left"
-                            Margin="12,0" VerticalAlignment="Center">
+                                                            HorizontalAlignment="Left"
+                                                            Margin="12,0" VerticalAlignment="Center">
                                                             <Border.Style>
                                                                 <Style TargetType="Border">
                                                                     <Setter Property="Background" Value="#0d1f15"/>

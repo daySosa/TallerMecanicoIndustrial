@@ -8,7 +8,11 @@
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        MouseDown="Window_MouseDown">
+        Opacity="0"
+        MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
+        Closed="Window_Closed">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
@@ -270,12 +274,12 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="160"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Content="Cancelar"
+                                <Button Grid.Column="0" Content="Cancelar" IsCancel="True"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         Foreground="#8890b5" BorderBrush="#1e2235"
                                         materialDesign:ButtonAssist.CornerRadius="8"
                                         Height="42" Click="btnCancelar_Click"/>
-                                <Button Grid.Column="2" x:Name="btnGuardar" Content="Guardar Usuario"
+                                <Button Grid.Column="2" x:Name="btnGuardar" Content="Guardar Usuario" IsDefault="True"
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         Background="#4f6ef7" Foreground="White"
                                         materialDesign:ButtonAssist.CornerRadius="8"

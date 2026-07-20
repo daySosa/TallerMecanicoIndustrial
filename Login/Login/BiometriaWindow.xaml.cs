@@ -1,38 +1,74 @@
-﻿using AForge.Video;
+﻿#nullable enable
+using AForge.Video;
 using AForge.Video.DirectShow;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Login.Clases;
+using MaterialDesignThemes.Wpf;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Drawing = System.Drawing;
 
 namespace InterfazClientes
 {
+    /// <summary>
+    /// Ventana para registrar la biometría facial de un usuario: activa la cámara,
+    /// detecta rostros en vivo con un clasificador Haar Cascade (Emgu CV), permite
+    /// capturar varias fotos con distintas poses y las guarda asociadas al usuario
+    /// seleccionado. Incluye una transición de fade-in al abrirse y fade-out al cerrarse.
+    /// </summary>
     public partial class VentanaBiometria : Window
     {
+        #region Constantes
+
+        /// <summary>Cantidad mínima de fotos requeridas para poder guardar el registro.</summary>
+        private const int MIN_FOTOS = 8;
+
+        /// <summary>Cantidad máxima de fotos permitidas por sesión de captura.</summary>
+        private const int MAX_FOTOS = 12;
+
+        /// <summary>Duración de las transiciones de entrada/salida de la ventana.</summary>
+        private static readonly Duration DuracionTransicion = new(TimeSpan.FromMilliseconds(200));
+
+        private const string RutaDetector = "haarcascade_frontalface_default.xml";
+
+        #endregion
+
+        #region Estado interno
+
         private readonly RepositorioSql _db = new();
         private DataTable _usuariosCache = new();
-        private string _emailSeleccionado = null;
+        private string? _emailSeleccionado;
 
-        // ── CAPTURA MÚLTIPLE ─────────────────────────────────────────
-        // Se piden varias fotos (en vez de una sola) para que el modelo de
-        // reconocimiento tenga más variación de luz/ángulo y sea más estable.
-        private const int MIN_FOTOS = 8;
-        private const int MAX_FOTOS = 12;
+        /// <summary>Fotos capturadas en la sesión actual, aún sin persistir.</summary>
         private readonly List<byte[]> _fotosCapturadas = new();
 
-        // ── CÁMARA ───────────────────────────────────────────────────
         private FilterInfoCollection? _camarasDisponibles;
         private VideoCaptureDevice? _camaraActiva;
         private CascadeClassifier? _detectorRostros;
-        private bool _rostroDetectadoEnVivo = false;
-        private Drawing.Bitmap? _ultimoFrameLimpio; // frame SIN el rectángulo verde, para capturar sin ruido
+        private volatile bool _rostroDetectadoEnVivo;
+
+        /// <summary>Último frame SIN el rectángulo de detección dibujado, para capturar sin ruido visual.</summary>
+        private Drawing.Bitmap? _ultimoFrameLimpio;
+
+        /// <summary>
+        /// Indica si la ventana ya fue cerrada (o está cerrándose). El callback de la
+        /// cámara corre en un hilo secundario y puede seguir disparándose durante el
+        /// fade-out; esta bandera evita que intente tocar controles de UI ya inválidos.
+        /// </summary>
+        private volatile bool _ventanaCerrada;
+
+        /// <summary>Evita el reingreso a Window_Closing mientras se reproduce el fade-out.</summary>
+        private bool _cerrandoConAnimacion;
+
+        #endregion
 
         public VentanaBiometria()
         {
@@ -41,7 +77,7 @@ namespace InterfazClientes
             CargarUsuarios();
         }
 
-        // ── MOVER VENTANA ────────────────────────────────────────────
+        #region Ciclo de vida y transición de entrada/salida
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -49,11 +85,55 @@ namespace InterfazClientes
                 DragMove();
         }
 
-        // ── DETECTOR DE ROSTROS ──────────────────────────────────────
+        /// <summary>Aplica un fade-in suave al mostrar la ventana (entra con Opacity="0" desde XAML).</summary>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var fadeIn = new DoubleAnimation(0d, 1d, DuracionTransicion)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
+        }
 
+        /// <summary>
+        /// Intercepta el cierre para detener la cámara de inmediato (evita que siga
+        /// entregando frames durante la animación) y reproducir un fade-out antes de
+        /// cerrar de verdad. La primera vez cancela el cierre; al completarse la
+        /// animación se vuelve a llamar Close() con la bandera activada.
+        /// </summary>
+        private void Window_Closing(object? sender, CancelEventArgs e)
+        {
+            if (_cerrandoConAnimacion) return;
+
+            _ventanaCerrada = true;
+            DetenerCamara();
+
+            e.Cancel = true;
+            _cerrandoConAnimacion = true;
+
+            var fadeOut = new DoubleAnimation(1d, 0d, DuracionTransicion)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+            };
+            fadeOut.Completed += (_, _) => Close();
+            BeginAnimation(OpacityProperty, fadeOut);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _ventanaCerrada = true;
+            DetenerCamara();
+            base.OnClosed(e);
+        }
+
+        #endregion
+
+        #region Detector de rostros
+
+        /// <summary>Carga el clasificador Haar Cascade usado para detectar rostros en cada frame.</summary>
         private void CargarDetector()
         {
-            string ruta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "haarcascade_frontalface_default.xml");
+            string ruta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RutaDetector);
 
             if (File.Exists(ruta))
             {
@@ -61,13 +141,17 @@ namespace InterfazClientes
             }
             else
             {
-                MessageBox.Show("No se encontró el archivo del detector de rostros (haarcascade_frontalface_default.xml). " +
-                    "Verifica que esté en la carpeta de salida del proyecto y que su propiedad 'Copiar en el directorio de salida' esté activada.",
+                MessageBox.Show(
+                    $"No se encontró el archivo del detector de rostros ({RutaDetector}). " +
+                    "Verifica que esté en la carpeta de salida del proyecto y que su propiedad " +
+                    "'Copiar en el directorio de salida' esté activada.",
                     "Detector no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
-        // ── USUARIOS ─────────────────────────────────────────────────
+        #endregion
+
+        #region Usuarios: búsqueda y selección
 
         private void CargarUsuarios()
         {
@@ -77,15 +161,16 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar usuarios: " + ex.Message);
+                MessageBox.Show("Error al cargar usuarios: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void txtBuscarUsuario_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string texto = txtBuscarUsuario.Text.Trim().Replace("'", "''");
-
             if (_usuariosCache == null) return;
+
+            string texto = EscaparParaFiltro(txtBuscarUsuario.Text.Trim());
 
             _usuariosCache.DefaultView.RowFilter = string.IsNullOrWhiteSpace(texto)
                 ? string.Empty
@@ -96,6 +181,17 @@ namespace InterfazClientes
                 SeleccionarUsuario(_usuariosCache.DefaultView[0].Row);
             else
                 LimpiarSeleccion();
+        }
+
+        /// <summary>Escapa comillas y caracteres especiales de LIKE (% * [ ]) usados por DataView.RowFilter.</summary>
+        private static string EscaparParaFiltro(string texto)
+        {
+            if (string.IsNullOrEmpty(texto)) return texto;
+            return texto
+                .Replace("'", "''")
+                .Replace("[", "[[]")
+                .Replace("%", "[%]")
+                .Replace("*", "[*]");
         }
 
         private void SeleccionarUsuario(DataRow row)
@@ -121,14 +217,15 @@ namespace InterfazClientes
             ActualizarBotonesCaptura();
         }
 
-        // ── CÁMARA ───────────────────────────────────────────────────
+        #endregion
+
+        #region Cámara
 
         private void btnIniciarCamara_Click(object sender, RoutedEventArgs e)
         {
             if (_emailSeleccionado == null)
             {
-                MessageBox.Show("Selecciona un usuario válido de la lista antes de activar la cámara.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Aviso("Selecciona un usuario válido de la lista antes de activar la cámara.");
                 return;
             }
 
@@ -156,12 +253,20 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al iniciar cámara: " + ex.Message);
+                MessageBox.Show("Error al iniciar cámara: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
+        /// <summary>
+        /// Se ejecuta en el hilo de captura de AForge por cada frame nuevo. Detecta el
+        /// rostro principal con Emgu CV, dibuja un rectángulo indicativo solo en la copia
+        /// que se muestra en pantalla, y actualiza el estado de detección en el hilo de UI.
+        /// </summary>
         private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs args)
         {
+            if (_ventanaCerrada) return;
+
             using Drawing.Bitmap frame = (Drawing.Bitmap)args.Frame.Clone();
 
             // Guardamos una copia limpia ANTES de dibujar el rectángulo de detección encima,
@@ -170,91 +275,140 @@ namespace InterfazClientes
             _ultimoFrameLimpio = (Drawing.Bitmap)frame.Clone();
 
             if (_detectorRostros != null)
-            {
-                using var imgEmgu = frame.ToImage<Bgr, byte>();
-                using var imgGris = imgEmgu.Convert<Gray, byte>();
+                DetectarYMarcarRostro(frame);
 
-                CvInvoke.EqualizeHist(imgGris, imgGris);
+            if (_ventanaCerrada) return;
 
-                // ROI central: solo buscamos rostros en el área donde normalmente
-                // se posiciona la persona, ignorando bordes/fondo
-                int roiWidth = (int)(frame.Width * 0.6);
-                int roiHeight = (int)(frame.Height * 0.75);
-                int roiX = (frame.Width - roiWidth) / 2;
-                int roiY = (frame.Height - roiHeight) / 2;
-                var roiRect = new Drawing.Rectangle(roiX, roiY, roiWidth, roiHeight);
-
-                imgGris.ROI = roiRect;
-
-                var rostrosEnRoi = _detectorRostros.DetectMultiScale(
-                    imgGris,
-                    scaleFactor: 1.1,
-                    minNeighbors: 10,
-                    minSize: new Drawing.Size(100, 100),
-                    maxSize: new Drawing.Size(350, 350));
-
-                imgGris.ROI = Drawing.Rectangle.Empty; // resetear ROI
-
-                var rostros = rostrosEnRoi
-                    .Select(r => new Drawing.Rectangle(r.X + roiX, r.Y + roiY, r.Width, r.Height))
-                    .ToArray();
-
-                Drawing.Rectangle[] rostroPrincipal = rostros.Length > 0
-                    ? new[] { rostros.OrderByDescending(r => r.Width * r.Height).First() }
-                    : Array.Empty<Drawing.Rectangle>();
-
-                _rostroDetectadoEnVivo = rostroPrincipal.Length > 0;
-
-                using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
-                foreach (var rostro in rostroPrincipal)
-                    g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
-            }
-
-            var src = BitmapToImageSource(frame); // esta SÍ lleva el rectángulo, solo para mostrar en pantalla
+            var src = BitmapToImageSource(frame); // esta copia SÍ lleva el rectángulo, solo para mostrar en pantalla
             Dispatcher.Invoke(() =>
             {
-                imgCamara.Source = src;
+                if (_ventanaCerrada) return;
 
-                if (_rostroDetectadoEnVivo)
-                {
-                    txtEstadoDeteccion.Text = "Rostro detectado — listo para capturar";
-                    txtEstadoDeteccion.Foreground = Pincel("#4CAF50");
-                }
-                else
-                {
-                    txtEstadoDeteccion.Text = "No se detecta rostro";
-                    txtEstadoDeteccion.Foreground = Pincel("#E74C3C");
-                }
+                imgCamara.Source = src;
+                ActualizarEstadoDeteccion(_rostroDetectadoEnVivo);
             });
         }
+
+        /// <summary>Detecta el rostro de mayor tamaño dentro de una región central del frame y lo marca con un rectángulo.</summary>
+        private void DetectarYMarcarRostro(Drawing.Bitmap frame)
+        {
+            using var imgEmgu = frame.ToImage<Bgr, byte>();
+            using var imgGris = imgEmgu.Convert<Gray, byte>();
+
+            CvInvoke.EqualizeHist(imgGris, imgGris);
+
+            // ROI central: solo buscamos rostros en el área donde normalmente
+            // se posiciona la persona, ignorando bordes/fondo.
+            int roiWidth = (int)(frame.Width * 0.6);
+            int roiHeight = (int)(frame.Height * 0.75);
+            int roiX = (frame.Width - roiWidth) / 2;
+            int roiY = (frame.Height - roiHeight) / 2;
+            var roiRect = new Drawing.Rectangle(roiX, roiY, roiWidth, roiHeight);
+
+            imgGris.ROI = roiRect;
+
+            var rostrosEnRoi = _detectorRostros!.DetectMultiScale(
+                imgGris,
+                scaleFactor: 1.1,
+                minNeighbors: 10,
+                minSize: new Drawing.Size(100, 100),
+                maxSize: new Drawing.Size(350, 350));
+
+            imgGris.ROI = Drawing.Rectangle.Empty; // resetear ROI
+
+            var rostros = rostrosEnRoi
+                .Select(r => new Drawing.Rectangle(r.X + roiX, r.Y + roiY, r.Width, r.Height))
+                .ToArray();
+
+            var rostroPrincipal = rostros.Length > 0
+                ? new[] { rostros.OrderByDescending(r => r.Width * r.Height).First() }
+                : Array.Empty<Drawing.Rectangle>();
+
+            _rostroDetectadoEnVivo = rostroPrincipal.Length > 0;
+
+            using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
+            foreach (var rostro in rostroPrincipal)
+                g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
+        }
+
+        /// <summary>Sincroniza texto, color e ícono del panel de estado con si hay o no rostro detectado.</summary>
+        private void ActualizarEstadoDeteccion(bool rostroDetectado)
+        {
+            if (rostroDetectado)
+            {
+                txtEstadoDeteccion.Text = "Rostro detectado — listo para capturar";
+                txtEstadoDeteccion.Foreground = Pincel("#4CAF50");
+                iconDeteccion.Kind = PackIconKind.CheckCircleOutline;
+                iconDeteccion.Foreground = Pincel("#4CAF50");
+            }
+            else
+            {
+                txtEstadoDeteccion.Text = "No se detecta rostro";
+                txtEstadoDeteccion.Foreground = Pincel("#E74C3C");
+                iconDeteccion.Kind = PackIconKind.CloseCircleOutline;
+                iconDeteccion.Foreground = Pincel("#E74C3C");
+            }
+        }
+
+        /// <summary>Detiene la captura de cámara (si está activa) y libera el último frame en memoria.</summary>
+        private void DetenerCamara()
+        {
+            if (_camaraActiva is { IsRunning: true })
+            {
+                _camaraActiva.NewFrame -= CamaraActiva_NewFrame;
+                _camaraActiva.SignalToStop();
+                _camaraActiva = null;
+            }
+
+            _ultimoFrameLimpio?.Dispose();
+            _ultimoFrameLimpio = null;
+        }
+
+        /// <summary>Convierte un <see cref="Drawing.Bitmap"/> a un <see cref="BitmapImage"/> congelado, apto para enlazar en WPF.</summary>
+        private static BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
+        {
+            using MemoryStream ms = new();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            ms.Position = 0;
+
+            BitmapImage img = new();
+            img.BeginInit();
+            img.StreamSource = ms;
+            img.CacheOption = BitmapCacheOption.OnLoad;
+            img.EndInit();
+            img.Freeze();
+            return img;
+        }
+
+        #endregion
+
+        #region Captura de fotos
 
         private void btnCapturar_Click(object sender, RoutedEventArgs e)
         {
             if (_emailSeleccionado == null)
             {
-                MessageBox.Show("Selecciona un usuario válido de la lista antes de capturar.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Aviso("Selecciona un usuario válido de la lista antes de capturar.");
                 return;
             }
 
             if (!_rostroDetectadoEnVivo)
             {
-                MessageBox.Show("No se detecta ningún rostro. Ubícate frente a la cámara.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Aviso("No se detecta ningún rostro. Ubícate frente a la cámara.");
                 return;
             }
 
             if (_fotosCapturadas.Count >= MAX_FOTOS)
             {
-                MessageBox.Show($"Ya capturaste el máximo de {MAX_FOTOS} fotos. Guarda el registro o descarta las capturas para empezar de nuevo.",
+                MessageBox.Show(
+                    $"Ya capturaste el máximo de {MAX_FOTOS} fotos. Guarda el registro o descarta las capturas para empezar de nuevo.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             if (_ultimoFrameLimpio == null)
             {
-                MessageBox.Show("No hay un frame disponible todavía para capturar. Espera un momento e intenta de nuevo.",
-                    "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Aviso("No hay un frame disponible todavía para capturar. Espera un momento e intenta de nuevo.");
                 return;
             }
 
@@ -264,12 +418,11 @@ namespace InterfazClientes
                 // no del que se muestra en pantalla (imgCamara.Source), que sí lo tiene dibujado.
                 using MemoryStream ms = new();
                 _ultimoFrameLimpio.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-
                 _fotosCapturadas.Add(ms.ToArray());
 
                 txtEstadoDeteccion.Text = "Rostro capturado correctamente";
                 txtEstadoDeteccion.Foreground = Pincel("#4CAF50");
-                iconDeteccion.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
+                iconDeteccion.Kind = PackIconKind.CheckCircleOutline;
                 iconDeteccion.Foreground = Pincel("#4CAF50");
 
                 ActualizarContadorCapturas();
@@ -286,7 +439,8 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al capturar: " + ex.Message);
+                MessageBox.Show("Error al capturar: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -305,34 +459,9 @@ namespace InterfazClientes
             ActualizarBotonesCaptura();
         }
 
-        private void DetenerCamara()
-        {
-            if (_camaraActiva is { IsRunning: true })
-            {
-                _camaraActiva.SignalToStop();
-                _camaraActiva.NewFrame -= CamaraActiva_NewFrame;
-                _camaraActiva = null;
-            }
+        #endregion
 
-            _ultimoFrameLimpio?.Dispose();
-            _ultimoFrameLimpio = null;
-        }
-
-        private static BitmapImage BitmapToImageSource(Drawing.Bitmap bitmap)
-        {
-            using MemoryStream ms = new();
-            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            ms.Position = 0;
-            BitmapImage img = new();
-            img.BeginInit();
-            img.StreamSource = ms;
-            img.CacheOption = BitmapCacheOption.OnLoad;
-            img.EndInit();
-            img.Freeze();
-            return img;
-        }
-
-        // ── GUARDAR / ELIMINAR ───────────────────────────────────────
+        #region Guardar / Eliminar registro
 
         private void btnGuardarBiometria_Click(object sender, RoutedEventArgs e)
         {
@@ -345,7 +474,8 @@ namespace InterfazClientes
 
             if (_fotosCapturadas.Count < MIN_FOTOS)
             {
-                MessageBox.Show($"Captura al menos {MIN_FOTOS} fotos (llevas {_fotosCapturadas.Count}) antes de guardar, " +
+                MessageBox.Show(
+                    $"Captura al menos {MIN_FOTOS} fotos (llevas {_fotosCapturadas.Count}) antes de guardar, " +
                     "para que el reconocimiento sea más confiable.",
                     "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -358,16 +488,16 @@ namespace InterfazClientes
                 foreach (var foto in _fotosCapturadas)
                     _db.GuardarBiometria(_emailSeleccionado, foto);
 
-                MessageBox.Show($"✅ Biometría guardada correctamente ({_fotosCapturadas.Count} fotos).", "Éxito",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"✅ Biometría guardada correctamente ({_fotosCapturadas.Count} fotos).",
+                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 _fotosCapturadas.Clear();
-                DetenerCamara();
-                this.Close();
+                Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al guardar: " + ex.Message);
+                MessageBox.Show("Error al guardar: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -395,25 +525,16 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al eliminar: " + ex.Message);
+                MessageBox.Show("Error al eliminar: " + ex.Message,
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        // ── CERRAR ───────────────────────────────────────────────────
+        private void btnCerrar_Click(object sender, RoutedEventArgs e) => Close();
 
-        private void btnCerrar_Click(object sender, RoutedEventArgs e)
-        {
-            DetenerCamara();
-            this.Close();
-        }
+        #endregion
 
-        protected override void OnClosed(EventArgs e)
-        {
-            DetenerCamara();
-            base.OnClosed(e);
-        }
-
-        // ── HELPERS ──────────────────────────────────────────────────
+        #region Helpers
 
         private void ActualizarContadorCapturas()
         {
@@ -434,7 +555,12 @@ namespace InterfazClientes
             btnEliminarBiometria.IsEnabled = hayUsuario;
         }
 
+        private static void Aviso(string mensaje) =>
+            MessageBox.Show(mensaje, "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+
         private static SolidColorBrush Pincel(string hex) =>
             new((Color)ColorConverter.ConvertFromString(hex));
+
+        #endregion
     }
 }
