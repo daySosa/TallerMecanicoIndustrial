@@ -9,7 +9,10 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        Opacity="0"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="40" ShadowDepth="0" Opacity="0.70"/>
@@ -115,7 +118,8 @@
                                              MaxLength="13"
                                              materialDesign:HintAssist.Hint="Ingresa el DNI..."
                                              PreviewTextInput="txtDNI_PreviewTextInput"
-                                             TextChanged="txtDNI_TextChanged"/>
+                                             TextChanged="txtDNI_TextChanged"
+                                             KeyDown="txtDNI_KeyDown"/>
                                     <Button Grid.Column="2" x:Name="btnBuscar"
                                             Style="{StaticResource MaterialDesignOutlinedButton}"
                                             Foreground="#4f6ef7" BorderBrush="#4f6ef7"
