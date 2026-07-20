@@ -9,7 +9,10 @@
         AllowsTransparency="True"
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
-        MouseDown="Window_MouseDown">
+        Opacity="0"
+        MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
@@ -228,9 +231,9 @@
 
                                 <Button x:Name="btnBitacora" Style="{StaticResource SidebarButtonActive}" Margin="0,2">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="NotebookOutline" Foreground="#8890b5"
-                                   Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Bitácora" Foreground="#8890b5"
+                                        <materialDesign:PackIcon Kind="NotebookOutline" Foreground="White"
+                                                                 Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Bitácora" Foreground="White"
                                                    FontSize="13" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
@@ -299,15 +302,15 @@
                                                 <GradientStop Color="#1c2455" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Border.Background>
-                                        <TextBlock Text="OS" Foreground="#7986f7"
-                                                   FontSize="13" FontWeight="Bold"
+                                        <TextBlock x:Name="txtIniciales" Text=""
+                                                   Foreground="#7986f7" FontSize="13" FontWeight="Bold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock x:Name="txtNombreUsuario" Text="Oscar Sosa"
+                                        <TextBlock x:Name="txtNombreUsuario" Text=""
                                                    Foreground="White" FontSize="12" FontWeight="Medium"
                                                    TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock x:Name="txtRolUsuario" Text="Propietario"
+                                        <TextBlock x:Name="txtRolUsuario" Text=""
                                                    Foreground="#4f6ef7" FontSize="10"/>
                                     </StackPanel>
                                     <Ellipse Grid.Column="2" Width="8" Height="8"
@@ -318,6 +321,7 @@
                         </DockPanel>
                     </Border>
 
+                    <!-- ═══════════ CONTENIDO PRINCIPAL ═══════════ -->
                     <Grid Grid.Column="1" Background="#0f1117">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -536,7 +540,7 @@
                                 </Border>
 
                             </Grid>
-                            
+
                             <Border Grid.Row="1" Background="#13161f" CornerRadius="12"
                                     BorderBrush="#1e2235" BorderThickness="1"
                                     Padding="16,12" Margin="0,0,0,16">
@@ -565,7 +569,8 @@
 
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Usuario" Foreground="#505880" FontSize="10" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="txtFiltroUsuario" Style="{StaticResource FilterTextBox}"/>
+                                        <TextBox x:Name="txtFiltroUsuario" Style="{StaticResource FilterTextBox}"
+                                                 TextChanged="txtFiltroUsuario_TextChanged"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="4">
@@ -675,6 +680,11 @@
                                               BorderThickness="0" RowBackground="Transparent"
                                               AlternatingRowBackground="#0d1020"
                                               ColumnHeaderHeight="38" RowHeight="52"
+                                              EnableRowVirtualization="True"
+                                              EnableColumnVirtualization="True"
+                                              VirtualizingPanel.IsVirtualizing="True"
+                                              VirtualizingPanel.VirtualizationMode="Recycling"
+                                              VirtualizingPanel.ScrollUnit="Pixel"
                                               materialDesign:DataGridAssist.CellPadding="0"
                                               materialDesign:DataGridAssist.ColumnHeaderPadding="12,0">
 
