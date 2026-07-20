@@ -1,28 +1,65 @@
 ﻿using Login.Clases;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Contabilidad
 {
+    /// <summary>
+    /// Ventana de gestión de gastos (egresos): permite registrar un nuevo gasto o editar uno existente.
+    /// La ventana nace invisible (Opacity="0" en el Window) y su Border raíz nace ligeramente reducido
+    /// (ScaleTransform en el XAML) para una transición de apertura fluida sin parpadeos; se anima
+    /// simétricamente al cerrarse.
+    /// </summary>
     public partial class GestiónEgresos : Window
     {
-        private readonly RepositorioSql _db = new RepositorioSql();
+        // ===== Recursos cacheados (estáticos) =====
+        private static readonly SolidColorBrush BrushAcentoNuevo = new(Color.FromRgb(0x4f, 0x6e, 0xf7));
+        private static readonly SolidColorBrush BrushFondoNuevo = new(Color.FromRgb(0x1a, 0x1d, 0x35));
+        private static readonly SolidColorBrush BrushAcentoEditar = new(Color.FromRgb(0x4C, 0xAF, 0x50));
+        private static readonly SolidColorBrush BrushFondoEditar = new(Color.FromRgb(0x1a, 0x2b, 0x1a));
+        private static readonly CultureInfo CulturaFecha = new("es-HN");
+
+        // Duración compartida para las animaciones de apertura/cierre.
+        private static readonly Duration DuracionAnimacion = new(TimeSpan.FromMilliseconds(220));
+
+        private readonly RepositorioSql _db = new();
         private readonly MenúPrincipalEgresos _menuRef;
-        private bool _esEdicion = false;
-        private int _gastoId = 0;
+
+        private bool _esEdicion;
+        private int _gastoId;
         private DateTime _fechaRegistro;
 
-        // ── Constructor AGREGAR ──────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // CONSTRUCTORES
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Crea la ventana en modo <b>Agregar</b>, para registrar un nuevo gasto.
+        /// </summary>
+        /// <param name="menuRef">Referencia al menú principal, usada para refrescar la lista al guardar.</param>
         public GestiónEgresos(MenúPrincipalEgresos menuRef)
         {
             InitializeComponent();
             _menuRef = menuRef;
+
             MostrarModoAgregar();
+            Loaded += GestiónEgresos_Loaded;
         }
 
-        // ── Constructor EDITAR ───────────────────────────────────────
+        /// <summary>
+        /// Crea la ventana en modo <b>Editar</b>, precargando los datos del gasto indicado.
+        /// </summary>
+        /// <param name="menuRef">Referencia al menú principal, usada para refrescar la lista al guardar.</param>
+        /// <param name="gastoId">Identificador del gasto a editar.</param>
+        /// <param name="tipo">Tipo de gasto actual ("Gasto en Repuesto" o "Gasto Adicional").</param>
+        /// <param name="nombre">Nombre o descripción actual del gasto.</param>
+        /// <param name="precio">Monto actual del gasto.</param>
+        /// <param name="fecha">Fecha de registro original del gasto (determina el bloqueo por antigüedad).</param>
+        /// <param name="observaciones">Observaciones actuales del gasto.</param>
         public GestiónEgresos(MenúPrincipalEgresos menuRef,
                                int gastoId, string tipo, string nombre,
                                decimal precio, DateTime fecha, string observaciones)
@@ -32,7 +69,62 @@ namespace Contabilidad
             _esEdicion = true;
             _gastoId = gastoId;
             _fechaRegistro = fecha;
+
             MostrarModoActualizar(gastoId, tipo, nombre, precio, fecha, observaciones);
+            Loaded += GestiónEgresos_Loaded;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // TRANSICIÓN DE APERTURA / CIERRE
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Dispara la animación de entrada una sola vez, apenas la ventana termina de cargar
+        /// (ya renderizada en su estado inicial invisible definido en el XAML).
+        /// </summary>
+        private void GestiónEgresos_Loaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= GestiónEgresos_Loaded; // Solo debe ocurrir una vez.
+            AnimarEntrada();
+        }
+
+        /// <summary>
+        /// Anima la opacidad del <see cref="Window"/> (0→1) y la escala del Border raíz
+        /// <c>rootScale</c> (0.94→1, vía <c>scaleEntrada</c>), con <see cref="QuadraticEase"/>
+        /// para un movimiento natural y fluido. El Window solo anima Opacity: WPF no soporta
+        /// de forma confiable un RenderTransform de escala aplicado al Window mismo.
+        /// </summary>
+        private void AnimarEntrada()
+        {
+            var easing = new QuadraticEase { EasingMode = EasingMode.EaseOut };
+
+            var fadeIn = new DoubleAnimation(0, 1, DuracionAnimacion) { EasingFunction = easing };
+            var scaleX = new DoubleAnimation(0.94, 1, DuracionAnimacion) { EasingFunction = easing };
+            var scaleY = new DoubleAnimation(0.94, 1, DuracionAnimacion) { EasingFunction = easing };
+
+            BeginAnimation(OpacityProperty, fadeIn);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
+        }
+
+        /// <summary>
+        /// Reproduce la animación inversa a la de entrada y, al completarse, cierra la ventana.
+        /// Se usa para <b>toda</b> salida de la ventana (Cancelar, Guardar exitoso), así la
+        /// transición es consistente sin importar el camino de cierre.
+        /// </summary>
+        private void AnimarSalidaYCerrar()
+        {
+            var easing = new QuadraticEase { EasingMode = EasingMode.EaseIn };
+
+            var fadeOut = new DoubleAnimation(1, 0, DuracionAnimacion) { EasingFunction = easing };
+            var scaleX = new DoubleAnimation(1, 0.94, DuracionAnimacion) { EasingFunction = easing };
+            var scaleY = new DoubleAnimation(1, 0.94, DuracionAnimacion) { EasingFunction = easing };
+
+            fadeOut.Completed += (_, _) => Close();
+
+            BeginAnimation(OpacityProperty, fadeOut);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
         }
 
         // ════════════════════════════════════════════════════════════
@@ -45,17 +137,18 @@ namespace Contabilidad
             panelEditar.Visibility = Visibility.Collapsed;
             iconAgregar.Visibility = Visibility.Visible;
             iconEditar.Visibility = Visibility.Collapsed;
+
             txtTitulo.Text = "Nuevo Gasto";
             txtSubtitulo.Text = "Completa los datos para registrar";
             txtBadge.Text = "NUEVO";
-            txtBadge.Foreground = Pincel("#4f6ef7");
-            badgeModo.Background = Pincel("#1a1d35");
+            txtBadge.Foreground = BrushAcentoNuevo;
+            badgeModo.Background = BrushFondoNuevo;
             btnGuardar.Content = "Guardar Gasto";
         }
 
         private void txtNombreGasto_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            // Sin restricciones; el nombre puede incluir letras, números y símbolos.
+            // Intencionalmente vacío: sin restricciones de entrada para este campo.
         }
 
         private void txtPrecio_LostFocus(object sender, RoutedEventArgs e)
@@ -78,42 +171,47 @@ namespace Contabilidad
             panelEditar.Visibility = Visibility.Visible;
             iconAgregar.Visibility = Visibility.Collapsed;
             iconEditar.Visibility = Visibility.Visible;
+
             txtTitulo.Text = "Editar Gasto";
             txtSubtitulo.Text = "Modifica los datos del gasto";
             txtBadge.Text = "EDITAR";
-            txtBadge.Foreground = Pincel("#4CAF50");
-            badgeModo.Background = Pincel("#1a2b1a");
+            txtBadge.Foreground = BrushAcentoEditar;
+            badgeModo.Background = BrushFondoEditar;
             btnGuardar.Content = "Guardar Cambios";
 
-            foreach (ComboBoxItem item in cmbTipoGasto_Edit.Items)
-            {
-                if (item.Content?.ToString() == tipo)
-                {
-                    cmbTipoGasto_Edit.SelectedItem = item;
-                    break;
-                }
-            }
+            SeleccionarTipoEnCombo(cmbTipoGasto_Edit, tipo);
 
             txtNombre_Edit.Text = nombre;
             txtPrecio_Edit.Text = "L " + precio.ToString("N2");
-            txtFecha_Edit.Text = fecha.ToString("dd/MM/yyyy hh:mm tt",
-                                             new System.Globalization.CultureInfo("es-ES"));
+            txtFecha_Edit.Text = fecha.ToString("dd/MM/yyyy hh:mm tt", CulturaFecha);
             txtObservaciones_Edit.Text = observaciones ?? "";
 
             VerificarBloqueoEdicion();
         }
 
+        private static void SeleccionarTipoEnCombo(ComboBox combo, string tipo)
+        {
+            foreach (var obj in combo.Items)
+            {
+                if (obj is ComboBoxItem item && item.Content?.ToString() == tipo)
+                {
+                    combo.SelectedItem = item;
+                    return;
+                }
+            }
+        }
+
         private void VerificarBloqueoEdicion()
         {
-            if ((DateTime.Now - _fechaRegistro).TotalDays >= 1)
-            {
-                cmbTipoGasto_Edit.IsEnabled = false;
-                txtNombre_Edit.IsEnabled = false;
-                txtPrecio_Edit.IsEnabled = false;
-                txtObservaciones_Edit.IsEnabled = false;
-                btnGuardar.IsEnabled = false;
-                borderBloqueado.Visibility = Visibility.Visible;
-            }
+            if ((DateTime.Now - _fechaRegistro).TotalDays < 1)
+                return;
+
+            cmbTipoGasto_Edit.IsEnabled = false;
+            txtNombre_Edit.IsEnabled = false;
+            txtPrecio_Edit.IsEnabled = false;
+            txtObservaciones_Edit.IsEnabled = false;
+            btnGuardar.IsEnabled = false;
+            borderBloqueado.Visibility = Visibility.Visible;
         }
 
         private void txtPrecio_Edit_LostFocus(object sender, RoutedEventArgs e)
@@ -162,10 +260,14 @@ namespace Contabilidad
 
                 MessageBox.Show("✅ ¡Gasto registrado correctamente!", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
                 _menuRef.CargarEgreso();
-                this.Close();
+                AnimarSalidaYCerrar();
             }
-            catch (Exception ex) { MostrarMensajeAgregar("⚠ " + ex.Message); }
+            catch (Exception ex)
+            {
+                MostrarMensajeAgregar("⚠ " + ex.Message);
+            }
         }
 
         private void GuardarEdicion()
@@ -201,13 +303,18 @@ namespace Contabilidad
 
                 MessageBox.Show("✅ ¡Gasto actualizado correctamente!", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
                 _menuRef.CargarEgreso();
-                this.Close();
+                AnimarSalidaYCerrar();
             }
-            catch (Exception ex) { MostrarMensajeEditar("⚠ Error al actualizar: " + ex.Message); }
+            catch (Exception ex)
+            {
+                MostrarMensajeEditar("⚠ Error al actualizar: " + ex.Message);
+            }
         }
 
-        private void btnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
+            => AnimarSalidaYCerrar();
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
@@ -217,27 +324,26 @@ namespace Contabilidad
                 GuardarNuevo();
         }
 
-        // ── Mensajes ─────────────────────────────────────────────────
-        private void MostrarMensajeAgregar(string msg)
+        // ════════════════════════════════════════════════════════════
+        // MENSAJES DE VALIDACIÓN
+        // ════════════════════════════════════════════════════════════
+
+        private void MostrarMensajeAgregar(string mensaje)
         {
-            txtMensaje.Text = msg;
+            txtMensaje.Text = mensaje;
             borderMensajeAgregar.Visibility = Visibility.Visible;
         }
 
         private void OcultarMensajeAgregar()
             => borderMensajeAgregar.Visibility = Visibility.Collapsed;
 
-        private void MostrarMensajeEditar(string msg)
+        private void MostrarMensajeEditar(string mensaje)
         {
-            txtMensajeEditar.Text = msg;
+            txtMensajeEditar.Text = mensaje;
             borderMensajeEditar.Visibility = Visibility.Visible;
         }
 
         private void OcultarMensajeEditar()
             => borderMensajeEditar.Visibility = Visibility.Collapsed;
-
-        // ── Helper ───────────────────────────────────────────────────
-        private static SolidColorBrush Pincel(string hex) =>
-            new((Color)ColorConverter.ConvertFromString(hex));
     }
 }

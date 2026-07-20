@@ -9,7 +9,8 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        Opacity="0">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="40" ShadowDepth="0" Opacity="0.70"/>
@@ -29,7 +30,15 @@
         </Style>
     </Window.Resources>
 
-    <Border Effect="{StaticResource WinShadow}" CornerRadius="14">
+    <!-- Este Border raíz es el que se escala en la animación de entrada/salida,
+         no el Window (WPF no soporta un RenderTransform de escala confiable sobre el Window mismo). -->
+    <Border x:Name="rootScale"
+            RenderTransformOrigin="0.5,0.5"
+            Effect="{StaticResource WinShadow}" CornerRadius="14">
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="scaleEntrada" ScaleX="0.94" ScaleY="0.94"/>
+        </Border.RenderTransform>
+
         <Border CornerRadius="14" ClipToBounds="True" Background="#0f1117">
             <Grid>
                 <Grid.RowDefinitions>
@@ -38,7 +47,6 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- ===== HEADER ===== -->
                 <Border Grid.Row="0" Background="#13161f"
                         BorderBrush="#1e2235" BorderThickness="0,0,0,1">
                     <Grid Margin="20,0">
@@ -65,10 +73,8 @@
                     </Grid>
                 </Border>
 
-                <!-- ===== CONTENIDO ===== -->
                 <StackPanel Grid.Row="1" Margin="24,20,24,10">
 
-                    <!-- Información principal del gasto -->
                     <Border Background="#13161f" CornerRadius="10"
                             BorderBrush="#1e2235" BorderThickness="1"
                             Padding="18,16" Margin="0,0,0,16">
@@ -101,7 +107,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Monto destacado -->
                     <Border Background="#2a0f0f" BorderBrush="#4d1f1f"
                             BorderThickness="1" CornerRadius="10"
                             Padding="18,14" Margin="0,0,0,16">
@@ -129,7 +134,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Observaciones -->
                     <Border Background="#13161f" CornerRadius="10"
                             BorderBrush="#1e2235" BorderThickness="1"
                             Padding="18,16">
@@ -143,7 +147,6 @@
 
                 </StackPanel>
 
-                <!-- ===== FOOTER ===== -->
                 <Border Grid.Row="2" Background="#13161f"
                         BorderBrush="#1e2235" BorderThickness="0,1,0,0"
                         Padding="24,14">

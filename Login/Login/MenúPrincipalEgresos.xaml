@@ -9,7 +9,10 @@
         AllowsTransparency="True"
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
-        MouseDown="Window_MouseDown">
+        Opacity="0"
+        MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
@@ -196,7 +199,7 @@
                                         </StackPanel>
                                     </Expander.Header>
                                     <StackPanel Margin="30,2,0,2">
-                                        
+
                                         <Border CornerRadius="9" Padding="12,0" Height="36" Margin="0,1">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <materialDesign:PackIcon Kind="ArrowDownCircleOutline" Foreground="#8890b5"
@@ -249,15 +252,15 @@
                                                 <GradientStop Color="#1c2455" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Border.Background>
-                                        <TextBlock x:Name="txtIniciales" Text="OS" Foreground="#7986f7"
+                                        <TextBlock x:Name="txtIniciales" Text="US" Foreground="#7986f7"
                                                    FontSize="13" FontWeight="Bold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock x:Name="txtNombreUsuario" Text="Oscar Sosa"
+                                        <TextBlock x:Name="txtNombreUsuario" Text="Usuario"
                                                    Foreground="White" FontSize="12" FontWeight="Medium"
                                                    TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock x:Name="txtRolUsuario" Text="Propietario"
+                                        <TextBlock x:Name="txtRolUsuario" Text="Rol"
                                                    Foreground="#4f6ef7" FontSize="10"/>
                                     </StackPanel>
                                     <Ellipse Grid.Column="2" Width="8" Height="8"
