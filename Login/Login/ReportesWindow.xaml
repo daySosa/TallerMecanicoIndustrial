@@ -9,13 +9,22 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        Opacity="0">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="40" ShadowDepth="0" Opacity="0.70"/>
     </Window.Resources>
 
-    <Border Effect="{StaticResource WinShadow}" CornerRadius="14">
+    <!-- Este Border raíz es el que se escala en la animación de entrada/salida,
+         no el Window (WPF no soporta un RenderTransform de escala confiable sobre el Window mismo). -->
+    <Border x:Name="rootScale"
+            RenderTransformOrigin="0.5,0.5"
+            Effect="{StaticResource WinShadow}" CornerRadius="14">
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="scaleEntrada" ScaleX="0.94" ScaleY="0.94"/>
+        </Border.RenderTransform>
+
         <Border CornerRadius="14" ClipToBounds="True" Background="#0f1117">
             <Grid>
                 <Grid.RowDefinitions>

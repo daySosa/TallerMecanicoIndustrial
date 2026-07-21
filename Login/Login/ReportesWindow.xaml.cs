@@ -6,36 +6,124 @@ using Microsoft.Win32;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Login
 {
+    /// <summary>
+    /// Ventana para generar reportes en PDF de los distintos módulos del sistema
+    /// (Clientes, Inventario, Vehículos, Órdenes, Egresos, Ingresos).
+    /// La ventana nace invisible (Opacity="0" en el Window) y su Border raíz nace
+    /// ligeramente reducido (ScaleTransform en el XAML) para una transición de
+    /// apertura fluida sin parpadeos; se anima simétricamente al cerrarse.
+    /// </summary>
     public partial class ReportesWindow : Window
     {
-        private string _modulo;
+        // ════════════════════════════════════════════════════════════
+        // ESTADO Y RECURSOS COMPARTIDOS
+        // ════════════════════════════════════════════════════════════
+
+        private readonly string _modulo;
         private readonly RepositorioSql _db = new();
 
         // Cultura fija en español (Honduras) para que los reportes nunca
         // salgan con nombres de días/meses en inglés, sin importar el
         // idioma del sistema operativo del usuario.
-        private static readonly CultureInfo CulturaES = new CultureInfo("es-HN");
+        private static readonly CultureInfo CulturaES = new("es-HN");
 
-        // ─────────────────────────────────────────────
-        //  DATOS DEL NEGOCIO
-        // ─────────────────────────────────────────────
+        // Duración y easing compartidos para las animaciones de apertura/cierre de la ventana.
+        private static readonly Duration DuracionAnimacion = new(TimeSpan.FromMilliseconds(220));
+
+        // ── Datos del negocio (encabezado/pie de los reportes) ──────
         private const string NombreNegocio = "OSM";
         private const string DireccionNegocio = "Col. 21 de Febrero, Bloque 5, Calle Principal, dos cuadras antes del Cementerio Santa Anita";
-        private const string TelefonoNegocio = "9575-9819"; // Ajusta el formato si hace falta
+        private const string TelefonoNegocio = "9575-9819";
 
+        // ── Literales reutilizados en varios reportes (S1192) ───────
+        private const string AccentColorDefault = "#1e2d5f";
+        private const string FormatoFechaCorta = "dd/MM/yyyy";
+        private const string ColumnaClienteDni = "Cliente_DNI";
+        private const string GrupoTipoReporte = "tipoReporte";
+
+        // Ruta relativa del logo, reutilizada tanto para el pack URI como para la
+        // búsqueda en disco junto al ejecutable (S1075: se evita repetir la ruta
+        // absoluta/URI directamente en el código de negocio).
+        private const string LogoResourceRelativePath = "Imagenes/OSM_LOGO.png"; // NOSONAR: ruta de recurso empaquetado, no de sistema de archivos externo.
+
+        /// <summary>
+        /// Crea la ventana de generación de reportes para el módulo indicado.
+        /// </summary>
+        /// <param name="modulo">Nombre del módulo ("Clientes", "Inventario", "Vehiculos", "Ordenes", "Egresos" o "Ingresos").</param>
         public ReportesWindow(string modulo)
         {
             InitializeComponent();
             _modulo = modulo;
             txtModulo.Text = $"Reporte de {modulo}";
+
+            Loaded += ReportesWindow_Loaded;
         }
 
-        private void BtnCancelar_Click(object sender, RoutedEventArgs e) => this.Close();
+        // ════════════════════════════════════════════════════════════
+        // TRANSICIÓN DE APERTURA / CIERRE
+        // ════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// Dispara la animación de entrada una sola vez, apenas la ventana termina de cargar
+        /// (ya renderizada en su estado inicial invisible definido en el XAML).
+        /// </summary>
+        private void ReportesWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= ReportesWindow_Loaded; // Solo debe ocurrir una vez.
+            AnimarEntrada();
+        }
+
+        /// <summary>
+        /// Anima la opacidad del <see cref="Window"/> (0→1) y la escala del Border raíz
+        /// <c>rootScale</c> (0.94→1, vía <c>scaleEntrada</c>), con <see cref="QuadraticEase"/>
+        /// para un movimiento natural y fluido.
+        /// </summary>
+        private void AnimarEntrada()
+        {
+            var easing = new QuadraticEase { EasingMode = EasingMode.EaseOut };
+
+            var fadeIn = new DoubleAnimation(0, 1, DuracionAnimacion) { EasingFunction = easing };
+            var scaleX = new DoubleAnimation(0.94, 1, DuracionAnimacion) { EasingFunction = easing };
+            var scaleY = new DoubleAnimation(0.94, 1, DuracionAnimacion) { EasingFunction = easing };
+
+            BeginAnimation(OpacityProperty, fadeIn);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
+        }
+
+        /// <summary>
+        /// Reproduce la animación inversa a la de entrada y, al completarse, cierra la ventana.
+        /// Se usa para toda salida de esta ventana (Cancelar o generación de PDF exitosa),
+        /// así la transición es consistente sin importar el camino de cierre.
+        /// </summary>
+        private void AnimarSalidaYCerrar()
+        {
+            var easing = new QuadraticEase { EasingMode = EasingMode.EaseIn };
+
+            var fadeOut = new DoubleAnimation(1, 0, DuracionAnimacion) { EasingFunction = easing };
+            var scaleX = new DoubleAnimation(1, 0.94, DuracionAnimacion) { EasingFunction = easing };
+            var scaleY = new DoubleAnimation(1, 0.94, DuracionAnimacion) { EasingFunction = easing };
+
+            fadeOut.Completed += (_, _) => Close();
+
+            BeginAnimation(OpacityProperty, fadeOut);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
+            scaleEntrada.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
+        }
+
+        private void BtnCancelar_Click(object sender, RoutedEventArgs e) => AnimarSalidaYCerrar();
+
+        /// <summary>
+        /// Punto de entrada del botón "Generar PDF": despacha al generador correspondiente
+        /// según el módulo con el que se abrió la ventana.
+        /// </summary>
         private async void BtnGenerarPDF_Click(object sender, RoutedEventArgs e)
         {
             switch (_modulo)
@@ -49,26 +137,39 @@ namespace Login
             }
         }
 
-        // ─────────────────────────────────────────────
-        //  HELPERS DE FECHA EN ESPAÑOL
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // HELPERS DE FECHA EN ESPAÑOL
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Formatea una fecha con <see cref="CulturaES"/> y capitaliza la primera letra
+        /// (para nombres de día/mes como "lunes" → "Lunes").
+        /// </summary>
         private static string FormatearFechaEs(DateTime fecha, string formato)
         {
             string texto = fecha.ToString(formato, CulturaES);
             return string.IsNullOrEmpty(texto)
                 ? texto
-                : char.ToUpper(texto[0], CulturaES) + texto.Substring(1);
+                : char.ToUpper(texto[0], CulturaES) + texto[1..];
         }
 
-        // ─────────────────────────────────────────────
-        //  LOGO
-        // ─────────────────────────────────────────────
-        private string GetLogoBase64()
+        // ════════════════════════════════════════════════════════════
+        // LOGO
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene el logo del negocio como Base64 para incrustarlo en el HTML del reporte.
+        /// Intenta, en orden: recurso empaquetado (pack URI), carpeta "Imagenes" junto al
+        /// ejecutable, y por último buscando esa carpeta subiendo directorios (por si el
+        /// build cambia de ubicación relativa). Cualquier fallo en un intento simplemente
+        /// pasa al siguiente; si los tres fallan, se muestra el texto "OSM" en su lugar.
+        /// </summary>
+        private static string GetLogoBase64()
         {
             try
             {
-                var uri = new Uri("pack://application:,,,/Imagenes/OSM_LOGO.png", UriKind.Absolute);
-                var si = System.Windows.Application.GetResourceStream(uri);
+                var uri = new Uri($"pack://application:,,,/{LogoResourceRelativePath}", UriKind.Absolute);
+                var si = Application.GetResourceStream(uri);
                 if (si != null)
                 {
                     using var ms = new MemoryStream();
@@ -76,36 +177,43 @@ namespace Login
                     return Convert.ToBase64String(ms.ToArray());
                 }
             }
-            catch { }
+            catch { /* Intencional: se prueba el siguiente método de carga del logo. */ }
+
+            string rutaRelativaDisco = LogoResourceRelativePath.Replace('/', Path.DirectorySeparatorChar);
 
             try
             {
                 string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                string path = Path.Combine(exeDir, "Imagenes", "OSM_LOGO.png");
+                string path = Path.Combine(exeDir!, rutaRelativaDisco);
                 if (File.Exists(path)) return Convert.ToBase64String(File.ReadAllBytes(path));
             }
-            catch { }
+            catch { /* Intencional: se prueba el siguiente método de carga del logo. */ }
 
             try
             {
                 string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 for (int i = 0; i < 5; i++)
                 {
-                    string candidate = Path.Combine(dir, "Imagenes", "OSM_LOGO.png");
+                    string candidate = Path.Combine(dir!, rutaRelativaDisco);
                     if (File.Exists(candidate)) return Convert.ToBase64String(File.ReadAllBytes(candidate));
                     dir = Path.GetDirectoryName(dir);
                     if (dir == null) break;
                 }
             }
-            catch { }
+            catch { /* Intencional: no se encontró el logo en ninguna ubicación conocida. */ }
 
             return string.Empty;
         }
 
-        // ─────────────────────────────────────────────
-        //  ESTILOS BASE
-        // ─────────────────────────────────────────────
-        private string GetBaseStyles(string accentColor = "#1e2d5f")
+        // ════════════════════════════════════════════════════════════
+        // ESTILOS BASE Y PLANTILLAS HTML
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el bloque &lt;style&gt; compartido por todos los reportes, parametrizado
+        /// por el color de acento propio de cada módulo.
+        /// </summary>
+        private string GetBaseStyles(string accentColor = AccentColorDefault)
         {
             return $@"
             <style>
@@ -185,23 +293,27 @@ namespace Login
             </style>";
         }
 
-        private string AdjustColor(string hex)
+        /// <summary>
+        /// Aclara un color hexadecimal en +40 por canal, usado para el degradado del encabezado.
+        /// Si el color no se puede parsear, se devuelve sin cambios.
+        /// </summary>
+        private static string AdjustColor(string hex)
         {
             try
             {
                 hex = hex.TrimStart('#');
-                int r = Math.Min(255, Convert.ToInt32(hex.Substring(0, 2), 16) + 40);
-                int g = Math.Min(255, Convert.ToInt32(hex.Substring(2, 2), 16) + 40);
-                int b = Math.Min(255, Convert.ToInt32(hex.Substring(4, 2), 16) + 40);
+                int r = Math.Min(255, Convert.ToInt32(hex[..2], 16) + 40);
+                int g = Math.Min(255, Convert.ToInt32(hex[2..4], 16) + 40);
+                int b = Math.Min(255, Convert.ToInt32(hex[4..6], 16) + 40);
                 return $"#{r:X2}{g:X2}{b:X2}";
             }
             catch { return hex; }
         }
 
-        // ─────────────────────────────────────────────
-        //  HEADER / TITLE / FOOTER
-        // ─────────────────────────────────────────────
-        private string GetHeader(string accentColor, string periodo = "")
+        /// <summary>
+        /// Genera el encabezado (logo, nombre del negocio, fecha/período/hora) común a todos los reportes.
+        /// </summary>
+        private string GetHeader(string periodo = "")
         {
             string periodoTexto = string.IsNullOrEmpty(periodo)
                 ? $"Q{((DateTime.Now.Month - 1) / 3 + 1)} {DateTime.Now.Year}" : periodo;
@@ -222,7 +334,7 @@ namespace Login
                 <div class='header-right'>
                     <div class='header-meta'>
                         <div class='meta-label'>Fecha Emitida</div>
-                        <div class='meta-value'>{DateTime.Now.ToString("dd/MM/yyyy", CulturaES)}</div>
+                        <div class='meta-value'>{DateTime.Now.ToString(FormatoFechaCorta, CulturaES)}</div>
                     </div>
                     <div class='header-meta'>
                         <div class='meta-label'>Período</div>
@@ -236,7 +348,11 @@ namespace Login
             </div>";
         }
 
-        private string GetTitleBar(string accentColor, string titulo, string subtitulo = "")
+        /// <summary>
+        /// Genera la barra de título con el nombre del reporte y su subtítulo
+        /// (por defecto, la fecha de generación en español).
+        /// </summary>
+        private static string GetTitleBar(string titulo, string subtitulo = "")
         {
             string sub = string.IsNullOrEmpty(subtitulo)
                 ? $"Generado el {FormatearFechaEs(DateTime.Now, "dddd, dd 'de' MMMM 'de' yyyy")}"
@@ -248,14 +364,21 @@ namespace Login
             </div>";
         }
 
-        private string GetFooter() => $@"
+        /// <summary>
+        /// Genera el pie de página común a todos los reportes.
+        /// </summary>
+        private static string GetFooter() => $@"
             <div class='footer'>
                 <span class='footer-brand'>{NombreNegocio}</span>
                 <span>Documento confidencial · Uso interno</span>
-                <span>Generado: {DateTime.Now.ToString("dd/MM/yyyy", CulturaES)} {DateTime.Now.ToString("hh:mm tt", CulturaES)}</span>
+                <span>Generado: {DateTime.Now.ToString(FormatoFechaCorta, CulturaES)} {DateTime.Now.ToString("hh:mm tt", CulturaES)}</span>
             </div>";
 
-        private string BadgeEstado(string estado) => estado switch
+        /// <summary>
+        /// Devuelve el HTML de un badge de estado con el color correspondiente
+        /// ("Finalizado", "En Proceso", "Pendiente", "Cancelado", "Sin Empezar").
+        /// </summary>
+        private static string BadgeEstado(string estado) => estado switch
         {
             "Finalizado" => $"<span class='badge badge-pagado'>{estado}</span>",
             "En Proceso" => $"<span class='badge badge-proceso'>{estado}</span>",
@@ -265,9 +388,18 @@ namespace Login
             _ => $"<span class='badge'>{estado}</span>"
         };
 
-        // ─────────────────────────────────────────────
-        //  EXPORTAR PDF
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // EXPORTAR PDF
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Renderiza el HTML dado en un WebView2 invisible y lo exporta a PDF mediante el
+        /// diálogo de guardado del sistema. Si todo sale bien, registra la bitácora, abre
+        /// el PDF generado y cierra esta ventana con animación.
+        /// </summary>
+        /// <param name="html">Documento HTML completo del reporte.</param>
+        /// <param name="nombreArchivo">Nombre base sugerido para el archivo (se le agrega la fecha).</param>
+        /// <param name="landscape">Si es true, exporta en orientación horizontal.</param>
         private async Task ExportarPDF(string html, string nombreArchivo, bool landscape = false)
         {
             var dialog = new SaveFileDialog
@@ -307,14 +439,13 @@ namespace Login
                     : CoreWebView2PrintOrientation.Portrait;
 
                 bool success = await webView.CoreWebView2.PrintToPdfAsync(dialog.FileName, printSettings);
-                if (!success) throw new Exception("No se pudo generar el PDF.");
+                if (!success) throw new InvalidOperationException("No se pudo generar el PDF.");
 
                 hiddenWindow.Close();
                 hiddenWindow = null;
 
                 MessageBox.Show("✅ Reporte generado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
-
 
                 try
                 {
@@ -323,7 +454,8 @@ namespace Login
                 }
                 catch
                 {
-
+                    // Intencional: un fallo al registrar la bitácora no debe impedir
+                    // que el usuario reciba y abra su PDF ya generado.
                 }
 
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -332,19 +464,28 @@ namespace Login
                     UseShellExecute = true
                 });
 
-                this.Close();
+                AnimarSalidaYCerrar();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"❌ Error al generar el PDF:\n{ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { hiddenWindow?.Close(); }
+            finally
+            {
+                hiddenWindow?.Close();
+            }
         }
 
-        // ─────────────────────────────────────────────
-        //  SELECTOR DE PERÍODO (Semanal / Mensual / Anual / Todo)
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // SELECTOR DE PERÍODO (Semanal / Mensual / Anual / Todo)
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Muestra un diálogo modal para que el usuario elija el período del reporte
+        /// (semanal, mensual, anual o todo el histórico) y calcula el rango de fechas resultante.
+        /// </summary>
+        /// <returns><c>true</c> si el usuario confirmó una selección; <c>false</c> si canceló.</returns>
         private bool ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto)
         {
             fechaInicio = DateTime.MinValue;
@@ -359,8 +500,7 @@ namespace Login
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = this,
                 ResizeMode = ResizeMode.NoResize,
-                Background = new System.Windows.Media.SolidColorBrush(
-                    System.Windows.Media.Color.FromRgb(30, 45, 95))
+                Background = new SolidColorBrush(Color.FromRgb(30, 45, 95))
             };
 
             var panelPrincipal = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
@@ -368,115 +508,33 @@ namespace Login
             panelPrincipal.Children.Add(new System.Windows.Controls.Label
             {
                 Content = "Tipo de reporte:",
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = Brushes.White,
                 FontSize = 13,
                 FontWeight = FontWeights.Bold,
                 Margin = new Thickness(0, 0, 0, 4)
             });
 
-            var tipoPanel = new System.Windows.Controls.StackPanel
-            {
-                Orientation = System.Windows.Controls.Orientation.Horizontal,
-                Margin = new Thickness(0, 0, 0, 14)
-            };
-
-            var rbSemanal = new System.Windows.Controls.RadioButton
-            {
-                Content = "Semanal",
-                Foreground = System.Windows.Media.Brushes.White,
-                Margin = new Thickness(0, 0, 14, 0),
-                IsChecked = true,
-                GroupName = "tipoReporte"
-            };
-            var rbMensual = new System.Windows.Controls.RadioButton
-            {
-                Content = "Mensual",
-                Foreground = System.Windows.Media.Brushes.White,
-                Margin = new Thickness(0, 0, 14, 0),
-                GroupName = "tipoReporte"
-            };
-            var rbAnual = new System.Windows.Controls.RadioButton
-            {
-                Content = "Anual",
-                Foreground = System.Windows.Media.Brushes.White,
-                Margin = new Thickness(0, 0, 14, 0),
-                GroupName = "tipoReporte"
-            };
-            var rbTodo = new System.Windows.Controls.RadioButton
-            {
-                Content = "Todo",
-                Foreground = System.Windows.Media.Brushes.White,
-                GroupName = "tipoReporte"
-            };
-            tipoPanel.Children.Add(rbSemanal);
-            tipoPanel.Children.Add(rbMensual);
-            tipoPanel.Children.Add(rbAnual);
-            tipoPanel.Children.Add(rbTodo);
+            var (tipoPanel, rbSemanal, rbMensual, rbAnual, rbTodo) = CrearPanelTipoReporte();
             panelPrincipal.Children.Add(tipoPanel);
 
-            // ---- Panel Semanal ----
-            var panelSemanal = new System.Windows.Controls.StackPanel { Margin = new Thickness(0, 0, 0, 14) };
-            panelSemanal.Children.Add(new System.Windows.Controls.Label
-            {
-                Content = "Selecciona un día dentro de la semana deseada:",
-                Foreground = System.Windows.Media.Brushes.White,
-                FontSize = 11
-            });
             var dpSemana = new System.Windows.Controls.DatePicker
             {
                 SelectedDate = DateTime.Today,
                 FirstDayOfWeek = DayOfWeek.Monday
             };
-            panelSemanal.Children.Add(dpSemana);
+            var panelSemanal = CrearPanelSemanal(dpSemana);
 
-            // ---- Panel Mensual ----
-            var panelMensual = new System.Windows.Controls.StackPanel
-            {
-                Margin = new Thickness(0, 0, 0, 14),
-                Visibility = Visibility.Collapsed
-            };
-            panelMensual.Children.Add(new System.Windows.Controls.Label
-            {
-                Content = "Selecciona el mes y el año:",
-                Foreground = System.Windows.Media.Brushes.White,
-                FontSize = 11
-            });
-            var mesAnioPanel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
             var cmbMes = new System.Windows.Controls.ComboBox { Width = 150, Margin = new Thickness(0, 0, 8, 0) };
-            foreach (var nombreMes in CulturaES.DateTimeFormat.MonthNames)
-                if (!string.IsNullOrEmpty(nombreMes))
-                    cmbMes.Items.Add(char.ToUpper(nombreMes[0], CulturaES) + nombreMes.Substring(1));
-            cmbMes.SelectedIndex = DateTime.Today.Month - 1;
             var cmbAnioMes = new System.Windows.Controls.ComboBox { Width = 90 };
-            int anioActual = DateTime.Today.Year;
-            for (int y = anioActual; y >= anioActual - 10; y--) cmbAnioMes.Items.Add(y);
-            cmbAnioMes.SelectedIndex = 0;
-            mesAnioPanel.Children.Add(cmbMes);
-            mesAnioPanel.Children.Add(cmbAnioMes);
-            panelMensual.Children.Add(mesAnioPanel);
+            var panelMensual = CrearPanelMensual(cmbMes, cmbAnioMes);
 
-            // ---- Panel Anual ----
-            var panelAnual = new System.Windows.Controls.StackPanel
-            {
-                Margin = new Thickness(0, 0, 0, 14),
-                Visibility = Visibility.Collapsed
-            };
-            panelAnual.Children.Add(new System.Windows.Controls.Label
-            {
-                Content = "Selecciona el año:",
-                Foreground = System.Windows.Media.Brushes.White,
-                FontSize = 11
-            });
             var cmbAnioSolo = new System.Windows.Controls.ComboBox { Width = 90, HorizontalAlignment = HorizontalAlignment.Left };
-            for (int y = anioActual; y >= anioActual - 10; y--) cmbAnioSolo.Items.Add(y);
-            cmbAnioSolo.SelectedIndex = 0;
-            panelAnual.Children.Add(cmbAnioSolo);
+            var panelAnual = CrearPanelAnual(cmbAnioSolo);
 
             panelPrincipal.Children.Add(panelSemanal);
             panelPrincipal.Children.Add(panelMensual);
             panelPrincipal.Children.Add(panelAnual);
 
-            // ---- Alternar paneles según el tipo elegido ----
             void ActualizarVisibilidad()
             {
                 panelSemanal.Visibility = rbSemanal.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
@@ -488,8 +546,143 @@ namespace Login
             rbAnual.Checked += (s, e) => ActualizarVisibilidad();
             rbTodo.Checked += (s, e) => ActualizarVisibilidad();
 
-            // ---- Botones ----
             bool confirmado = false;
+            var btnPanel = CrearPanelBotones(ventana, () => confirmado = true);
+            panelPrincipal.Children.Add(btnPanel);
+
+            ventana.Content = panelPrincipal;
+            ventana.ShowDialog();
+
+            if (!confirmado) return false;
+
+            (fechaInicio, fechaFin, periodoTexto) = CalcularRangoFechas(
+                rbSemanal.IsChecked == true, rbMensual.IsChecked == true, rbAnual.IsChecked == true,
+                dpSemana, cmbMes, cmbAnioMes, cmbAnioSolo);
+
+            return true;
+        }
+
+        /// <summary>Crea los radio buttons de tipo de reporte (Semanal/Mensual/Anual/Todo).</summary>
+        private static (System.Windows.Controls.StackPanel panel, System.Windows.Controls.RadioButton semanal,
+            System.Windows.Controls.RadioButton mensual, System.Windows.Controls.RadioButton anual,
+            System.Windows.Controls.RadioButton todo) CrearPanelTipoReporte()
+        {
+            var tipoPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 14)
+            };
+
+            var rbSemanal = new System.Windows.Controls.RadioButton
+            {
+                Content = "Semanal",
+                Foreground = Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0),
+                IsChecked = true,
+                GroupName = GrupoTipoReporte
+            };
+            var rbMensual = new System.Windows.Controls.RadioButton
+            {
+                Content = "Mensual",
+                Foreground = Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0),
+                GroupName = GrupoTipoReporte
+            };
+            var rbAnual = new System.Windows.Controls.RadioButton
+            {
+                Content = "Anual",
+                Foreground = Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0),
+                GroupName = GrupoTipoReporte
+            };
+            var rbTodo = new System.Windows.Controls.RadioButton
+            {
+                Content = "Todo",
+                Foreground = Brushes.White,
+                GroupName = GrupoTipoReporte
+            };
+
+            tipoPanel.Children.Add(rbSemanal);
+            tipoPanel.Children.Add(rbMensual);
+            tipoPanel.Children.Add(rbAnual);
+            tipoPanel.Children.Add(rbTodo);
+
+            return (tipoPanel, rbSemanal, rbMensual, rbAnual, rbTodo);
+        }
+
+        /// <summary>Crea el panel del selector semanal.</summary>
+        private static System.Windows.Controls.StackPanel CrearPanelSemanal(System.Windows.Controls.DatePicker dpSemana)
+        {
+            var panelSemanal = new System.Windows.Controls.StackPanel { Margin = new Thickness(0, 0, 0, 14) };
+            panelSemanal.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona un día dentro de la semana deseada:",
+                Foreground = Brushes.White,
+                FontSize = 11
+            });
+            panelSemanal.Children.Add(dpSemana);
+            return panelSemanal;
+        }
+
+        /// <summary>Crea el panel del selector mensual (combo de mes + combo de año).</summary>
+        private static System.Windows.Controls.StackPanel CrearPanelMensual(
+            System.Windows.Controls.ComboBox cmbMes, System.Windows.Controls.ComboBox cmbAnioMes)
+        {
+            var panelMensual = new System.Windows.Controls.StackPanel
+            {
+                Margin = new Thickness(0, 0, 0, 14),
+                Visibility = Visibility.Collapsed
+            };
+            panelMensual.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona el mes y el año:",
+                Foreground = Brushes.White,
+                FontSize = 11
+            });
+
+            var mesAnioPanel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+
+            foreach (var nombreMes in CulturaES.DateTimeFormat.MonthNames.Where(m => !string.IsNullOrEmpty(m)))
+                cmbMes.Items.Add(char.ToUpper(nombreMes[0], CulturaES) + nombreMes[1..]);
+            cmbMes.SelectedIndex = DateTime.Today.Month - 1;
+
+            int anioActual = DateTime.Today.Year;
+            for (int y = anioActual; y >= anioActual - 10; y--) cmbAnioMes.Items.Add(y);
+            cmbAnioMes.SelectedIndex = 0;
+
+            mesAnioPanel.Children.Add(cmbMes);
+            mesAnioPanel.Children.Add(cmbAnioMes);
+            panelMensual.Children.Add(mesAnioPanel);
+
+            return panelMensual;
+        }
+
+        /// <summary>Crea el panel del selector anual.</summary>
+        private static System.Windows.Controls.StackPanel CrearPanelAnual(System.Windows.Controls.ComboBox cmbAnioSolo)
+        {
+            var panelAnual = new System.Windows.Controls.StackPanel
+            {
+                Margin = new Thickness(0, 0, 0, 14),
+                Visibility = Visibility.Collapsed
+            };
+            panelAnual.Children.Add(new System.Windows.Controls.Label
+            {
+                Content = "Selecciona el año:",
+                Foreground = Brushes.White,
+                FontSize = 11
+            });
+
+            int anioActual = DateTime.Today.Year;
+            for (int y = anioActual; y >= anioActual - 10; y--) cmbAnioSolo.Items.Add(y);
+            cmbAnioSolo.SelectedIndex = 0;
+            panelAnual.Children.Add(cmbAnioSolo);
+
+            return panelAnual;
+        }
+
+        /// <summary>Crea los botones "Generar" y "Cancelar" del diálogo de período.</summary>
+        private static System.Windows.Controls.StackPanel CrearPanelBotones(Window ventana, Action onAceptar)
+        {
             var btnPanel = new System.Windows.Controls.StackPanel
             {
                 Orientation = System.Windows.Controls.Orientation.Horizontal,
@@ -503,93 +696,112 @@ namespace Login
                 Width = 90,
                 Height = 32,
                 Margin = new Thickness(0, 0, 8, 0),
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 45, 95)),
+                Background = new SolidColorBrush(Colors.White),
+                Foreground = new SolidColorBrush(Color.FromRgb(30, 45, 95)),
                 FontWeight = FontWeights.Bold,
                 Cursor = System.Windows.Input.Cursors.Hand
             };
-            btnAceptar.Click += (s, e) => { confirmado = true; ventana.Close(); };
+            btnAceptar.Click += (s, e) => { onAceptar(); ventana.Close(); };
 
             var btnCancelarPeriodo = new System.Windows.Controls.Button
             {
                 Content = "Cancelar",
                 Width = 80,
                 Height = 32,
-                Background = System.Windows.Media.Brushes.Transparent,
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderBrush = System.Windows.Media.Brushes.White,
+                Background = Brushes.Transparent,
+                Foreground = Brushes.White,
+                BorderBrush = Brushes.White,
                 Cursor = System.Windows.Input.Cursors.Hand
             };
             btnCancelarPeriodo.Click += (s, e) => ventana.Close();
 
             btnPanel.Children.Add(btnAceptar);
             btnPanel.Children.Add(btnCancelarPeriodo);
-            panelPrincipal.Children.Add(btnPanel);
 
-            ventana.Content = panelPrincipal;
-            ventana.ShowDialog();
-
-            if (!confirmado) return false;
-
-            if (rbSemanal.IsChecked == true)
-            {
-                DateTime fechaBase = dpSemana.SelectedDate ?? DateTime.Today;
-                int diasDesdeLunes = ((int)fechaBase.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-                fechaInicio = fechaBase.AddDays(-diasDesdeLunes);
-                fechaFin = fechaInicio.AddDays(7).AddTicks(-1);
-                periodoTexto = $"Semana del {FormatearFechaEs(fechaInicio, "dd MMM")} al {FormatearFechaEs(fechaInicio.AddDays(6), "dd MMM yyyy")}";
-            }
-            else if (rbMensual.IsChecked == true)
-            {
-                int mes = cmbMes.SelectedIndex + 1;
-                int anio = (int)cmbAnioMes.SelectedItem;
-                fechaInicio = new DateTime(anio, mes, 1);
-                fechaFin = fechaInicio.AddMonths(1).AddTicks(-1);
-                periodoTexto = FormatearFechaEs(fechaInicio, "MMMM yyyy");
-            }
-            else if (rbAnual.IsChecked == true)
-            {
-                int anio = (int)cmbAnioSolo.SelectedItem;
-                fechaInicio = new DateTime(anio, 1, 1);
-                fechaFin = new DateTime(anio, 12, 31, 23, 59, 59);
-                periodoTexto = anio.ToString();
-            }
-            else
-            {
-                fechaInicio = DateTime.MinValue;
-                fechaFin = DateTime.MaxValue;
-                periodoTexto = "Todo";
-            }
-
-            return true;
+            return btnPanel;
         }
 
-        // ─────────────────────────────────────────────
-        //  REPORTE CLIENTES
-        // ─────────────────────────────────────────────
+        /// <summary>Calcula el rango de fechas y el texto de período según el tipo elegido.</summary>
+        private static (DateTime inicio, DateTime fin, string texto) CalcularRangoFechas(
+            bool esSemanal, bool esMensual, bool esAnual,
+            System.Windows.Controls.DatePicker dpSemana,
+            System.Windows.Controls.ComboBox cmbMes,
+            System.Windows.Controls.ComboBox cmbAnioMes,
+            System.Windows.Controls.ComboBox cmbAnioSolo)
+        {
+            if (esSemanal) return CalcularRangoSemanal(dpSemana);
+            if (esMensual) return CalcularRangoMensual(cmbMes, cmbAnioMes);
+            if (esAnual) return CalcularRangoAnual(cmbAnioSolo);
+            return (DateTime.MinValue, DateTime.MaxValue, "Todo");
+        }
+
+        private static (DateTime, DateTime, string) CalcularRangoSemanal(System.Windows.Controls.DatePicker dpSemana)
+        {
+            DateTime fechaBase = dpSemana.SelectedDate ?? DateTime.Today;
+            int diasDesdeLunes = ((int)fechaBase.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+            DateTime inicio = fechaBase.AddDays(-diasDesdeLunes);
+            DateTime fin = inicio.AddDays(7).AddTicks(-1);
+            string texto = $"Semana del {FormatearFechaEs(inicio, "dd MMM")} al {FormatearFechaEs(inicio.AddDays(6), "dd MMM yyyy")}";
+            return (inicio, fin, texto);
+        }
+
+        private static (DateTime, DateTime, string) CalcularRangoMensual(
+            System.Windows.Controls.ComboBox cmbMes, System.Windows.Controls.ComboBox cmbAnioMes)
+        {
+            int mes = cmbMes.SelectedIndex + 1;
+            int anio = (int)cmbAnioMes.SelectedItem;
+            DateTime inicio = new(anio, mes, 1, 0, 0, 0, DateTimeKind.Local);
+            DateTime fin = inicio.AddMonths(1).AddTicks(-1);
+            string texto = FormatearFechaEs(inicio, "MMMM yyyy");
+            return (inicio, fin, texto);
+        }
+
+        private static (DateTime, DateTime, string) CalcularRangoAnual(System.Windows.Controls.ComboBox cmbAnioSolo)
+        {
+            int anio = (int)cmbAnioSolo.SelectedItem;
+            DateTime inicio = new(anio, 1, 1, 0, 0, 0, DateTimeKind.Local);
+            DateTime fin = new(anio, 12, 31, 23, 59, 59, DateTimeKind.Local);
+            string texto = anio.ToString();
+            return (inicio, fin, texto);
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // REPORTE CLIENTES
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el reporte de todos los clientes registrados, ordenados por apellido.
+        /// </summary>
         private async Task GenerarReporteClientes()
         {
-            string accent = "#1e2d5f";
-            var db = new ClsConexion(); db.Abrir();
-            string filas = "";
-            using (var cmd = new SqlCommand(
-                @"SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
-                         Cliente_TelefonoPrincipal, Cliente_Email
-                  FROM Cliente ORDER BY Cliente_Apellidos", db.SqlC))
-            using (var r = cmd.ExecuteReader())
-                while (r.Read())
-                    filas += $@"<tr>
-                        <td>{r["Cliente_DNI"]}</td>
+            const string accent = AccentColorDefault;
+            var filas = new StringBuilder();
+            var db = new ClsConexion();
+            try
+            {
+                db.Abrir();
+                using var cmd = new SqlCommand(
+                    @"SELECT Cliente_DNI, Cliente_Nombres, Cliente_Apellidos,
+                             Cliente_TelefonoPrincipal, Cliente_Email
+                      FROM Cliente ORDER BY Cliente_Apellidos", db.SqlC);
+                using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
+                    filas.Append($@"<tr>
+                        <td>{r[ColumnaClienteDni]}</td>
                         <td class='left'>{r["Cliente_Nombres"]}</td>
                         <td class='left'>{r["Cliente_Apellidos"]}</td>
                         <td>{r["Cliente_TelefonoPrincipal"]}</td>
                         <td class='left'>{r["Cliente_Email"]}</td>
-                    </tr>";
-            db.Cerrar();
+                    </tr>");
+            }
+            finally
+            {
+                db.Cerrar();
+            }
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent)}
-                {GetTitleBar(accent, "Reporte de Clientes")}
+                {GetHeader()}
+                {GetTitleBar("Reporte de Clientes")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -607,64 +819,72 @@ namespace Login
             await ExportarPDF(html, "Reporte_Clientes");
         }
 
-        // ─────────────────────────────────────────────
-        //  REPORTE INVENTARIO
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // REPORTE INVENTARIO
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el reporte de inventario. Sin período seleccionado ("Todo") lista todos
+        /// los productos; con un período, lista solo los usados en órdenes de ese rango,
+        /// ordenados por cantidad usada.
+        /// </summary>
         private async Task GenerarReporteInventario()
         {
             if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
                 return;
 
-            string accent = "#1e2d5f";
-            var db = new ClsConexion(); db.Abrir();
-            string filas = "";
-
-            if (periodoTexto == "Todo")
+            const string accent = AccentColorDefault;
+            var filas = new StringBuilder();
+            var db = new ClsConexion();
+            try
             {
-                using (var cmd = new SqlCommand(
-                    @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
-                             Producto_Modelo, Producto_Precio,
-                             Producto_Cantidad_Actual, Producto_Stock_Minimo
-                      FROM Producto ORDER BY Producto_Nombre", db.SqlC))
-                using (var r = cmd.ExecuteReader())
-                    while (r.Read())
+                db.Abrir();
+
+                if (periodoTexto == "Todo")
+                {
+                    using var cmd = new SqlCommand(
+                        @"SELECT Producto_Nombre, Producto_Categoria, Producto_Marca,
+                                 Producto_Modelo, Producto_Precio,
+                                 Producto_Cantidad_Actual, Producto_Stock_Minimo
+                          FROM Producto ORDER BY Producto_Nombre", db.SqlC);
+                    using var r = await cmd.ExecuteReaderAsync();
+                    while (await r.ReadAsync())
                     {
                         int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
                         int min = Convert.ToInt32(r["Producto_Stock_Minimo"]);
                         string stock = cant <= min
                             ? $"<span class='badge badge-cancelado'>{cant}</span>"
                             : $"<span class='badge badge-activo'>{cant}</span>";
-                        filas += $@"<tr>
+                        filas.Append($@"<tr>
                             <td class='left'>{r["Producto_Nombre"]}</td>
                             <td class='left'>{r["Producto_Categoria"]}</td>
                             <td>{r["Producto_Marca"]}</td>
                             <td>{r["Producto_Modelo"]}</td>
                             <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
                             <td>{stock}</td><td>{min}</td><td>—</td>
-                        </tr>";
+                        </tr>");
                     }
-            }
-            else
-            {
-                using (var cmd = new SqlCommand(
-                    @"SELECT p.Producto_Nombre, p.Producto_Categoria, p.Producto_Marca,
-                             p.Producto_Modelo, p.Producto_Precio,
-                             p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
-                             SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
-                      FROM Orden_Repuesto orep
-                      INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
-                      INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
-                      WHERE ot.Fecha BETWEEN @FI AND @FF
-                      GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
-                               p.Producto_Marca, p.Producto_Modelo, p.Producto_Precio,
-                               p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo
-                      ORDER BY Cantidad_Usada DESC", db.SqlC))
+                }
+                else
                 {
+                    using var cmd = new SqlCommand(
+                        @"SELECT p.Producto_Nombre, p.Producto_Categoria, p.Producto_Marca,
+                                 p.Producto_Modelo, p.Producto_Precio,
+                                 p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo,
+                                 SUM(orep.Repuesto_Cantidad) AS Cantidad_Usada
+                          FROM Orden_Repuesto orep
+                          INNER JOIN Producto p ON orep.Producto_ID = p.Producto_ID
+                          INNER JOIN Orden_Trabajo ot ON orep.Orden_ID = ot.Orden_ID
+                          WHERE ot.Fecha BETWEEN @FI AND @FF
+                          GROUP BY p.Producto_ID, p.Producto_Nombre, p.Producto_Categoria,
+                                   p.Producto_Marca, p.Producto_Modelo, p.Producto_Precio,
+                                   p.Producto_Cantidad_Actual, p.Producto_Stock_Minimo
+                          ORDER BY Cantidad_Usada DESC", db.SqlC);
                     cmd.Parameters.AddWithValue("@FI", fechaInicio);
                     cmd.Parameters.AddWithValue("@FF", fechaFin);
-                    using var r = cmd.ExecuteReader();
+                    using var r = await cmd.ExecuteReaderAsync();
                     bool hay = false;
-                    while (r.Read())
+                    while (await r.ReadAsync())
                     {
                         hay = true;
                         int cant = Convert.ToInt32(r["Producto_Cantidad_Actual"]);
@@ -672,23 +892,27 @@ namespace Login
                         string stock = cant <= min
                             ? $"<span class='badge badge-cancelado'>{cant}</span>"
                             : $"<span class='badge badge-activo'>{cant}</span>";
-                        filas += $@"<tr>
+                        filas.Append($@"<tr>
                             <td class='left'>{r["Producto_Nombre"]}</td>
                             <td class='left'>{r["Producto_Categoria"]}</td>
                             <td>{r["Producto_Marca"]}</td><td>{r["Producto_Modelo"]}</td>
                             <td>L {Convert.ToDecimal(r["Producto_Precio"]):N2}</td>
                             <td>{stock}</td><td>{min}</td>
                             <td><b>{r["Cantidad_Usada"]}</b></td>
-                        </tr>";
+                        </tr>");
                     }
-                    if (!hay) filas = $"<tr><td colspan='8' style='text-align:center;padding:20px;color:#888;'>Sin datos para {periodoTexto}</td></tr>";
+                    if (!hay)
+                        filas.Append($"<tr><td colspan='8' style='text-align:center;padding:20px;color:#888;'>Sin datos para {periodoTexto}</td></tr>");
                 }
             }
-            db.Cerrar();
+            finally
+            {
+                db.Cerrar();
+            }
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent, periodoTexto)}
-                {GetTitleBar(accent, $"Reporte de Inventario — {periodoTexto}")}
+                {GetHeader(periodoTexto)}
+                {GetTitleBar($"Reporte de Inventario — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -708,38 +932,49 @@ namespace Login
             await ExportarPDF(html, $"Reporte_Inventario_{periodoTexto.Replace(" ", "_")}", landscape: true);
         }
 
-        // ─────────────────────────────────────────────
-        //  REPORTE VEHÍCULOS
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // REPORTE VEHÍCULOS
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el reporte de todos los vehículos registrados, ordenados por marca.
+        /// </summary>
         private async Task GenerarReporteVehiculos()
         {
-            string accent = "#1e2d5f";
-            var db = new ClsConexion(); db.Abrir();
-            string filas = "";
-            using (var cmd = new SqlCommand(
-                @"SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año,
-                         Vehiculo_Tipo, Cliente_DNI, Vehiculo_Activo, Vehiculo_Observaciones
-                  FROM Vehiculo ORDER BY Vehiculo_Marca", db.SqlC))
-            using (var r = cmd.ExecuteReader())
-                while (r.Read())
+            const string accent = AccentColorDefault;
+            var filas = new StringBuilder();
+            var db = new ClsConexion();
+            try
+            {
+                db.Abrir();
+                using var cmd = new SqlCommand(
+                    @"SELECT Vehiculo_Placa, Vehiculo_Marca, Vehiculo_Modelo, Vehiculo_Año,
+                             Vehiculo_Tipo, Cliente_DNI, Vehiculo_Activo, Vehiculo_Observaciones
+                      FROM Vehiculo ORDER BY Vehiculo_Marca", db.SqlC);
+                using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
                 {
                     bool activo = r["Vehiculo_Activo"] != DBNull.Value && (bool)r["Vehiculo_Activo"];
                     string badge = activo
                         ? "<span class='badge badge-activo'>Activo</span>"
                         : "<span class='badge badge-inactivo'>Inactivo</span>";
-                    filas += $@"<tr>
+                    filas.Append($@"<tr>
                         <td><b>{r["Vehiculo_Placa"]}</b></td>
                         <td>{r["Vehiculo_Marca"]}</td><td>{r["Vehiculo_Modelo"]}</td>
                         <td>{r["Vehiculo_Año"]}</td><td>{r["Vehiculo_Tipo"]}</td>
-                        <td>{r["Cliente_DNI"]}</td><td>{badge}</td>
+                        <td>{r[ColumnaClienteDni]}</td><td>{badge}</td>
                         <td class='obs'>{(r["Vehiculo_Observaciones"] == DBNull.Value ? "—" : r["Vehiculo_Observaciones"])}</td>
-                    </tr>";
+                    </tr>");
                 }
-            db.Cerrar();
+            }
+            finally
+            {
+                db.Cerrar();
+            }
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent)}
-                {GetTitleBar(accent, "Reporte de Vehículos")}
+                {GetHeader()}
+                {GetTitleBar("Reporte de Vehículos")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -759,51 +994,61 @@ namespace Login
             await ExportarPDF(html, "Reporte_Vehiculos", landscape: true);
         }
 
-        // ─────────────────────────────────────────────
-        //  REPORTE ÓRDENES
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // REPORTE ÓRDENES
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el reporte de órdenes de trabajo dentro del período elegido, con el
+        /// total general acumulado.
+        /// </summary>
         private async Task GenerarReporteOrdenes()
         {
             if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
                 return;
 
-            string accent = "#1e2d5f";
-            var db = new ClsConexion(); db.Abrir();
-            string filas = "";
+            const string accent = AccentColorDefault;
+            var filas = new StringBuilder();
             decimal grandTotal = 0;
-            using (var cmd = new SqlCommand(
-                @"SELECT Orden_ID, Cliente_DNI, Vehiculo_Placa, Estado,
-                         Fecha, Fecha_Entrega, Servicio_Precio, OrdenPrecio_Total, Observaciones
-                  FROM Orden_Trabajo
-                  WHERE Fecha BETWEEN @FI AND @FF
-                  ORDER BY Fecha DESC", db.SqlC))
+            var db = new ClsConexion();
+            try
             {
+                db.Abrir();
+                using var cmd = new SqlCommand(
+                    @"SELECT Orden_ID, Cliente_DNI, Vehiculo_Placa, Estado,
+                             Fecha, Fecha_Entrega, Servicio_Precio, OrdenPrecio_Total, Observaciones
+                      FROM Orden_Trabajo
+                      WHERE Fecha BETWEEN @FI AND @FF
+                      ORDER BY Fecha DESC", db.SqlC);
                 cmd.Parameters.AddWithValue("@FI", fechaInicio);
                 cmd.Parameters.AddWithValue("@FF", fechaFin);
-                using var r = cmd.ExecuteReader();
-                while (r.Read())
+                using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
                 {
                     decimal total = Convert.ToDecimal(r["OrdenPrecio_Total"]);
                     grandTotal += total;
-                    filas += $@"<tr>
+                    filas.Append($@"<tr>
                         <td><b>{r["Orden_ID"]}</b></td>
-                        <td>{r["Cliente_DNI"]}</td><td>{r["Vehiculo_Placa"]}</td>
+                        <td>{r[ColumnaClienteDni]}</td><td>{r["Vehiculo_Placa"]}</td>
                         <td>{BadgeEstado(r["Estado"].ToString())}</td>
-                        <td>{Convert.ToDateTime(r["Fecha"]).ToString("dd/MM/yyyy", CulturaES)}</td>
-                        <td>{(r["Fecha_Entrega"] == DBNull.Value ? "—" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString("dd/MM/yyyy", CulturaES))}</td>
+                        <td>{Convert.ToDateTime(r["Fecha"]).ToString(FormatoFechaCorta, CulturaES)}</td>
+                        <td>{(r["Fecha_Entrega"] == DBNull.Value ? "—" : Convert.ToDateTime(r["Fecha_Entrega"]).ToString(FormatoFechaCorta, CulturaES))}</td>
                         <td>L {Convert.ToDecimal(r["Servicio_Precio"]):N2}</td>
                         <td>L {total:N2}</td>
                         <td class='obs'>{(r["Observaciones"] == DBNull.Value ? "—" : r["Observaciones"])}</td>
-                    </tr>";
+                    </tr>");
                 }
-                if (string.IsNullOrEmpty(filas))
-                    filas = $"<tr><td colspan='9' style='text-align:center;padding:20px;color:#888;'>Sin órdenes para {periodoTexto}</td></tr>";
+                if (filas.Length == 0)
+                    filas.Append($"<tr><td colspan='9' style='text-align:center;padding:20px;color:#888;'>Sin órdenes para {periodoTexto}</td></tr>");
             }
-            db.Cerrar();
+            finally
+            {
+                db.Cerrar();
+            }
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent, periodoTexto)}
-                {GetTitleBar(accent, $"Reporte de Órdenes de Trabajo — {periodoTexto}")}
+                {GetHeader(periodoTexto)}
+                {GetTitleBar($"Reporte de Órdenes de Trabajo — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -829,47 +1074,57 @@ namespace Login
             await ExportarPDF(html, $"Reporte_Ordenes_{periodoTexto.Replace(" ", "_")}", landscape: true);
         }
 
-        // ─────────────────────────────────────────────
-        //  REPORTE EGRESOS
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // REPORTE EGRESOS
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el reporte de gastos (egresos) dentro del período elegido, con el
+        /// total general acumulado.
+        /// </summary>
         private async Task GenerarReporteEgresos()
         {
             if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
                 return;
 
-            string accent = "#7f1d1d";
-            var db = new ClsConexion(); db.Abrir();
-            string filas = "";
+            const string accent = "#7f1d1d";
+            var filas = new StringBuilder();
             decimal total = 0;
-            using (var cmd = new SqlCommand(
-                @"SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto
-                  FROM Contabilidad_Gastos
-                  WHERE Fecha_Gasto BETWEEN @FI AND @FF
-                  ORDER BY Fecha_Gasto DESC", db.SqlC))
+            var db = new ClsConexion();
+            try
             {
+                db.Abrir();
+                using var cmd = new SqlCommand(
+                    @"SELECT Tipo_Gasto, Nombre_Gasto, Observaciones_Gasto, Precio_Gasto, Fecha_Gasto
+                      FROM Contabilidad_Gastos
+                      WHERE Fecha_Gasto BETWEEN @FI AND @FF
+                      ORDER BY Fecha_Gasto DESC", db.SqlC);
                 cmd.Parameters.AddWithValue("@FI", fechaInicio);
                 cmd.Parameters.AddWithValue("@FF", fechaFin);
-                using var r = cmd.ExecuteReader();
-                while (r.Read())
+                using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
                 {
                     decimal precio = r["Precio_Gasto"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Gasto"]);
                     total += precio;
-                    filas += $@"<tr>
+                    filas.Append($@"<tr>
                         <td class='left'>{r["Tipo_Gasto"]}</td>
                         <td class='left'>{r["Nombre_Gasto"]}</td>
                         <td class='obs'>{(r["Observaciones_Gasto"] == DBNull.Value ? "—" : r["Observaciones_Gasto"])}</td>
                         <td>L {precio:N2}</td>
-                        <td>{Convert.ToDateTime(r["Fecha_Gasto"]).ToString("dd/MM/yyyy", CulturaES)}</td>
-                    </tr>";
+                        <td>{Convert.ToDateTime(r["Fecha_Gasto"]).ToString(FormatoFechaCorta, CulturaES)}</td>
+                    </tr>");
                 }
-                if (string.IsNullOrEmpty(filas))
-                    filas = $"<tr><td colspan='5' style='text-align:center;padding:20px;color:#888;'>Sin egresos para {periodoTexto}</td></tr>";
+                if (filas.Length == 0)
+                    filas.Append($"<tr><td colspan='5' style='text-align:center;padding:20px;color:#888;'>Sin egresos para {periodoTexto}</td></tr>");
             }
-            db.Cerrar();
+            finally
+            {
+                db.Cerrar();
+            }
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent, periodoTexto)}
-                {GetTitleBar(accent, $"Reporte de Egresos — {periodoTexto}")}
+                {GetHeader(periodoTexto)}
+                {GetTitleBar($"Reporte de Egresos — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
@@ -893,50 +1148,60 @@ namespace Login
             await ExportarPDF(html, $"Reporte_Egresos_{periodoTexto.Replace(" ", "_")}");
         }
 
-        // ─────────────────────────────────────────────
-        //  REPORTE INGRESOS
-        // ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+        // REPORTE INGRESOS
+        // ════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Genera el reporte de pagos (ingresos) dentro del período elegido, con el
+        /// total general acumulado.
+        /// </summary>
         private async Task GenerarReporteIngresos()
         {
             if (!ObtenerRangoFechas(out DateTime fechaInicio, out DateTime fechaFin, out string periodoTexto))
                 return;
 
-            string accent = "#1b4332";
-            var db = new ClsConexion(); db.Abrir();
-            string filas = "";
+            const string accent = "#1b4332";
+            var filas = new StringBuilder();
             decimal total = 0;
-            using (var cmd = new SqlCommand(
-                @"SELECT p.Pago_ID,
-                         c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
-                         p.Cliente_DNI, p.Orden_ID, p.Precio_Pago, p.Fecha_Pago
-                  FROM Contabilidad_Pago p
-                  INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
-                  WHERE p.Fecha_Pago BETWEEN @FI AND @FF
-                  ORDER BY p.Pago_ID DESC", db.SqlC))
+            var db = new ClsConexion();
+            try
             {
+                db.Abrir();
+                using var cmd = new SqlCommand(
+                    @"SELECT p.Pago_ID,
+                             c.Cliente_Nombres + ' ' + c.Cliente_Apellidos AS NombreCompleto,
+                             p.Cliente_DNI, p.Orden_ID, p.Precio_Pago, p.Fecha_Pago
+                      FROM Contabilidad_Pago p
+                      INNER JOIN Cliente c ON p.Cliente_DNI = c.Cliente_DNI
+                      WHERE p.Fecha_Pago BETWEEN @FI AND @FF
+                      ORDER BY p.Pago_ID DESC", db.SqlC);
                 cmd.Parameters.AddWithValue("@FI", fechaInicio);
                 cmd.Parameters.AddWithValue("@FF", fechaFin);
-                using var r = cmd.ExecuteReader();
-                while (r.Read())
+                using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
                 {
                     decimal monto = r["Precio_Pago"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Precio_Pago"]);
                     total += monto;
-                    filas += $@"<tr>
+                    filas.Append($@"<tr>
                         <td><b>{r["Pago_ID"]}</b></td>
                         <td class='left'>{r["NombreCompleto"]}</td>
-                        <td>{r["Cliente_DNI"]}</td><td>{r["Orden_ID"]}</td>
+                        <td>{r[ColumnaClienteDni]}</td><td>{r["Orden_ID"]}</td>
                         <td>L {monto:N2}</td>
                         <td><span class='badge badge-pagado'>Pagado</span></td>
-                    </tr>";
+                    </tr>");
                 }
-                if (string.IsNullOrEmpty(filas))
-                    filas = $"<tr><td colspan='6' style='text-align:center;padding:20px;color:#888;'>Sin ingresos para {periodoTexto}</td></tr>";
+                if (filas.Length == 0)
+                    filas.Append($"<tr><td colspan='6' style='text-align:center;padding:20px;color:#888;'>Sin ingresos para {periodoTexto}</td></tr>");
             }
-            db.Cerrar();
+            finally
+            {
+                db.Cerrar();
+            }
 
             string html = $@"<html><head>{GetBaseStyles(accent)}</head><body>
-                {GetHeader(accent, periodoTexto)}
-                {GetTitleBar(accent, $"Reporte de Ingresos — {periodoTexto}")}
+                {GetHeader(periodoTexto)}
+                {GetTitleBar($"Reporte de Ingresos — {periodoTexto}")}
                 <div class='content'>
                 <table>
                     <colgroup>
