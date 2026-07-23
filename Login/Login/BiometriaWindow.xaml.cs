@@ -39,6 +39,13 @@ namespace InterfazClientes
 
         private const string RutaDetector = "haarcascade_frontalface_default.xml";
 
+        /// <summary>
+        /// Cada cuántos frames se corre el clasificador Haar (costoso). No hace falta
+        /// detectar en los 30 fps de la cámara: con 1 de cada 3 alcanza y de sobra,
+        /// y evita que el hilo de captura se sature y el video "salte" o parpadee.
+        /// </summary>
+        private const int FRAMES_ENTRE_DETECCIONES = 3;
+
         #endregion
 
         #region Estado interno
@@ -57,6 +64,16 @@ namespace InterfazClientes
 
         /// <summary>Último frame SIN el rectángulo de detección dibujado, para capturar sin ruido visual.</summary>
         private Drawing.Bitmap? _ultimoFrameLimpio;
+
+        /// <summary>Protege el acceso a <see cref="_ultimoFrameLimpio"/> entre el hilo de cámara y el hilo de UI.</summary>
+        private readonly object _lockFrame = new();
+
+        /// <summary>Contador de frames recibidos, usado para espaciar las detecciones costosas.</summary>
+        private int _contadorFrames;
+
+        /// <summary>Última posición de rostro detectada, para seguir dibujando el rectángulo
+        /// en los frames intermedios donde no se vuelve a correr el cascade Haar.</summary>
+        private Drawing.Rectangle? _ultimoRectanguloRostro;
 
         /// <summary>
         /// Indica si la ventana ya fue cerrada (o está cerrándose). El callback de la
@@ -144,8 +161,11 @@ namespace InterfazClientes
                 MessageBox.Show(
                     $"No se encontró el archivo del detector de rostros ({RutaDetector}). " +
                     "Verifica que esté en la carpeta de salida del proyecto y que su propiedad " +
-                    "'Copiar en el directorio de salida' esté activada.",
+                    "'Copiar en el directorio de salida' esté activada.\n\n" +
+                    "La cámara quedará deshabilitada hasta que se corrija esto.",
                     "Detector no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                btnIniciarCamara.IsEnabled = false;
             }
         }
 
@@ -158,6 +178,7 @@ namespace InterfazClientes
             try
             {
                 _usuariosCache = _db.ObtenerUsuarios();
+                lstResultadosUsuario.ItemsSource = _usuariosCache.DefaultView;
             }
             catch (Exception ex)
             {
@@ -177,10 +198,38 @@ namespace InterfazClientes
                 : $"Usuario_Nombre LIKE '%{texto}%' OR Usuario_Apellido LIKE '%{texto}%' " +
                   $"OR Usuario_Email LIKE '%{texto}%'";
 
-            if (_usuariosCache.DefaultView.Count == 1)
+            int coincidencias = _usuariosCache.DefaultView.Count;
+
+            if (string.IsNullOrWhiteSpace(texto))
+            {
+                lstResultadosUsuario.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            if (coincidencias == 1)
+            {
+                lstResultadosUsuario.Visibility = Visibility.Collapsed;
                 SeleccionarUsuario(_usuariosCache.DefaultView[0].Row);
+            }
+            else if (coincidencias > 1)
+            {
+                lstResultadosUsuario.Visibility = Visibility.Visible;
+                LimpiarSeleccion(limpiarTexto: false);
+            }
             else
-                LimpiarSeleccion();
+            {
+                lstResultadosUsuario.Visibility = Visibility.Collapsed;
+                LimpiarSeleccion(limpiarTexto: false);
+            }
+        }
+
+        /// <summary>El usuario eligió una fila directamente del ListBox de resultados.</summary>
+        private void lstResultadosUsuario_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (lstResultadosUsuario.SelectedItem is not DataRowView rowView) return;
+
+            lstResultadosUsuario.Visibility = Visibility.Collapsed;
+            SeleccionarUsuario(rowView.Row);
         }
 
         /// <summary>Escapa comillas y caracteres especiales de LIKE (% * [ ]) usados por DataView.RowFilter.</summary>
@@ -201,13 +250,17 @@ namespace InterfazClientes
             txtUsuarioSeleccionado.Text = nombre;
             txtUsuarioSeleccionado.Foreground = Pincel("#FFFFFF");
 
-            // Al cambiar de usuario se descartan capturas pendientes del usuario anterior.
             _fotosCapturadas.Clear();
             ActualizarContadorCapturas();
             ActualizarBotonesCaptura();
         }
 
-        private void LimpiarSeleccion()
+        /// <param name="limpiarTexto">
+        /// Si es true, también borra lo escrito en el buscador (usado al cerrar/reiniciar).
+        /// Si es false, solo limpia la selección actual (usado mientras se está escribiendo,
+        /// para no interrumpir al usuario borrando su búsqueda en curso).
+        /// </param>
+        private void LimpiarSeleccion(bool limpiarTexto = true)
         {
             _emailSeleccionado = null;
             txtUsuarioSeleccionado.Text = "Sin usuario seleccionado";
@@ -215,6 +268,12 @@ namespace InterfazClientes
             _fotosCapturadas.Clear();
             ActualizarContadorCapturas();
             ActualizarBotonesCaptura();
+
+            if (limpiarTexto)
+            {
+                txtBuscarUsuario.Text = string.Empty;
+                lstResultadosUsuario.Visibility = Visibility.Collapsed;
+            }
         }
 
         #endregion
@@ -226,6 +285,12 @@ namespace InterfazClientes
             if (_emailSeleccionado == null)
             {
                 Aviso("Selecciona un usuario válido de la lista antes de activar la cámara.");
+                return;
+            }
+
+            if (_detectorRostros == null)
+            {
+                Aviso("No se puede iniciar la cámara: falta el archivo del detector de rostros.");
                 return;
             }
 
@@ -260,8 +325,10 @@ namespace InterfazClientes
 
         /// <summary>
         /// Se ejecuta en el hilo de captura de AForge por cada frame nuevo. Detecta el
-        /// rostro principal con Emgu CV, dibuja un rectángulo indicativo solo en la copia
-        /// que se muestra en pantalla, y actualiza el estado de detección en el hilo de UI.
+        /// rostro principal con Emgu CV (solo cada <see cref="FRAMES_ENTRE_DETECCIONES"/>
+        /// frames, por costo de CPU), dibuja un rectángulo indicativo solo en la copia que
+        /// se muestra en pantalla, y actualiza la UI de forma asíncrona para no bloquear
+        /// el hilo de captura (esto último es lo que evita el parpadeo/salto del video).
         /// </summary>
         private void CamaraActiva_NewFrame(object sender, NewFrameEventArgs args)
         {
@@ -269,24 +336,39 @@ namespace InterfazClientes
 
             using Drawing.Bitmap frame = (Drawing.Bitmap)args.Frame.Clone();
 
-            // Guardamos una copia limpia ANTES de dibujar el rectángulo de detección encima,
-            // para no quemar esa línea verde sobre los píxeles del rostro al capturar.
-            _ultimoFrameLimpio?.Dispose();
-            _ultimoFrameLimpio = (Drawing.Bitmap)frame.Clone();
+            lock (_lockFrame)
+            {
+                _ultimoFrameLimpio?.Dispose();
+                _ultimoFrameLimpio = (Drawing.Bitmap)frame.Clone();
+            }
 
-            if (_detectorRostros != null)
+            _contadorFrames++;
+            if (_detectorRostros != null && _contadorFrames % FRAMES_ENTRE_DETECCIONES == 0)
                 DetectarYMarcarRostro(frame);
+            else if (_rostroDetectadoEnVivo)
+                DibujarUltimoRectangulo(frame);
 
             if (_ventanaCerrada) return;
 
-            var src = BitmapToImageSource(frame); // esta copia SÍ lleva el rectángulo, solo para mostrar en pantalla
-            Dispatcher.Invoke(() =>
+            var src = BitmapToImageSource(frame);
+
+            Dispatcher.BeginInvoke(() =>
             {
                 if (_ventanaCerrada) return;
 
                 imgCamara.Source = src;
                 ActualizarEstadoDeteccion(_rostroDetectadoEnVivo);
             });
+        }
+
+        /// <summary>Dibuja el último rectángulo conocido sobre un frame donde no se re-detectó,
+        /// para que el recuadro verde se siga viendo fluido entre detecciones reales.</summary>
+        private void DibujarUltimoRectangulo(Drawing.Bitmap frame)
+        {
+            if (_ultimoRectanguloRostro is not { } rostro) return;
+
+            using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
+            g.DrawRectangle(new Drawing.Pen(Drawing.Color.LimeGreen, 2), rostro);
         }
 
         /// <summary>Detecta el rostro de mayor tamaño dentro de una región central del frame y lo marca con un rectángulo.</summary>
@@ -297,8 +379,6 @@ namespace InterfazClientes
 
             CvInvoke.EqualizeHist(imgGris, imgGris);
 
-            // ROI central: solo buscamos rostros en el área donde normalmente
-            // se posiciona la persona, ignorando bordes/fondo.
             int roiWidth = (int)(frame.Width * 0.6);
             int roiHeight = (int)(frame.Height * 0.75);
             int roiX = (frame.Width - roiWidth) / 2;
@@ -314,7 +394,7 @@ namespace InterfazClientes
                 minSize: new Drawing.Size(100, 100),
                 maxSize: new Drawing.Size(350, 350));
 
-            imgGris.ROI = Drawing.Rectangle.Empty; // resetear ROI
+            imgGris.ROI = Drawing.Rectangle.Empty;
 
             var rostros = rostrosEnRoi
                 .Select(r => new Drawing.Rectangle(r.X + roiX, r.Y + roiY, r.Width, r.Height))
@@ -325,6 +405,7 @@ namespace InterfazClientes
                 : Array.Empty<Drawing.Rectangle>();
 
             _rostroDetectadoEnVivo = rostroPrincipal.Length > 0;
+            _ultimoRectanguloRostro = rostroPrincipal.Length > 0 ? rostroPrincipal[0] : null;
 
             using Drawing.Graphics g = Drawing.Graphics.FromImage(frame);
             foreach (var rostro in rostroPrincipal)
@@ -360,8 +441,14 @@ namespace InterfazClientes
                 _camaraActiva = null;
             }
 
-            _ultimoFrameLimpio?.Dispose();
-            _ultimoFrameLimpio = null;
+            lock (_lockFrame)
+            {
+                _ultimoFrameLimpio?.Dispose();
+                _ultimoFrameLimpio = null;
+            }
+
+            _contadorFrames = 0;
+            _ultimoRectanguloRostro = null;
         }
 
         /// <summary>Convierte un <see cref="Drawing.Bitmap"/> a un <see cref="BitmapImage"/> congelado, apto para enlazar en WPF.</summary>
@@ -406,19 +493,24 @@ namespace InterfazClientes
                 return;
             }
 
-            if (_ultimoFrameLimpio == null)
-            {
-                Aviso("No hay un frame disponible todavía para capturar. Espera un momento e intenta de nuevo.");
-                return;
-            }
-
             try
             {
-                // Capturamos del frame LIMPIO (sin el rectángulo verde quemado en los píxeles),
-                // no del que se muestra en pantalla (imgCamara.Source), que sí lo tiene dibujado.
-                using MemoryStream ms = new();
-                _ultimoFrameLimpio.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-                _fotosCapturadas.Add(ms.ToArray());
+
+                byte[]? datosFoto = null;
+                lock (_lockFrame)
+                {
+                    if (_ultimoFrameLimpio == null)
+                    {
+                        Aviso("No hay un frame disponible todavía para capturar. Espera un momento e intenta de nuevo.");
+                        return;
+                    }
+
+                    using MemoryStream ms = new();
+                    _ultimoFrameLimpio.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    datosFoto = ms.ToArray();
+                }
+
+                _fotosCapturadas.Add(datosFoto);
 
                 txtEstadoDeteccion.Text = "Rostro capturado correctamente";
                 txtEstadoDeteccion.Foreground = Pincel("#4CAF50");
@@ -488,7 +580,7 @@ namespace InterfazClientes
                 foreach (var foto in _fotosCapturadas)
                     _db.GuardarBiometria(_emailSeleccionado, foto);
 
-                MessageBox.Show($"✅ Biometría guardada correctamente ({_fotosCapturadas.Count} fotos).",
+                MessageBox.Show($"Biometría guardada correctamente ({_fotosCapturadas.Count} fotos).",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 _fotosCapturadas.Clear();
@@ -519,7 +611,7 @@ namespace InterfazClientes
             try
             {
                 _db.EliminarBiometria(_emailSeleccionado);
-                MessageBox.Show("✅ Registro biométrico eliminado.", "Éxito",
+                MessageBox.Show("Registro biométrico eliminado.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 LimpiarSeleccion();
             }
