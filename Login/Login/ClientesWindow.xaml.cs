@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using Login.Clases;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -17,7 +18,7 @@ namespace InterfazClientes
     {
         #region Constantes y caché estática
 
-        /// <summary>Duración de la transición de entrada de la ventana.</summary>
+        /// <summary>Duración de la transición de entrada/salida de la ventana.</summary>
         private static readonly Duration DuracionTransicion = new(TimeSpan.FromMilliseconds(200));
 
         /// <summary>Caché de pinceles ya congelados, para no crear un SolidColorBrush nuevo en cada cambio de estado.</summary>
@@ -30,14 +31,14 @@ namespace InterfazClientes
 
         #region Estado interno
 
-        // La conexión a la BD se abre en el Loaded, de forma asíncrona, para que
-        // ShowDialog() y el fade-in arranquen al instante en vez de bloquearse
-        // mientras se conecta.
         private RepositorioSql? _db;
         private readonly CancellationTokenSource _cts = new();
 
         private string _dniEditando = string.Empty;
         private volatile bool _ventanaCerrada;
+
+        /// <summary>Evita el reingreso a Window_Closing mientras se reproduce el fade-out.</summary>
+        private bool _cerrandoConAnimacion;
 
         /// <summary>Cliente recién creado, disponible tras un alta exitosa mediante <see cref="BtnAgregar_Click"/>.</summary>
         public clsCliente? ClienteResultado { get; private set; }
@@ -50,8 +51,6 @@ namespace InterfazClientes
 
             btnActualizar.Visibility = Visibility.Collapsed;
             btnAgregar.Visibility = Visibility.Visible;
-
-            // Deshabilitados hasta que la conexión a la BD esté lista (ver Loaded).
             btnAgregar.IsEnabled = false;
             btnActualizar.IsEnabled = false;
             btnActualizar.Opacity = 0.4;
@@ -99,6 +98,30 @@ namespace InterfazClientes
             BeginAnimation(OpacityProperty, fadeIn);
         }
 
+        /// <summary>
+        /// Intercepta el cierre para reproducir un fade-out antes de cerrar de verdad,
+        /// igual que en VentanaBiometria, para que todas las ventanas de la app se
+        /// sientan consistentes al abrir y cerrar. La primera vez cancela el cierre;
+        /// al completarse la animación se vuelve a llamar Close() con la bandera activada
+        /// (el DialogResult ya asignado por BtnAgregar_Click/BtnActualizar_Click se conserva).
+        /// </summary>
+        private void Window_Closing(object? sender, CancelEventArgs e)
+        {
+            if (_cerrandoConAnimacion) return;
+
+            _ventanaCerrada = true;
+
+            e.Cancel = true;
+            _cerrandoConAnimacion = true;
+
+            var fadeOut = new DoubleAnimation(1d, 0d, DuracionTransicion)
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+            };
+            fadeOut.Completed += (_, _) => Close();
+            BeginAnimation(OpacityProperty, fadeOut);
+        }
+
         /// <summary>Libera los recursos propios (token de cancelación, repositorio) al cerrar la ventana.</summary>
         private void LiberarRecursos()
         {
@@ -109,9 +132,7 @@ namespace InterfazClientes
                 (_db as IDisposable)?.Dispose();
             }
             catch
-            {
-                // Liberación best-effort al cerrar la ventana; no debe interrumpir el cierre.
-            }
+            { }
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -122,10 +143,7 @@ namespace InterfazClientes
                     DragMove();
             }
             catch (InvalidOperationException)
-            {
-                // DragMove() puede lanzar si el botón ya no está presionado al momento
-                // de procesarse el evento; se ignora intencionalmente.
-            }
+            { }
         }
 
         #endregion
@@ -188,7 +206,6 @@ namespace InterfazClientes
             _dniEditando = c.Cliente_DPI;
 
             txtDPI.Text = c.Cliente_DPI;
-            txtDPI.IsReadOnly = false;
             txtNombre.Text = c.Cliente_Nombre;
             txtApellido.Text = c.Cliente_Apellido;
             txtTelefono.Text = FormatearTelefono(SoloDigitos(c.Cliente_Telefono));
@@ -311,7 +328,7 @@ namespace InterfazClientes
                     Cliente_Activo = true
                 };
 
-                MessageBox.Show("✅ Cliente guardado correctamente.",
+                MessageBox.Show("Cliente guardado correctamente.",
                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 DialogResult = true;
@@ -320,7 +337,7 @@ namespace InterfazClientes
             catch (Exception ex)
             {
                 btnAgregar.IsEnabled = true;
-                MessageBox.Show("⚠ Error al agregar cliente:\n" + ex.Message,
+                MessageBox.Show("Error al agregar cliente:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -336,17 +353,19 @@ namespace InterfazClientes
 
             if (string.IsNullOrEmpty(_dniEditando))
             {
-                MessageBox.Show("⚠ No hay ningún cliente cargado para actualizar.",
+                MessageBox.Show("No hay ningún cliente cargado para actualizar.",
                     "Sin selección", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!SesionActual.HaySesionActiva)
             {
-                MessageBox.Show("⚠ No hay una sesión activa. Vuelve a iniciar sesión antes de continuar.",
+                MessageBox.Show("No hay una sesión activa. Vuelve a iniciar sesión antes de continuar.",
                     "Sesión no válida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            btnActualizar.IsEnabled = false;
 
             string nuevoDni = txtDPI.Text.Trim();
             string nombre = txtNombre.Text.Trim();
@@ -355,9 +374,11 @@ namespace InterfazClientes
             string correo = txtCorreo.Text.Trim();
             string direccion = txtDireccion.Text.Trim();
 
-            if (!ValidarCampos(_db, nuevoDni, telefonoLimpio, dniActual: _dniEditando)) return;
-
-            btnActualizar.IsEnabled = false;
+            if (!ValidarCampos(_db, nuevoDni, telefonoLimpio, dniActual: _dniEditando))
+            {
+                btnActualizar.IsEnabled = true;
+                return;
+            }
 
             try
             {
@@ -370,7 +391,7 @@ namespace InterfazClientes
 
                 _dniEditando = nuevoDni;
 
-                MessageBox.Show("✅ Cliente actualizado correctamente.", "Éxito",
+                MessageBox.Show("Cliente actualizado correctamente.", "Éxito",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
                 DialogResult = true;
@@ -378,12 +399,9 @@ namespace InterfazClientes
             }
             catch (Exception ex)
             {
+                btnActualizar.IsEnabled = true;
                 MessageBox.Show("Error al actualizar:\n" + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                btnActualizar.IsEnabled = true;
             }
         }
 

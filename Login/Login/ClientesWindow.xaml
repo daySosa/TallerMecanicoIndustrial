@@ -11,7 +11,8 @@
         WindowStartupLocation="CenterScreen"
         Opacity="0"
         MouseDown="Window_MouseDown"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
 
     <Window.Resources>
         <DropShadowEffect x:Key="WinShadow" Color="#000000" BlurRadius="48" ShadowDepth="0" Opacity="0.75"/>
